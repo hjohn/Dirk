@@ -87,16 +87,16 @@ Open issues
 * Circular dependencies are not supported (since the Injector checks dependencies when registering a class, it will never allow anything to be registered that has missing dependencies).  It is unclear if support for these is desired at all.
 
 
-Third Party Dependencies and Acknowledgements
-=============================================
+Dependencies and Acknowledgements
+=================================
 
 Reflections
 -----------
-License: WTFPL, http://www.wtfpl.net/
+License: WTFPL, http://www.wtfpl.net/  
 https://code.google.com/p/reflections/
 
 DirectedGraph and TopologicalSort
 ---------------------------------
-by Keith Schwarz
-License: Public Domain
+by Keith Schwarz  
+License: Public Domain  
 http://www.keithschwarz.com/interesting/
