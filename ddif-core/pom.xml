@@ -5,6 +5,37 @@
 	<groupId>hs.ddif</groupId>
 	<artifactId>ddif-core</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>Dynamic Dependency Injection Framework</name>
+  <description>
+    A light-weight framework that allows you to use standard JSR-330 javax.inject Annotations to create 
+    instances of objects, even when they're dynamically loaded at runtime. This framework will allow you 
+    to package your classes in seperate JAR's, load them at runtime, and have them injected with 
+    dependencies or serve as dependencies for other classes.
+  </description>
+  <url>https://github.com/hjohn/hs.ddif</url>
+  
+  <licenses>
+    <license>
+      <name>The BSD 2-Clause License</name>
+      <url>http://opensource.org/licenses/BSD-2-Clause</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <scm>
+    <url>https://github.com/hjohn/hs.ddif.git</url>
+    <connection>https://github.com/hjohn/hs.ddif.git</connection>
+  </scm>
+  
+  <developers>
+    <developer>
+	    <id>hjohn</id>
+	    <name>John Hendrikx</name>
+	    <email>hjohn@xs4all.nl</email>
+    </developer>
+  </developers>
 
 	<build>
 		<plugins>
@@ -15,7 +46,7 @@
 					<source>1.7</source>
 					<target>1.7</target>
 				</configuration>
-			</plugin>
+			</plugin>	
 		</plugins>
 	</build>
 
