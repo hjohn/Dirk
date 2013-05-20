@@ -92,7 +92,7 @@ Dependencies and Acknowledgements
 
 Reflections
 -----------
-License: WTFPL, http://www.wtfpl.net/  
+License: WTFPL (http://www.wtfpl.net/)  
 https://code.google.com/p/reflections/
 
 DirectedGraph and TopologicalSort
