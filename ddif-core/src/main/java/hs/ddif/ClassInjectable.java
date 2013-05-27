@@ -12,6 +12,10 @@ public class ClassInjectable implements Injectable {
   private final Class<?> injectableClass;
 
   public ClassInjectable(Class<?> injectableClass) {
+    if(injectableClass.isInterface()) {
+      throw new IllegalArgumentException("parameter 'injectableClass' must be a concrete class: " + injectableClass);
+    }
+
     this.injectableClass = injectableClass;
   }
 

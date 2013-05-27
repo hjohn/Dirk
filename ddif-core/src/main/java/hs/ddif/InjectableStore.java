@@ -102,9 +102,6 @@ public class InjectableStore {
 
     Class<?> concreteClass = injectable.getInjectableClass();
 
-    if(concreteClass.isInterface()) {
-      throw new IllegalArgumentException("injectable class must be a concrete class: " + concreteClass);
-    }
     if(classBindings.containsKey(concreteClass)) {
       throw new DuplicateBeanException(concreteClass);
     }
@@ -130,16 +127,11 @@ public class InjectableStore {
     if(injectable == null) {
       throw new IllegalArgumentException("parameter 'injectable' cannot be null");
     }
-
-    Class<?> concreteClass = injectable.getInjectableClass();
-
-    if(concreteClass.isInterface()) {
-      throw new IllegalArgumentException("injectable class must be a concrete class: " + concreteClass);
-    }
     if(!beanDefinitions.get(Object.class).contains(injectable)) {
       throw new NoSuchInjectableException(injectable);
     }
 
+    Class<?> concreteClass = injectable.getInjectableClass();
     Set<Annotation> qualifiers = extractQualifiers(concreteClass);  // TODO extractQualifiers might simply add ConcreteClass to the set?
 
     policy.checkRemoval(concreteClass, qualifiers);
