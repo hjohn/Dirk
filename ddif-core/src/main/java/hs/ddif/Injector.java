@@ -6,6 +6,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -289,7 +290,7 @@ public class Injector {
           Set<Class<?>> concreteClasses = store.resolve(requiredKey);
 
           if(concreteClasses.isEmpty()) {
-            throw new UnresolvedDependencyException("Unable to resolve dependency for " + concreteClass + "." + entry.getKey());
+            throw new UnresolvedDependencyException(requiredKey + " required for: " + formatInjectionPoint(concreteClass, entry.getKey()));
           }
           if(concreteClasses.size() > 1) {
             throw new AmbigiousDependencyException(concreteClass, requiredKey, concreteClasses);
@@ -302,5 +303,33 @@ public class Injector {
     public void checkRemoval(Class<?> concreteClass, Set<Annotation> qualifiers) {
       ensureSingularDependenciesHold(concreteClass, qualifiers);
     }
+  }
+
+  private static String formatInjectionPoint(Class<?> concreteClass, AccessibleObject accessibleObject) {
+    if(accessibleObject instanceof Constructor) {
+      Constructor<?> constructor = (Constructor<?>)accessibleObject;
+
+      return concreteClass.getName() + "#<init>(" + formatInjectionParameterTypes(constructor.getGenericParameterTypes()) + ")";
+    }
+    else if(accessibleObject instanceof Field) {
+      Field field = (Field)accessibleObject;
+
+      return concreteClass.getName() + "." + field.getName();
+    }
+
+    return concreteClass.getName() + "->" + accessibleObject;
+  }
+
+  private static String formatInjectionParameterTypes(Type[] types) {
+    StringBuilder builder = new StringBuilder();
+
+    for(Type type : types) {
+      if(builder.length() > 0) {
+        builder.append(", ");
+      }
+      builder.append(type.toString());
+    }
+
+    return builder.toString();
   }
 }

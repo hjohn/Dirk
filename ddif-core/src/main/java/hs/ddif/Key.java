@@ -27,7 +27,22 @@ public class Key {
 
   @Override
   public String toString() {
-    return "Key[" + type + " " + qualifiers + "]";
+    StringBuilder builder = new StringBuilder();
+
+    builder.append("[");
+
+    for(Annotation annotation : getQualifiers()) {
+      if(builder.length() > 1) {
+        builder.append(" ");
+      }
+      builder.append("@");
+      builder.append(annotation.annotationType().getName());
+    }
+
+    builder.append(type.getName());
+    builder.append("]");
+
+    return builder.toString();
   }
 
   @Override
