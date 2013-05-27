@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,17 +53,17 @@ public class Binder {
         foundInjectableConstructor = true;
 
         Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
-        Class<?>[] parameterTypes = constructor.getParameterTypes();
+        Type[] genericParameterTypes = constructor.getGenericParameterTypes();
 
         final List<Binding> constructorBindings = new ArrayList<>();
         final List<Key> requiredKeys = new ArrayList<>();
 
-        for(int i = 0; i < parameterTypes.length; i++) {
-          Class<?> cls = parameterTypes[i];
+        for(int i = 0; i < genericParameterTypes.length; i++) {
+          Type type = genericParameterTypes[i];
 
           Set<Annotation> qualifiers = extractQualifiers(parameterAnnotations[i]);
 
-          Binding binding = createBinding(qualifiers, cls);
+          Binding binding = createBinding(qualifiers, type);
 
           constructorBindings.add(binding);
           requiredKeys.addAll(Arrays.asList(binding.getRequiredKeys()));
@@ -94,8 +95,24 @@ public class Binder {
     return bindings;
   }
 
+  private static final Class<?> determineClassFromType(Type type) {
+    if(type instanceof Class) {
+      return (Class<?>)type;
+    }
+    else if(type instanceof ParameterizedType) {
+      return (Class<?>)((ParameterizedType)type).getRawType();
+    }
+    else if(type instanceof TypeVariable) {
+      System.err.println(type);
+      System.err.println(Arrays.toString(((TypeVariable<?>)type).getBounds()));
+      return (Class<?>)((TypeVariable<?>)type).getBounds()[0];
+    }
+
+    throw new IllegalArgumentException("Unsupported type: " + type);
+  }
+
   private Binding createBinding(Set<Annotation> qualifiers, Type type) {
-    final Class<?> cls = type instanceof Class ? (Class<?>)type : (Class<?>)((ParameterizedType)type).getRawType();
+    final Class<?> cls = determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
       final Class<?> genericType = (Class<?>)getGenericType(type);
@@ -179,6 +196,10 @@ public class Binder {
     if(type instanceof ParameterizedType) {
       ParameterizedType genericType = (ParameterizedType)type;
       return genericType.getActualTypeArguments()[0];
+    }
+    else if(type instanceof Class) {
+      Class<?> cls = (Class<?>)type;
+      return cls.getTypeParameters()[0];
     }
 
     throw new RuntimeException("Could not get generic type for: " + type);
