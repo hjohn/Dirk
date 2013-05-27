@@ -16,8 +16,8 @@ public class DependencySorter {
         Key[] requiredKeys = binding.getRequiredKeys();
 
         for(Key requiredKey : requiredKeys) {
-          for(Class<?> dependency : store.resolve(requiredKey)) {
-            dg.addEdge(dependency, cls);
+          for(Injectable injectable : store.resolve(requiredKey)) {
+            dg.addEdge(injectable.getInjectableClass(), cls);
           }
         }
       }

@@ -31,7 +31,7 @@ public class PluginManager {
 
     for(String className : classNames) {
       try {
-        store.put(classLoader.loadClass(className));
+        store.put(new ClassInjectable(classLoader.loadClass(className)));
       }
       catch(ClassNotFoundException e) {
         throw new RuntimeException(e);

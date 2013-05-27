@@ -1,8 +1,6 @@
 package hs.ddif;
 
 import static org.junit.Assert.assertTrue;
-import hs.ddif.DependencySorter;
-import hs.ddif.InjectableStore;
 import hs.ddif.test.qualifiers.Big;
 import hs.ddif.test.qualifiers.Red;
 
@@ -19,7 +17,7 @@ public class DependencySorterTest {
     InjectableStore store = new InjectableStore();
 
     for(Class<?> cls : new Class<?>[] {H.class, G.class, F.class, E.class, D.class, C.class, B.class, A.class}) {
-      store.put(cls);
+      store.put(new ClassInjectable(cls));
     }
 
     List<Class<?>> list = DependencySorter.getInTopologicalOrder(store);

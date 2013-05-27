@@ -95,7 +95,7 @@ public class Binder {
     return bindings;
   }
 
-  private static final Class<?> determineClassFromType(Type type) {
+  public static final Class<?> determineClassFromType(Type type) {
     if(type instanceof Class) {
       return (Class<?>)type;
     }
@@ -123,8 +123,8 @@ public class Binder {
         public Object getValue(Injector injector) {
           Set<Object> injectObject = new HashSet<>();
 
-          for(Class<?> concreteClass : injector.getConcreteClasses(key)) {
-            injectObject.add(injector.getInstance(concreteClass));
+          for(Injectable injectable : injector.getInjectables(key)) {
+            injectObject.add(injector.getInstance(injectable.getInjectableClass()));
           }
 
           return injectObject;
@@ -192,7 +192,7 @@ public class Binder {
     return qualifiers;
   }
 
-  private static Type getGenericType(Type type) {
+  public static Type getGenericType(Type type) {
     if(type instanceof ParameterizedType) {
       ParameterizedType genericType = (ParameterizedType)type;
       return genericType.getActualTypeArguments()[0];

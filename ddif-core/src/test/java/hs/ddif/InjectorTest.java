@@ -1,6 +1,7 @@
 package hs.ddif;
 
 import static org.hamcrest.Matchers.isA;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -43,6 +44,8 @@ import hs.ddif.test.injectables.UnregisteredParentBean;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Provider;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -136,7 +139,7 @@ public class InjectorTest {
     injector.remove(SimpleInterface.class);
   }
 
-  @Test(expected = NoSuchBeanException.class)
+  @Test(expected = NoSuchInjectableException.class)
   public void shouldThrowExceptionWhenRemovingUnregisteredBean() {
     injector.remove(ArrayList.class);
   }
@@ -349,7 +352,7 @@ public class InjectorTest {
    * Misc
    */
 
-  @Test(expected = NoSuchBeanException.class)
+  @Test(expected = NoSuchInjectableException.class)
   public void shouldThrowExceptionWhenRemovingUnregisteredSuperClass() {
     injector.remove(UnregisteredParentBean.class);
   }
@@ -386,5 +389,73 @@ public class InjectorTest {
     thrown.expectMessage("Only one constructor is allowed to be annoted with @Inject: " + ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
 
     injector.register(ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
+  }
+
+  /*
+   * Provider use
+   */
+
+  @Test
+  public void shouldRegisterAndUseProvider() {
+    injector.register(new Provider<String>() {
+      @Override
+      public String get() {
+        return "a string";
+      }
+    });
+
+    assertEquals("a string", injector.getInstance(String.class));
+  }
+
+  @Test
+  public void shouldRemoveProvider() {
+    Provider<String> provider = new Provider<String>() {
+      @Override
+      public String get() {
+        return "a string";
+      }
+    };
+
+    injector.register(provider);
+    injector.remove(provider);
+  }
+
+  @Test(expected = ViolatesSingularDependencyException.class)
+  public void shouldThrowExceptionWhenRegisteringProviderWouldViolateSingularDependencies() {
+    injector.register(new Provider<SimpleChildBean>() {
+      @Override
+      public SimpleChildBean get() {
+        return new SimpleChildBean();
+      }
+    });
+  }
+
+  @Test(expected = NoSuchInjectableException.class)
+  public void shouldThrowExceptionWhenRemovingSimilarProvider() {
+    injector.register(new Provider<String>() {
+      @Override
+      public String get() {
+        return "a string";
+      }
+    });
+
+    injector.remove(new Provider<String>() {
+      @Override
+      public String get() {
+        return "a string";
+      }
+    });
+  }
+
+  @Test(expected = NoSuchInjectableException.class)
+  public void shouldThrowExceptionWhenRemovingProviderByClass() {
+    injector.register(new Provider<String>() {
+      @Override
+      public String get() {
+        return "a string";
+      }
+    });
+
+    injector.remove(String.class);
   }
 }

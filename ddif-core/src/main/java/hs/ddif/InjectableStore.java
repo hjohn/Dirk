@@ -17,6 +17,8 @@ import javax.inject.Qualifier;
  * is made to make sure that the store only contains injectables that have
  * resolvable bindings, although using a {@link StoreConsistencyPolicy} it is
  * possible to prevent such additions and removals from taking place.
+ *
+ * @param <T> type of objects the store holds
  */
 public class InjectableStore {
 
@@ -27,7 +29,7 @@ public class InjectableStore {
    *
    * The key is either an Annotation (annotated with {@link Qualifier}) or a {@link Class}.
    */
-  private final Map<Object, Set<Class<?>>> beanDefinitions = new HashMap<>();
+  private final Map<Object, Set<Injectable>> beanDefinitions = new HashMap<>();
 
   /**
    * Map containing bindings for each class.  Bindings can resolved to a value that can
@@ -67,8 +69,8 @@ public class InjectableStore {
     return Collections.unmodifiableSet(classBindings.keySet());
   }
 
-  public Set<Class<?>> resolve(Key key) {
-    Set<Class<?>> matches = beanDefinitions.get(key.getType());
+  public Set<Injectable> resolve(Key key) {
+    Set<Injectable> matches = beanDefinitions.get(key.getType());
 
     if(matches == null) {
       return Collections.emptySet();
@@ -77,7 +79,7 @@ public class InjectableStore {
     matches = new HashSet<>(matches);  // Make a copy as otherwise retainAll below will modify the beanDefinitions map
 
     for(Annotation qualifier : key.getQualifiers()) {
-      Set<Class<?>> qualifierMatches = beanDefinitions.get(qualifier);
+      Set<Injectable> qualifierMatches = beanDefinitions.get(qualifier);
 
       if(qualifierMatches == null) {
         return Collections.emptySet();
@@ -93,9 +95,15 @@ public class InjectableStore {
     return classBindings.containsKey(concreteClass);
   }
 
-  public Map<AccessibleObject, Binding> put(Class<?> concreteClass) {
+  public Map<AccessibleObject, Binding> put(Injectable injectable) {
+    if(injectable == null) {
+      throw new IllegalArgumentException("parameter 'injectable' cannot be null");
+    }
+
+    Class<?> concreteClass = injectable.getInjectableClass();
+
     if(concreteClass.isInterface()) {
-      throw new IllegalArgumentException("parameter 'concreteClass' must be a concrete class: " + concreteClass);
+      throw new IllegalArgumentException("injectable class must be a concrete class: " + concreteClass);
     }
     if(classBindings.containsKey(concreteClass)) {
       throw new DuplicateBeanException(concreteClass);
@@ -109,21 +117,27 @@ public class InjectableStore {
     classBindings.put(concreteClass, bindings);
 
     for(Annotation annotation : qualifiers) {
-      register(annotation, concreteClass);
+      register(annotation, injectable);
     }
     for(Class<?> cls : getSuperClassesAndInterfaces(concreteClass)) {
-      register(cls, concreteClass);
+      register(cls, injectable);
     }
 
     return bindings;
   }
 
-  public Map<AccessibleObject, Binding> remove(Class<?> concreteClass) {
-    if(concreteClass.isInterface()) {
-      throw new IllegalArgumentException("parameter 'concreteClass' must be a concrete class: " + concreteClass);
+  public Map<AccessibleObject, Binding> remove(Injectable injectable) {
+    if(injectable == null) {
+      throw new IllegalArgumentException("parameter 'injectable' cannot be null");
     }
-    if(!classBindings.containsKey(concreteClass)) {
-      throw new NoSuchBeanException(concreteClass);
+
+    Class<?> concreteClass = injectable.getInjectableClass();
+
+    if(concreteClass.isInterface()) {
+      throw new IllegalArgumentException("injectable class must be a concrete class: " + concreteClass);
+    }
+    if(!beanDefinitions.get(Object.class).contains(injectable)) {
+      throw new NoSuchInjectableException(injectable);
     }
 
     Set<Annotation> qualifiers = extractQualifiers(concreteClass);  // TODO extractQualifiers might simply add ConcreteClass to the set?
@@ -131,10 +145,10 @@ public class InjectableStore {
     policy.checkRemoval(concreteClass, qualifiers);
 
     for(Annotation annotation : qualifiers) {
-      remove(annotation, concreteClass);
+      removeInternal(annotation, injectable);
     }
     for(Class<?> cls : getSuperClassesAndInterfaces(concreteClass)) {
-      remove(cls, concreteClass);
+      removeInternal(cls, injectable);
     }
 
     return classBindings.remove(concreteClass);
@@ -162,27 +176,27 @@ public class InjectableStore {
     return superClassesAndInterfaces;
   }
 
-  private void register(Object typeOrQualifier, Class<?> cls) {
-    Set<Class<?>> concreteClasses = beanDefinitions.get(typeOrQualifier);
+  private void register(Object typeOrQualifier, Injectable injectable) {
+    Set<Injectable> values = beanDefinitions.get(typeOrQualifier);
 
-    if(concreteClasses == null) {
-      concreteClasses = new HashSet<>();
-      beanDefinitions.put(typeOrQualifier, concreteClasses);
+    if(values == null) {
+      values = new HashSet<>();
+      beanDefinitions.put(typeOrQualifier, values);
     }
 
-    if(!concreteClasses.add(cls)) {
-      throw new AssertionError("Map 'beanDefinitions' already contained: " + cls + " for key: " + typeOrQualifier);
+    if(!values.add(injectable)) {
+      throw new AssertionError("Map 'beanDefinitions' already contained: " + injectable + " for key: " + typeOrQualifier);
     }
   }
 
-  private void remove(Object typeOrQualifier, Class<?> cls) {
-    Set<Class<?>> concreteClasses = beanDefinitions.get(typeOrQualifier);
+  private void removeInternal(Object typeOrQualifier, Injectable injectable) {
+    Set<Injectable> values = beanDefinitions.get(typeOrQualifier);
 
-    if(concreteClasses == null || !concreteClasses.remove(cls)) {
-      throw new AssertionError("Map 'beanDefinitions' must contain: " + cls + " for key: " + typeOrQualifier + " concreteClasses = " + concreteClasses);
+    if(values == null || !values.remove(injectable)) {
+      throw new AssertionError("Map 'beanDefinitions' must contain: " + injectable + " for key: " + typeOrQualifier + " concreteClasses = " + values);
     }
 
-    if(concreteClasses.isEmpty()) {
+    if(values.isEmpty()) {
       beanDefinitions.remove(typeOrQualifier);
     }
   }

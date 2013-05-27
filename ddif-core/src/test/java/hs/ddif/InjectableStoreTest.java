@@ -5,11 +5,6 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import hs.ddif.Binding;
-import hs.ddif.DirectedGraph;
-import hs.ddif.InjectableStore;
-import hs.ddif.Key;
-import hs.ddif.TopologicalSort;
 import hs.ddif.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.test.injectables.BigRedBean;
 import hs.ddif.test.qualifiers.Big;
@@ -34,7 +29,7 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldStore() {
-    store.put(BeanWithBigRedInjection.class);
+    store.put(new ClassInjectable(BeanWithBigRedInjection.class));
 
     Map<AccessibleObject, Binding> bindings = store.getInjections(BeanWithBigRedInjection.class);
 
@@ -42,7 +37,7 @@ public class InjectableStoreTest {
       assertThat(store.resolve(binding.getRequiredKeys()[0]), empty());
     }
 
-    store.put(BigRedBean.class);
+    store.put(new ClassInjectable(BigRedBean.class));
 
     bindings = store.getInjections(BeanWithBigRedInjection.class);
 
@@ -76,13 +71,13 @@ public class InjectableStoreTest {
     assertTrue(list.indexOf(H.class) == list.size() - 1);
   }
 
-  public List<Class<?>> getInTopologicalOrder(Class<?>... classes) {
+  public static List<Class<?>> getInTopologicalOrder(Class<?>... classes) {
     InjectableStore store = new InjectableStore();
     DirectedGraph<Class<?>> dg = new DirectedGraph<>();
 
     for(Class<?> cls : classes) {
       dg.addNode(cls);
-      store.put(cls);
+      store.put(new ClassInjectable(cls));
     }
 
     for(Class<?> cls : classes) {
@@ -90,8 +85,8 @@ public class InjectableStoreTest {
         Key[] requiredKeys = binding.getRequiredKeys();
 
         for(Key requiredKey : requiredKeys) {
-          for(Class<?> dependency : store.resolve(requiredKey)) {
-            dg.addEdge(dependency, cls);
+          for(Injectable injectable : store.resolve(requiredKey)) {
+            dg.addEdge(injectable.getInjectableClass(), cls);
           }
         }
       }

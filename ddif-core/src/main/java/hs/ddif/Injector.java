@@ -5,7 +5,6 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,11 +14,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 // TODO Named without value is treated differently ... some use field name, others default to empty?
 // TODO What about generics support?  @Inject Shop<Book> --> how would that work?
 // TODO See if there really is a point in keeping the Interfaces/Superclass chain seperate from Annotation based qualifiers
+// TODO Binder class is pretty much static, and also has several public statics being used -- it is more of a utility class, consider refactoring
 public class Injector {
 
   /**
@@ -57,91 +58,44 @@ public class Injector {
 
   @SuppressWarnings("unchecked")
   protected <T> T getInstance(Key key) {
-    Set<Class<?>> concreteClasses = store.resolve(key);
+    Set<Injectable> injectables = store.resolve(key);
 
-    if(concreteClasses.isEmpty()) {
+    if(injectables.isEmpty()) {
       throw new NoSuchBeanException(key);
     }
-    if(concreteClasses.size() > 1) {
-      throw new AmbigiousBeanException(key, concreteClasses);
+    if(injectables.size() > 1) {
+      throw new AmbigiousBeanException(key, injectables);
     }
 
-    try {
-      Class<?> concreteClass = concreteClasses.iterator().next();
-      boolean isSingleton = concreteClass.getAnnotation(Singleton.class) != null;
+    Injectable injectable = injectables.iterator().next();
+    boolean isSingleton = injectable.getInjectableClass().getAnnotation(Singleton.class) != null;
 
-      if(isSingleton) {
-        WeakReference<Object> reference = singletons.get(concreteClass);
+    if(isSingleton) {
+      WeakReference<Object> reference = singletons.get(injectable.getInjectableClass());
 
-        if(reference != null) {
-          T bean = (T)reference.get();  // create strong reference first
+      if(reference != null) {
+        T bean = (T)reference.get();  // create strong reference first
 
-          if(bean != null) {  // if it was not null, return it
-            return bean;
-          }
+        if(bean != null) {  // if it was not null, return it
+          return bean;
         }
       }
-
-      Map<AccessibleObject, Binding> injections = store.getInjections(concreteClass);
-
-      /*
-       * Look for a constructor injection, and if found use that.  If not, use the default
-       * constructor.
-       */
-
-      T bean = null;
-
-      for(AccessibleObject accessibleObject : injections.keySet()) {
-        if(accessibleObject instanceof Constructor) {
-          Constructor<?> constructor = (Constructor<?>)accessibleObject;
-
-          bean = (T)constructor.newInstance((Object[])injections.get(accessibleObject).getValue(this));
-        }
-      }
-
-      if(bean == null) {
-        bean = (T)concreteClass.newInstance();
-      }
-
-      /*
-       * Do field/method injections.
-       */
-
-      for(Map.Entry<AccessibleObject, Binding> entry : store.getInjections(bean.getClass()).entrySet()) {
-        try {
-          AccessibleObject accessibleObject = entry.getKey();
-
-          if(accessibleObject instanceof Field) {
-            Field field = (Field)accessibleObject;
-
-            field.setAccessible(true);
-            field.set(bean, entry.getValue().getValue(this));
-          }
-        }
-        catch(IllegalArgumentException e) {
-          throw new InjectionException("Incompatible types", e);
-        }
-        catch(IllegalAccessException e) {
-          throw new InjectionException("Illegal access", e);
-        }
-      }
-
-      /*
-       * Store the result if singleton.
-       */
-
-      if(isSingleton) {
-        singletons.put(concreteClass, new WeakReference<Object>(bean));
-      }
-
-      return bean;
     }
-    catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new RuntimeException(e);
+
+    T bean = (T)injectable.getInstance(this, store.getInjections(injectable.getInjectableClass()));
+
+    /*
+     * Store the result if singleton.
+     */
+
+    if(isSingleton) {
+      singletons.put(injectable.getInjectableClass(), new WeakReference<Object>(bean));
     }
+
+    return bean;
   }
 
-  protected Set<Class<?>> getConcreteClasses(Key key) {
+  protected Set<Injectable> getInjectables(Key key) {
     return store.resolve(key);
   }
 
@@ -178,11 +132,32 @@ public class Injector {
    * classes, then this method will throw an exception.
    *
    * @param concreteClass the class to register with the Injector
-   * @throws ViolatesSingularDependencyException when the registration of the given class would cause an ambigious dependency in one or more previously registered classes
+   * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
    * @throws UnresolvedDependencyException when one or more dependencies of the given class cannot be resolved
    */
   public void register(Class<?> concreteClass) {
-    Map<AccessibleObject, Binding> bindings = store.put(concreteClass);
+    register(new ClassInjectable(concreteClass));
+  }
+
+  /**
+   * Registers a provider with this Injector if all its dependencies can be
+   * resolved and it would not cause existing registered classes to have
+   * ambigious dependencies as a result of registering the given provider.<p>
+   *
+   * If there are unresolvable dependencies, or registering this provider
+   * would result in ambigious dependencies for previously registered
+   * classes, then this method will throw an exception.
+   *
+   * @param provider the provider to register with the Injector
+   * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
+   * @throws UnresolvedDependencyException when one or more dependencies of the given provider cannot be resolved
+   */
+  public void register(Provider<?> provider) {
+    register(new ProvidedInjectable(provider));
+  }
+
+  private void register(Injectable injectable) {
+    Map<AccessibleObject, Binding> bindings = store.put(injectable);
 
     for(Binding binding : bindings.values()) {
       Key[] keys = binding.getRequiredKeys();
@@ -210,10 +185,28 @@ public class Injector {
    * and an exception is thrown.
    *
    * @param concreteClass the class to remove from the Injector
-   * @throws ViolatesSingularDependencyException when the removal of the given class would cause a missing dependency in one or more of the remaining registered classes
+   * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
    */
   public void remove(Class<?> concreteClass) {
-    Map<AccessibleObject, Binding> bindings = store.remove(concreteClass);
+    remove(new ClassInjectable(concreteClass));
+  }
+
+  /**
+   * Removes a provider from this Injector if doing so would not result in
+   * broken dependencies in the remaining registered classes.<p>
+   *
+   * If there would be broken dependencies then the removal will fail
+   * and an exception is thrown.
+   *
+   * @param concreteClass the class to remove from the Injector
+   * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
+   */
+  public void remove(Provider<?> provider) {
+    remove(new ProvidedInjectable(provider));
+  }
+
+  private void remove(Injectable injectable) {
+    Map<AccessibleObject, Binding> bindings = store.remove(injectable);
 
     for(Binding binding : bindings.values()) {
       Key[] keys = binding.getRequiredKeys();
@@ -234,15 +227,15 @@ public class Injector {
     }
   }
 
-  private void ensureSingularDependenciesHold(Class<?> concreteClass, Set<Annotation> qualifiers) {
+  private void ensureSingularDependenciesHold(Class<?> classOrInterface, Set<Annotation> qualifiers) {
     Set<Set<Annotation>> qualifierSubSets = powerSet(qualifiers);
 
-    for(Class<?> cls : getSuperClassesAndInterfaces(concreteClass)) {
+    for(Class<?> cls : getSuperClassesAndInterfaces(classOrInterface)) {
       for(Set<Annotation> qualifierSubSet : qualifierSubSets) {
         Key key = new Key(qualifierSubSet, cls);
 
         if(referenceCounters.containsKey(key)) {
-          throw new ViolatesSingularDependencyException(concreteClass, key, true);
+          throw new ViolatesSingularDependencyException(classOrInterface, key, true);
         }
       }
     }
@@ -287,13 +280,13 @@ public class Injector {
         Key[] requiredKeys = entry.getValue().getRequiredKeys();
 
         for(Key requiredKey : requiredKeys) {
-          Set<Class<?>> concreteClasses = store.resolve(requiredKey);
+          Set<Injectable> injectables = store.resolve(requiredKey);
 
-          if(concreteClasses.isEmpty()) {
+          if(injectables.isEmpty()) {
             throw new UnresolvedDependencyException(requiredKey + " required for: " + formatInjectionPoint(concreteClass, entry.getKey()));
           }
-          if(concreteClasses.size() > 1) {
-            throw new AmbigiousDependencyException(concreteClass, requiredKey, concreteClasses);
+          if(injectables.size() > 1) {
+            throw new AmbigiousDependencyException(concreteClass, requiredKey, injectables);
           }
         }
       }
