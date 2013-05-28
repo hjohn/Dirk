@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,16 +45,41 @@ public class Injector {
   private final Map<Class<?>, WeakReference<Object>> singletons = new WeakHashMap<>();
 
   /**
-   * Returns an instance of the given class in which all dependencies are
-   * injected.
+   * Returns an instance of the given class matching the given qualifiers (if any) in
+   * which all dependencies are injected.
    *
-   * @param cls the class
-   * @return an instance of the given class
+   * @param cls the class of the instance required
+   * @param qualifiers optional list of qualifiers
+   * @return an instance of the given class matching the given qualifiers (if any)
    * @throws NoSuchBeanException when the given class is not registered with this Injector
    * @throws AmbigiousBeanException when the given class has multiple matching candidates
    */
-  public <T> T getInstance(Class<T> cls) {
-    return getInstance(new Key(cls));
+  public <T> T getInstance(Class<T> cls, Annotation... qualifiers) {
+    return getInstance(new Key(new HashSet<>(Arrays.asList(qualifiers)), cls));
+  }
+
+  /**
+   * Returns all instances of the given class matching the given qualifiers (if any) in
+   * which all dependencies are injected.  When there are no matching instances, an
+   * empty set is returned.
+   *
+   * @param cls the class of the instances required
+   * @param qualifiers optional list of qualifiers
+   * @return all instances of the given class matching the given qualifiers (if any)
+   */
+  public <T> Set<T> getInstances(Class<T> cls, Annotation... qualifiers) {
+    return getInstances(new Key(new HashSet<>(Arrays.asList(qualifiers)), cls));
+  }
+
+  /**
+   * Returns <code>true</code> when the given class is part of this Injector, otherwise
+   * <code>false</code>.
+   *
+   * @param cls a class to check
+   * @return <code>true</code> when the given class is part of this Injector, otherwise <code>false</code>
+   */
+  public boolean contains(Class<?> cls) {
+    return store.contains(cls);
   }
 
   @SuppressWarnings("unchecked")
@@ -93,6 +119,17 @@ public class Injector {
     }
 
     return bean;
+  }
+
+  @SuppressWarnings("unchecked")
+  protected <T> Set<T> getInstances(Key key) {
+    Set<T> instances = new HashSet<>();
+
+    for(Injectable injectable : getInjectables(key)) {
+      instances.add((T)getInstance(injectable.getInjectableClass()));
+    }
+
+    return instances;
   }
 
   protected Set<Injectable> getInjectables(Key key) {
