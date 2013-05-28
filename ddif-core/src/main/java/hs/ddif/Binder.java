@@ -121,13 +121,7 @@ public class Binder {
       return new Binding() {
         @Override
         public Object getValue(Injector injector) {
-          Set<Object> injectObject = new HashSet<>();
-
-          for(Injectable injectable : injector.getInjectables(key)) {
-            injectObject.add(injector.getInstance(injectable.getInjectableClass()));
-          }
-
-          return injectObject;
+          return injector.getInstances(key);
         }
 
         @Override
