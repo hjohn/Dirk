@@ -63,10 +63,13 @@ will look for all registered books, even ones that were added or removed after t
 
 Features
 --------
-* Can inject classes loaded at runtime
-* Can use classes loaded at runtime as injection candidates
+* Injects classes with dependencies, even if loaded at runtime
+* Injects collections
+* Injection candidates can be supplied directly and/or loaded at runtime
 * Supports JSR-330
-* Allows multiple Qualifiers for injectables as well as injections
+* Just-in-time discovery of dependencies
+* Jars can be scanned for injection candidates to be included in an injector
+* Allows multiple Qualifiers for injection candidates as well as injections
 
 Requirements
 ------------
@@ -85,6 +88,7 @@ Open issues
 * Exception messages probably need to be improved to be more clear
 * Injector is not thread-safe; it is still undecided if it should be thread-safe (which can affect its speed) or that external synchronisation is the solution
 * Circular dependencies are not supported (since the Injector checks dependencies when registering a class, it will never allow anything to be registered that has missing dependencies).  It is unclear if support for these is desired at all.
+* Only java.util.Set is currently supported for collection injection (but easy to extend)
 
 BSD License
 -----------
