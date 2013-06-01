@@ -134,7 +134,7 @@ the ``Provider`` any time they want:
         ...
     }
 
-#### Just-in-time dependencies
+### Just-in-time dependencies
 
 Registering every dependency manually (and in the correct order) can quickly become tedious.  In our above
 example, the ``BookShop`` class needed to be registered as well as its ``CreditCardPaymentProcessor`` dependency.
@@ -182,15 +182,15 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Dependencies and Acknowledgements
-=================================
+---------------------------------
 
-Reflections
------------
+### Reflections
+
 License: WTFPL (http://www.wtfpl.net/)  
 https://code.google.com/p/reflections/
 
-DirectedGraph and TopologicalSort
----------------------------------
+### DirectedGraph and TopologicalSort
+
 by Keith Schwarz  
 License: Public Domain  
 http://www.keithschwarz.com/interesting/
