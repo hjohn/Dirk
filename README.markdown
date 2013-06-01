@@ -7,9 +7,9 @@ runtime.  This framework will allow you to package your classes in seperate JAR'
 load them at runtime, and have them injected with dependencies or serve as dependencies
 for other classes.
 
-For example given a class implementing the `PaymentProvider` interface:
+For example given a class implementing the `PaymentProcessor` interface:
 
-    public class CreditCardPaymentProvider implements PaymentProvider {
+    public class CreditCardPaymentProcessor implements PaymentProcessor {
     }
 
 The below class would get its `paymentProvider` field injected with an instance of
@@ -17,7 +17,7 @@ the above class:
 
     public class BookShop {
         @Inject
-        private PaymentProvider paymentProvider;
+        private PaymentProcessor paymentProcessor;
     }
 
 This framework differs from most standard DI frameworks that dependencies can be
@@ -78,6 +78,85 @@ Requirements
 Getting started
 ---------------
 Todo...
+
+A basic example will be used to illustrate how this framework works.  We start with
+a class that needs some dependencies injected:
+
+    public class BookShop {
+    
+        @Inject
+        private Set<Book> booksOnShelf;
+        
+        @Inject
+        public BookShop(CreditCardPaymentProcessor paymentProcessor) {
+            ...
+        }
+    }
+    
+To have this class injected, we'll need to create an Injector and configure it
+properly:
+
+    Injector injector = new Injector();
+    
+    injector.register(CreditCardPaymentProcessor.class);
+    injector.register(BookShop.class);
+    
+Now we can ask the Injector to create us an instance of ``BookShop``:    
+    
+    BookShop bookShop = injector.getInstance(BookShop.class);
+    
+This will create a ``BookShop`` instance by calling the constructor annotated with ``@Inject`` and providing it with
+an instance of ``CreditCardPaymentProcessor``.  The ``booksOnShelf`` field will be injected (after the Constructor
+has completed) with an empty Set as no ``Book`` injection candidates are currently known to the Injector.
+
+By registering some ``Book`` objects, and asking for a new Instance of ``BookShop`` we can get the ``booksOnShelf`` field
+populated with some books:
+
+    injector.registerInstance(new Book("Dune"));
+    injector.register(SomeBook.class);
+
+    BookShop anotherBookShop = injector.getInstance(BookShop.class);
+
+The second ``BookShop`` instance will have a ``Set`` of ``Book`` objects matching those known by the Injector.  If you
+wanted to have all ``BookShop`` instances to have access to the latest known books, you can wrap the collection
+with a ``Provider``.  The ``BookShop`` instances can then query for the latest books by calling the ``get`` method of
+the ``Provider`` any time they want:
+
+    public class BookShop {
+    
+        @Inject
+        private Provider<Set<Book>> booksOnShelf;
+    
+        public Set<Book> getLatestBooks() {
+            return booksOnShelf.get();
+        }
+        
+        ...
+    }
+
+#### Just-in-time dependencies
+
+Registering every dependency manually (and in the correct order) can quickly become tedious.  In our above
+example, the ``BookShop`` class needed to be registered as well as its ``CreditCardPaymentProcessor`` dependency.
+We can however have the Injector discover these automatically, as long as the dependencies themselves are
+concrete classes that have a default constructor or a constructor with the ``@Inject`` annotation.
+
+In order to discover dependencies automatically, we have to create the Injector slightly differently:
+
+    Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
+
+Now we can an instance of ``BookShop`` without any further dependencies needing to be registered:
+
+    BookShop bookShop = injector.getInstance(BookShop.class);
+    
+Under the hood, the Injector will notice there is no ``BookShop`` injection candidate registered.  However,
+by analyzing the ``BookShop`` class it sees that it can be instantiated with a Constructor that requires a
+``CreditCardPaymentProcessor`` -- unfortunately, there is also no ``CreditCardPaymentProcessor`` registered.  The
+Injector then recursively analyzes the ``CreditCardPaymentProcessor`` class, and registers this class with
+itself as it noticed that it can be simply instantiated with a default constructor.
+
+Now the dependencies for BookShop can also be satisfied, the BookShop class is registered with the Injector
+and an instance is returned.  
 
 Open issues
 -----------
