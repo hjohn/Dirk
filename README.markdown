@@ -145,7 +145,7 @@ In order to discover dependencies automatically, we have to create the Injector 
 
     Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
 
-Now we can an instance of ``BookShop`` without any further dependencies needing to be registered:
+Now we can get an instance of ``BookShop`` without any further dependencies needing to be registered:
 
     BookShop bookShop = injector.getInstance(BookShop.class);
     
@@ -155,7 +155,7 @@ by analyzing the ``BookShop`` class it sees that it can be instantiated with a C
 Injector then recursively analyzes the ``CreditCardPaymentProcessor`` class, and registers this class with
 itself as it noticed that it can be simply instantiated with a default constructor.
 
-Now the dependencies for BookShop can also be satisfied, the BookShop class is registered with the Injector
+Now the dependencies for ``BookShop`` can also be satisfied, the ``BookShop`` class is registered with the Injector
 and an instance is returned.  
 
 Open issues
