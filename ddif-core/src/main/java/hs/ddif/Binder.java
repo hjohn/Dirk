@@ -40,57 +40,63 @@ public class Binder {
       }
     }
 
+    Constructor<?> suitableConstructor = null;
     boolean foundInjectableConstructor = false;
 
     for(final Constructor<?> constructor : injectableClass.getConstructors()) {
       Inject inject = constructor.getAnnotation(Inject.class);
 
+      if(constructor.getParameterTypes().length == 0) {
+        suitableConstructor = constructor;
+      }
       if(inject != null) {
         if(foundInjectableConstructor) {
           throw new DependencyException("Only one constructor is allowed to be annoted with @Inject: " + injectableClass);
         }
 
         foundInjectableConstructor = true;
-
-        Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
-        Type[] genericParameterTypes = constructor.getGenericParameterTypes();
-
-        final List<Binding> constructorBindings = new ArrayList<>();
-        final List<Key> requiredKeys = new ArrayList<>();
-
-        for(int i = 0; i < genericParameterTypes.length; i++) {
-          Type type = genericParameterTypes[i];
-
-          Set<Annotation> qualifiers = extractQualifiers(parameterAnnotations[i]);
-
-          Binding binding = createBinding(qualifiers, type);
-
-          constructorBindings.add(binding);
-          requiredKeys.addAll(Arrays.asList(binding.getRequiredKeys()));
-        }
-
-        bindings.put(constructor, new Binding() {
-          @Override
-          public Object getValue(Injector injector) {
-            Object[] values = new Object[constructorBindings.size()];
-
-            for(int i = 0; i < constructorBindings.size(); i++) {
-              Binding binding = constructorBindings.get(i);
-
-              values[i] = binding.getValue(injector);
-            }
-
-            return values;
-          }
-
-          @Override
-          public Key[] getRequiredKeys() {
-            return requiredKeys.toArray(new Key[requiredKeys.size()]);
-          }
-        });
+        suitableConstructor = constructor;
       }
     }
 
+    if(suitableConstructor != null) {
+      Annotation[][] parameterAnnotations = suitableConstructor.getParameterAnnotations();
+      Type[] genericParameterTypes = suitableConstructor.getGenericParameterTypes();
+
+      final List<Binding> constructorBindings = new ArrayList<>();
+      final List<Key> requiredKeys = new ArrayList<>();
+
+      for(int i = 0; i < genericParameterTypes.length; i++) {
+        Type type = genericParameterTypes[i];
+
+        Set<Annotation> qualifiers = extractQualifiers(parameterAnnotations[i]);
+
+        Binding binding = createBinding(qualifiers, type);
+
+        constructorBindings.add(binding);
+        requiredKeys.addAll(Arrays.asList(binding.getRequiredKeys()));
+      }
+
+      bindings.put(suitableConstructor, new Binding() {
+        @Override
+        public Object getValue(Injector injector) {
+          Object[] values = new Object[constructorBindings.size()];
+
+          for(int i = 0; i < constructorBindings.size(); i++) {
+            Binding binding = constructorBindings.get(i);
+
+            values[i] = binding.getValue(injector);
+          }
+
+          return values;
+        }
+
+        @Override
+        public Key[] getRequiredKeys() {
+          return requiredKeys.toArray(new Key[requiredKeys.size()]);
+        }
+      });
+    }
 
     return bindings;
   }
@@ -115,7 +121,7 @@ public class Binder {
     final Class<?> cls = determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
-      final Class<?> genericType = (Class<?>)getGenericType(type);
+      final Class<?> genericType = determineClassFromType(getGenericType(type));
       final Key key = new Key(qualifiers, genericType);
 
       return new Binding() {
