@@ -12,7 +12,7 @@ public class DependencySorter {
     }
 
     for(Class<?> cls : store.getInjectables()) {
-      for(Binding binding : store.getInjections(cls).values()) {
+      for(Binding binding : store.getBindings(cls).values()) {
         Key[] requiredKeys = binding.getRequiredKeys();
 
         for(Key requiredKey : requiredKeys) {

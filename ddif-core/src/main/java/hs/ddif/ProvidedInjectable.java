@@ -18,18 +18,18 @@ public class ProvidedInjectable implements Injectable {
   }
 
   @Override
+  public boolean canBeInstantiated(Map<AccessibleObject, Binding> bindings) {
+    return true;
+  }
+
+  @Override
   public Class<?> getInjectableClass() {
     return injectableClass;
   }
 
   @Override
-  public Object getInstance(Injector injector, Map<AccessibleObject, Binding> injections) {
+  public Object getInstance(Injector injector, Map<AccessibleObject, Binding> bindings) {
     return provider.get();
-  }
-
-  @Override
-  public Provider<?> getProvider() {
-    return provider;
   }
 
   @Override

@@ -66,14 +66,14 @@ public class PluginManagerTest {
 
     List<String> texts = extractTextsFromBeanWithTextProviders(bean);
 
-    assertThat(texts, containsInAnyOrder("Fancy Text", "NORMAL TEXT"));
+    assertThat(texts, containsInAnyOrder("Fancy Text", "NORMAL TEXT", ">>Styled Text<<"));
 
     plugin.unload();
 
     BeanWithTextProviders beanAfter = injector.getInstance(BeanWithTextProviders.class);
 
     assertEquals(0, beanBefore.getTextProviders().size());
-    assertEquals(2, bean.getTextProviders().size());
+    assertEquals(3, bean.getTextProviders().size());
     assertEquals(0, beanAfter.getTextProviders().size());
 
     gc();

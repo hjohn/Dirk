@@ -11,6 +11,7 @@ import hs.ddif.test.qualifiers.Big;
 import hs.ddif.test.qualifiers.Red;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 
@@ -31,18 +32,22 @@ public class InjectableStoreTest {
   public void shouldStore() {
     store.put(new ClassInjectable(BeanWithBigRedInjection.class));
 
-    Map<AccessibleObject, Binding> bindings = store.getInjections(BeanWithBigRedInjection.class);
+    Map<AccessibleObject, Binding> bindings = store.getBindings(BeanWithBigRedInjection.class);
 
-    for(Binding binding : bindings.values()) {
-      assertThat(store.resolve(binding.getRequiredKeys()[0]), empty());
+    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+      if(!(entry.getKey() instanceof Constructor)) {
+        assertThat(store.resolve(entry.getValue().getRequiredKeys()[0]), empty());
+      }
     }
 
     store.put(new ClassInjectable(BigRedBean.class));
 
-    bindings = store.getInjections(BeanWithBigRedInjection.class);
+    bindings = store.getBindings(BeanWithBigRedInjection.class);
 
-    for(Binding binding : bindings.values()) {
-      assertThat(store.resolve(binding.getRequiredKeys()[0]), hasSize(1));
+    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+      if(!(entry.getKey() instanceof Constructor)) {
+        assertThat(store.resolve(entry.getValue().getRequiredKeys()[0]), hasSize(1));
+      }
     }
   }
 
@@ -81,7 +86,7 @@ public class InjectableStoreTest {
     }
 
     for(Class<?> cls : classes) {
-      for(Binding binding : store.getInjections(cls).values()) {
+      for(Binding binding : store.getBindings(cls).values()) {
         Key[] requiredKeys = binding.getRequiredKeys();
 
         for(Key requiredKey : requiredKeys) {

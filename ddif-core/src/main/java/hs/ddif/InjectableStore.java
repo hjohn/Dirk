@@ -44,25 +44,23 @@ public class InjectableStore {
   private final Binder binder = new Binder();
 
   private final StoreConsistencyPolicy policy;
+  private final DiscoveryPolicy discoveryPolicy;
+
+  public InjectableStore(StoreConsistencyPolicy policy, DiscoveryPolicy discoveryPolicy) {
+    this.policy = policy == null ? new NoStoreConsistencyPolicy() : policy;
+    this.discoveryPolicy = discoveryPolicy == null ? new NoDiscoveryPolicy() : discoveryPolicy;
+  }
 
   public InjectableStore(StoreConsistencyPolicy policy) {
-    this.policy = policy;
+    this(policy, null);
   }
 
   public InjectableStore() {
-    this(new StoreConsistencyPolicy() {
-      @Override
-      public void checkAddition(Class<?> concreteClass, Set<Annotation> qualifiers, Map<AccessibleObject, Binding> bindings) {
-      }
-
-      @Override
-      public void checkRemoval(Class<?> concreteClass, Set<Annotation> qualifiers) {
-      }
-    });
+    this(null, null);
   }
 
-  public Map<AccessibleObject, Binding> getInjections(Class<?> cls) {
-    return classBindings.get(cls);
+  public Map<AccessibleObject, Binding> getBindings(Class<?> cls) {
+    return Collections.unmodifiableMap(classBindings.get(cls));
   }
 
   public Set<Class<?>> getInjectables() {
@@ -73,7 +71,18 @@ public class InjectableStore {
     Set<Injectable> matches = beanDefinitions.get(key.getType());
 
     if(matches == null) {
-      return Collections.emptySet();
+
+      /*
+       * Attempt auto discovery
+       */
+
+      discoveryPolicy.discoverType(this, key.getType());
+
+      matches = beanDefinitions.get(key.getType());  // Check again for matches after discovery
+
+      if(matches == null) {
+        return Collections.emptySet();
+      }
     }
 
     matches = new HashSet<>(matches);  // Make a copy as otherwise retainAll below will modify the beanDefinitions map
@@ -109,7 +118,8 @@ public class InjectableStore {
     Set<Annotation> qualifiers = extractQualifiers(concreteClass);
     Map<AccessibleObject, Binding> bindings = binder.resolve(concreteClass);
 
-    policy.checkAddition(concreteClass, qualifiers, bindings);
+    discoveryPolicy.discoverDependencies(this, injectable, bindings);
+    policy.checkAddition(this, injectable, qualifiers, bindings);
 
     classBindings.put(concreteClass, bindings);
 
@@ -134,7 +144,7 @@ public class InjectableStore {
     Class<?> concreteClass = injectable.getInjectableClass();
     Set<Annotation> qualifiers = extractQualifiers(concreteClass);  // TODO extractQualifiers might simply add ConcreteClass to the set?
 
-    policy.checkRemoval(concreteClass, qualifiers);
+    policy.checkRemoval(this, injectable, qualifiers, classBindings.get(injectable.getInjectableClass()));
 
     for(Annotation annotation : qualifiers) {
       removeInternal(annotation, injectable);
@@ -207,5 +217,27 @@ public class InjectableStore {
     }
 
     return qualifiers;
+  }
+
+  static class NoStoreConsistencyPolicy implements StoreConsistencyPolicy {
+
+    @Override
+    public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<Annotation> qualifiers, Map<AccessibleObject, Binding> bindings) {
+    }
+
+    @Override
+    public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<Annotation> qualifiers, Map<AccessibleObject, Binding> bindings) {
+    }
+  }
+
+  static class NoDiscoveryPolicy implements DiscoveryPolicy {
+
+    @Override
+    public void discoverType(InjectableStore injectableStore, Class<?> type) {
+    }
+
+    @Override
+    public void discoverDependencies(InjectableStore injectableStore, Injectable injectable, Map<AccessibleObject, Binding> bindings) {
+    }
   }
 }

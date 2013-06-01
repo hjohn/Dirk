@@ -6,8 +6,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
-import javax.inject.Provider;
-
 public class ClassInjectable implements Injectable {
   private final Class<?> injectableClass;
 
@@ -25,32 +23,37 @@ public class ClassInjectable implements Injectable {
   }
 
   @Override
-  public Object getInstance(Injector injector, Map<AccessibleObject, Binding> injections) {
+  public boolean canBeInstantiated(Map<AccessibleObject, Binding> bindings) {
+    return findConstructorEntry(bindings) != null;
+  }
+
+  private static Map.Entry<AccessibleObject, Binding> findConstructorEntry(Map<AccessibleObject, Binding> bindings) {
+    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+      if(entry.getKey() instanceof Constructor) {
+        return entry;
+      }
+    }
+
+    return null;
+  }
+
+  @Override
+  public Object getInstance(Injector injector, Map<AccessibleObject, Binding> bindings) {
     try {
+
       /*
-       * Look for a constructor injection, and if found use that.  If not, use the default
-       * constructor.
+       * Look for a constructor injection to create the object, and instantiate it.
        */
 
-      Object bean = null;
-
-      for(AccessibleObject accessibleObject : injections.keySet()) {
-        if(accessibleObject instanceof Constructor) {
-          Constructor<?> constructor = (Constructor<?>)accessibleObject;
-
-          bean = constructor.newInstance((Object[])injections.get(accessibleObject).getValue(injector));
-        }
-      }
-
-      if(bean == null) {
-        bean = getInjectableClass().newInstance();
-      }
+      Map.Entry<AccessibleObject, Binding> constructorEntry = findConstructorEntry(bindings);
+      Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
+      Object bean = constructor.newInstance((Object[])constructorEntry.getValue().getValue(injector));
 
       /*
        * Do field/method injections.
        */
 
-      for(Map.Entry<AccessibleObject, Binding> entry : injections.entrySet()) {
+      for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
         try {
           AccessibleObject accessibleObject = entry.getKey();
 
@@ -74,11 +77,6 @@ public class ClassInjectable implements Injectable {
     catch(IllegalAccessException | InstantiationException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  @Override
-  public Provider<Object> getProvider() {
-    throw new UnsupportedOperationException();
   }
 
   @Override
