@@ -3,8 +3,6 @@ package hs.ddif;
 import java.lang.reflect.AccessibleObject;
 import java.util.Map;
 
-import javax.inject.Provider;
-
 public class InstanceInjectable implements Injectable {
   private final Object instance;
 
