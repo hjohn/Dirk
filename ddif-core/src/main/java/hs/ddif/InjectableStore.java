@@ -23,13 +23,10 @@ import javax.inject.Qualifier;
 public class InjectableStore {
 
   /**
-   * Map containing sets of injectables which match one specific type or qualifier.  An
-   * injectable is added multiple times to this Map, once for each qualifier, class,
-   * superclass and interface it matches.<p>
-   *
-   * The key is either an Annotation (annotated with {@link Qualifier}) or a {@link Class}.
+   * Map containing annotations mapping to sets of injectables which match one specific
+   * type or qualifier class.<p>
    */
-  private final Map<Object, Set<Injectable>> beanDefinitions = new HashMap<>();
+  private final Map<Class<?>, Map<Annotation, Set<Injectable>>> beanDefinitions = new HashMap<>();
 
   /**
    * Map containing bindings for each class.  Bindings can resolved to a value that can
@@ -42,7 +39,6 @@ public class InjectableStore {
   private final Map<Class<?>, Map<AccessibleObject, Binding>> classBindings = new HashMap<>();
 
   private final Binder binder = new Binder();
-
   private final StoreConsistencyPolicy policy;
   private final DiscoveryPolicy discoveryPolicy;
 
@@ -68,9 +64,9 @@ public class InjectableStore {
   }
 
   public Set<Injectable> resolve(Key key) {
-    Set<Injectable> matches = beanDefinitions.get(key.getType());
+    Map<Annotation, Set<Injectable>> injectablesByAnnotation = beanDefinitions.get(key.getType());
 
-    if(matches == null) {
+    if(injectablesByAnnotation == null) {
 
       /*
        * Attempt auto discovery
@@ -78,17 +74,17 @@ public class InjectableStore {
 
       discoveryPolicy.discoverType(this, key.getType());
 
-      matches = beanDefinitions.get(key.getType());  // Check again for matches after discovery
+      injectablesByAnnotation = beanDefinitions.get(key.getType());  // Check again for matches after discovery
 
-      if(matches == null) {
+      if(injectablesByAnnotation == null) {
         return Collections.emptySet();
       }
     }
 
-    matches = new HashSet<>(matches);  // Make a copy as otherwise retainAll below will modify the beanDefinitions map
+    Set<Injectable> matches = new HashSet<>(injectablesByAnnotation.get(null));  // Make a copy as otherwise retainAll below will modify the map
 
     for(Annotation qualifier : key.getQualifiers()) {
-      Set<Injectable> qualifierMatches = beanDefinitions.get(qualifier);
+      Set<Injectable> qualifierMatches = injectablesByAnnotation.get(qualifier);
 
       if(qualifierMatches == null) {
         return Collections.emptySet();
@@ -123,11 +119,22 @@ public class InjectableStore {
 
     classBindings.put(concreteClass, bindings);
 
-    for(Annotation annotation : qualifiers) {
-      register(annotation, injectable);
-    }
     for(Class<?> cls : getSuperClassesAndInterfaces(concreteClass)) {
-      register(cls, injectable);
+      register(cls, null, injectable);
+
+      for(Annotation annotation : qualifiers) {
+        register(cls, annotation, injectable);
+      }
+    }
+
+    for(Annotation outerAnnotation : qualifiers) {
+      Class<? extends Annotation> annotationType = outerAnnotation.annotationType();
+
+      register(annotationType, null, injectable);
+
+      for(Annotation annotation : qualifiers) {
+        register(annotationType, annotation, injectable);
+      }
     }
 
     return bindings;
@@ -137,7 +144,10 @@ public class InjectableStore {
     if(injectable == null) {
       throw new IllegalArgumentException("parameter 'injectable' cannot be null");
     }
-    if(!beanDefinitions.get(Object.class).contains(injectable)) {
+
+    Map<Annotation, Set<Injectable>> injectablesByAnnotation = beanDefinitions.get(Object.class);
+
+    if(injectablesByAnnotation == null || !injectablesByAnnotation.get(null).contains(injectable)) {
       throw new NoSuchInjectableException(injectable);
     }
 
@@ -146,11 +156,22 @@ public class InjectableStore {
 
     policy.checkRemoval(this, injectable, qualifiers, classBindings.get(injectable.getInjectableClass()));
 
-    for(Annotation annotation : qualifiers) {
-      removeInternal(annotation, injectable);
-    }
     for(Class<?> cls : getSuperClassesAndInterfaces(concreteClass)) {
-      removeInternal(cls, injectable);
+      removeInternal(cls, null, injectable);
+
+      for(Annotation annotation : qualifiers) {
+        removeInternal(cls, annotation, injectable);
+      }
+    }
+
+    for(Annotation outerAnnotation : qualifiers) {
+      Class<? extends Annotation> annotationType = outerAnnotation.annotationType();
+
+      removeInternal(annotationType, null, injectable);
+
+      for(Annotation annotation : qualifiers) {
+        removeInternal(annotationType, annotation, injectable);
+      }
     }
 
     return classBindings.remove(concreteClass);
@@ -178,28 +199,45 @@ public class InjectableStore {
     return superClassesAndInterfaces;
   }
 
-  private void register(Object typeOrQualifier, Injectable injectable) {
-    Set<Injectable> values = beanDefinitions.get(typeOrQualifier);
+  private void register(Class<?> type, Annotation qualifier, Injectable injectable) {
+    Map<Annotation, Set<Injectable>> injectablesByAnnotation = beanDefinitions.get(type);
 
-    if(values == null) {
-      values = new HashSet<>();
-      beanDefinitions.put(typeOrQualifier, values);
+    if(injectablesByAnnotation == null) {
+      injectablesByAnnotation = new HashMap<>();
+      beanDefinitions.put(type, injectablesByAnnotation);
     }
 
-    if(!values.add(injectable)) {
-      throw new AssertionError("Map 'beanDefinitions' already contained: " + injectable + " for key: " + typeOrQualifier);
+    Set<Injectable> injectables = injectablesByAnnotation.get(qualifier);
+
+    if(injectables == null) {
+      injectables = new HashSet<>();
+      injectablesByAnnotation.put(qualifier, injectables);
+    }
+
+    if(!injectables.add(injectable)) {
+      throw new AssertionError("Map 'beanDefinitions' already contained: " + injectable + " for key: " + type + "->" + qualifier);
     }
   }
 
-  private void removeInternal(Object typeOrQualifier, Injectable injectable) {
-    Set<Injectable> values = beanDefinitions.get(typeOrQualifier);
+  private void removeInternal(Class<?> type, Annotation qualifier, Injectable injectable) {
+    Map<Annotation, Set<Injectable>> injectablesByAnnotation = beanDefinitions.get(type);
 
-    if(values == null || !values.remove(injectable)) {
-      throw new AssertionError("Map 'beanDefinitions' must contain: " + injectable + " for key: " + typeOrQualifier + " concreteClasses = " + values);
+    if(injectablesByAnnotation == null) {
+      throw new AssertionError("Map 'beanDefinitions' must contain: " + injectable + " for key: " + type);
     }
 
-    if(values.isEmpty()) {
-      beanDefinitions.remove(typeOrQualifier);
+    Set<Injectable> injectables = injectablesByAnnotation.get(qualifier);
+
+    if(injectables == null || !injectables.remove(injectable)) {
+      throw new AssertionError("Map 'beanDefinitions' must contain: " + injectable + " for key: " + type + "->" + qualifier + " injectables = " + injectables);
+    }
+
+    if(injectables.isEmpty()) {
+      injectablesByAnnotation.remove(qualifier);
+
+      if(injectablesByAnnotation.isEmpty()) {
+        beanDefinitions.remove(type);
+      }
     }
   }
 
