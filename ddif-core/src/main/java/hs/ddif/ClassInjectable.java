@@ -95,4 +95,9 @@ public class ClassInjectable implements Injectable {
 
     return injectableClass.equals(((ClassInjectable)obj).injectableClass);
   }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "[" + injectableClass + "]";
+  }
 }
