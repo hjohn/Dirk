@@ -1,6 +1,5 @@
 package hs.ddif;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +21,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
   private final Map<Key, Integer> referenceCounters = new HashMap<>();
 
   @Override
-  public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<Annotation> qualifiers, Map<AccessibleObject, Binding> bindings) {
+  public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings) {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
 
     if(!injectable.canBeInstantiated(bindings)) {
@@ -50,7 +49,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
   }
 
   @Override
-  public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<Annotation> qualifiers, Map<AccessibleObject, Binding> bindings) {
+  public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings) {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
   }
 
@@ -85,12 +84,12 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
     }
   }
 
-  private void ensureSingularDependenciesHold(Class<?> classOrInterface, Set<Annotation> qualifiers) {
-    Set<Set<Annotation>> qualifierSubSets = powerSet(qualifiers);
+  private void ensureSingularDependenciesHold(Class<?> classOrInterface, Set<AnnotationDescriptor> qualifiers) {
+    Set<Set<AnnotationDescriptor>> qualifierSubSets = powerSet(qualifiers);
 
     for(Class<?> cls : getSuperClassesAndInterfaces(classOrInterface)) {
-      for(Set<Annotation> qualifierSubSet : qualifierSubSets) {
-        Key key = new Key(qualifierSubSet, cls);
+      for(Set<AnnotationDescriptor> qualifierSubSet : qualifierSubSets) {
+        Key key = new Key(cls, qualifierSubSet);
 
         if(referenceCounters.containsKey(key)) {
           throw new ViolatesSingularDependencyException(classOrInterface, key, true);

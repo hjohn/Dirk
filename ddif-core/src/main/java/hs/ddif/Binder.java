@@ -30,13 +30,11 @@ public class Binder {
       Inject inject = field.getAnnotation(Inject.class);
 
       if(inject != null) {
-        Set<Annotation> qualifiers = extractQualifiers(field);
-
         if(Modifier.isFinal(field.getModifiers())) {
           throw new DependencyException("Cannot inject final fields: " + field + " in: " + injectableClass);
         }
 
-        bindings.put(field, createBinding(qualifiers, field.getGenericType()));
+        bindings.put(field, createBinding(field.getGenericType(), extractQualifiers(field)));
       }
     }
 
@@ -69,9 +67,9 @@ public class Binder {
       for(int i = 0; i < genericParameterTypes.length; i++) {
         Type type = genericParameterTypes[i];
 
-        Set<Annotation> qualifiers = extractQualifiers(parameterAnnotations[i]);
+        AnnotationDescriptor[] qualifiers = extractQualifiers(parameterAnnotations[i]);
 
-        Binding binding = createBinding(qualifiers, type);
+        Binding binding = createBinding(type, qualifiers);
 
         constructorBindings.add(binding);
         requiredKeys.addAll(Arrays.asList(binding.getRequiredKeys()));
@@ -117,17 +115,16 @@ public class Binder {
     throw new IllegalArgumentException("Unsupported type: " + type);
   }
 
-  private Binding createBinding(Set<Annotation> qualifiers, Type type) {
+  private Binding createBinding(Type type, final AnnotationDescriptor... qualifiers) {
     final Class<?> cls = determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
       final Class<?> genericType = determineClassFromType(getGenericType(type));
-      final Key key = new Key(qualifiers, genericType);
 
       return new Binding() {
         @Override
         public Object getValue(Injector injector) {
-          return injector.getInstances(key);
+          return injector.getInstances(genericType, (Object[])qualifiers);
         }
 
         @Override
@@ -138,7 +135,7 @@ public class Binder {
     }
     else if(Provider.class.isAssignableFrom(cls)) {
       final Type genericType = getGenericType(type);
-      final Binding binding = createBinding(qualifiers, genericType);
+      final Binding binding = createBinding(genericType, qualifiers);
 
       return new Binding() {
         @Override
@@ -160,12 +157,12 @@ public class Binder {
       };
     }
     else {
-      final Key key = new Key(qualifiers, cls);
+      final Key key = new Key(cls, qualifiers);
 
       return new Binding() {
         @Override
         public Object getValue(Injector injector) {
-          return injector.getInstance(key);
+          return injector.getInstance(cls, (Object[])qualifiers);
         }
 
         @Override
@@ -176,20 +173,20 @@ public class Binder {
     }
   }
 
-  private static Set<Annotation> extractQualifiers(Field field) {
+  private static AnnotationDescriptor[] extractQualifiers(Field field) {
     return extractQualifiers(field.getAnnotations());
   }
 
-  private static Set<Annotation> extractQualifiers(Annotation[] annotations) {
-    Set<Annotation> qualifiers = new HashSet<>();
+  private static AnnotationDescriptor[] extractQualifiers(Annotation[] annotations) {
+    Set<AnnotationDescriptor> qualifiers = new HashSet<>();
 
     for(Annotation annotation : annotations) {
       if(annotation.annotationType().getAnnotation(Qualifier.class) != null) {
-        qualifiers.add(annotation);
+        qualifiers.add(new AnnotationDescriptor(annotation));
       }
     }
 
-    return qualifiers;
+    return qualifiers.toArray(new AnnotationDescriptor[qualifiers.size()]);
   }
 
   public static Type getGenericType(Type type) {

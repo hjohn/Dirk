@@ -1,9 +1,7 @@
 package hs.ddif;
 
-import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.AccessibleObject;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -46,30 +44,46 @@ public class Injector {
   }
 
   /**
-   * Returns an instance of the given class matching the given qualifiers (if any) in
+   * Returns an instance of the given class matching the given criteria (if any) in
    * which all dependencies are injected.
    *
-   * @param cls the class of the instance required
-   * @param qualifiers optional list of qualifiers
-   * @return an instance of the given class matching the given qualifiers (if any)
+   * @param type the class of the instance required
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @return an instance of the given class matching the given criteria (if any)
    * @throws NoSuchBeanException when the given class is not registered with this Injector
    * @throws AmbigiousBeanException when the given class has multiple matching candidates
    */
-  public <T> T getInstance(Class<T> cls, Annotation... qualifiers) {
-    return getInstance(new Key(new HashSet<>(Arrays.asList(qualifiers)), cls));
+  public <T> T getInstance(Class<T> type, Object... criteria) {
+    Set<Injectable> injectables = store.resolve(type, criteria);
+
+    if(injectables.isEmpty()) {
+      throw new NoSuchBeanException(type, criteria);
+    }
+    if(injectables.size() > 1) {
+      throw new AmbigiousBeanException(injectables, type, criteria);
+    }
+
+    return getInstance(injectables.iterator().next());
   }
 
   /**
-   * Returns all instances of the given class matching the given qualifiers (if any) in
-   * which all dependencies are injected.  When there are no matching instances, an
-   * empty set is returned.
+   * Returns all instances of the given class matching the given criteria (if any) in
+   * which all dependencies are injected.  When there are no matches, an empty set is
+   * returned.
    *
    * @param cls the class of the instances required
-   * @param qualifiers optional list of qualifiers
-   * @return all instances of the given class matching the given qualifiers (if any)
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @return all instances of the given class matching the given criteria (if any)
    */
-  public <T> Set<T> getInstances(Class<T> cls, Annotation... qualifiers) {
-    return getInstances(new Key(new HashSet<>(Arrays.asList(qualifiers)), cls));
+  @SuppressWarnings("unchecked")
+  public <T> Set<T> getInstances(Class<T> type, Object... criteria) {
+    Set<T> instances = new HashSet<>();
+
+    for(Injectable injectable : store.resolve(type, criteria)) {
+      instances.add((T)getInstance(injectable));
+    }
+
+    return instances;
   }
 
   /**
@@ -81,19 +95,6 @@ public class Injector {
    */
   public boolean contains(Class<?> cls) {
     return store.contains(cls);
-  }
-
-  protected <T> T getInstance(Key key) {
-    Set<Injectable> injectables = store.resolve(key);
-
-    if(injectables.isEmpty()) {
-      throw new NoSuchBeanException(key);
-    }
-    if(injectables.size() > 1) {
-      throw new AmbigiousBeanException(key, injectables);
-    }
-
-    return getInstance(injectables.iterator().next());
   }
 
   protected <T> T getInstance(Injectable injectable) {
@@ -124,21 +125,6 @@ public class Injector {
     }
 
     return bean;
-  }
-
-  @SuppressWarnings("unchecked")
-  protected <T> Set<T> getInstances(Key key) {
-    Set<T> instances = new HashSet<>();
-
-    for(Injectable injectable : getInjectables(key)) {
-      instances.add((T)getInstance(injectable));
-    }
-
-    return instances;
-  }
-
-  protected Set<Injectable> getInjectables(Key key) {
-    return store.resolve(key);
   }
 
   /**

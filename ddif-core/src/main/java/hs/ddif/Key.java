@@ -1,24 +1,33 @@
 package hs.ddif;
 
-import java.lang.annotation.Annotation;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 public class Key {
-  private final Set<Annotation> qualifiers;
+  private final Set<AnnotationDescriptor> qualifiers;
   private final Class<?> type;
 
-  public Key(Set<Annotation> qualifiers, Class<?> type) {
-    this.qualifiers = qualifiers;
+  public Key(Class<?> type, Set<AnnotationDescriptor> qualifiers) {
+    if(type == null) {
+      throw new IllegalArgumentException("parameter 'type' cannot be null");
+    }
+
     this.type = type;
+    this.qualifiers = qualifiers;
   }
 
-  public Key(Class<?> type) {
-    this(Collections.<Annotation>emptySet(), type);
+  public Key(Class<?> type, AnnotationDescriptor... qualifiers) {
+    if(type == null) {
+      throw new IllegalArgumentException("parameter 'type' cannot be null");
+    }
+
+    this.type = type;
+    this.qualifiers = new HashSet<>(Arrays.asList(qualifiers));
   }
 
-  public Set<Annotation> getQualifiers() {
-    return qualifiers;
+  public AnnotationDescriptor[] getQualifiers() {
+    return qualifiers.toArray(new AnnotationDescriptor[qualifiers.size()]);
   }
 
   public Class<?> getType() {
@@ -31,14 +40,15 @@ public class Key {
 
     builder.append("[");
 
-    for(Annotation annotation : getQualifiers()) {
+    for(AnnotationDescriptor qualifier : getQualifiers()) {
       if(builder.length() > 1) {
         builder.append(" ");
       }
       builder.append("@");
-      builder.append(annotation.annotationType().getName());
+      builder.append(qualifier.annotationType().getName());
     }
 
+    builder.append(" ");
     builder.append(type.getName());
     builder.append("]");
 
@@ -49,19 +59,20 @@ public class Key {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((qualifiers == null) ? 0 : qualifiers.hashCode());
-    result = prime * result + ((type == null) ? 0 : type.hashCode());
+    result = prime * result + qualifiers.hashCode();
+    result = prime * result + type.hashCode();
     return result;
   }
 
   @Override
   public boolean equals(Object obj) {
-    if(this == obj)
+    if(this == obj) {
       return true;
-    if(obj == null)
+    }
+    if(obj == null || getClass() != obj.getClass()) {
       return false;
-    if(getClass() != obj.getClass())
-      return false;
+    }
+
     Key other = (Key)obj;
     if(qualifiers == null) {
       if(other.qualifiers != null)
@@ -77,7 +88,4 @@ public class Key {
       return false;
     return true;
   }
-
-
-
 }

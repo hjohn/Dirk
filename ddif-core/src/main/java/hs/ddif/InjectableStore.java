@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,10 +24,10 @@ import javax.inject.Qualifier;
 public class InjectableStore {
 
   /**
-   * Map containing annotations mapping to sets of injectables which match one specific
+   * Map containing annotation descriptor mappings to sets of injectables which match one specific
    * type or qualifier class.<p>
    */
-  private final Map<Class<?>, Map<Annotation, Set<Injectable>>> beanDefinitions = new HashMap<>();
+  private final Map<Class<?>, Map<AnnotationDescriptor, Set<Injectable>>> injectablesByDescriptorByType = new HashMap<>();
 
   /**
    * Map containing bindings for each class.  Bindings can resolved to a value that can
@@ -36,7 +37,7 @@ public class InjectableStore {
    *
    * The key is always a concrete class.
    */
-  private final Map<Class<?>, Map<AccessibleObject, Binding>> classBindings = new HashMap<>();
+  private final Map<Class<?>, Map<AccessibleObject, Binding>> bindingsByClass = new HashMap<>();
 
   private final Binder binder = new Binder();
   private final StoreConsistencyPolicy policy;
@@ -56,48 +57,103 @@ public class InjectableStore {
   }
 
   public Map<AccessibleObject, Binding> getBindings(Class<?> cls) {
-    return Collections.unmodifiableMap(classBindings.get(cls));
+    return Collections.unmodifiableMap(bindingsByClass.get(cls));
   }
 
   public Set<Class<?>> getInjectables() {
-    return Collections.unmodifiableSet(classBindings.keySet());
+    return Collections.unmodifiableSet(bindingsByClass.keySet());
   }
 
-  public Set<Injectable> resolve(Key key) {
-    Map<Annotation, Set<Injectable>> injectablesByAnnotation = beanDefinitions.get(key.getType());
+  Set<Injectable> resolve(Key key) {
+    return resolve(key.getType(), (Object[])key.getQualifiers());
+  }
 
-    if(injectablesByAnnotation == null) {
+  /**
+   * Looks up Injectables by type and by the given criteria.  The empty set is returned if
+   * there were no matches.  Supported criteria are:
+   * <ul>
+   * <li>{@link Class} to match by implemented interface or by presence of an annotation, for
+   *     example the interface <code>List.class</code> or the annotation
+   *     <code>Singleton.class</code></li>
+   * <li>{@link Annotation} or {@link AnnotationDescriptor} to match by an annotation,
+   *     including matching all its values</li>
+   * <li>{@link Matcher} to match by custom criteria provided by a {@link Matcher}
+   *     implementation</li>
+   * </ul>
+   * @param type the type of the Injectables to look up
+   * @param criteria the criteria the Injectables must match
+   * @return a set of Injectables matching the given type and critera
+   */
+  public Set<Injectable> resolve(Class<?> type, Object... criteria) {
+    Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
+
+    if(injectablesByDescriptor == null) {
 
       /*
        * Attempt auto discovery
        */
 
-      discoveryPolicy.discoverType(this, key.getType());
+      discoveryPolicy.discoverType(this, type);
 
-      injectablesByAnnotation = beanDefinitions.get(key.getType());  // Check again for matches after discovery
+      injectablesByDescriptor = injectablesByDescriptorByType.get(type);  // Check again for matches after discovery
 
-      if(injectablesByAnnotation == null) {
+      if(injectablesByDescriptor == null) {
         return Collections.emptySet();
       }
     }
 
-    Set<Injectable> matches = new HashSet<>(injectablesByAnnotation.get(null));  // Make a copy as otherwise retainAll below will modify the map
+    Set<Injectable> matches = new HashSet<>(injectablesByDescriptor.get(null));  // Make a copy as otherwise retainAll below will modify the map
 
-    for(Annotation qualifier : key.getQualifiers()) {
-      Set<Injectable> qualifierMatches = injectablesByAnnotation.get(qualifier);
-
-      if(qualifierMatches == null) {
-        return Collections.emptySet();
+    for(Object criterion : criteria) {
+      if(matches.isEmpty()) {
+        break;
       }
 
-      matches.retainAll(qualifierMatches);
+      if(criterion instanceof Matcher) {
+        Matcher matcher = (Matcher)criterion;
+
+        for(Iterator<Injectable> iterator = matches.iterator(); iterator.hasNext();) {
+          Injectable injectable = iterator.next();
+
+          if(!matcher.matches(injectable.getInjectableClass())) {
+            iterator.remove();
+          }
+        }
+      }
+      else {
+        Set<Injectable> qualifierMatches = null;
+
+        if(criterion instanceof Class) {
+          Map<AnnotationDescriptor, Set<Injectable>> map = injectablesByDescriptorByType.get(criterion);
+
+          if(map != null) {
+            qualifierMatches = map.get(null);
+          }
+        }
+        else if(criterion instanceof Annotation) {
+          qualifierMatches = injectablesByDescriptor.get(new AnnotationDescriptor((Annotation)criterion));
+        }
+        else if(criterion instanceof AnnotationDescriptor) {
+          qualifierMatches = injectablesByDescriptor.get(criterion);
+        }
+        else {
+          throw new IllegalArgumentException("Unsupported criterion type, must be Class, Annotation or Matcher: " + criterion);
+        }
+
+        if(qualifierMatches != null) {
+          matches.retainAll(qualifierMatches);
+        }
+        else {
+          matches.clear();
+        }
+      }
     }
 
     return matches;
   }
 
   public boolean contains(Class<?> concreteClass) {
-    return classBindings.containsKey(concreteClass);
+    return bindingsByClass.containsKey(concreteClass);
   }
 
   public Map<AccessibleObject, Binding> put(Injectable injectable) {
@@ -107,33 +163,33 @@ public class InjectableStore {
 
     Class<?> concreteClass = injectable.getInjectableClass();
 
-    if(classBindings.containsKey(concreteClass)) {
+    if(bindingsByClass.containsKey(concreteClass)) {
       throw new DuplicateBeanException(concreteClass);
     }
 
-    Set<Annotation> qualifiers = extractQualifiers(concreteClass);
+    Set<AnnotationDescriptor> qualifiers = extractQualifiers(concreteClass);
     Map<AccessibleObject, Binding> bindings = binder.resolve(concreteClass);
 
     discoveryPolicy.discoverDependencies(this, injectable, bindings);
     policy.checkAddition(this, injectable, qualifiers, bindings);
 
-    classBindings.put(concreteClass, bindings);
+    bindingsByClass.put(concreteClass, bindings);
 
     for(Class<?> cls : getSuperClassesAndInterfaces(concreteClass)) {
       register(cls, null, injectable);
 
-      for(Annotation annotation : qualifiers) {
-        register(cls, annotation, injectable);
+      for(AnnotationDescriptor qualifier : qualifiers) {
+        register(cls, qualifier, injectable);
       }
     }
 
-    for(Annotation outerAnnotation : qualifiers) {
-      Class<? extends Annotation> annotationType = outerAnnotation.annotationType();
+    for(AnnotationDescriptor outerQualifier : qualifiers) {
+      Class<? extends Annotation> annotationType = outerQualifier.annotationType();
 
       register(annotationType, null, injectable);
 
-      for(Annotation annotation : qualifiers) {
-        register(annotationType, annotation, injectable);
+      for(AnnotationDescriptor qualifier : qualifiers) {
+        register(annotationType, qualifier, injectable);
       }
     }
 
@@ -145,36 +201,36 @@ public class InjectableStore {
       throw new IllegalArgumentException("parameter 'injectable' cannot be null");
     }
 
-    Map<Annotation, Set<Injectable>> injectablesByAnnotation = beanDefinitions.get(Object.class);
+    Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(Object.class);
 
-    if(injectablesByAnnotation == null || !injectablesByAnnotation.get(null).contains(injectable)) {
+    if(injectablesByDescriptor == null || !injectablesByDescriptor.get(null).contains(injectable)) {
       throw new NoSuchInjectableException(injectable);
     }
 
     Class<?> concreteClass = injectable.getInjectableClass();
-    Set<Annotation> qualifiers = extractQualifiers(concreteClass);  // TODO extractQualifiers might simply add ConcreteClass to the set?
+    Set<AnnotationDescriptor> qualifiers = extractQualifiers(concreteClass);  // TODO extractQualifiers might simply add ConcreteClass to the set?
 
-    policy.checkRemoval(this, injectable, qualifiers, classBindings.get(injectable.getInjectableClass()));
+    policy.checkRemoval(this, injectable, qualifiers, bindingsByClass.get(injectable.getInjectableClass()));
 
     for(Class<?> cls : getSuperClassesAndInterfaces(concreteClass)) {
       removeInternal(cls, null, injectable);
 
-      for(Annotation annotation : qualifiers) {
-        removeInternal(cls, annotation, injectable);
+      for(AnnotationDescriptor qualifier : qualifiers) {
+        removeInternal(cls, qualifier, injectable);
       }
     }
 
-    for(Annotation outerAnnotation : qualifiers) {
-      Class<? extends Annotation> annotationType = outerAnnotation.annotationType();
+    for(AnnotationDescriptor outerQualifier : qualifiers) {
+      Class<? extends Annotation> annotationType = outerQualifier.annotationType();
 
       removeInternal(annotationType, null, injectable);
 
-      for(Annotation annotation : qualifiers) {
-        removeInternal(annotationType, annotation, injectable);
+      for(AnnotationDescriptor qualifier : qualifiers) {
+        removeInternal(annotationType, qualifier, injectable);
       }
     }
 
-    return classBindings.remove(concreteClass);
+    return bindingsByClass.remove(concreteClass);
   }
 
   private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
@@ -199,19 +255,19 @@ public class InjectableStore {
     return superClassesAndInterfaces;
   }
 
-  private void register(Class<?> type, Annotation qualifier, Injectable injectable) {
-    Map<Annotation, Set<Injectable>> injectablesByAnnotation = beanDefinitions.get(type);
+  private void register(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {
+    Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
 
-    if(injectablesByAnnotation == null) {
-      injectablesByAnnotation = new HashMap<>();
-      beanDefinitions.put(type, injectablesByAnnotation);
+    if(injectablesByDescriptor == null) {
+      injectablesByDescriptor = new HashMap<>();
+      injectablesByDescriptorByType.put(type, injectablesByDescriptor);
     }
 
-    Set<Injectable> injectables = injectablesByAnnotation.get(qualifier);
+    Set<Injectable> injectables = injectablesByDescriptor.get(qualifier);
 
     if(injectables == null) {
       injectables = new HashSet<>();
-      injectablesByAnnotation.put(qualifier, injectables);
+      injectablesByDescriptor.put(qualifier, injectables);
     }
 
     if(!injectables.add(injectable)) {
@@ -219,38 +275,38 @@ public class InjectableStore {
     }
   }
 
-  private void removeInternal(Class<?> type, Annotation qualifier, Injectable injectable) {
-    Map<Annotation, Set<Injectable>> injectablesByAnnotation = beanDefinitions.get(type);
+  private void removeInternal(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {
+    Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
 
-    if(injectablesByAnnotation == null) {
+    if(injectablesByDescriptor == null) {
       throw new AssertionError("Map 'beanDefinitions' must contain: " + injectable + " for key: " + type);
     }
 
-    Set<Injectable> injectables = injectablesByAnnotation.get(qualifier);
+    Set<Injectable> injectables = injectablesByDescriptor.get(qualifier);
 
     if(injectables == null || !injectables.remove(injectable)) {
       throw new AssertionError("Map 'beanDefinitions' must contain: " + injectable + " for key: " + type + "->" + qualifier + " injectables = " + injectables);
     }
 
     if(injectables.isEmpty()) {
-      injectablesByAnnotation.remove(qualifier);
+      injectablesByDescriptor.remove(qualifier);
 
-      if(injectablesByAnnotation.isEmpty()) {
-        beanDefinitions.remove(type);
+      if(injectablesByDescriptor.isEmpty()) {
+        injectablesByDescriptorByType.remove(type);
       }
     }
   }
 
-  private static Set<Annotation> extractQualifiers(Class<?> cls) {
+  private static Set<AnnotationDescriptor> extractQualifiers(Class<?> cls) {
     return extractQualifiers(cls.getAnnotations());
   }
 
-  private static Set<Annotation> extractQualifiers(Annotation[] annotations) {
-    Set<Annotation> qualifiers = new HashSet<>();
+  private static Set<AnnotationDescriptor> extractQualifiers(Annotation[] annotations) {
+    Set<AnnotationDescriptor> qualifiers = new HashSet<>();
 
     for(Annotation annotation : annotations) {
       if(annotation.annotationType().getAnnotation(Qualifier.class) != null) {
-        qualifiers.add(annotation);
+        qualifiers.add(new AnnotationDescriptor(annotation));
       }
     }
 
@@ -260,11 +316,11 @@ public class InjectableStore {
   static class NoStoreConsistencyPolicy implements StoreConsistencyPolicy {
 
     @Override
-    public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<Annotation> qualifiers, Map<AccessibleObject, Binding> bindings) {
+    public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings) {
     }
 
     @Override
-    public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<Annotation> qualifiers, Map<AccessibleObject, Binding> bindings) {
+    public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings) {
     }
   }
 

@@ -1,13 +1,11 @@
 package hs.ddif;
 
+import java.util.Arrays;
+
 public class NoSuchBeanException extends RuntimeException {
 
-  public NoSuchBeanException(Key key) {
-    super(key + " not found");
-  }
-
-  public NoSuchBeanException(Class<?> concreteClass) {
-    super(concreteClass + " not found");
+  public NoSuchBeanException(Class<?> concreteClass, Object... criteria) {
+    super(concreteClass + (criteria.length > 0 ? " matching criteria " + Arrays.toString(criteria) : "") + " not found");
   }
 
 }
