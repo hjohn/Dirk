@@ -133,6 +133,21 @@ public class Binder {
         }
       };
     }
+    else if(List.class.isAssignableFrom(cls)) {
+      final Class<?> genericType = determineClassFromType(getGenericType(type));
+
+      return new Binding() {
+        @Override
+        public Object getValue(Injector injector) {
+          return new ArrayList<>(injector.getInstances(genericType, (Object[])qualifiers));
+        }
+
+        @Override
+        public Key[] getRequiredKeys() {
+          return NO_REQUIRED_KEYS;
+        }
+      };
+    }
     else if(Provider.class.isAssignableFrom(cls)) {
       final Type genericType = getGenericType(type);
       final Binding binding = createBinding(genericType, qualifiers);
