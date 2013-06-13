@@ -1,6 +1,7 @@
 package hs.ddif;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -23,7 +24,7 @@ public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy {
 
   @Override
   public void discoverType(InjectableStore injectableStore, Class<?> type) {
-    if(!type.isInterface()) {
+    if(!type.isInterface() && !Modifier.isAbstract(type.getModifiers())) {
       try {
         injectableStore.put(new ClassInjectable(type));
       }
