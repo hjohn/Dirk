@@ -48,7 +48,9 @@ public class Key {
       builder.append(qualifier.annotationType().getName());
     }
 
-    builder.append(" ");
+    if(builder.length() > 1) {
+      builder.append(" ");
+    }
     builder.append(type.getName());
     builder.append("]");
 
@@ -74,18 +76,24 @@ public class Key {
     }
 
     Key other = (Key)obj;
+
     if(qualifiers == null) {
-      if(other.qualifiers != null)
+      if(other.qualifiers != null) {
         return false;
+      }
     }
-    else if(!qualifiers.equals(other.qualifiers))
+    else if(!qualifiers.equals(other.qualifiers)) {
       return false;
+    }
     if(type == null) {
-      if(other.type != null)
+      if(other.type != null) {
         return false;
+      }
     }
-    else if(!type.equals(other.type))
+    else if(!type.equals(other.type)) {
       return false;
+    }
+
     return true;
   }
 }
