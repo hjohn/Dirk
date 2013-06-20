@@ -3,6 +3,7 @@ package hs.ddif;
 import java.io.IOException;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -104,10 +105,11 @@ public class PluginManager {
 
       for(Binding binding : bindings.values()) {
         for(Key key : binding.getRequiredKeys()) {
-          Class<?> type = key.getType();
+          Type type = key.getType();
+          Class<?> typeClass = Binder.determineClassFromType(type);
 
-          if(!type.isInterface() && !Modifier.isAbstract(type.getModifiers())) {
-            putInStore(store, type);
+          if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
+            putInStore(store, typeClass);
           }
         }
       }

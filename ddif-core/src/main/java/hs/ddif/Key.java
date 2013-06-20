@@ -1,14 +1,15 @@
 package hs.ddif;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 public class Key {
   private final Set<AnnotationDescriptor> qualifiers;
-  private final Class<?> type;
+  private final Type type;
 
-  public Key(Class<?> type, Set<AnnotationDescriptor> qualifiers) {
+  public Key(Type type, Set<AnnotationDescriptor> qualifiers) {
     if(type == null) {
       throw new IllegalArgumentException("parameter 'type' cannot be null");
     }
@@ -17,7 +18,7 @@ public class Key {
     this.qualifiers = qualifiers;
   }
 
-  public Key(Class<?> type, AnnotationDescriptor... qualifiers) {
+  public Key(Type type, AnnotationDescriptor... qualifiers) {
     if(type == null) {
       throw new IllegalArgumentException("parameter 'type' cannot be null");
     }
@@ -30,7 +31,7 @@ public class Key {
     return qualifiers.toArray(new AnnotationDescriptor[qualifiers.size()]);
   }
 
-  public Class<?> getType() {
+  public Type getType() {
     return type;
   }
 
@@ -51,7 +52,7 @@ public class Key {
     if(builder.length() > 1) {
       builder.append(" ");
     }
-    builder.append(type.getName());
+    builder.append(type);
     builder.append("]");
 
     return builder.toString();

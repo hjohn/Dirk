@@ -2,6 +2,7 @@ package hs.ddif;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class InjectableStore {
    * Map containing annotation descriptor mappings to sets of injectables which match one specific
    * type or qualifier class.<p>
    */
-  private final Map<Class<?>, Map<AnnotationDescriptor, Set<Injectable>>> injectablesByDescriptorByType = new HashMap<>();
+  private final Map<Type, Map<AnnotationDescriptor, Set<Injectable>>> injectablesByDescriptorByType = new HashMap<>();
 
   /**
    * Map containing bindings for each class.  Bindings can resolved to a value that can
@@ -84,7 +85,7 @@ public class InjectableStore {
    * @param criteria the criteria the Injectables must match
    * @return a set of Injectables matching the given type and critera
    */
-  public Set<Injectable> resolve(Class<?> type, Object... criteria) {
+  public Set<Injectable> resolve(Type type, Object... criteria) {
     Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
 
     if(injectablesByDescriptor == null) {
@@ -175,11 +176,11 @@ public class InjectableStore {
 
     bindingsByClass.put(concreteClass, bindings);
 
-    for(Class<?> cls : getSuperClassesAndInterfaces(concreteClass)) {
-      register(cls, null, injectable);
+    for(Type type : getSuperClassesAndInterfaces(concreteClass)) {
+      register(type, null, injectable);
 
       for(AnnotationDescriptor qualifier : qualifiers) {
-        register(cls, qualifier, injectable);
+        register(type, qualifier, injectable);
       }
     }
 
@@ -212,11 +213,11 @@ public class InjectableStore {
 
     policy.checkRemoval(this, injectable, qualifiers, bindingsByClass.get(injectable.getInjectableClass()));
 
-    for(Class<?> cls : getSuperClassesAndInterfaces(concreteClass)) {
-      removeInternal(cls, null, injectable);
+    for(Type type : getSuperClassesAndInterfaces(concreteClass)) {
+      removeInternal(type, null, injectable);
 
       for(AnnotationDescriptor qualifier : qualifiers) {
-        removeInternal(cls, qualifier, injectable);
+        removeInternal(type, qualifier, injectable);
       }
     }
 
@@ -233,29 +234,31 @@ public class InjectableStore {
     return bindingsByClass.remove(concreteClass);
   }
 
-  private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
-    List<Class<?>> toScan = new ArrayList<>();
-    Set<Class<?>> superClassesAndInterfaces = new HashSet<>();
+  private static Set<Type> getSuperClassesAndInterfaces(Class<?> cls) {
+    List<Type> toScan = new ArrayList<>();
+    Set<Type> superClassesAndInterfaces = new HashSet<>();
 
     toScan.add(cls);
 
     while(!toScan.isEmpty()) {
-      Class<?> scanClass = toScan.remove(toScan.size() - 1);
-      superClassesAndInterfaces.add(scanClass);
+      Type scanClassType = toScan.remove(toScan.size() - 1);
+      superClassesAndInterfaces.add(scanClassType);
 
-      for(Class<?> iface : scanClass.getInterfaces()) {
+      Class<?> scanClass = Binder.determineClassFromType(scanClassType);
+
+      for(Type iface : scanClass.getGenericInterfaces()) {
         toScan.add(iface);
       }
 
-      if(scanClass.getSuperclass() != null) {
-        toScan.add(scanClass.getSuperclass());
+      if(scanClass.getGenericSuperclass() != null) {
+        toScan.add(scanClass.getGenericSuperclass());
       }
     }
 
     return superClassesAndInterfaces;
   }
 
-  private void register(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {
+  private void register(Type type, AnnotationDescriptor qualifier, Injectable injectable) {
     Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
 
     if(injectablesByDescriptor == null) {
@@ -275,7 +278,7 @@ public class InjectableStore {
     }
   }
 
-  private void removeInternal(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {
+  private void removeInternal(Type type, AnnotationDescriptor qualifier, Injectable injectable) {
     Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
 
     if(injectablesByDescriptor == null) {
@@ -327,7 +330,7 @@ public class InjectableStore {
   static class NoDiscoveryPolicy implements DiscoveryPolicy {
 
     @Override
-    public void discoverType(InjectableStore injectableStore, Class<?> type) {
+    public void discoverType(InjectableStore injectableStore, Type type) {
     }
 
     @Override

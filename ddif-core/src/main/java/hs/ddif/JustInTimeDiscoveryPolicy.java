@@ -2,6 +2,7 @@ package hs.ddif;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -23,10 +24,12 @@ import javax.inject.Inject;
 public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy {
 
   @Override
-  public void discoverType(InjectableStore injectableStore, Class<?> type) {
-    if(!type.isInterface() && !Modifier.isAbstract(type.getModifiers())) {
+  public void discoverType(InjectableStore injectableStore, Type type) {
+    Class<?> typeClass = Binder.determineClassFromType(type);
+
+    if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
       try {
-        injectableStore.put(new ClassInjectable(type));
+        injectableStore.put(new ClassInjectable(typeClass));
       }
       catch(DiscoveryException e) {
         // discovery halted, the type does not have a suitable constructor or has undiscoverable dependencies

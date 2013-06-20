@@ -2,6 +2,7 @@ package hs.ddif;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -10,9 +11,7 @@ import java.util.WeakHashMap;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-// TODO Named without value is treated differently ... some use field name, others default to empty?
-// TODO What about generics support?  @Inject Shop<Book> --> how would that work?
-// TODO See if there really is a point in keeping the Interfaces/Superclass chain seperate from Annotation based qualifiers
+// TODO JSR-330: Named without value is treated differently ... some use field name, others default to empty?
 // TODO Binder class is pretty much static, and also has several public statics being used -- it is more of a utility class, consider refactoring
 public class Injector {
 
@@ -44,16 +43,16 @@ public class Injector {
   }
 
   /**
-   * Returns an instance of the given class matching the given criteria (if any) in
+   * Returns an instance of the given type matching the given criteria (if any) in
    * which all dependencies are injected.
    *
-   * @param type the class of the instance required
+   * @param type the type of the instance required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return an instance of the given class matching the given criteria (if any)
    * @throws NoSuchBeanException when the given class is not registered with this Injector
    * @throws AmbigiousBeanException when the given class has multiple matching candidates
    */
-  public <T> T getInstance(Class<T> type, Object... criteria) {
+  public <T> T getInstance(Type type, Object... criteria) {
     Set<Injectable> injectables = store.resolve(type, criteria);
 
     if(injectables.isEmpty()) {
@@ -67,6 +66,40 @@ public class Injector {
   }
 
   /**
+   * Returns an instance of the given class matching the given criteria (if any) in
+   * which all dependencies are injected.
+   *
+   * @param type the class of the instance required
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @return an instance of the given class matching the given criteria (if any)
+   * @throws NoSuchBeanException when the given class is not registered with this Injector
+   * @throws AmbigiousBeanException when the given class has multiple matching candidates
+   */
+  public <T> T getInstance(Class<T> cls, Object... criteria) {
+    return getInstance((Type)cls, criteria);
+  }
+
+  /**
+   * Returns all instances of the given type matching the given criteria (if any) in
+   * which all dependencies are injected.  When there are no matches, an empty set is
+   * returned.
+   *
+   * @param cls the type of the instances required
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @return all instances of the given class matching the given criteria (if any)
+   */
+  @SuppressWarnings("unchecked")
+  public <T> Set<T> getInstances(Type type, Object... criteria) {
+    Set<T> instances = new HashSet<>();
+
+    for(Injectable injectable : store.resolve(type, criteria)) {
+      instances.add((T)getInstance(injectable));
+    }
+
+    return instances;
+  }
+
+  /**
    * Returns all instances of the given class matching the given criteria (if any) in
    * which all dependencies are injected.  When there are no matches, an empty set is
    * returned.
@@ -75,15 +108,8 @@ public class Injector {
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return all instances of the given class matching the given criteria (if any)
    */
-  @SuppressWarnings("unchecked")
   public <T> Set<T> getInstances(Class<T> type, Object... criteria) {
-    Set<T> instances = new HashSet<>();
-
-    for(Injectable injectable : store.resolve(type, criteria)) {
-      instances.add((T)getInstance(injectable));
-    }
-
-    return instances;
+    return getInstances((Type)type, criteria);
   }
 
   /**

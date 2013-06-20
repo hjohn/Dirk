@@ -1,6 +1,7 @@
 package hs.ddif;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
@@ -15,7 +16,7 @@ public interface DiscoveryPolicy {
    * @param injectableStore an {@link InjectableStore}
    * @param type the type which was not found by the store
    */
-  void discoverType(InjectableStore injectableStore, Class<?> type);
+  void discoverType(InjectableStore injectableStore, Type type);
 
   /**
    * Called when an {@link Injectable} object's dependencies may need to be

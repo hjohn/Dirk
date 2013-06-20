@@ -115,16 +115,16 @@ public class Binder {
     throw new IllegalArgumentException("Unsupported type: " + type);
   }
 
-  private Binding createBinding(Type type, final AnnotationDescriptor... qualifiers) {
+  private Binding createBinding(final Type type, final AnnotationDescriptor... qualifiers) {
     final Class<?> cls = determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
-      final Class<?> genericType = determineClassFromType(getGenericType(type));
+      final Type elementType = getGenericType(type);
 
       return new Binding() {
         @Override
         public Object getValue(Injector injector) {
-          return injector.getInstances(genericType, (Object[])qualifiers);
+          return injector.getInstances(elementType, (Object[])qualifiers);
         }
 
         @Override
@@ -134,12 +134,12 @@ public class Binder {
       };
     }
     else if(List.class.isAssignableFrom(cls)) {
-      final Class<?> genericType = determineClassFromType(getGenericType(type));
+      final Type elementType = getGenericType(type);
 
       return new Binding() {
         @Override
         public Object getValue(Injector injector) {
-          return new ArrayList<>(injector.getInstances(genericType, (Object[])qualifiers));
+          return new ArrayList<>(injector.getInstances(elementType, (Object[])qualifiers));
         }
 
         @Override
@@ -172,17 +172,22 @@ public class Binder {
       };
     }
     else {
-      final Key key = new Key(cls, qualifiers);
+      final Key key = new Key(type, qualifiers);
 
       return new Binding() {
         @Override
         public Object getValue(Injector injector) {
-          return injector.getInstance(cls, (Object[])qualifiers);
+          return injector.getInstance(type, (Object[])qualifiers);
         }
 
         @Override
         public Key[] getRequiredKeys() {
           return new Key[] {key};
+        }
+
+        @Override
+        public String toString() {
+          return "DirectBinding[cls=" + cls + "; requiredKeys=" + key + "]";
         }
       };
     }

@@ -70,6 +70,7 @@ Features
 * Just-in-time discovery of dependencies
 * Jars can be scanned for injection candidates to be included in an injector
 * Allows multiple Qualifiers for injection candidates as well as injections
+* Supports injection of generic types
 
 Requirements
 ------------
@@ -167,7 +168,8 @@ Open issues
 * Exception messages probably need to be improved to be more clear
 * Injector is not thread-safe; it is still undecided if it should be thread-safe (which can affect its speed) or that external synchronisation is the solution
 * Circular dependencies are not supported (since the Injector checks dependencies when registering a class, it will never allow anything to be registered that has missing dependencies).  It is unclear if support for these is desired at all.
-* Only java.util.Set is currently supported for collection injection (but easy to extend)
+* Only java.util.Set and java.util.List are currently supported for collection injection (but easy to extend)
+* Collection injection conflicts with injecting classes that extends a collection interface
 
 BSD License
 -----------
