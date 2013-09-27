@@ -2,8 +2,10 @@ package hs.ddif;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +15,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Qualifier;
+
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Store which keeps track of injectable objects and of their bindings.  No effort
@@ -28,7 +32,7 @@ public class InjectableStore {
    * Map containing annotation descriptor mappings to sets of injectables which match one specific
    * type or qualifier class.<p>
    */
-  private final Map<Type, Map<AnnotationDescriptor, Set<Injectable>>> injectablesByDescriptorByType = new HashMap<>();
+  private final Map<Class<?>, Map<AnnotationDescriptor, Set<Injectable>>> injectablesByDescriptorByType = new HashMap<>();
 
   /**
    * Map containing bindings for each class.  Bindings can resolved to a value that can
@@ -66,7 +70,7 @@ public class InjectableStore {
   }
 
   Set<Injectable> resolve(Key key) {
-    return resolve(key.getType(), (Object[])key.getQualifiers());
+    return resolve(key.getType(), (Object[])key.getQualifiersAsArray());
   }
 
   /**
@@ -86,7 +90,8 @@ public class InjectableStore {
    * @return a set of Injectables matching the given type and critera
    */
   public Set<Injectable> resolve(Type type, Object... criteria) {
-    Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
+    Class<?> cls = Binder.determineClassFromType(type);
+    Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
 
     if(injectablesByDescriptor == null) {
 
@@ -96,7 +101,7 @@ public class InjectableStore {
 
       discoveryPolicy.discoverType(this, type);
 
-      injectablesByDescriptor = injectablesByDescriptorByType.get(type);  // Check again for matches after discovery
+      injectablesByDescriptor = injectablesByDescriptorByType.get(cls);  // Check again for matches after discovery
 
       if(injectablesByDescriptor == null) {
         return Collections.emptySet();
@@ -104,6 +109,8 @@ public class InjectableStore {
     }
 
     Set<Injectable> matches = new HashSet<>(injectablesByDescriptor.get(null));  // Make a copy as otherwise retainAll below will modify the map
+
+    filterByGenericType(type, matches);
 
     for(Object criterion : criteria) {
       if(matches.isEmpty()) {
@@ -164,6 +171,9 @@ public class InjectableStore {
 
     Class<?> concreteClass = injectable.getInjectableClass();
 
+    if(concreteClass.getTypeParameters().length > 0) {
+      throw new IllegalArgumentException(concreteClass + " has type parameters " + Arrays.toString(concreteClass.getTypeParameters()) + ": Injection candidates with type parameters are not supported.");
+    }
     if(bindingsByClass.containsKey(concreteClass)) {
       throw new DuplicateBeanException(concreteClass);
     }
@@ -176,21 +186,11 @@ public class InjectableStore {
 
     bindingsByClass.put(concreteClass, bindings);
 
-    for(Type type : getSuperClassesAndInterfaces(concreteClass)) {
+    for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
       register(type, null, injectable);
 
       for(AnnotationDescriptor qualifier : qualifiers) {
         register(type, qualifier, injectable);
-      }
-    }
-
-    for(AnnotationDescriptor outerQualifier : qualifiers) {
-      Class<? extends Annotation> annotationType = outerQualifier.annotationType();
-
-      register(annotationType, null, injectable);
-
-      for(AnnotationDescriptor qualifier : qualifiers) {
-        register(annotationType, qualifier, injectable);
       }
     }
 
@@ -213,7 +213,7 @@ public class InjectableStore {
 
     policy.checkRemoval(this, injectable, qualifiers, bindingsByClass.get(injectable.getInjectableClass()));
 
-    for(Type type : getSuperClassesAndInterfaces(concreteClass)) {
+    for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
       removeInternal(type, null, injectable);
 
       for(AnnotationDescriptor qualifier : qualifiers) {
@@ -221,44 +221,34 @@ public class InjectableStore {
       }
     }
 
-    for(AnnotationDescriptor outerQualifier : qualifiers) {
-      Class<? extends Annotation> annotationType = outerQualifier.annotationType();
-
-      removeInternal(annotationType, null, injectable);
-
-      for(AnnotationDescriptor qualifier : qualifiers) {
-        removeInternal(annotationType, qualifier, injectable);
-      }
-    }
-
     return bindingsByClass.remove(concreteClass);
   }
 
-  private static Set<Type> getSuperClassesAndInterfaces(Class<?> cls) {
-    List<Type> toScan = new ArrayList<>();
-    Set<Type> superClassesAndInterfaces = new HashSet<>();
+  private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
+    List<Class<?>> toScan = new ArrayList<>();
+    Set<Class<?>> superClassesAndInterfaces = new HashSet<>();
 
     toScan.add(cls);
 
     while(!toScan.isEmpty()) {
-      Type scanClassType = toScan.remove(toScan.size() - 1);
+      Class<?> scanClassType = toScan.remove(toScan.size() - 1);
       superClassesAndInterfaces.add(scanClassType);
 
       Class<?> scanClass = Binder.determineClassFromType(scanClassType);
 
-      for(Type iface : scanClass.getGenericInterfaces()) {
+      for(Class<?> iface : scanClass.getInterfaces()) {
         toScan.add(iface);
       }
 
-      if(scanClass.getGenericSuperclass() != null) {
-        toScan.add(scanClass.getGenericSuperclass());
+      if(scanClass.getSuperclass() != null) {
+        toScan.add(scanClass.getSuperclass());
       }
     }
 
     return superClassesAndInterfaces;
   }
 
-  private void register(Type type, AnnotationDescriptor qualifier, Injectable injectable) {
+  private void register(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {
     Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
 
     if(injectablesByDescriptor == null) {
@@ -278,7 +268,7 @@ public class InjectableStore {
     }
   }
 
-  private void removeInternal(Type type, AnnotationDescriptor qualifier, Injectable injectable) {
+  private void removeInternal(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {
     Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
 
     if(injectablesByDescriptor == null) {
@@ -314,6 +304,18 @@ public class InjectableStore {
     }
 
     return qualifiers;
+  }
+
+  private static void filterByGenericType(Type type, Set<Injectable> matches) {
+    if(type instanceof ParameterizedType) {
+      for(Iterator<Injectable> iterator = matches.iterator(); iterator.hasNext();) {
+        Injectable injectable = iterator.next();
+
+        if(!TypeUtils.isAssignable(injectable.getInjectableClass(), type)) {
+          iterator.remove();
+        }
+      }
+    }
   }
 
   static class NoStoreConsistencyPolicy implements StoreConsistencyPolicy {

@@ -1,12 +1,12 @@
 package hs.ddif;
 
 import java.lang.reflect.AccessibleObject;
-import java.util.ArrayList;
+import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Policy that makes sure the InjectableStore at all times contains
@@ -84,62 +84,13 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
     }
   }
 
-  private void ensureSingularDependenciesHold(Class<?> classOrInterface, Set<AnnotationDescriptor> qualifiers) {
-    Set<Set<AnnotationDescriptor>> qualifierSubSets = powerSet(qualifiers);
-
-    for(Class<?> cls : getSuperClassesAndInterfaces(classOrInterface)) {
-      for(Set<AnnotationDescriptor> qualifierSubSet : qualifierSubSets) {
-        Key key = new Key(cls, qualifierSubSet);
-
-        if(referenceCounters.containsKey(key)) {
-          throw new ViolatesSingularDependencyException(classOrInterface, key, true);
+  private void ensureSingularDependenciesHold(Type type, Set<AnnotationDescriptor> qualifiers) {
+    for(Key key : referenceCounters.keySet()) {
+      if(TypeUtils.isAssignable(type, key.getType())) {
+        if(qualifiers.containsAll(key.getQualifiers())) {
+          throw new ViolatesSingularDependencyException(type, key, true);
         }
       }
     }
-  }
-
-  private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
-    List<Class<?>> toScan = new ArrayList<>();
-    Set<Class<?>> superClassesAndInterfaces = new HashSet<>();
-
-    toScan.add(cls);
-
-    while(!toScan.isEmpty()) {
-      Class<?> scanClass = toScan.remove(toScan.size() - 1);
-      superClassesAndInterfaces.add(scanClass);
-
-      for(Class<?> iface : scanClass.getInterfaces()) {
-        toScan.add(iface);
-      }
-
-      if(scanClass.getSuperclass() != null) {
-        toScan.add(scanClass.getSuperclass());
-      }
-    }
-
-    return superClassesAndInterfaces;
-  }
-
-  private static <T> Set<Set<T>> powerSet(Set<T> originalSet) {
-    Set<Set<T>> sets = new HashSet<>();
-
-    if(originalSet.isEmpty()) {
-      sets.add(new HashSet<T>());
-      return sets;
-    }
-
-    List<T> list = new ArrayList<>(originalSet);
-    T head = list.get(0);
-    Set<T> rest = new HashSet<>(list.subList(1, list.size()));
-
-    for(Set<T> set : powerSet(rest)) {
-      Set<T> newSet = new HashSet<>();
-      newSet.add(head);
-      newSet.addAll(set);
-      sets.add(newSet);
-      sets.add(set);
-    }
-
-    return sets;
   }
 }

@@ -10,10 +10,15 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class InjectorTestGenerics {
   private Injector injector;
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void before() {
@@ -72,6 +77,18 @@ public class InjectorTestGenerics {
       add("b");
       add("c");
     }}, instance.convertToStringList("a,b,c"));
+  }
+
+  @Test
+  public void shouldNotViolateSingularDependencies() {
+    injector.register(StringToIntConverter.class);
+    injector.register(IntToStringConverter.class);
+    injector.register(StringToStringListConverter.class);
+    injector.register(InjectableWithConverters.class);
+
+    thrown.expect(ViolatesSingularDependencyException.class);
+
+    injector.remove(StringToIntConverter.class);
   }
 
   public static class InjectableWithConverters {

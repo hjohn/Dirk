@@ -2,6 +2,7 @@ package hs.ddif;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,7 +16,7 @@ public class Key {
     }
 
     this.type = type;
-    this.qualifiers = qualifiers;
+    this.qualifiers = Collections.unmodifiableSet(new HashSet<>(qualifiers));
   }
 
   public Key(Type type, AnnotationDescriptor... qualifiers) {
@@ -24,10 +25,14 @@ public class Key {
     }
 
     this.type = type;
-    this.qualifiers = new HashSet<>(Arrays.asList(qualifiers));
+    this.qualifiers = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(qualifiers)));
   }
 
-  public AnnotationDescriptor[] getQualifiers() {
+  public Set<AnnotationDescriptor> getQualifiers() {
+    return qualifiers;
+  }
+
+  public AnnotationDescriptor[] getQualifiersAsArray() {
     return qualifiers.toArray(new AnnotationDescriptor[qualifiers.size()]);
   }
 
@@ -41,7 +46,7 @@ public class Key {
 
     builder.append("[");
 
-    for(AnnotationDescriptor qualifier : getQualifiers()) {
+    for(AnnotationDescriptor qualifier : getQualifiersAsArray()) {
       if(builder.length() > 1) {
         builder.append(" ");
       }
