@@ -168,11 +168,11 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRegisteringDuplicate() {
-    injector.register(ArrayList.class);
+    injector.register(String.class);
 
     thrown.expect(DuplicateBeanException.class);
 
-    injector.register(ArrayList.class);
+    injector.register(String.class);
   }
 
   @Test(expected = IllegalArgumentException.class)
