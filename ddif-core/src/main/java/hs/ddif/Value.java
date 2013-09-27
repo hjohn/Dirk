@@ -16,6 +16,11 @@ public class Value {
     this.value = value;
   }
 
+  public Value(String key, boolean value) {
+    this.key = key;
+    this.value = value;
+  }
+
   public Value(String key, Class<?> value) {
     this.key = key;
     this.value = value;
