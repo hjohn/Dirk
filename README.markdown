@@ -20,7 +20,7 @@ the above class:
         private PaymentProcessor paymentProcessor;
     }
 
-This framework differs from most standard DI frameworks that dependencies can be
+This framework differs from most standard DI frameworks in that dependencies can be
 added and removed at runtime.  The used Injector will make sure that dependencies can
 be satisfied and will refuse to add or remove classes when it would result in broken
 dependencies.
@@ -140,7 +140,7 @@ the ``Provider`` any time they want:
 Registering every dependency manually (and in the correct order) can quickly become tedious.  In our above
 example, the ``BookShop`` class needed to be registered as well as its ``CreditCardPaymentProcessor`` dependency.
 We can however have the Injector discover these automatically, as long as the dependencies themselves are
-concrete classes that have a default constructor or a constructor with the ``@Inject`` annotation.
+concrete classes that have a default constructor or exactly one constructor with the ``@Inject`` annotation.
 
 In order to discover dependencies automatically, we have to create the Injector slightly differently:
 
@@ -156,20 +156,20 @@ by analyzing the ``BookShop`` class it sees that it can be instantiated with a C
 Injector then recursively analyzes the ``CreditCardPaymentProcessor`` class, and registers this class with
 itself as it noticed that it can be simply instantiated with a default constructor.
 
-Now the dependencies for ``BookShop`` can also be satisfied, the ``BookShop`` class is registered with the Injector
+Now that the dependencies for ``BookShop`` can also be satisfied, the ``BookShop`` class is registered with the Injector
 and an instance is returned.  
 
 Open issues
 -----------
 * No optional dependencies yet (JSR-330 does not support them, so it still has to be decided how those can be added without becoming incompatible)
 * Does not yet support the JSR-330 Scope annotation (although Singleton is supported)
-* Many Qualifiers on a single class (10+) will probably cause issues, somekind of limit needs to be enforced to prevent this or the issue needs to be addressed with a better solution
+* Many Qualifiers on a single class (10+) will probably cause issues, some kind of limit needs to be enforced to prevent this or the issue needs to be addressed with a better solution
 * No method injection support yet
 * Exception messages probably need to be improved to be more clear
 * Injector is not thread-safe; it is still undecided if it should be thread-safe (which can affect its speed) or that external synchronisation is the solution
 * Circular dependencies are not supported (since the Injector checks dependencies when registering a class, it will never allow anything to be registered that has missing dependencies).  It is unclear if support for these is desired at all.
 * Only java.util.Set and java.util.List are currently supported for collection injection (but easy to extend)
-* Collection injection conflicts with injecting classes that extends a collection interface
+* Collection injection conflicts with injecting classes that extend a collection interface
 
 BSD License
 -----------
