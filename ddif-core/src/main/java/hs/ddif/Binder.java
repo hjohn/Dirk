@@ -4,7 +4,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -30,73 +29,71 @@ public class Binder {
       Inject inject = field.getAnnotation(Inject.class);
 
       if(inject != null) {
-        if(Modifier.isFinal(field.getModifiers())) {
-          throw new DependencyException("Cannot inject final fields: " + field + " in: " + injectableClass);
-        }
-
         bindings.put(field, createBinding(field.getGenericType(), extractQualifiers(field)));
       }
     }
 
-    Constructor<?> suitableConstructor = null;
+    Constructor<?> emptyConstructor = null;
+    Constructor<?>[] constructors = injectableClass.getConstructors();
     boolean foundInjectableConstructor = false;
 
-    for(final Constructor<?> constructor : injectableClass.getConstructors()) {
+    for(final Constructor<?> constructor : constructors) {
       Inject inject = constructor.getAnnotation(Inject.class);
 
       if(constructor.getParameterTypes().length == 0) {
-        suitableConstructor = constructor;
+        emptyConstructor = constructor;
       }
-      if(inject != null) {
-        if(foundInjectableConstructor) {
-          throw new DependencyException("Only one constructor is allowed to be annoted with @Inject: " + injectableClass);
-        }
 
+      if(inject != null) {
         foundInjectableConstructor = true;
-        suitableConstructor = constructor;
+        bindings.put(constructor, createConstructorBinding(constructor));
       }
     }
 
-    if(suitableConstructor != null) {
-      Annotation[][] parameterAnnotations = suitableConstructor.getParameterAnnotations();
-      Type[] genericParameterTypes = suitableConstructor.getGenericParameterTypes();
-
-      final List<Binding> constructorBindings = new ArrayList<>();
-      final List<Key> requiredKeys = new ArrayList<>();
-
-      for(int i = 0; i < genericParameterTypes.length; i++) {
-        Type type = genericParameterTypes[i];
-
-        AnnotationDescriptor[] qualifiers = extractQualifiers(parameterAnnotations[i]);
-
-        Binding binding = createBinding(type, qualifiers);
-
-        constructorBindings.add(binding);
-        requiredKeys.addAll(Arrays.asList(binding.getRequiredKeys()));
-      }
-
-      bindings.put(suitableConstructor, new Binding() {
-        @Override
-        public Object getValue(Injector injector) {
-          Object[] values = new Object[constructorBindings.size()];
-
-          for(int i = 0; i < constructorBindings.size(); i++) {
-            Binding binding = constructorBindings.get(i);
-
-            values[i] = binding.getValue(injector);
-          }
-
-          return values;
-        }
-
-        @Override
-        public Key[] getRequiredKeys() {
-          return requiredKeys.toArray(new Key[requiredKeys.size()]);
-        }
-      });
+    if(!foundInjectableConstructor && emptyConstructor != null) {
+      bindings.put(emptyConstructor, createConstructorBinding(emptyConstructor));
     }
 
     return bindings;
+  }
+
+  private Binding createConstructorBinding(Constructor<?> constructor) {
+    Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
+    Type[] genericParameterTypes = constructor.getGenericParameterTypes();
+
+    final List<Binding> constructorBindings = new ArrayList<>();
+    final List<Key> requiredKeys = new ArrayList<>();
+
+    for(int i = 0; i < genericParameterTypes.length; i++) {
+      Type type = genericParameterTypes[i];
+
+      AnnotationDescriptor[] qualifiers = extractQualifiers(parameterAnnotations[i]);
+
+      Binding binding = createBinding(type, qualifiers);
+
+      constructorBindings.add(binding);
+      requiredKeys.addAll(Arrays.asList(binding.getRequiredKeys()));
+    }
+
+    return new Binding() {
+      @Override
+      public Object getValue(Injector injector) {
+        Object[] values = new Object[constructorBindings.size()];
+
+        for(int i = 0; i < constructorBindings.size(); i++) {
+          Binding binding = constructorBindings.get(i);
+
+          values[i] = binding.getValue(injector);
+        }
+
+        return values;
+      }
+
+      @Override
+      public Key[] getRequiredKeys() {
+        return requiredKeys.toArray(new Key[requiredKeys.size()]);
+      }
+    };
   }
 
   public static final Class<?> determineClassFromType(Type type) {

@@ -24,8 +24,8 @@ public class ClassInjectable implements Injectable {
   }
 
   @Override
-  public boolean canBeInstantiated(Map<AccessibleObject, Binding> bindings) {
-    return findConstructorEntry(bindings) != null;
+  public boolean needsInjection() {
+    return true;
   }
 
   private static Map.Entry<AccessibleObject, Binding> findConstructorEntry(Map<AccessibleObject, Binding> bindings) {

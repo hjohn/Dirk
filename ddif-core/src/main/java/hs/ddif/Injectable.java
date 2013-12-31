@@ -11,13 +11,12 @@ import java.util.Map;
 public interface Injectable {
 
   /**
-   * Checks whether this injectable can be instantiated.  Depending on
-   * the type of {@link Injectable} this may never fail.
+   * Returns whether or not this Injectable requires any form of injection
+   * (constructor, field or method injection).
    *
-   * @param bindings the bindings to check for possible ways to instantiate the injectable
-   * @return <code>true</code> if the injectable can be provided, otherwise <code>false</code>
+   * @return <code>true</code> if the injectable needs injection, otherwise <code>false</code>
    */
-  boolean canBeInstantiated(Map<AccessibleObject, Binding> bindings);
+  boolean needsInjection();
 
   /**
    * Returns the type of the resulting instance provided by this {@link Injectable}.

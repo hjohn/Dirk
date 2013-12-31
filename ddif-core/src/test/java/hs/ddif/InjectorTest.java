@@ -32,6 +32,8 @@ import hs.ddif.test.injectables.BigRedBean;
 import hs.ddif.test.injectables.ConstructorInjectionSample;
 import hs.ddif.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors;
 import hs.ddif.test.injectables.FieldInjectionSampleWithAnnotatedFinalField;
+import hs.ddif.test.injectables.SampleWithAnnotatedFinalFields;
+import hs.ddif.test.injectables.SampleWithMultipleAnnotatedConstructors;
 import hs.ddif.test.injectables.SimpleBean;
 import hs.ddif.test.injectables.SimpleChildBean;
 import hs.ddif.test.injectables.SimpleCollectionItemImpl1;
@@ -363,8 +365,8 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenFinalFieldAnnotatedWithInject() throws NoSuchFieldException, SecurityException {
-    thrown.expect(DependencyException.class);
-    thrown.expectMessage("Cannot inject final fields: " + FieldInjectionSampleWithAnnotatedFinalField.class.getDeclaredField("injectedValue") + " in: " + FieldInjectionSampleWithAnnotatedFinalField.class);
+    thrown.expect(BindingException.class);
+    thrown.expectMessage("Cannot inject final field: " + FieldInjectionSampleWithAnnotatedFinalField.class.getDeclaredField("injectedValue") + " in: " + FieldInjectionSampleWithAnnotatedFinalField.class);
 
     injector.register(FieldInjectionSampleWithAnnotatedFinalField.class);
   }
@@ -386,7 +388,7 @@ public class InjectorTest {
   @Test
   public void shouldThrowExceptionWhenMultipleConstructorsAnnotatedWithInject() {
     thrown.expect(DependencyException.class);
-    thrown.expectMessage("Only one constructor is allowed to be annoted with @Inject: " + ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
+    thrown.expectMessage("Multiple constructors found to be annotated with @Inject, but only one allowed: " + ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
 
     injector.register(ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
   }
@@ -457,5 +459,20 @@ public class InjectorTest {
     });
 
     injector.remove(String.class);
+  }
+
+  @Test
+  public void shouldRegisterInstance() {
+    injector.registerInstance(new String("hello there!"));
+  }
+
+  @Test
+  public void shouldRegisterInstanceEvenWithBadAnnotations() {
+    injector.registerInstance(new SampleWithMultipleAnnotatedConstructors());  // note, not a class, but an instantiated object!
+  }
+
+  @Test
+  public void shouldRegisterInstanceEvenWithAnnotatedFinalFields() {
+    injector.registerInstance(new SampleWithAnnotatedFinalFields());  // note, not a class, but an instantiated object!
   }
 }

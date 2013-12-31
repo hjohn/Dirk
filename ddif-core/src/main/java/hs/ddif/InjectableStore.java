@@ -27,6 +27,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * @param <T> type of objects the store holds
  */
 public class InjectableStore {
+  private static final Map<AccessibleObject, Binding> NO_BINDINGS = Collections.emptyMap();
 
   /**
    * Map containing annotation descriptor mappings to sets of injectables which match one specific
@@ -179,9 +180,8 @@ public class InjectableStore {
     }
 
     Set<AnnotationDescriptor> qualifiers = extractQualifiers(concreteClass);
-    Map<AccessibleObject, Binding> bindings = binder.resolve(concreteClass);
+    Map<AccessibleObject, Binding> bindings = injectable.needsInjection() ? binder.resolve(concreteClass) : NO_BINDINGS;
 
-    discoveryPolicy.discoverDependencies(this, injectable, bindings);
     policy.checkAddition(this, injectable, qualifiers, bindings);
 
     bindingsByClass.put(concreteClass, bindings);
@@ -319,7 +319,6 @@ public class InjectableStore {
   }
 
   static class NoStoreConsistencyPolicy implements StoreConsistencyPolicy {
-
     @Override
     public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings) {
     }
@@ -330,13 +329,8 @@ public class InjectableStore {
   }
 
   static class NoDiscoveryPolicy implements DiscoveryPolicy {
-
     @Override
     public void discoverType(InjectableStore injectableStore, Type type) {
-    }
-
-    @Override
-    public void discoverDependencies(InjectableStore injectableStore, Injectable injectable, Map<AccessibleObject, Binding> bindings) {
     }
   }
 }

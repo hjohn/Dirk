@@ -11,8 +11,8 @@ public class InstanceInjectable implements Injectable {
   }
 
   @Override
-  public boolean canBeInstantiated(Map<AccessibleObject, Binding> bindings) {
-    return true;
+  public boolean needsInjection() {
+    return false;
   }
 
   @Override
