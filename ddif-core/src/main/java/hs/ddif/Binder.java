@@ -169,12 +169,13 @@ public class Binder {
       };
     }
     else {
-      final Key key = new Key(type, qualifiers);
+      final Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
+      final Key key = new Key(finalType, qualifiers);
 
       return new Binding() {
         @Override
         public Object getValue(Injector injector) {
-          return injector.getInstance(type, (Object[])qualifiers);
+          return injector.getInstance(finalType, (Object[])qualifiers);
         }
 
         @Override
@@ -217,5 +218,18 @@ public class Binder {
     }
 
     throw new RuntimeException("Could not get generic type for: " + type);
+  }
+
+  private static final Map<Class<?>, Class<?>> WRAPPER_CLASS_BY_PRIMITIVE_CLASS = new HashMap<>();
+
+  static {
+    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(boolean.class, Boolean.class);
+    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(byte.class, Byte.class);
+    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(short.class, Short.class);
+    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(char.class, Character.class);
+    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(int.class, Integer.class);
+    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(long.class, Long.class);
+    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(float.class, Float.class);
+    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(double.class, Double.class);
   }
 }

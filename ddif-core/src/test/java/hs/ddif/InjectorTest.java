@@ -6,14 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import hs.ddif.AmbigiousBeanException;
-import hs.ddif.AmbigiousDependencyException;
-import hs.ddif.DependencyException;
-import hs.ddif.DuplicateBeanException;
-import hs.ddif.Injector;
-import hs.ddif.NoSuchBeanException;
-import hs.ddif.UnresolvedDependencyException;
-import hs.ddif.ViolatesSingularDependencyException;
 import hs.ddif.test.injectables.BeanWithBigInjection;
 import hs.ddif.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.test.injectables.BeanWithCollection;
@@ -47,6 +39,7 @@ import hs.ddif.test.injectables.UnregisteredParentBean;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.junit.Assert;
@@ -167,6 +160,20 @@ public class InjectorTest {
   /*
    * Injector#register tests
    */
+
+  @Test
+  public void shouldRegisterStringInstances() {
+    injector.registerInstance("a");
+    injector.registerInstance("b");
+    injector.registerInstance("c");
+    injector.registerInstance("d");
+  }
+
+  @Test
+  public void shouldRegisterSameStringInstancesWithDifferentQualifiers() {
+    injector.registerInstance("a", AnnotationDescriptor.describe(Named.class, new Value("value", "name-1")));
+    injector.registerInstance("a", AnnotationDescriptor.describe(Named.class, new Value("value", "name-2")));
+  }
 
   @Test
   public void shouldThrowExceptionWhenRegisteringDuplicate() {

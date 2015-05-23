@@ -61,7 +61,9 @@ public class InjectableStore {
   }
 
   public Map<AccessibleObject, Binding> getBindings(Class<?> cls) {
-    return Collections.unmodifiableMap(bindingsByClass.get(cls));
+    Map<AccessibleObject, Binding> bindings = bindingsByClass.get(cls);
+
+    return bindings == null ? NO_BINDINGS : Collections.unmodifiableMap(bindings);
   }
 
   public Set<Class<?>> getInjectables() {
@@ -160,7 +162,7 @@ public class InjectableStore {
   }
 
   public boolean contains(Class<?> concreteClass) {
-    return bindingsByClass.containsKey(concreteClass);
+    return injectablesByDescriptorByType.containsKey(concreteClass);
   }
 
   public Map<AccessibleObject, Binding> put(Injectable injectable) {
@@ -173,16 +175,27 @@ public class InjectableStore {
     if(concreteClass.getTypeParameters().length > 0) {
       throw new IllegalArgumentException(concreteClass + " has type parameters " + Arrays.toString(concreteClass.getTypeParameters()) + ": Injection candidates with type parameters are not supported.");
     }
-    if(bindingsByClass.containsKey(concreteClass)) {
-      throw new DuplicateBeanException(concreteClass, injectable);
-    }
 
     Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();
     Map<AccessibleObject, Binding> bindings = injectable.needsInjection() ? binder.resolve(concreteClass) : NO_BINDINGS;
 
     policy.checkAddition(this, injectable, qualifiers, bindings);
 
-    bindingsByClass.put(concreteClass, bindings);
+    for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
+      ensureRegistrationIsPossible(type, injectable);
+    }
+
+    /*
+     * Beyond this point, modifications are made to the store, nothing should go wrong or the store's state could become inconsistent.
+     */
+
+    if(injectable.needsInjection()) {
+      if(bindingsByClass.containsKey(concreteClass)) {
+        throw new DuplicateBeanException(concreteClass, injectable);
+      }
+
+      bindingsByClass.put(concreteClass, bindings);
+    }
 
     for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
       register(type, null, injectable);
@@ -211,6 +224,10 @@ public class InjectableStore {
 
     policy.checkRemoval(this, injectable, qualifiers, bindingsByClass.get(injectable.getInjectableClass()));
 
+    /*
+     * Beyond this point, modifications are made to the store, nothing should go wrong or the store's state could become inconsistent.
+     */
+
     for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
       removeInternal(type, null, injectable);
 
@@ -219,7 +236,7 @@ public class InjectableStore {
       }
     }
 
-    return bindingsByClass.remove(concreteClass);
+    return injectable.needsInjection() ? bindingsByClass.remove(concreteClass) : NO_BINDINGS;
   }
 
   private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
@@ -244,6 +261,22 @@ public class InjectableStore {
     }
 
     return superClassesAndInterfaces;
+  }
+
+  private void ensureRegistrationIsPossible(Class<?> type, Injectable injectable) {
+    Map<AnnotationDescriptor, Set<Injectable>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
+
+    if(injectablesByDescriptor == null) {
+      return;
+    }
+
+    Set<Injectable> injectables = injectablesByDescriptor.get(null);
+
+    if(injectables == null || !injectables.contains(injectable)) {
+      return;
+    }
+
+    throw new DuplicateBeanException(type, injectable);
   }
 
   private void register(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {

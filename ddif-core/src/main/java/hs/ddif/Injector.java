@@ -180,15 +180,16 @@ public class Injector {
    * classes, then this method will throw an exception.
    *
    * @param provider the provider to register with the Injector
+   * @param qualifiers the qualifiers for this provider
    * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
    * @throws UnresolvedDependencyException when one or more dependencies of the given provider cannot be resolved
    */
-  public void register(Provider<?> provider) {
-    register(new ProvidedInjectable(provider));
+  public void register(Provider<?> provider, AnnotationDescriptor... qualifiers) {
+    register(new ProvidedInjectable(provider, qualifiers));
   }
 
-  public void registerInstance(Object instance) {
-    register(new InstanceInjectable(instance));
+  public void registerInstance(Object instance, AnnotationDescriptor... qualifiers) {
+    register(new InstanceInjectable(instance, qualifiers));
   }
 
   private void register(Injectable injectable) {
