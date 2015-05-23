@@ -50,8 +50,7 @@ public class Key {
       if(builder.length() > 1) {
         builder.append(" ");
       }
-      builder.append("@");
-      builder.append(qualifier.annotationType().getName());
+      builder.append(qualifier);
     }
 
     if(builder.length() > 1) {

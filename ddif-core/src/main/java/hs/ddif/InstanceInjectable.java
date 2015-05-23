@@ -60,4 +60,9 @@ public class InstanceInjectable implements Injectable {
 
     return instance.equals(((InstanceInjectable)obj).instance) && descriptors.equals(((InstanceInjectable)obj).descriptors);
   }
+
+  @Override
+  public String toString() {
+    return "Injectable-Instance(" + instance.getClass() + " + " + descriptors + ")";
+  }
 }

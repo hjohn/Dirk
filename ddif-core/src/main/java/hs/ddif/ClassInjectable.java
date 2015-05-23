@@ -105,6 +105,6 @@ public class ClassInjectable implements Injectable {
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "[" + injectableClass + "]";
+    return "Injectable-Class(" + getInjectableClass() + ")";
   }
 }

@@ -45,7 +45,7 @@ public class AnnotationDescriptorTest {
           put("type", String.class);
         }},
         describeAsMap(Wierd.class, new Value("power", 15L), new Value("type", String.class)),
-        "[=hs.ddif.AnnotationDescriptorTest$Wierd, power=15, type=class java.lang.String]"
+        "@hs.ddif.AnnotationDescriptorTest$Wierd[power=15, type=class java.lang.String]"
       },
 
       {
@@ -56,7 +56,7 @@ public class AnnotationDescriptorTest {
           put("type", String.class);
         }},
         describeAsMap(Wierd.class, new Value("level", 5), new Value("power", 15L), new Value("type", String.class)),  // level=5 is default, gets automatically removed
-        "[=hs.ddif.AnnotationDescriptorTest$Wierd, power=15, type=class java.lang.String]"
+        "@hs.ddif.AnnotationDescriptorTest$Wierd[power=15, type=class java.lang.String]"
       },
 
       {
@@ -65,7 +65,7 @@ public class AnnotationDescriptorTest {
           put("", "hs.ddif.test.qualifiers.Big");
         }},
         describeAsMap(Big.class),
-        "[=hs.ddif.test.qualifiers.Big]"
+        "@hs.ddif.test.qualifiers.Big"
       },
 
       {
@@ -75,7 +75,7 @@ public class AnnotationDescriptorTest {
           put("value", "someName");
         }},
         describeAsMap(Named.class, new Value("value", "someName")),
-        "[=javax.inject.Named, value=someName]"
+        "@javax.inject.Named[value=someName]"
       },
 
       {
@@ -99,7 +99,7 @@ public class AnnotationDescriptorTest {
           describeAsMap(KeyValue.class, new Value("key", "a"), new Value("value", "1")),
           describeAsMap(KeyValue.class, new Value("key", "b"), new Value("value", "2"))
         })),
-        "[=hs.ddif.AnnotationDescriptorTest$Key, pairs={[=hs.ddif.AnnotationDescriptorTest$KeyValue, key=a, value=1], [=hs.ddif.AnnotationDescriptorTest$KeyValue, key=b, value=2]}]"
+        "@hs.ddif.AnnotationDescriptorTest$Key[pairs={@hs.ddif.AnnotationDescriptorTest$KeyValue[key=a, value=1], @hs.ddif.AnnotationDescriptorTest$KeyValue[key=b, value=2]}]"
       }
     };
 

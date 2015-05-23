@@ -55,6 +55,11 @@ public class AnnotationDescriptor {
     return description.equals(((AnnotationDescriptor)obj).description);
   }
 
+  @Override
+  public String toString() {
+    return description;
+  }
+
   public static Map<String, Object> describeAsMap(Class<? extends Annotation> annotation, Value... annotationValues) {
     Map<String, Object> map = new HashMap<>();
 
@@ -105,47 +110,49 @@ public class AnnotationDescriptor {
 
     Collections.sort(keys);
 
-    builder.append("[");
-    boolean firstMapItem = true;
-
     for(String key : keys) {
-      Object value = map.get(key);
+      if(!key.isEmpty()) {
+        Object value = map.get(key);
 
-      if(!firstMapItem) {
-        builder.append(", ");
-      }
-
-      if(value instanceof List) {
-        boolean firstItem = true;
-
-        builder.append(key).append("=").append("{");
-
-        for(Object obj : (List<?>)value) {
-          if(!firstItem) {
-            builder.append(", ");
-          }
-
-          if(obj instanceof Map) {
-            builder.append(mapToString((Map<String, Object>)obj));
-          }
-          else {
-            builder.append(obj);
-          }
-          firstItem = false;
+        if(builder.length() == 0) {
+          builder.append("[");
+        }
+        else {
+          builder.append(", ");
         }
 
-        builder.append("}");
-      }
-      else {
-        builder.append(key).append("=").append(value);
-      }
+        if(value instanceof List) {
+          boolean firstItem = true;
 
-      firstMapItem = false;
+          builder.append(key).append("=").append("{");
+
+          for(Object obj : (List<?>)value) {
+            if(!firstItem) {
+              builder.append(", ");
+            }
+
+            if(obj instanceof Map) {
+              builder.append(mapToString((Map<String, Object>)obj));
+            }
+            else {
+              builder.append(obj);
+            }
+            firstItem = false;
+          }
+
+          builder.append("}");
+        }
+        else {
+          builder.append(key).append("=").append(value);
+        }
+      }
     }
 
-    builder.append("]");
+    if(builder.length() > 0) {
+      builder.append("]");
+    }
 
-    return builder.toString();
+    return "@" + map.get("") + builder.toString();
   }
 
   public static Map<String, Object> annotationToMap(Annotation annotation) {

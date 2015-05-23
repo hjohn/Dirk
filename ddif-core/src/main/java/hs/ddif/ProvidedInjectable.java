@@ -65,4 +65,9 @@ public class ProvidedInjectable implements Injectable {
         && provider.equals(((ProvidedInjectable)obj).provider)
         && descriptors.equals(((ProvidedInjectable)obj).descriptors);
   }
+
+  @Override
+  public String toString() {
+    return "Injectable-Provider(" + getInjectableClass() + " + " + descriptors + ")";
+  }
 }

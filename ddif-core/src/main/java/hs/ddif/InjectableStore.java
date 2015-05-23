@@ -174,7 +174,7 @@ public class InjectableStore {
       throw new IllegalArgumentException(concreteClass + " has type parameters " + Arrays.toString(concreteClass.getTypeParameters()) + ": Injection candidates with type parameters are not supported.");
     }
     if(bindingsByClass.containsKey(concreteClass)) {
-      throw new DuplicateBeanException(concreteClass);
+      throw new DuplicateBeanException(concreteClass, injectable);
     }
 
     Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();
