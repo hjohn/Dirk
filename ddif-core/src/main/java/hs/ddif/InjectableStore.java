@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Qualifier;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
@@ -179,7 +177,7 @@ public class InjectableStore {
       throw new DuplicateBeanException(concreteClass);
     }
 
-    Set<AnnotationDescriptor> qualifiers = extractQualifiers(concreteClass);
+    Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();
     Map<AccessibleObject, Binding> bindings = injectable.needsInjection() ? binder.resolve(concreteClass) : NO_BINDINGS;
 
     policy.checkAddition(this, injectable, qualifiers, bindings);
@@ -209,7 +207,7 @@ public class InjectableStore {
     }
 
     Class<?> concreteClass = injectable.getInjectableClass();
-    Set<AnnotationDescriptor> qualifiers = extractQualifiers(concreteClass);  // TODO extractQualifiers might simply add ConcreteClass to the set?
+    Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();  // TODO extractQualifiers might simply add ConcreteClass to the set?
 
     policy.checkRemoval(this, injectable, qualifiers, bindingsByClass.get(injectable.getInjectableClass()));
 
@@ -288,22 +286,6 @@ public class InjectableStore {
         injectablesByDescriptorByType.remove(type);
       }
     }
-  }
-
-  private static Set<AnnotationDescriptor> extractQualifiers(Class<?> cls) {
-    return extractQualifiers(cls.getAnnotations());
-  }
-
-  private static Set<AnnotationDescriptor> extractQualifiers(Annotation[] annotations) {
-    Set<AnnotationDescriptor> qualifiers = new HashSet<>();
-
-    for(Annotation annotation : annotations) {
-      if(annotation.annotationType().getAnnotation(Qualifier.class) != null) {
-        qualifiers.add(new AnnotationDescriptor(annotation));
-      }
-    }
-
-    return qualifiers;
   }
 
   private static void filterByGenericType(Type type, Set<Injectable> matches) {

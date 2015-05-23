@@ -2,6 +2,7 @@ package hs.ddif;
 
 import java.lang.reflect.AccessibleObject;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents a source for an injectable dependency.  Injectables can be
@@ -33,4 +34,11 @@ public interface Injectable {
    * @return an instance of the type provided by this {@link Injectable}
    */
   Object getInstance(Injector injector, Map<AccessibleObject, Binding> bindings);
+
+  /**
+   * Returns the qualifiers associated with this Injectable.
+   *
+   * @return the qualifiers associated with this Injectable
+   */
+  Set<AnnotationDescriptor> getQualifiers();
 }
