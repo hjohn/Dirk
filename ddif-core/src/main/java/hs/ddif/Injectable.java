@@ -31,7 +31,7 @@ public interface Injectable {
    *
    * @param injector the injector to use to resolve dependencies
    * @param bindings the bindings to use
-   * @return an instance of the type provided by this {@link Injectable}
+   * @return an instance of the type provided by this {@link Injectable}, or <code>null</code> if the bean could not be provided
    */
   Object getInstance(Injector injector, Map<AccessibleObject, Binding> bindings);
 

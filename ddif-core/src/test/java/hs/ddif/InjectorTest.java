@@ -6,6 +6,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Named;
+import javax.inject.Provider;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
 import hs.ddif.test.injectables.BeanWithBigInjection;
 import hs.ddif.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.test.injectables.BeanWithCollection;
@@ -14,6 +27,9 @@ import hs.ddif.test.injectables.BeanWithDirectCollectionItemDependency;
 import hs.ddif.test.injectables.BeanWithDirectRedCollectionItemDependency;
 import hs.ddif.test.injectables.BeanWithInjection;
 import hs.ddif.test.injectables.BeanWithInterfaceBasedInjection;
+import hs.ddif.test.injectables.BeanWithOptionalConstructorDependency;
+import hs.ddif.test.injectables.BeanWithOptionalDependency;
+import hs.ddif.test.injectables.BeanWithUnsupportedOptionalProviderDependency;
 import hs.ddif.test.injectables.BeanWithProvider;
 import hs.ddif.test.injectables.BeanWithProviderWithoutMatch;
 import hs.ddif.test.injectables.BeanWithUnregisteredParent;
@@ -34,19 +50,8 @@ import hs.ddif.test.injectables.SimpleCollectionItemImpl3;
 import hs.ddif.test.injectables.SimpleCollectionItemInterface;
 import hs.ddif.test.injectables.SimpleImpl;
 import hs.ddif.test.injectables.SimpleInterface;
+import hs.ddif.test.injectables.UnavailableBean;
 import hs.ddif.test.injectables.UnregisteredParentBean;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.inject.Named;
-import javax.inject.Provider;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class InjectorTest {
   private Injector injector;
@@ -113,6 +118,72 @@ public class InjectorTest {
     Assert.assertEquals(SimpleBean.class, bean.getSimpleBean().getClass());
   }
 
+  @Test
+  public void shouldGetBeanWithOptionalDependencyWhenProviderReturnsNull() {
+    injector.register(BeanWithOptionalDependency.class);
+    injector.register(new Provider<UnavailableBean>() {
+      @Override
+      public UnavailableBean get() {
+        return null;
+      }
+    });
+
+    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
+  }
+
+  @Test
+  public void shouldGetBeanWithOptionalDependencyWhenNoProviderAvailable() {
+    injector.register(BeanWithOptionalDependency.class);
+
+    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
+  }
+
+  @Test
+  public void shouldGetBeanWithOptionalConstructorDependencyWhenNoProviderAvailable() {
+    injector.register(BeanWithOptionalConstructorDependency.class);
+
+    Assert.assertNotNull(injector.getInstance(BeanWithOptionalConstructorDependency.class));
+  }
+
+  @Test  // @Nullable annotation on Provider is just ignored as it makes no sense for Providers
+  public void shouldGetBeanWithOptionalProviderDependency() {
+    injector.register(new Provider<UnavailableBean>() {
+      @Override
+      public UnavailableBean get() {
+        return null;  // this provider breaks its contract
+      }
+    });
+    injector.register(BeanWithUnsupportedOptionalProviderDependency.class);
+
+    BeanWithUnsupportedOptionalProviderDependency instance = injector.getInstance(BeanWithUnsupportedOptionalProviderDependency.class);
+
+    Assert.assertNotNull(instance);
+    Assert.assertNotNull(instance.getUnavailableBeanProvider());
+
+    thrown.expect(NoSuchBeanException.class);
+
+    instance.getUnavailableBeanProvider().get();  // Make sure that null is not returned as that is not part of the Provider contract
+  }
+
+  @Test  // Providers cannot be made optional with @Nullable as a provider can always be created; it's only the result of the Provider that could be optional but that requires a different approach (new annotation of sub-interface)
+  public void shouldThrowUnresolvedDependencyExceptionWhenRegisteringBeanWithNullableProviderDependencyWhenNoProviderAvailableBecauseProvidersCannotBeMadeOptional() {
+    thrown.expect(UnresolvedDependencyException.class);
+
+    injector.register(BeanWithUnsupportedOptionalProviderDependency.class);
+  }
+
+  @Test(expected = NoSuchBeanException.class)
+  public void shouldThrowExceptionWhenGettingUnavailableBean() {
+    injector.register(new Provider<UnavailableBean>() {
+      @Override
+      public UnavailableBean get() {
+        return null;
+      }
+    });
+
+    injector.getInstance(UnavailableBean.class);
+  }
+
   /*
    * Injector#remove tests:
    */
@@ -155,6 +226,27 @@ public class InjectorTest {
     }
 
     injector.remove(SimpleBean.class);
+  }
+
+  @Test
+  public void shouldBeAbleToRemoveProviderWhichIsOnlyOptionallyDependedOn() {
+    Provider<UnavailableBean> provider = new Provider<UnavailableBean>() {
+      @Override
+      public UnavailableBean get() {
+        return new UnavailableBean();
+      }
+    };
+
+    injector.register(provider);
+    injector.register(BeanWithOptionalDependency.class);
+
+    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
+    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class).getUnavailableBean());
+
+    injector.remove(provider);
+
+    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
+    Assert.assertNull(injector.getInstance(BeanWithOptionalDependency.class).getUnavailableBean());
   }
 
   /*

@@ -25,4 +25,11 @@ public interface Binding {
    * @return the Keys this binding requires to resolve properly, or an empty array if none are required
    */
   Key[] getRequiredKeys();
+
+  /**
+   * Returns whether or not this binding is optional.
+   *
+   * @return whether or not this binding is optional
+   */
+  boolean isOptional();
 }

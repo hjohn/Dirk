@@ -49,7 +49,7 @@ public class Injector {
    * @param type the type of the instance required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return an instance of the given class matching the given criteria (if any)
-   * @throws NoSuchBeanException when the given class is not registered with this Injector
+   * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
    * @throws AmbigiousBeanException when the given class has multiple matching candidates
    */
   public <T> T getInstance(Type type, Object... criteria) {
@@ -62,7 +62,13 @@ public class Injector {
       throw new AmbigiousBeanException(injectables, type, criteria);
     }
 
-    return getInstance(injectables.iterator().next());
+    T instance = getInstance(injectables.iterator().next());
+
+    if(instance == null) {
+      throw new NoSuchBeanException(type, criteria);
+    }
+
+    return instance;
   }
 
   /**
@@ -72,7 +78,7 @@ public class Injector {
    * @param type the class of the instance required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return an instance of the given class matching the given criteria (if any)
-   * @throws NoSuchBeanException when the given class is not registered with this Injector
+   * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
    * @throws AmbigiousBeanException when the given class has multiple matching candidates
    */
   public <T> T getInstance(Class<T> cls, Object... criteria) {
@@ -88,12 +94,15 @@ public class Injector {
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return all instances of the given class matching the given criteria (if any)
    */
-  @SuppressWarnings("unchecked")
   public <T> Set<T> getInstances(Type type, Object... criteria) {
     Set<T> instances = new HashSet<>();
 
     for(Injectable injectable : store.resolve(type, criteria)) {
-      instances.add((T)getInstance(injectable));
+      T instance = getInstance(injectable);
+
+      if(instance != null) {
+        instances.add(instance);
+      }
     }
 
     return instances;

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
@@ -27,9 +28,10 @@ public class Binder {
 
     for(final Field field : injectableClass.getDeclaredFields()) {
       Inject inject = field.getAnnotation(Inject.class);
+      Nullable nullable = field.getAnnotation(Nullable.class);
 
       if(inject != null) {
-        bindings.put(field, createBinding(field.getGenericType(), extractQualifiers(field)));
+        bindings.put(field, createBinding(field.getGenericType(), nullable != null, extractQualifiers(field)));
       }
     }
 
@@ -69,10 +71,14 @@ public class Binder {
 
       AnnotationDescriptor[] qualifiers = extractQualifiers(parameterAnnotations[i]);
 
-      Binding binding = createBinding(type, qualifiers);
+      boolean optional = isOptional(parameterAnnotations[i]);
+      Binding binding = createBinding(type, optional, qualifiers);
 
       constructorBindings.add(binding);
-      requiredKeys.addAll(Arrays.asList(binding.getRequiredKeys()));
+
+      if(!optional) {
+        requiredKeys.addAll(Arrays.asList(binding.getRequiredKeys()));
+      }
     }
 
     return new Binding() {
@@ -83,10 +89,24 @@ public class Binder {
         for(int i = 0; i < constructorBindings.size(); i++) {
           Binding binding = constructorBindings.get(i);
 
-          values[i] = binding.getValue(injector);
+          try {
+            values[i] = binding.getValue(injector);
+          }
+          catch(NoSuchBeanException e) {
+            if(!binding.isOptional()) {
+              throw e;
+            }
+
+            values[i] = null;
+          }
         }
 
         return values;
+      }
+
+      @Override
+      public boolean isOptional() {
+        return false;
       }
 
       @Override
@@ -112,7 +132,7 @@ public class Binder {
     throw new IllegalArgumentException("Unsupported type: " + type);
   }
 
-  private Binding createBinding(final Type type, final AnnotationDescriptor... qualifiers) {
+  private Binding createBinding(final Type type, final boolean optional, final AnnotationDescriptor... qualifiers) {
     final Class<?> cls = determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
@@ -122,6 +142,11 @@ public class Binder {
         @Override
         public Object getValue(Injector injector) {
           return injector.getInstances(elementType, (Object[])qualifiers);
+        }
+
+        @Override
+        public boolean isOptional() {
+          return false;
         }
 
         @Override
@@ -140,6 +165,11 @@ public class Binder {
         }
 
         @Override
+        public boolean isOptional() {
+          return false;
+        }
+
+        @Override
         public Key[] getRequiredKeys() {
           return NO_REQUIRED_KEYS;
         }
@@ -147,7 +177,7 @@ public class Binder {
     }
     else if(Provider.class.isAssignableFrom(cls)) {
       final Type genericType = getGenericType(type);
-      final Binding binding = createBinding(genericType, qualifiers);
+      final Binding binding = createBinding(genericType, false, qualifiers);
 
       return new Binding() {
         @Override
@@ -163,6 +193,11 @@ public class Binder {
         }
 
         @Override
+        public boolean isOptional() {
+          return false;
+        }
+
+        @Override
         public Key[] getRequiredKeys() {
           return binding.getRequiredKeys();
         }
@@ -170,22 +205,37 @@ public class Binder {
     }
     else {
       final Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
-      final Key key = new Key(finalType, qualifiers);
+      final Key[] requiredKeys = optional ? NO_REQUIRED_KEYS : new Key[] {new Key(finalType, qualifiers)};
 
       return new Binding() {
         @Override
         public Object getValue(Injector injector) {
-          return injector.getInstance(finalType, (Object[])qualifiers);
+          if(optional) {
+            try {
+              return injector.getInstance(finalType, (Object[])qualifiers);
+            }
+            catch(NoSuchBeanException e) {
+              return null;
+            }
+          }
+          else {
+            return injector.getInstance(finalType, (Object[])qualifiers);
+          }
         }
 
         @Override
         public Key[] getRequiredKeys() {
-          return new Key[] {key};
+          return requiredKeys;
+        }
+
+        @Override
+        public boolean isOptional() {
+          return optional;
         }
 
         @Override
         public String toString() {
-          return "DirectBinding[cls=" + cls + "; requiredKeys=" + key + "]";
+          return "DirectBinding[cls=" + cls + "; requiredKeys=" + Arrays.toString(getRequiredKeys()) + "]";
         }
       };
     }
@@ -205,6 +255,16 @@ public class Binder {
     }
 
     return qualifiers.toArray(new AnnotationDescriptor[qualifiers.size()]);
+  }
+
+  private static boolean isOptional(Annotation[] annotations) {
+    for(Annotation annotation : annotations) {
+      if(Nullable.class.isInstance(annotation)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   public static Type getGenericType(Type type) {
