@@ -45,12 +45,12 @@ public class PluginManager {
 
     Set<String> classNames = new HashSet<>();
 
-    classNames.addAll(reflections.getStore().getStoreMap().get("TypeAnnotationsScanner").get("javax.inject.Named"));
+    classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Named"));
 
-    for(String name : reflections.getStore().getStoreMap().get("FieldAnnotationsScanner").get("javax.inject.Inject")) {
+    for(String name : reflections.getStore().get("FieldAnnotationsScanner").get("javax.inject.Inject")) {
       classNames.add(name.substring(0, name.lastIndexOf('.')));
     }
-    for(String name : reflections.getStore().getStoreMap().get("MethodAnnotationsScanner").get("javax.inject.Inject")) {
+    for(String name : reflections.getStore().get("MethodAnnotationsScanner").get("javax.inject.Inject")) {
       name = name.substring(0, name.lastIndexOf('('));
       classNames.add(name.substring(0, name.lastIndexOf('.')));
     }
