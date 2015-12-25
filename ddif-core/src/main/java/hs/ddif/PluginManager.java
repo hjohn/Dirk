@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
@@ -20,6 +21,8 @@ import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 
 public class PluginManager {
+  private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
+
   private final Injector injector;
 
   public PluginManager(Injector injector) {
@@ -31,7 +34,7 @@ public class PluginManager {
     AtomicBoolean unloaded = new AtomicBoolean();
     URLClassLoader classLoader = new UnloadTrackingClassLoader(url, unloaded);
 
-    System.out.println(">>> PluginManager: scanning " + url);
+    LOGGER.fine("scanning " + url);
 
     Reflections reflections = new Reflections(
       url,
@@ -55,7 +58,7 @@ public class PluginManager {
     InjectableStore store = new InjectableStore();
 
     for(String className : classNames) {
-      System.out.println(">>> PluginManager: found " + className);
+      LOGGER.finer("found " + className);
       try {
         putInStore(store, classLoader.loadClass(className));
       }
@@ -95,7 +98,7 @@ public class PluginManager {
 
   private void putInStore(InjectableStore store, Class<?> cls) {
     if(!store.contains(cls)) {
-      System.out.println(">>> PluginManager: adding " + cls.getName());
+      LOGGER.finest("adding " + cls.getName());
 
       Map<AccessibleObject, Binding> bindings = store.put(new ClassInjectable(cls));
 
