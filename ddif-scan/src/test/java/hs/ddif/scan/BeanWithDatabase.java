@@ -1,4 +1,4 @@
-package hs.ddif.core.test.injectables;
+package hs.ddif.scan;
 
 import hs.ddif.test.plugin.Database;
 
