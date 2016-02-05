@@ -62,6 +62,8 @@ import hs.ddif.core.test.injectables.SimpleCollectionItemImpl3;
 import hs.ddif.core.test.injectables.SimpleCollectionItemInterface;
 import hs.ddif.core.test.injectables.SimpleImpl;
 import hs.ddif.core.test.injectables.SimpleInterface;
+import hs.ddif.core.test.injectables.SubclassOfBeanWithInjection;
+import hs.ddif.core.test.injectables.SubclassOfBeanWithInjectionWithSameNamedInjection;
 import hs.ddif.core.test.injectables.UnavailableBean;
 import hs.ddif.core.test.injectables.UnregisteredParentBean;
 
@@ -585,5 +587,25 @@ public class InjectorTest {
   @Test
   public void shouldRegisterInstanceEvenWithAnnotatedFinalFields() {
     injector.registerInstance(new SampleWithAnnotatedFinalFields());  // note, not a class, but an instantiated object!
+  }
+
+  @Test
+  public void shouldInjectSuperClass() {
+    injector.register(SubclassOfBeanWithInjection.class);
+
+    SubclassOfBeanWithInjection bean = injector.getInstance(SubclassOfBeanWithInjection.class);
+
+    assertEquals(injector.getInstance(SimpleBean.class), bean.getInjectedValue());
+  }
+
+  @Test
+  public void shouldInjectSuperAndSubClassEvenIfFieldsAreSameName() {
+    injector.register(SubclassOfBeanWithInjectionWithSameNamedInjection.class);
+
+    SubclassOfBeanWithInjectionWithSameNamedInjection bean = injector.getInstance(SubclassOfBeanWithInjectionWithSameNamedInjection.class);
+    SimpleBean simpleBean = injector.getInstance(SimpleBean.class);
+
+    assertEquals(simpleBean, bean.getInjectedValue());
+    assertEquals(simpleBean, bean.getInjectedValueInSubClass());
   }
 }

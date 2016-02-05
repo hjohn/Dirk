@@ -26,13 +26,19 @@ public class Binder {
   public Map<AccessibleObject, Binding> resolve(Class<?> injectableClass) {
     Map<AccessibleObject, Binding> bindings = new HashMap<>();
 
-    for(final Field field : injectableClass.getDeclaredFields()) {
-      Inject inject = field.getAnnotation(Inject.class);
-      Nullable nullable = field.getAnnotation(Nullable.class);
+    Class<?> currentInjectableClass = injectableClass;
 
-      if(inject != null) {
-        bindings.put(field, createBinding(field.getGenericType(), nullable != null, extractQualifiers(field)));
+    while(currentInjectableClass != null) {
+      for(final Field field : currentInjectableClass.getDeclaredFields()) {
+        Inject inject = field.getAnnotation(Inject.class);
+        Nullable nullable = field.getAnnotation(Nullable.class);
+
+        if(inject != null) {
+          bindings.put(field, createBinding(field.getGenericType(), nullable != null, extractQualifiers(field)));
+        }
       }
+
+      currentInjectableClass = currentInjectableClass.getSuperclass();
     }
 
     Constructor<?> emptyConstructor = null;
