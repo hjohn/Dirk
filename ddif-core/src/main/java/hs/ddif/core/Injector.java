@@ -1,7 +1,9 @@
 package hs.ddif.core;
 
+import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -11,13 +13,12 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 // TODO JSR-330: Named without value is treated differently ... some use field name, others default to empty?
-// TODO Binder class is pretty much static, and also has several public statics being used -- it is more of a utility class, consider refactoring
 public class Injector {
 
   /**
    * The store consistency policy this injector uses.
    */
-  private final InjectorStoreConsistencyPolicy consistencyPolicy = new InjectorStoreConsistencyPolicy();
+  private final InjectorStoreConsistencyPolicy consistencyPolicy;
 
   /**
    * InjectableStore used by this Injector.  The Injector will safeguard that this store
@@ -26,19 +27,53 @@ public class Injector {
   private final InjectableStore store;
 
   /**
-   * Map containing known singleton instances.  Both key and value are weak to prevent the
-   * injector from holding on to unused singletons, or to classes that could be unloaded.<p>
-   *
-   * The key is always a concrete class.
+   * Map containing {@link ScopeResolver}s this injector can use.
    */
-  private final Map<Class<?>, WeakReference<Object>> singletons = new WeakHashMap<>();
+  private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
 
-  public Injector(DiscoveryPolicy discoveryPolicy) {
+  public Injector(DiscoveryPolicy discoveryPolicy, ScopeResolver... scopeResolvers) {
+    for(ScopeResolver scopeResolver : scopeResolvers) {
+      scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
+    }
+
+    scopesResolversByAnnotation.put(Singleton.class, new ScopeResolver() {
+      private final Map<Class<?>, WeakReference<Object>> singletons = new WeakHashMap<>();
+
+      @Override
+      public <T> T get(Class<?> injectableClass) {
+        WeakReference<Object> reference = singletons.get(injectableClass);
+
+        if(reference != null) {
+          @SuppressWarnings("unchecked")
+          T bean = (T)reference.get();
+
+          return bean;  // This may still return null
+        }
+
+        return null;
+      }
+
+      @Override
+      public <T> void put(Class<?> injectableClass, T instance) {
+        singletons.put(injectableClass, new WeakReference<Object>(instance));
+      }
+
+      @Override
+      public Class<? extends Annotation> getScopeAnnotationClass() {
+        return Singleton.class;
+      }
+    });
+
+    this.consistencyPolicy = new InjectorStoreConsistencyPolicy();
     this.store = new InjectableStore(consistencyPolicy, discoveryPolicy);
   }
 
+  public Injector(ScopeResolver... scopeResolvers) {
+    this(null, scopeResolvers);
+  }
+
   public Injector() {
-    this(null);
+    this((DiscoveryPolicy)null);
   }
 
   /**
@@ -47,7 +82,7 @@ public class Injector {
    *
    * @param type the type of the instance required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
-   * @return an instance of the given class matching the given criteria (if any)
+   * @return an instance of the given class matching the given criteria, never null
    * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
    * @throws AmbigiousBeanException when the given class has multiple matching candidates
    */
@@ -87,7 +122,7 @@ public class Injector {
    * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
    * @throws AmbigiousBeanException when the given class has multiple matching candidates
    */
-  public <T> T getInstance(Class<T> cls, Object... criteria) {
+  public <T> T getInstance(Class<T> cls, Object... criteria) {  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
     return getInstance((Type)cls, criteria);
   }
 
@@ -139,18 +174,20 @@ public class Injector {
   }
 
   protected <T> T getInstance(Injectable injectable) {
-    boolean isSingleton = injectable.getInjectableClass().getAnnotation(Singleton.class) != null;
+    ScopeResolver scopeResolver = null;
 
-    if(isSingleton) {
-      WeakReference<Object> reference = singletons.get(injectable.getInjectableClass());
+    for(Map.Entry<Class<? extends Annotation>, ScopeResolver> entry : scopesResolversByAnnotation.entrySet()) {
+      if(injectable.getInjectableClass().getAnnotation(entry.getKey()) != null) {
+        scopeResolver = entry.getValue();
+        break;  // There can only ever be one scope match as multiple scope annotations are not allowed by ClassInjectable
+      }
+    }
 
-      if(reference != null) {
-        @SuppressWarnings("unchecked")
-        T bean = (T)reference.get();  // create strong reference first
+    if(scopeResolver != null) {
+      T bean = scopeResolver.get(injectable.getInjectableClass());
 
-        if(bean != null) {  // if it was not null, return it
-          return bean;
-        }
+      if(bean != null) {
+        return bean;
       }
     }
 
@@ -158,11 +195,11 @@ public class Injector {
     T bean = (T)injectable.getInstance(this);
 
     /*
-     * Store the result if singleton.
+     * Store the result if scoped.
      */
 
-    if(isSingleton) {
-      singletons.put(injectable.getInjectableClass(), new WeakReference<Object>(bean));
+    if(scopeResolver != null) {
+      scopeResolver.put(injectable.getInjectableClass(), bean);
     }
 
     return bean;
@@ -203,6 +240,18 @@ public class Injector {
     register(new ProvidedInjectable(provider, qualifiers));
   }
 
+  /**
+   * Registers an instance with this Injector as a Singleton if it would not
+   * cause existing registered classes to have ambigious dependencies as a
+   * result.<p>
+   *
+   * If registering this instance would result in ambigious dependencies for
+   * previously registered classes, then this method will throw an exception.
+   *
+   * @param provider the provider to register with the Injector
+   * @param qualifiers the qualifiers for this provider
+   * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
+   */
   public void registerInstance(Object instance, AnnotationDescriptor... qualifiers) {
     register(new InstanceInjectable(instance, qualifiers));
   }

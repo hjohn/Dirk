@@ -1,15 +1,5 @@
 package hs.ddif.core;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import hs.ddif.core.BindingException;
-import hs.ddif.core.ClassInjectable;
-import hs.ddif.core.InjectableStore;
-import hs.ddif.core.InjectorStoreConsistencyPolicy;
-import hs.ddif.core.JustInTimeDiscoveryPolicy;
-import hs.ddif.core.Key;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithEmptyAndAnnotatedConstructor;
@@ -21,6 +11,10 @@ import hs.ddif.core.test.injectables.SimpleBean;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class JustInTimeDiscoveryPolicyTest {
   private InjectableStore store;

@@ -1,10 +1,13 @@
 package hs.ddif.core;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -43,9 +46,42 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
           if(injectables.size() > 1) {
             throw new AmbigiousDependencyException(injectable.getInjectableClass(), requiredKey, injectables);
           }
+
+          /*
+           * Perform scope check.  Having a dependency on a narrower scoped injectable would mean the injected
+           * dependency of narrower scope is not updated when the scope changes, resulting in unpredictable
+           * behaviour.
+           *
+           * Other frameworks solve this by injecting an adapter instead that relays calls to a specific instance
+           * of the dependency based on current scope.  As this is non-trivial a ScopeConflictException is
+           * thrown instead.
+           */
+
+          Injectable dependentInjectable = injectables.iterator().next();  // Previous checks ensure there is only a single element in the set
+
+          if(!binding.isProvider()) {  // When wrapped in a Provider, there are never any scope conflicts
+            Annotation dependencyScopeAnnotation = dependentInjectable.getScope();
+            Annotation injectableScopeAnnotation = injectable.getScope();
+
+            if(isNarrowerScope(injectableScopeAnnotation, dependencyScopeAnnotation)) {
+              throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getInjectableClass());
+            }
+          }
         }
       }
     }
+  }
+
+  private static boolean isNarrowerScope(Annotation scope, Annotation dependencyScope) {
+    if(scope == null) {
+      return false;
+    }
+
+    if(dependencyScope == null) {
+      return true;
+    }
+
+    return !dependencyScope.annotationType().equals(Singleton.class) && !scope.annotationType().equals(dependencyScope.annotationType());
   }
 
   @Override

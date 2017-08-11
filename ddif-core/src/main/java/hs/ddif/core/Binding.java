@@ -32,4 +32,12 @@ public interface Binding {
    * @return whether or not this binding is optional
    */
   boolean isOptional();
+
+  /**
+   * Returns whether this binding is for a Provider member or parameter (not whether or not
+   * the value is *supplied* by a Provider).
+   *
+   * @return <code>true</code> if the injection site is a Provider, otherwise <code>false</code>
+   */
+  boolean isProvider();
 }

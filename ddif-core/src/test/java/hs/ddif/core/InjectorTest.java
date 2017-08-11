@@ -608,4 +608,11 @@ public class InjectorTest {
     assertEquals(simpleBean, bean.getInjectedValue());
     assertEquals(simpleBean, bean.getInjectedValueInSubClass());
   }
+
+  @Test
+  public void shouldInjectSameSingletonEachTime() {
+    SimpleBean simpleBean = injector.getInstance(BeanWithInjection.class).getInjectedValue();
+
+    assertEquals(simpleBean, injector.getInstance(BeanWithInjection.class).getInjectedValue());
+  }
 }

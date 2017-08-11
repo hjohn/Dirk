@@ -1,19 +1,10 @@
 package hs.ddif.scan;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import hs.ddif.core.AmbigiousDependencyException;
 import hs.ddif.core.Injector;
+import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.ddif.core.NoSuchBeanException;
 import hs.ddif.core.ViolatesSingularDependencyException;
-import hs.ddif.scan.Plugin;
-import hs.ddif.scan.PluginManager;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
 
@@ -27,6 +18,14 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class PluginManagerTest {
   private static final URL PLUGIN_URL;
@@ -45,7 +44,7 @@ public class PluginManagerTest {
 
   @Before
   public void before() {
-    injector = new Injector();
+    injector = new Injector(new JustInTimeDiscoveryPolicy());
     pluginManager = new PluginManager(injector);
 
     injector.register(BeanWithTextProviders.class);

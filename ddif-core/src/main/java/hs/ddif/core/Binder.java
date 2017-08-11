@@ -111,6 +111,11 @@ public class Binder {
         }
 
         @Override
+        public boolean isProvider() {
+          return false;
+        }
+
+        @Override
         public Key getRequiredKey() {
           return null;
         }
@@ -127,6 +132,11 @@ public class Binder {
 
         @Override
         public boolean isOptional() {
+          return false;
+        }
+
+        @Override
+        public boolean isProvider() {
           return false;
         }
 
@@ -156,6 +166,11 @@ public class Binder {
         @Override
         public boolean isOptional() {
           return false;
+        }
+
+        @Override
+        public boolean isProvider() {
+          return true;
         }
 
         @Override
@@ -192,6 +207,11 @@ public class Binder {
         @Override
         public boolean isOptional() {
           return optional;
+        }
+
+        @Override
+        public boolean isProvider() {
+          return false;
         }
 
         @Override

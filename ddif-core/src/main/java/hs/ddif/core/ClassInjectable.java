@@ -1,15 +1,20 @@
 package hs.ddif.core;
 
+import hs.ddif.core.util.AnnotationUtils;
+
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class ClassInjectable implements Injectable {
   private final Class<?> injectableClass;
+  private final Annotation scopeAnnotation;
   private final Map<AccessibleObject, Binding[]> bindings;
 
   public ClassInjectable(Class<?> injectableClass) {
@@ -18,6 +23,8 @@ public class ClassInjectable implements Injectable {
     }
 
     this.injectableClass = injectableClass;
+    this.scopeAnnotation = findScopeAnnotation(injectableClass);
+
     this.bindings = Binder.resolve(injectableClass);
 
     /*
@@ -132,6 +139,11 @@ public class ClassInjectable implements Injectable {
   }
 
   @Override
+  public Annotation getScope() {
+    return scopeAnnotation;
+  }
+
+  @Override
   public int hashCode() {
     return injectableClass.toString().hashCode();
   }
@@ -151,5 +163,15 @@ public class ClassInjectable implements Injectable {
   @Override
   public String toString() {
     return "Injectable-Class(" + getInjectableClass() + ")";
+  }
+
+  private static Annotation findScopeAnnotation(Class<?> cls) {
+    List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(cls, javax.inject.Scope.class);
+
+    if(matchingAnnotations.size() > 1) {
+      throw new MultipleScopesException("Multiple scope annotations found on class while only one is allowed: " + cls + ", found: " + matchingAnnotations);
+    }
+
+    return matchingAnnotations.isEmpty() ? null : matchingAnnotations.get(0);
   }
 }

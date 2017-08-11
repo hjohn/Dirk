@@ -21,7 +21,7 @@ public class AnnotationDescriptor {
     return new AnnotationDescriptor(annotation, mapToString(describeAsMap(annotation, annotationValues)));
   }
 
-  private AnnotationDescriptor(Class<? extends Annotation> annotationType, String description) {
+  AnnotationDescriptor(Class<? extends Annotation> annotationType, String description) {
     if(description == null) {
       throw new IllegalArgumentException("parameter 'description' cannot be null");
     }

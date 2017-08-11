@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,7 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 public class InstanceInjectable implements Injectable {
+  private static final Annotation SINGLETON_ANNOTATION = new Annotation() {
+    @Override
+    public Class<? extends Annotation> annotationType() {
+      return Singleton.class;
+    }
+  };
+
   private final Object instance;
   private final List<AnnotationDescriptor> descriptors;
 
@@ -43,6 +53,11 @@ public class InstanceInjectable implements Injectable {
     qualifiers.addAll(descriptors);
 
     return qualifiers;
+  }
+
+  @Override
+  public Annotation getScope() {
+    return SINGLETON_ANNOTATION;
   }
 
   @Override

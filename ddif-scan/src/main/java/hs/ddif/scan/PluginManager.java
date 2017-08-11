@@ -36,31 +36,53 @@ public class PluginManager {
     this.injector = injector;
   }
 
-  public Plugin loadPluginAndScan(URL url) {
-    PluginLoader pluginLoader = new PluginLoader(url);
+  @SuppressWarnings("resource")
+  public Plugin loadPluginAndScan(String packageNamePrefix) {
+    URLClassLoader classLoader = (URLClassLoader)this.getClass().getClassLoader();
 
-    return pluginLoader.loadPlugin();
+    LOGGER.fine("scanning " + packageNamePrefix);
+
+    Reflections reflections = new Reflections(
+      packageNamePrefix,
+      new TypeAnnotationsScanner(),
+      new FieldAnnotationsScanner(),
+      new MethodAnnotationsScanner()
+    );
+
+    return new PluginLoader(reflections, classLoader).loadPlugin();
+  }
+
+  @SuppressWarnings("resource")
+  public Plugin loadPluginAndScan(URL url) {
+    URLClassLoader classLoader = new UnloadTrackingClassLoader(url);
+
+    LOGGER.fine("scanning " + url);
+
+    Reflections reflections = new Reflections(
+      url,
+      new TypeAnnotationsScanner(),
+      new FieldAnnotationsScanner(),
+      new MethodAnnotationsScanner()
+    );
+
+    return new PluginLoader(reflections, classLoader).loadPlugin();
   }
 
   private class PluginLoader {
-    private final InjectableStore store = new InjectableStore();
-    private final URL url;
     private final Set<ClassInjectable> classInjectables = new HashSet<>();
+    private final Reflections reflections;
+    private final URLClassLoader classLoader;
 
-    public PluginLoader(URL url) {
-      this.url = url;
+    public PluginLoader(Reflections reflections, URLClassLoader classLoader) {
+      this.reflections = reflections;
+      this.classLoader = classLoader;
     }
 
     public Plugin loadPlugin() {
-      LOGGER.fine("scanning " + url);
+      return createPlugin(reflections, classLoader);
+    }
 
-      Reflections reflections = new Reflections(
-        url,
-        new TypeAnnotationsScanner(),
-        new FieldAnnotationsScanner(),
-        new MethodAnnotationsScanner()
-      );
-
+    private Plugin createPlugin(Reflections reflections, URLClassLoader classLoader) {
       Set<String> classNames = new HashSet<>();
 
       classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Named"));
@@ -73,9 +95,7 @@ public class PluginManager {
         classNames.add(name.substring(0, name.lastIndexOf('.')));
       }
 
-      AtomicBoolean unloaded = new AtomicBoolean();
-      @SuppressWarnings("resource")
-      URLClassLoader classLoader = new UnloadTrackingClassLoader(url, unloaded);
+      InjectableStore store = new InjectableStore();
 
       for(String className : classNames) {
         LOGGER.finer("found " + className);
@@ -88,32 +108,9 @@ public class PluginManager {
       }
 
       List<Class<?>> matchingClasses = DependencySorter.getInTopologicalOrder(store, classInjectables);
-      List<Class<?>> registeredClasses = new ArrayList<>();
+      List<Class<?>> registeredClasses = registerClasses(matchingClasses);
 
-      try {
-        for(Class<?> cls : matchingClasses) {
-          if(!injector.contains(cls)) {
-            injector.register(cls);
-            registeredClasses.add(cls);
-          }
-        }
-      }
-      catch(DependencyException e) {
-
-        /*
-         * Registration failed, rolling back:
-         */
-
-        Collections.reverse(registeredClasses);
-
-        for(Class<?> cls : registeredClasses) {
-          injector.remove(cls);
-        }
-
-        throw e;
-      }
-
-      return new Plugin(injector, registeredClasses, classLoader, unloaded);
+      return new Plugin(injector, registeredClasses, classLoader);
     }
 
     private void putInStore(InjectableStore store, Class<?> cls) {
@@ -147,39 +144,23 @@ public class PluginManager {
     }
   }
 
+  /**
+   * Loads classes from a plugin defined by a Module.
+   *
+   * @param url a jar file
+   * @return a {@link Plugin}
+   */
   @SuppressWarnings("resource")
   public Plugin loadPlugin(URL url) {
-    AtomicBoolean unloaded = new AtomicBoolean();
-    URLClassLoader classLoader = new UnloadTrackingClassLoader(url, unloaded);//URLClassLoader.newInstance(new URL[] {url});
+    URLClassLoader classLoader = new UnloadTrackingClassLoader(url);
 
     try {
       @SuppressWarnings("unchecked")
       Class<Module> moduleClass = (Class<Module>)classLoader.loadClass("PluginModule");
       Module module = moduleClass.newInstance();
-      List<Class<?>> registeredClasses = new ArrayList<>();
+      List<Class<?>> registeredClasses = registerClasses(module.getClasses());
 
-      try {
-        for(Class<?> cls : module.getClasses()) {
-          injector.register(cls);
-          registeredClasses.add(cls);
-        }
-      }
-      catch(DependencyException e) {
-
-        /*
-         * Registration failed, rolling back:
-         */
-
-        Collections.reverse(registeredClasses);
-
-        for(Class<?> cls : registeredClasses) {
-          injector.remove(cls);
-        }
-
-        throw e;
-      }
-
-      return new Plugin(injector, registeredClasses, classLoader, unloaded);
+      return new Plugin(injector, registeredClasses, classLoader);
     }
     catch(ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       try {
@@ -193,13 +174,41 @@ public class PluginManager {
     }
   }
 
-  private static class UnloadTrackingClassLoader extends URLClassLoader {
-    private final AtomicBoolean unloaded;
+  // Registers classes with the injector and returns the classes actually registered (could be a subset of classes if classes were already registered).
+  private List<Class<?>> registerClasses(List<Class<?>> classes) {
+    List<Class<?>> registeredClasses = new ArrayList<>();
 
-    public UnloadTrackingClassLoader(URL url, AtomicBoolean unloaded) {
+    try {
+      for(Class<?> cls : classes) {
+        if(!injector.contains(cls)) {
+          injector.register(cls);
+          registeredClasses.add(cls);
+        }
+      }
+
+      return registeredClasses;
+    }
+    catch(DependencyException e) {
+
+      /*
+       * Registration failed, rolling back:
+       */
+
+      Collections.reverse(registeredClasses);
+
+      for(Class<?> cls : registeredClasses) {
+        injector.remove(cls);
+      }
+
+      throw e;
+    }
+  }
+
+  static class UnloadTrackingClassLoader extends URLClassLoader {
+    private final AtomicBoolean unloaded = new AtomicBoolean();
+
+    public UnloadTrackingClassLoader(URL url) {
       super(new URL[] {url});
-
-      this.unloaded = unloaded;
     }
 
     @Override
@@ -207,6 +216,10 @@ public class PluginManager {
       super.finalize();
 
       unloaded.set(true);
+    }
+
+    public AtomicBoolean getUnloadedAtomicBoolean() {
+      return unloaded;
     }
   }
 }

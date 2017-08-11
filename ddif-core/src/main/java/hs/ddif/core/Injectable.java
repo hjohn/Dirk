@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.util.Map;
 import java.util.Set;
@@ -39,4 +40,11 @@ public interface Injectable {
    * @return the qualifiers associated with this Injectable
    */
   Set<AnnotationDescriptor> getQualifiers();
+
+  /**
+   * Returns the scope of this {@link Injectable}.
+   *
+   * @return the scope of this {@link Injectable}
+   */
+  Annotation getScope();
 }

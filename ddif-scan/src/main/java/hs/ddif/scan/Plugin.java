@@ -1,12 +1,13 @@
 package hs.ddif.scan;
 
+import hs.ddif.core.Injector;
+import hs.ddif.scan.PluginManager.UnloadTrackingClassLoader;
+
 import java.io.IOException;
 import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import hs.ddif.core.Injector;
 
 public class Plugin {
   private final AtomicBoolean unloaded;
@@ -15,11 +16,17 @@ public class Plugin {
   private List<Class<?>> classes;
   private URLClassLoader classLoader;
 
-  public Plugin(Injector injector, List<Class<?>> classes, URLClassLoader classLoader, AtomicBoolean unloaded) {
+  public Plugin(Injector injector, List<Class<?>> classes, URLClassLoader classLoader) {
     this.injector = injector;
     this.classLoader = classLoader;
-    this.unloaded = unloaded;
     this.classes = classes;
+
+    if(classLoader instanceof UnloadTrackingClassLoader) {
+      this.unloaded = ((UnloadTrackingClassLoader)classLoader).getUnloadedAtomicBoolean();
+    }
+    else {
+      this.unloaded = null;
+    }
   }
 
   public void unload() {
@@ -43,6 +50,6 @@ public class Plugin {
   }
 
   public boolean isUnloaded() {
-    return unloaded.get();
+    return unloaded == null ? false : unloaded.get();
   }
 }

@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -15,14 +16,14 @@ public class ProvidedInjectable implements Injectable {
   private final Provider<?> provider;
   private final Class<?> injectableClass;
   private final List<AnnotationDescriptor> descriptors;
+  private final Type type;
 
   public ProvidedInjectable(Provider<?> provider, AnnotationDescriptor... descriptors) {
     if(provider == null) {
       throw new IllegalArgumentException("provider cannot be null");
     }
 
-    Type type = provider.getClass().getGenericInterfaces()[0];
-
+    this.type = provider.getClass().getGenericInterfaces()[0];
     this.provider = provider;
     this.injectableClass = Binder.determineClassFromType(Binder.getGenericType(type));
     this.descriptors = new ArrayList<>(Arrays.asList(descriptors));
@@ -40,12 +41,22 @@ public class ProvidedInjectable implements Injectable {
 
   @Override
   public Object getInstance(Injector injector) {
-    return provider.get();
+    try {
+      return provider.get();
+    }
+    catch(Exception e) {
+      throw new NoSuchBeanException(type, e);
+    }
   }
 
   @Override
   public Set<AnnotationDescriptor> getQualifiers() {
     return AnnotationDescriptor.extractQualifiers(injectableClass);
+  }
+
+  @Override
+  public Annotation getScope() {
+    return null;
   }
 
   @Override
