@@ -177,7 +177,7 @@ public class InjectableStore {
     }
 
     Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();
-    Map<AccessibleObject, Binding> bindings = injectable.needsInjection() ? binder.resolve(concreteClass) : NO_BINDINGS;
+    Map<AccessibleObject, Binding> bindings = injectable.needsInjection() ? Binder.resolve(concreteClass) : NO_BINDINGS;
 
     policy.checkAddition(this, injectable, qualifiers, bindings);
 

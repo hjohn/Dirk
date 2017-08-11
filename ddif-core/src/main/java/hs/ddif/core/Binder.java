@@ -23,7 +23,7 @@ import javax.inject.Qualifier;
 public class Binder {
   private static final Key[] NO_REQUIRED_KEYS = new Key[0];
 
-  public Map<AccessibleObject, Binding> resolve(Class<?> injectableClass) {
+  public static Map<AccessibleObject, Binding> resolve(Class<?> injectableClass) {
     Map<AccessibleObject, Binding> bindings = new HashMap<>();
 
     Class<?> currentInjectableClass = injectableClass;
@@ -65,7 +65,7 @@ public class Binder {
     return bindings;
   }
 
-  private Binding createConstructorBinding(Constructor<?> constructor) {
+  private static Binding createConstructorBinding(Constructor<?> constructor) {
     Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
     Type[] genericParameterTypes = constructor.getGenericParameterTypes();
 
@@ -138,7 +138,7 @@ public class Binder {
     throw new IllegalArgumentException("Unsupported type: " + type);
   }
 
-  private Binding createBinding(final Type type, final boolean optional, final AnnotationDescriptor... qualifiers) {
+  private static Binding createBinding(final Type type, final boolean optional, final AnnotationDescriptor... qualifiers) {
     final Class<?> cls = determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
