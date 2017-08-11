@@ -37,21 +37,21 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldStore() {
-    store.put(new ClassInjectable(BeanWithBigRedInjection.class));
+    ClassInjectable injectable = new ClassInjectable(BeanWithBigRedInjection.class);
 
-    Map<AccessibleObject, Binding> bindings = store.getBindings(BeanWithBigRedInjection.class);
+    store.put(injectable);
 
-    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, Binding> entry : injectable.getBindings().entrySet()) {
       if(!(entry.getKey() instanceof Constructor)) {
         assertThat(store.resolve(entry.getValue().getRequiredKeys()[0]), empty());
       }
     }
 
-    store.put(new ClassInjectable(BigRedBean.class));
+    injectable = new ClassInjectable(BigRedBean.class);
 
-    bindings = store.getBindings(BeanWithBigRedInjection.class);
+    store.put(injectable);
 
-    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, Binding> entry : injectable.getBindings().entrySet()) {
       if(!(entry.getKey() instanceof Constructor)) {
         assertThat(store.resolve(entry.getValue().getRequiredKeys()[0]), hasSize(1));
       }
@@ -90,55 +90,6 @@ public class InjectableStoreTest {
     store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.remove(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-  }
-
-  @SuppressWarnings("unchecked")
-  @Test
-  public void shouldCreateDG() {
-    assertThat(getInTopologicalOrder(BeanWithBigRedInjection.class, BigRedBean.class), contains(BigRedBean.class, BeanWithBigRedInjection.class));
-  }
-
-  @Test
-  public void shouldCreateDG2() {
-    List<Class<?>> list = getInTopologicalOrder(H.class, G.class, F.class, E.class, D.class, C.class, B.class, A.class);
-
-    assertTrue(list.size() == 8);
-    assertTrue(list.indexOf(A.class) == 0);
-    assertTrue(list.indexOf(B.class) == 1);
-    assertTrue(list.indexOf(C.class) < list.indexOf(D.class));
-    assertTrue(list.indexOf(C.class) < list.indexOf(F.class));
-    assertTrue(list.indexOf(C.class) < list.indexOf(G.class));
-    assertTrue(list.indexOf(C.class) < list.indexOf(H.class));
-    assertTrue(list.indexOf(D.class) < list.indexOf(H.class));
-    assertTrue(list.indexOf(E.class) < list.indexOf(F.class));
-    assertTrue(list.indexOf(E.class) < list.indexOf(H.class));
-    assertTrue(list.indexOf(F.class) < list.indexOf(H.class));
-    assertTrue(list.indexOf(G.class) < list.indexOf(H.class));
-    assertTrue(list.indexOf(H.class) == list.size() - 1);
-  }
-
-  public static List<Class<?>> getInTopologicalOrder(Class<?>... classes) {
-    InjectableStore store = new InjectableStore();
-    DirectedGraph<Class<?>> dg = new DirectedGraph<>();
-
-    for(Class<?> cls : classes) {
-      dg.addNode(cls);
-      store.put(new ClassInjectable(cls));
-    }
-
-    for(Class<?> cls : classes) {
-      for(Binding binding : store.getBindings(cls).values()) {
-        Key[] requiredKeys = binding.getRequiredKeys();
-
-        for(Key requiredKey : requiredKeys) {
-          for(Injectable injectable : store.resolve(requiredKey)) {
-            dg.addEdge(injectable.getInjectableClass(), cls);
-          }
-        }
-      }
-    }
-
-    return TopologicalSort.sort(dg);
   }
 
   @Big @Red

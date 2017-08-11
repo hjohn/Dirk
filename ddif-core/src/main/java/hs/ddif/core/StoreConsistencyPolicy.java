@@ -1,7 +1,5 @@
 package hs.ddif.core;
 
-import java.lang.reflect.AccessibleObject;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -16,9 +14,8 @@ public interface StoreConsistencyPolicy {
    * @param injectableStore the {@link InjectableStore}
    * @param injectable the injectable being considered for addition to the store
    * @param qualifiers the qualifiers of the injectable
-   * @param bindings the bindings of the injectable
    */
-  void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings);
+  void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers);
 
   /**
    * Called when an attempt is made to remove an {@link Injectable} from the store.  Implementors
@@ -27,7 +24,6 @@ public interface StoreConsistencyPolicy {
    * @param injectableStore the {@link InjectableStore}
    * @param injectable the injectable being considered for removal from the store
    * @param qualifiers the qualifiers of the injectable
-   * @param bindings the bindings of the injectable
    */
-  void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings);
+  void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers);
 }

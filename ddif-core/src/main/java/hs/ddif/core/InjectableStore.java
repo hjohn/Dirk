@@ -1,7 +1,6 @@
 package hs.ddif.core;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -17,15 +16,12 @@ import java.util.Set;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Store which keeps track of injectable objects and of their bindings.  No effort
- * is made to make sure that the store only contains injectables that have
- * resolvable bindings, although using a {@link StoreConsistencyPolicy} it is
- * possible to prevent such additions and removals from taking place.
- *
- * @param <T> type of objects the store holds
+ * Store which keeps track of injectable objects.  No effort is made to make sure that
+ * the store only contains injectables that have resolvable bindings, although using a
+ * {@link StoreConsistencyPolicy} it is possible to prevent such additions and removals
+ * from taking place.
  */
 public class InjectableStore {
-  private static final Map<AccessibleObject, Binding> NO_BINDINGS = Collections.emptyMap();
 
   /**
    * Map containing annotation descriptor mappings to sets of injectables which match one specific
@@ -33,17 +29,6 @@ public class InjectableStore {
    */
   private final Map<Class<?>, Map<AnnotationDescriptor, Set<Injectable>>> injectablesByDescriptorByType = new HashMap<>();
 
-  /**
-   * Map containing bindings for each class.  Bindings can resolved to a value that can
-   * be injected into a new object.  Bindings can be optional or required.  Required
-   * Bindings play an important role when ensuring that all dependencies an injectable
-   * has can be resolved at runtime.<p>
-   *
-   * The key is always a concrete class.
-   */
-  private final Map<Class<?>, Map<AccessibleObject, Binding>> bindingsByClass = new HashMap<>();
-
-  private final Binder binder = new Binder();
   private final StoreConsistencyPolicy policy;
   private final DiscoveryPolicy discoveryPolicy;
 
@@ -58,16 +43,6 @@ public class InjectableStore {
 
   public InjectableStore() {
     this(null, null);
-  }
-
-  public Map<AccessibleObject, Binding> getBindings(Class<?> cls) {
-    Map<AccessibleObject, Binding> bindings = bindingsByClass.get(cls);
-
-    return bindings == null ? NO_BINDINGS : Collections.unmodifiableMap(bindings);
-  }
-
-  public Set<Class<?>> getInjectables() {
-    return Collections.unmodifiableSet(bindingsByClass.keySet());
   }
 
   Set<Injectable> resolve(Key key) {
@@ -165,7 +140,7 @@ public class InjectableStore {
     return injectablesByDescriptorByType.containsKey(concreteClass);
   }
 
-  public Map<AccessibleObject, Binding> put(Injectable injectable) {
+  public void put(Injectable injectable) {
     if(injectable == null) {
       throw new IllegalArgumentException("parameter 'injectable' cannot be null");
     }
@@ -177,9 +152,8 @@ public class InjectableStore {
     }
 
     Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();
-    Map<AccessibleObject, Binding> bindings = injectable.needsInjection() ? Binder.resolve(concreteClass) : NO_BINDINGS;
 
-    policy.checkAddition(this, injectable, qualifiers, bindings);
+    policy.checkAddition(this, injectable, qualifiers);
 
     for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
       ensureRegistrationIsPossible(type, injectable);
@@ -189,14 +163,6 @@ public class InjectableStore {
      * Beyond this point, modifications are made to the store, nothing should go wrong or the store's state could become inconsistent.
      */
 
-    if(injectable.needsInjection()) {
-      if(bindingsByClass.containsKey(concreteClass)) {
-        throw new DuplicateBeanException(concreteClass, injectable);
-      }
-
-      bindingsByClass.put(concreteClass, bindings);
-    }
-
     for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
       register(type, null, injectable);
 
@@ -204,11 +170,9 @@ public class InjectableStore {
         register(type, qualifier, injectable);
       }
     }
-
-    return bindings;
   }
 
-  public Map<AccessibleObject, Binding> remove(Injectable injectable) {
+  public void remove(Injectable injectable) {
     if(injectable == null) {
       throw new IllegalArgumentException("parameter 'injectable' cannot be null");
     }
@@ -222,7 +186,7 @@ public class InjectableStore {
     Class<?> concreteClass = injectable.getInjectableClass();
     Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();  // TODO extractQualifiers might simply add ConcreteClass to the set?
 
-    policy.checkRemoval(this, injectable, qualifiers, bindingsByClass.get(injectable.getInjectableClass()));
+    policy.checkRemoval(this, injectable, qualifiers);
 
     /*
      * Beyond this point, modifications are made to the store, nothing should go wrong or the store's state could become inconsistent.
@@ -235,8 +199,6 @@ public class InjectableStore {
         removeInternal(type, qualifier, injectable);
       }
     }
-
-    return injectable.needsInjection() ? bindingsByClass.remove(concreteClass) : NO_BINDINGS;
   }
 
   private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
@@ -335,11 +297,11 @@ public class InjectableStore {
 
   static class NoStoreConsistencyPolicy implements StoreConsistencyPolicy {
     @Override
-    public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings) {
+    public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
     }
 
     @Override
-    public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings) {
+    public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
     }
   }
 

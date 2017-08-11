@@ -156,7 +156,7 @@ public class Injector {
     }
 
     @SuppressWarnings("unchecked")
-    T bean = (T)injectable.getInstance(this, store.getBindings(injectable.getInjectableClass()));
+    T bean = (T)injectable.getInstance(this);
 
     /*
      * Store the result if singleton.
@@ -209,9 +209,9 @@ public class Injector {
   }
 
   private void register(Injectable injectable) {
-    Map<AccessibleObject, Binding> bindings = store.put(injectable);
+    store.put(injectable);
 
-    for(Binding binding : bindings.values()) {
+    for(Binding binding : injectable.getBindings().values()) {
       consistencyPolicy.addReferences(binding.getRequiredKeys());
     }
   }
@@ -245,9 +245,9 @@ public class Injector {
   }
 
   private void remove(Injectable injectable) {
-    Map<AccessibleObject, Binding> bindings = store.remove(injectable);
+    store.remove(injectable);
 
-    for(Binding binding : bindings.values()) {
+    for(Binding binding : injectable.getBindings().values()) {
       consistencyPolicy.removeReferences(binding.getRequiredKeys());
     }
   }

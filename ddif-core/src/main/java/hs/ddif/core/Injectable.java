@@ -12,12 +12,11 @@ import java.util.Set;
 public interface Injectable {
 
   /**
-   * Returns whether or not this Injectable requires any form of injection
-   * (constructor, field or method injection).
+   * Returns the {@link Binding}s required.
    *
-   * @return <code>true</code> if the injectable needs injection, otherwise <code>false</code>
+   * @return a {@link Map} of {@link Binding}s, never null, can be empty if no bindings are needed.
    */
-  boolean needsInjection();
+  Map<AccessibleObject, Binding> getBindings();
 
   /**
    * Returns the type of the resulting instance provided by this {@link Injectable}.
@@ -30,10 +29,9 @@ public interface Injectable {
    * Returns an instance of the type provided by this {@link Injectable}.
    *
    * @param injector the injector to use to resolve dependencies
-   * @param bindings the bindings to use
    * @return an instance of the type provided by this {@link Injectable}, or <code>null</code> if the bean could not be provided
    */
-  Object getInstance(Injector injector, Map<AccessibleObject, Binding> bindings);
+  Object getInstance(Injector injector);
 
   /**
    * Returns the qualifiers associated with this Injectable.

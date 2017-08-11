@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -24,60 +25,33 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
   private final Map<Key, Integer> referenceCounters = new HashMap<>();
 
   @Override
-  public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings) {
+  public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
 
-    if(injectable.needsInjection()) {
+    Map<AccessibleObject, Binding> bindings = injectable.getBindings();
 
-      /*
-       * Check bindings to see if this injectable can be instantiated and injected.
-       */
+    /*
+     * Check the created bindings for unresolved or ambigious dependencies:
+     */
 
-      int constructorCount = 0;
+    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+      Key[] requiredKeys = entry.getValue().getRequiredKeys();
 
-      for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
-        if(entry.getKey() instanceof Constructor) {
-          constructorCount++;
+      for(Key requiredKey : requiredKeys) {
+        Set<Injectable> injectables = injectableStore.resolve(requiredKey);
+
+        if(injectables.isEmpty()) {
+          throw new UnresolvedDependencyException(injectable, entry.getKey(), requiredKey);
         }
-        if(entry.getKey() instanceof Field) {
-          Field field = (Field)entry.getKey();
-
-          if(Modifier.isFinal(field.getModifiers())) {
-            throw new BindingException("Cannot inject final field: " + field + " in: " + injectable.getInjectableClass());
-          }
-        }
-      }
-
-      if(constructorCount < 1) {
-        throw new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: " + injectable.getInjectableClass());
-      }
-      else if(constructorCount > 1) {
-        throw new BindingException("Multiple constructors found to be annotated with @Inject, but only one allowed: " + injectable.getInjectableClass());
-      }
-
-      /*
-       * Check the created bindings for unresolved or ambigious dependencies:
-       */
-
-      for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
-        Key[] requiredKeys = entry.getValue().getRequiredKeys();
-
-        for(Key requiredKey : requiredKeys) {
-          Set<Injectable> injectables = injectableStore.resolve(requiredKey);
-
-          if(injectables.isEmpty()) {
-            throw new UnresolvedDependencyException(injectable, entry.getKey(), requiredKey);
-          }
-          if(injectables.size() > 1) {
-            throw new AmbigiousDependencyException(injectable.getInjectableClass(), requiredKey, injectables);
-          }
+        if(injectables.size() > 1) {
+          throw new AmbigiousDependencyException(injectable.getInjectableClass(), requiredKey, injectables);
         }
       }
     }
   }
 
   @Override
-  public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers, Map<AccessibleObject, Binding> bindings) {
+  public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
   }
 

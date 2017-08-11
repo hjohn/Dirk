@@ -10,6 +10,7 @@ import java.util.Set;
 
 public class ClassInjectable implements Injectable {
   private final Class<?> injectableClass;
+  private final Map<AccessibleObject, Binding> bindings;
 
   public ClassInjectable(Class<?> injectableClass) {
     if(injectableClass.isInterface() || Modifier.isAbstract(injectableClass.getModifiers())) {
@@ -17,6 +18,33 @@ public class ClassInjectable implements Injectable {
     }
 
     this.injectableClass = injectableClass;
+    this.bindings = Binder.resolve(injectableClass);
+
+    /*
+     * Check bindings to see if this injectable can be instantiated and injected.
+     */
+
+    int constructorCount = 0;
+
+    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+      if(entry.getKey() instanceof Constructor) {
+        constructorCount++;
+      }
+      if(entry.getKey() instanceof Field) {
+        Field field = (Field)entry.getKey();
+
+        if(Modifier.isFinal(field.getModifiers())) {
+          throw new BindingException("Cannot inject final field: " + field + " in: " + injectableClass);
+        }
+      }
+    }
+
+    if(constructorCount < 1) {
+      throw new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: " + injectableClass);
+    }
+    else if(constructorCount > 1) {
+      throw new BindingException("Multiple constructors found to be annotated with @Inject, but only one allowed: " + injectableClass);
+    }
   }
 
   @Override
@@ -25,8 +53,8 @@ public class ClassInjectable implements Injectable {
   }
 
   @Override
-  public boolean needsInjection() {
-    return true;
+  public Map<AccessibleObject, Binding> getBindings() {
+    return bindings;
   }
 
   private static Map.Entry<AccessibleObject, Binding> findConstructorEntry(Map<AccessibleObject, Binding> bindings) {
@@ -40,7 +68,7 @@ public class ClassInjectable implements Injectable {
   }
 
   @Override
-  public Object getInstance(Injector injector, Map<AccessibleObject, Binding> bindings) {
+  public Object getInstance(Injector injector) {
     try {
 
       /*

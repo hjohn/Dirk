@@ -1,4 +1,4 @@
-package hs.ddif.core;
+package hs.ddif.scan;
 
 import java.util.Collections;
 import java.util.HashMap;

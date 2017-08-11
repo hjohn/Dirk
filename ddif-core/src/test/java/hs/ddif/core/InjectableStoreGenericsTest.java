@@ -33,7 +33,7 @@ public class InjectableStoreGenericsTest {
   @Test
   public void shouldResolveToStringWhenUsingGenerics() {
     store.put(new ClassInjectable(String.class));   // String extends Object implements CharSequence, Serializable, Comparable<String>
-    store.put(new ClassInjectable(Integer.class));  // Integer extends Number implements Serializable, Comparable<Integer>
+    store.put(new InstanceInjectable(Integer.MAX_VALUE));  // Integer extends Number implements Serializable, Comparable<Integer>
 
     // Resolvables
     assertTrue(store.resolve(new Key(Object.class)).size() == 2);
@@ -90,13 +90,13 @@ public class InjectableStoreGenericsTest {
     assertTrue(store.resolve(new Key(new TypeReference<Converter<Apple, ?>>() {}.getType())).size() == 1);
   }
 
-  class OrangeToOrangeJuiceConverter implements Converter<Orange, OrangeJuice> {
+  public static class OrangeToOrangeJuiceConverter implements Converter<Orange, OrangeJuice> {
   }
 
-  class AppleToSlicedAppleConverter extends FruitToSlicedFruitConverter<Apple> {
+  public static class AppleToSlicedAppleConverter extends FruitToSlicedFruitConverter<Apple> {
   }
 
-  class FruitToSlicedFruitConverter<T extends Fruit> implements Converter<T, Sliced<T>> {
+  public static class FruitToSlicedFruitConverter<T extends Fruit> implements Converter<T, Sliced<T>> {
   }
 
   interface Converter<I, O> {

@@ -4,6 +4,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,8 +29,8 @@ public class ProvidedInjectable implements Injectable {
   }
 
   @Override
-  public boolean needsInjection() {
-    return false;
+  public Map<AccessibleObject, Binding> getBindings() {
+    return Collections.emptyMap();
   }
 
   @Override
@@ -38,7 +39,7 @@ public class ProvidedInjectable implements Injectable {
   }
 
   @Override
-  public Object getInstance(Injector injector, Map<AccessibleObject, Binding> bindings) {
+  public Object getInstance(Injector injector) {
     return provider.get();
   }
 

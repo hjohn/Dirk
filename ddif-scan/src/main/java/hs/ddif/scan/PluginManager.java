@@ -1,7 +1,15 @@
 package hs.ddif.scan;
 
+import hs.ddif.core.Binder;
+import hs.ddif.core.Binding;
+import hs.ddif.core.ClassInjectable;
+import hs.ddif.core.DependencyException;
+import hs.ddif.core.InjectableStore;
+import hs.ddif.core.Injector;
+import hs.ddif.core.Key;
+import hs.ddif.core.Module;
+
 import java.io.IOException;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -10,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -19,16 +26,6 @@ import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
-
-import hs.ddif.core.Binder;
-import hs.ddif.core.Binding;
-import hs.ddif.core.ClassInjectable;
-import hs.ddif.core.DependencyException;
-import hs.ddif.core.DependencySorter;
-import hs.ddif.core.InjectableStore;
-import hs.ddif.core.Injector;
-import hs.ddif.core.Key;
-import hs.ddif.core.Module;
 
 public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
@@ -39,90 +36,107 @@ public class PluginManager {
     this.injector = injector;
   }
 
-  @SuppressWarnings("resource")
   public Plugin loadPluginAndScan(URL url) {
-    AtomicBoolean unloaded = new AtomicBoolean();
-    URLClassLoader classLoader = new UnloadTrackingClassLoader(url, unloaded);
+    PluginLoader pluginLoader = new PluginLoader(url);
 
-    LOGGER.fine("scanning " + url);
-
-    Reflections reflections = new Reflections(
-      url,
-      new TypeAnnotationsScanner(),
-      new FieldAnnotationsScanner(),
-      new MethodAnnotationsScanner()
-    );
-
-    Set<String> classNames = new HashSet<>();
-
-    classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Named"));
-
-    for(String name : reflections.getStore().get("FieldAnnotationsScanner").get("javax.inject.Inject")) {
-      classNames.add(name.substring(0, name.lastIndexOf('.')));
-    }
-    for(String name : reflections.getStore().get("MethodAnnotationsScanner").get("javax.inject.Inject")) {
-      name = name.substring(0, name.lastIndexOf('('));
-      classNames.add(name.substring(0, name.lastIndexOf('.')));
-    }
-
-    InjectableStore store = new InjectableStore();
-
-    for(String className : classNames) {
-      LOGGER.finer("found " + className);
-      try {
-        putInStore(store, classLoader.loadClass(className));
-      }
-      catch(ClassNotFoundException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    List<Class<?>> matchingClasses = DependencySorter.getInTopologicalOrder(store);
-    List<Class<?>> registeredClasses = new ArrayList<>();
-
-    try {
-      for(Class<?> cls : matchingClasses) {
-        if(!injector.contains(cls)) {
-          injector.register(cls);
-          registeredClasses.add(cls);
-        }
-      }
-    }
-    catch(DependencyException e) {
-
-      /*
-       * Registration failed, rolling back:
-       */
-
-      Collections.reverse(registeredClasses);
-
-      for(Class<?> cls : registeredClasses) {
-        injector.remove(cls);
-      }
-
-      throw e;
-    }
-
-    return new Plugin(injector, registeredClasses, classLoader, unloaded);
+    return pluginLoader.loadPlugin();
   }
 
-  private void putInStore(InjectableStore store, Class<?> cls) {
-    if(!store.contains(cls)) {
-      LOGGER.finest("adding " + cls.getName());
+  private class PluginLoader {
+    private final InjectableStore store = new InjectableStore();
+    private final URL url;
+    private final Set<ClassInjectable> classInjectables = new HashSet<>();
 
-      Map<AccessibleObject, Binding> bindings = store.put(new ClassInjectable(cls));
+    public PluginLoader(URL url) {
+      this.url = url;
+    }
 
-      /*
-       * Self discovery of other injectables
-       */
+    public Plugin loadPlugin() {
+      LOGGER.fine("scanning " + url);
 
-      for(Binding binding : bindings.values()) {
-        for(Key key : binding.getRequiredKeys()) {
-          Type type = key.getType();
-          Class<?> typeClass = Binder.determineClassFromType(type);
+      Reflections reflections = new Reflections(
+        url,
+        new TypeAnnotationsScanner(),
+        new FieldAnnotationsScanner(),
+        new MethodAnnotationsScanner()
+      );
 
-          if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
-            putInStore(store, typeClass);
+      Set<String> classNames = new HashSet<>();
+
+      classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Named"));
+
+      for(String name : reflections.getStore().get("FieldAnnotationsScanner").get("javax.inject.Inject")) {
+        classNames.add(name.substring(0, name.lastIndexOf('.')));
+      }
+      for(String name : reflections.getStore().get("MethodAnnotationsScanner").get("javax.inject.Inject")) {
+        name = name.substring(0, name.lastIndexOf('('));
+        classNames.add(name.substring(0, name.lastIndexOf('.')));
+      }
+
+      AtomicBoolean unloaded = new AtomicBoolean();
+      @SuppressWarnings("resource")
+      URLClassLoader classLoader = new UnloadTrackingClassLoader(url, unloaded);
+
+      for(String className : classNames) {
+        LOGGER.finer("found " + className);
+        try {
+          putInStore(store, classLoader.loadClass(className));
+        }
+        catch(ClassNotFoundException e) {
+          throw new RuntimeException(e);
+        }
+      }
+
+      List<Class<?>> matchingClasses = DependencySorter.getInTopologicalOrder(store, classInjectables);
+      List<Class<?>> registeredClasses = new ArrayList<>();
+
+      try {
+        for(Class<?> cls : matchingClasses) {
+          if(!injector.contains(cls)) {
+            injector.register(cls);
+            registeredClasses.add(cls);
+          }
+        }
+      }
+      catch(DependencyException e) {
+
+        /*
+         * Registration failed, rolling back:
+         */
+
+        Collections.reverse(registeredClasses);
+
+        for(Class<?> cls : registeredClasses) {
+          injector.remove(cls);
+        }
+
+        throw e;
+      }
+
+      return new Plugin(injector, registeredClasses, classLoader, unloaded);
+    }
+
+    private void putInStore(InjectableStore store, Class<?> cls) {
+      if(!store.contains(cls)) {
+        LOGGER.finest("adding " + cls.getName());
+
+        ClassInjectable classInjectable = new ClassInjectable(cls);
+
+        store.put(classInjectable);
+        classInjectables.add(classInjectable);
+
+        /*
+         * Self discovery of other injectables
+         */
+
+        for(Binding binding : classInjectable.getBindings().values()) {
+          for(Key key : binding.getRequiredKeys()) {
+            Type type = key.getType();
+            Class<?> typeClass = Binder.determineClassFromType(type);
+
+            if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
+              putInStore(store, typeClass);
+            }
           }
         }
       }

@@ -1,30 +1,35 @@
-package hs.ddif.core;
-
-import static org.junit.Assert.assertTrue;
+package hs.ddif.scan;
 
 import hs.ddif.core.ClassInjectable;
-import hs.ddif.core.DependencySorter;
 import hs.ddif.core.InjectableStore;
-import hs.ddif.core.test.qualifiers.Big;
-import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.scan.test.qualifiers.Big;
+import hs.ddif.scan.test.qualifiers.Red;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 public class DependencySorterTest {
 
   @Test
   public void shouldCreateDirectedGraph() {
     InjectableStore store = new InjectableStore();
+    Set<ClassInjectable> classInjectables = new HashSet<>();
 
     for(Class<?> cls : new Class<?>[] {H.class, G.class, F.class, E.class, D.class, C.class, B.class, A.class}) {
-      store.put(new ClassInjectable(cls));
+      ClassInjectable injectable = new ClassInjectable(cls);
+
+      classInjectables.add(injectable);
+      store.put(injectable);
     }
 
-    List<Class<?>> list = DependencySorter.getInTopologicalOrder(store);
+    List<Class<?>> list = DependencySorter.getInTopologicalOrder(store, classInjectables);
 
     assertTrue(list.size() == 8);
     assertTrue(list.indexOf(A.class) == 0);
