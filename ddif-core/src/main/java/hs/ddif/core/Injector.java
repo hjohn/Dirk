@@ -1,7 +1,6 @@
 package hs.ddif.core;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.Map;

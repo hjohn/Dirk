@@ -1,14 +1,12 @@
 package hs.ddif.core;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
+import hs.ddif.core.test.injectables.BigRedBean;
+import hs.ddif.core.test.qualifiers.Big;
+import hs.ddif.core.test.qualifiers.Red;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -19,10 +17,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
-import hs.ddif.core.test.injectables.BigRedBean;
-import hs.ddif.core.test.qualifiers.Big;
-import hs.ddif.core.test.qualifiers.Red;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
 public class InjectableStoreTest {
   @Rule
