@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
 import org.reflections.scanners.MethodAnnotationsScanner;
+import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 
 public class PluginManager {
@@ -62,7 +63,8 @@ public class PluginManager {
       url,
       new TypeAnnotationsScanner(),
       new FieldAnnotationsScanner(),
-      new MethodAnnotationsScanner()
+      new MethodAnnotationsScanner(),
+      new SubTypesScanner(false)
     );
 
     return new PluginLoader(reflections, classLoader).loadPlugin();
@@ -79,10 +81,6 @@ public class PluginManager {
     }
 
     public Plugin loadPlugin() {
-      return createPlugin(reflections, classLoader);
-    }
-
-    private Plugin createPlugin(Reflections reflections, URLClassLoader classLoader) {
       Set<String> classNames = new HashSet<>();
 
       classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Named"));
@@ -114,31 +112,36 @@ public class PluginManager {
     }
 
     private void putInStore(InjectableStore store, Class<?> cls) {
-      if(!store.contains(cls)) {
-        LOGGER.finest("adding " + cls.getName());
+      if(!store.contains(cls) && reflections.getAllTypes().contains(cls.getName())) {
+        try {
+          LOGGER.finest("adding " + cls.getName());
 
-        ClassInjectable classInjectable = new ClassInjectable(cls);
+          ClassInjectable classInjectable = new ClassInjectable(cls);
 
-        store.put(classInjectable);
-        classInjectables.add(classInjectable);
+          store.put(classInjectable);
+          classInjectables.add(classInjectable);
 
-        /*
-         * Self discovery of other injectables
-         */
+          /*
+           * Self discovery of other injectables
+           */
 
-        for(Binding[] bindings : classInjectable.getBindings().values()) {
-          for(Binding binding : bindings) {
-            Key key = binding.getRequiredKey();
+          for(Binding[] bindings : classInjectable.getBindings().values()) {
+            for(Binding binding : bindings) {
+              Key key = binding.getRequiredKey();
 
-            if(key != null) {
-              Type type = key.getType();
-              Class<?> typeClass = Binder.determineClassFromType(type);
+              if(key != null) {
+                Type type = key.getType();
+                Class<?> typeClass = Binder.determineClassFromType(type);
 
-              if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
-                putInStore(store, typeClass);
+                if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
+                  putInStore(store, typeClass);
+                }
               }
             }
           }
+        }
+        catch(Exception e) {
+          throw new IllegalStateException("Exception while loading plugin class: " + cls, e);
         }
       }
     }
