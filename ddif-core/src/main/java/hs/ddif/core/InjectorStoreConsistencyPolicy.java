@@ -24,23 +24,25 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
   public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
 
-    Map<AccessibleObject, Binding> bindings = injectable.getBindings();
+    Map<AccessibleObject, Binding[]> bindings = injectable.getBindings();
 
     /*
      * Check the created bindings for unresolved or ambigious dependencies:
      */
 
-    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
-      Key[] requiredKeys = entry.getValue().getRequiredKeys();
+    for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
+      for(Binding binding : entry.getValue()) {
+        Key requiredKey = binding.getRequiredKey();
 
-      for(Key requiredKey : requiredKeys) {
-        Set<Injectable> injectables = injectableStore.resolve(requiredKey);
+        if(requiredKey != null) {
+          Set<Injectable> injectables = injectableStore.resolve(requiredKey);
 
-        if(injectables.isEmpty()) {
-          throw new UnresolvedDependencyException(injectable, entry.getKey(), requiredKey);
-        }
-        if(injectables.size() > 1) {
-          throw new AmbigiousDependencyException(injectable.getInjectableClass(), requiredKey, injectables);
+          if(injectables.isEmpty()) {
+            throw new UnresolvedDependencyException(injectable, entry.getKey(), requiredKey);
+          }
+          if(injectables.size() > 1) {
+            throw new AmbigiousDependencyException(injectable.getInjectableClass(), requiredKey, injectables);
+          }
         }
       }
     }
@@ -51,34 +53,30 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
   }
 
-  void addReferences(Key[] keys) {
-    for(Key key : keys) {
-      Integer referenceCounter = referenceCounters.get(key);
+  void addReference(Key key) {
+    Integer referenceCounter = referenceCounters.get(key);
 
-      if(referenceCounter == null) {
-        referenceCounter = 1;
-      }
-      else {
-        referenceCounter++;
-      }
-
-      referenceCounters.put(key, referenceCounter);
+    if(referenceCounter == null) {
+      referenceCounter = 1;
     }
+    else {
+      referenceCounter++;
+    }
+
+    referenceCounters.put(key, referenceCounter);
   }
 
-  void removeReferences(Key[] keys) {
-    for(Key key : keys) {
-      Integer referenceCounter = referenceCounters.remove(key);
+  void removeReference(Key key) {
+    Integer referenceCounter = referenceCounters.remove(key);
 
-      if(referenceCounter == null) {
-        throw new RuntimeException("Assertion error");
-      }
+    if(referenceCounter == null) {
+      throw new RuntimeException("Assertion error");
+    }
 
-      referenceCounter--;
+    referenceCounter--;
 
-      if(referenceCounter > 0) {
-        referenceCounters.put(key, referenceCounter);
-      }
+    if(referenceCounter > 0) {
+      referenceCounters.put(key, referenceCounter);
     }
   }
 

@@ -14,9 +14,9 @@ public interface Injectable {
   /**
    * Returns the {@link Binding}s required.
    *
-   * @return a {@link Map} of {@link Binding}s, never null, can be empty if no bindings are needed.
+   * @return a {@link Map} of {@link Binding}[], never null, can be empty if no bindings are needed.
    */
-  Map<AccessibleObject, Binding> getBindings();
+  Map<AccessibleObject, Binding[]> getBindings();
 
   /**
    * Returns the type of the resulting instance provided by this {@link Injectable}.

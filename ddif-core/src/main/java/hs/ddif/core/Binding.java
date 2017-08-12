@@ -17,14 +17,14 @@ public interface Binding {
   Object getValue(Injector injector);
 
   /**
-   * Returns the Keys this binding requires to resolve properly.  If there are
-   * none (empty array) this means the binding can supply a valid value at all
-   * times.  For example, a Collection Binding can always return an empty
-   * collection if there are no valid candidates for it.
+   * Returns the Key this binding requires to resolve properly.  If <code>null</code>
+   * this means the binding can supply a valid value at all times.  For example, a
+   * Collection Binding can always return an empty collection if there are no valid
+   * candidates for it.
    *
-   * @return the Keys this binding requires to resolve properly, or an empty array if none are required
+   * @return the Key this binding requires to resolve properly, or <code>null</code> if none are required
    */
-  Key[] getRequiredKeys();
+  Key getRequiredKey();
 
   /**
    * Returns whether or not this binding is optional.

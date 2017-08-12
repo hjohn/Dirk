@@ -210,8 +210,12 @@ public class Injector {
   private void register(Injectable injectable) {
     store.put(injectable);
 
-    for(Binding binding : injectable.getBindings().values()) {
-      consistencyPolicy.addReferences(binding.getRequiredKeys());
+    for(Binding[] bindings : injectable.getBindings().values()) {
+      for(Binding binding : bindings) {
+        if(binding.getRequiredKey() != null) {
+          consistencyPolicy.addReference(binding.getRequiredKey());
+        }
+      }
     }
   }
 
@@ -246,8 +250,12 @@ public class Injector {
   private void remove(Injectable injectable) {
     store.remove(injectable);
 
-    for(Binding binding : injectable.getBindings().values()) {
-      consistencyPolicy.removeReferences(binding.getRequiredKeys());
+    for(Binding[] bindings : injectable.getBindings().values()) {
+      for(Binding binding : bindings) {
+        if(binding.getRequiredKey() != null) {
+          consistencyPolicy.removeReference(binding.getRequiredKey());
+        }
+      }
     }
   }
 }

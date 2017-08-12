@@ -29,7 +29,7 @@ public class ProvidedInjectable implements Injectable {
   }
 
   @Override
-  public Map<AccessibleObject, Binding> getBindings() {
+  public Map<AccessibleObject, Binding[]> getBindings() {
     return Collections.emptyMap();
   }
 

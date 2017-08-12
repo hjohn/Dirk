@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class ClassInjectable implements Injectable {
   private final Class<?> injectableClass;
-  private final Map<AccessibleObject, Binding> bindings;
+  private final Map<AccessibleObject, Binding[]> bindings;
 
   public ClassInjectable(Class<?> injectableClass) {
     if(injectableClass.isInterface() || Modifier.isAbstract(injectableClass.getModifiers())) {
@@ -26,7 +26,7 @@ public class ClassInjectable implements Injectable {
 
     int constructorCount = 0;
 
-    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         constructorCount++;
       }
@@ -53,12 +53,12 @@ public class ClassInjectable implements Injectable {
   }
 
   @Override
-  public Map<AccessibleObject, Binding> getBindings() {
+  public Map<AccessibleObject, Binding[]> getBindings() {
     return bindings;
   }
 
-  private static Map.Entry<AccessibleObject, Binding> findConstructorEntry(Map<AccessibleObject, Binding> bindings) {
-    for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+  private static Map.Entry<AccessibleObject, Binding[]> findConstructorEntry(Map<AccessibleObject, Binding[]> bindings) {
+    for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         return entry;
       }
@@ -75,15 +75,32 @@ public class ClassInjectable implements Injectable {
        * Look for a constructor injection to create the object, and instantiate it.
        */
 
-      Map.Entry<AccessibleObject, Binding> constructorEntry = findConstructorEntry(bindings);
+      Map.Entry<AccessibleObject, Binding[]> constructorEntry = findConstructorEntry(bindings);
       Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
-      Object bean = constructor.newInstance((Object[])constructorEntry.getValue().getValue(injector));
+      Object[] values = new Object[constructorEntry.getValue().length];  // Parameters for constructor
+
+      for(int i = 0; i < values.length; i++) {
+        Binding binding = constructorEntry.getValue()[i];
+
+        try {
+          values[i] = binding.getValue(injector);
+        }
+        catch(NoSuchBeanException e) {
+          if(!binding.isOptional()) {
+            throw e;
+          }
+
+          values[i] = null;
+        }
+      }
+
+      Object bean = constructor.newInstance(values);
 
       /*
        * Do field/method injections.
        */
 
-      for(Map.Entry<AccessibleObject, Binding> entry : bindings.entrySet()) {
+      for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
         try {
           AccessibleObject accessibleObject = entry.getKey();
 
@@ -91,7 +108,7 @@ public class ClassInjectable implements Injectable {
             Field field = (Field)accessibleObject;
 
             field.setAccessible(true);
-            field.set(bean, entry.getValue().getValue(injector));
+            field.set(bean, entry.getValue()[0].getValue(injector));
           }
         }
         catch(IllegalArgumentException e) {

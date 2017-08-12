@@ -22,7 +22,7 @@ public class InstanceInjectable implements Injectable {
   }
 
   @Override
-  public Map<AccessibleObject, Binding> getBindings() {
+  public Map<AccessibleObject, Binding[]> getBindings() {
     return Collections.emptyMap();
   }
 

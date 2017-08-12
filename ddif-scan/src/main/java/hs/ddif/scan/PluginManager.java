@@ -129,13 +129,17 @@ public class PluginManager {
          * Self discovery of other injectables
          */
 
-        for(Binding binding : classInjectable.getBindings().values()) {
-          for(Key key : binding.getRequiredKeys()) {
-            Type type = key.getType();
-            Class<?> typeClass = Binder.determineClassFromType(type);
+        for(Binding[] bindings : classInjectable.getBindings().values()) {
+          for(Binding binding : bindings) {
+            Key key = binding.getRequiredKey();
 
-            if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
-              putInStore(store, typeClass);
+            if(key != null) {
+              Type type = key.getType();
+              Class<?> typeClass = Binder.determineClassFromType(type);
+
+              if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
+                putInStore(store, typeClass);
+              }
             }
           }
         }

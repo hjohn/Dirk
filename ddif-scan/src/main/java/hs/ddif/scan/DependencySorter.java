@@ -19,12 +19,14 @@ public class DependencySorter {
     }
 
     for(ClassInjectable classInjectable : classInjectables) {
-      for(Binding binding : classInjectable.getBindings().values()) {
-        Key[] requiredKeys = binding.getRequiredKeys();
+      for(Binding[] bindings : classInjectable.getBindings().values()) {
+        for(Binding binding : bindings) {
+          Key requiredKey = binding.getRequiredKey();
 
-        for(Key requiredKey : requiredKeys) {
-          for(Injectable injectable : store.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray())) {
-            dg.addEdge(injectable.getInjectableClass(), classInjectable.getInjectableClass());
+          if(requiredKey != null) {
+            for(Injectable injectable : store.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray())) {
+              dg.addEdge(injectable.getInjectableClass(), classInjectable.getInjectableClass());
+            }
           }
         }
       }

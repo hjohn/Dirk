@@ -8,7 +8,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,10 +20,9 @@ import javax.inject.Provider;
 import javax.inject.Qualifier;
 
 public class Binder {
-  private static final Key[] NO_REQUIRED_KEYS = new Key[0];
 
-  public static Map<AccessibleObject, Binding> resolve(Class<?> injectableClass) {
-    Map<AccessibleObject, Binding> bindings = new HashMap<>();
+  public static Map<AccessibleObject, Binding[]> resolve(Class<?> injectableClass) {
+    Map<AccessibleObject, Binding[]> bindings = new HashMap<>();
 
     Class<?> currentInjectableClass = injectableClass;
 
@@ -34,7 +32,7 @@ public class Binder {
         Nullable nullable = field.getAnnotation(Nullable.class);
 
         if(inject != null) {
-          bindings.put(field, createBinding(field.getGenericType(), nullable != null, extractQualifiers(field)));
+          bindings.put(field, new Binding[] {createBinding(field.getGenericType(), nullable != null, extractQualifiers(field))});
         }
       }
 
@@ -45,7 +43,7 @@ public class Binder {
     Constructor<?>[] constructors = injectableClass.getConstructors();
     boolean foundInjectableConstructor = false;
 
-    for(final Constructor<?> constructor : constructors) {
+    for(Constructor<?> constructor : constructors) {
       Inject inject = constructor.getAnnotation(Inject.class);
 
       if(constructor.getParameterTypes().length == 0) {
@@ -65,61 +63,20 @@ public class Binder {
     return bindings;
   }
 
-  private static Binding createConstructorBinding(Constructor<?> constructor) {
+  private static Binding[] createConstructorBinding(Constructor<?> constructor) {
     Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
     Type[] genericParameterTypes = constructor.getGenericParameterTypes();
-
-    final List<Binding> constructorBindings = new ArrayList<>();
-    final List<Key> requiredKeys = new ArrayList<>();
+    List<Binding> constructorBindings = new ArrayList<>();
 
     for(int i = 0; i < genericParameterTypes.length; i++) {
       Type type = genericParameterTypes[i];
-
       AnnotationDescriptor[] qualifiers = extractQualifiers(parameterAnnotations[i]);
-
-      boolean optional = isOptional(parameterAnnotations[i]);
-      Binding binding = createBinding(type, optional, qualifiers);
+      Binding binding = createBinding(type, isOptional(parameterAnnotations[i]), qualifiers);
 
       constructorBindings.add(binding);
-
-      if(!optional) {
-        requiredKeys.addAll(Arrays.asList(binding.getRequiredKeys()));
-      }
     }
 
-    return new Binding() {
-      @Override
-      public Object getValue(Injector injector) {
-        Object[] values = new Object[constructorBindings.size()];
-
-        for(int i = 0; i < constructorBindings.size(); i++) {
-          Binding binding = constructorBindings.get(i);
-
-          try {
-            values[i] = binding.getValue(injector);
-          }
-          catch(NoSuchBeanException e) {
-            if(!binding.isOptional()) {
-              throw e;
-            }
-
-            values[i] = null;
-          }
-        }
-
-        return values;
-      }
-
-      @Override
-      public boolean isOptional() {
-        return false;
-      }
-
-      @Override
-      public Key[] getRequiredKeys() {
-        return requiredKeys.toArray(new Key[requiredKeys.size()]);
-      }
-    };
+    return constructorBindings.toArray(new Binding[constructorBindings.size()]);
   }
 
   public static final Class<?> determineClassFromType(Type type) {
@@ -130,8 +87,6 @@ public class Binder {
       return (Class<?>)((ParameterizedType)type).getRawType();
     }
     else if(type instanceof TypeVariable) {
-      System.err.println(type);
-      System.err.println(Arrays.toString(((TypeVariable<?>)type).getBounds()));
       return (Class<?>)((TypeVariable<?>)type).getBounds()[0];
     }
 
@@ -156,8 +111,8 @@ public class Binder {
         }
 
         @Override
-        public Key[] getRequiredKeys() {
-          return NO_REQUIRED_KEYS;
+        public Key getRequiredKey() {
+          return null;
         }
       };
     }
@@ -176,8 +131,8 @@ public class Binder {
         }
 
         @Override
-        public Key[] getRequiredKeys() {
-          return NO_REQUIRED_KEYS;
+        public Key getRequiredKey() {
+          return null;
         }
       };
     }
@@ -204,14 +159,14 @@ public class Binder {
         }
 
         @Override
-        public Key[] getRequiredKeys() {
-          return binding.getRequiredKeys();
+        public Key getRequiredKey() {
+          return binding.getRequiredKey();
         }
       };
     }
     else {
       final Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
-      final Key[] requiredKeys = optional ? NO_REQUIRED_KEYS : new Key[] {new Key(finalType, qualifiers)};
+      final Key requiredKey = optional ? null : new Key(finalType, qualifiers);
 
       return new Binding() {
         @Override
@@ -230,8 +185,8 @@ public class Binder {
         }
 
         @Override
-        public Key[] getRequiredKeys() {
-          return requiredKeys;
+        public Key getRequiredKey() {
+          return requiredKey;
         }
 
         @Override
@@ -241,7 +196,7 @@ public class Binder {
 
         @Override
         public String toString() {
-          return "DirectBinding[cls=" + cls + "; requiredKeys=" + Arrays.toString(getRequiredKeys()) + "]";
+          return "DirectBinding[cls=" + cls + "; key=" + getRequiredKey() + "]";
         }
       };
     }
