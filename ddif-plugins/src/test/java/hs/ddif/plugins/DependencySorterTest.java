@@ -1,7 +1,8 @@
-package hs.ddif.scan;
+package hs.ddif.plugins;
 
 import hs.ddif.core.ClassInjectable;
 import hs.ddif.core.InjectableStore;
+import hs.ddif.plugins.DependencySorter;
 import hs.ddif.scan.test.qualifiers.Big;
 import hs.ddif.scan.test.qualifiers.Red;
 

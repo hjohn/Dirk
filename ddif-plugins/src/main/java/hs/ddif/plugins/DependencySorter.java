@@ -1,4 +1,4 @@
-package hs.ddif.scan;
+package hs.ddif.plugins;
 
 import hs.ddif.core.Binding;
 import hs.ddif.core.ClassInjectable;

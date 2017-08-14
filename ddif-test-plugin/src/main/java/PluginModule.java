@@ -1,4 +1,4 @@
-import hs.ddif.core.Module;
+import hs.ddif.plugins.Module;
 import hs.ddif.test.beans.TextDatabase;
 import hs.ddif.test.beans.TextUppercaser;
 import hs.ddif.test.textprovider.FancyTextProvider;

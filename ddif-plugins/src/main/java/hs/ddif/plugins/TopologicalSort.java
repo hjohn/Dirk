@@ -1,4 +1,4 @@
-package hs.ddif.scan;
+package hs.ddif.plugins;
 
 import java.util.ArrayList;
 import java.util.HashSet;

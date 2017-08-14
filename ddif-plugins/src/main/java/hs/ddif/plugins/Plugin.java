@@ -1,7 +1,7 @@
-package hs.ddif.scan;
+package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
-import hs.ddif.scan.PluginManager.UnloadTrackingClassLoader;
+import hs.ddif.plugins.PluginManager.UnloadTrackingClassLoader;
 
 import java.io.IOException;
 import java.net.URLClassLoader;

@@ -1,4 +1,4 @@
-package hs.ddif.scan;
+package hs.ddif.plugins;
 
 import hs.ddif.core.Binder;
 import hs.ddif.core.Binding;
@@ -7,7 +7,6 @@ import hs.ddif.core.DependencyException;
 import hs.ddif.core.InjectableStore;
 import hs.ddif.core.Injector;
 import hs.ddif.core.Key;
-import hs.ddif.core.Module;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;

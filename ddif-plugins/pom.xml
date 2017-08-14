@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>hs.ddif</groupId>
-  <artifactId>ddif-scan</artifactId>
+  <artifactId>ddif-plugins</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 

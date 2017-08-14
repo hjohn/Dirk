@@ -1,4 +1,4 @@
-package hs.ddif.core;
+package hs.ddif.plugins;
 
 import java.util.List;
 
