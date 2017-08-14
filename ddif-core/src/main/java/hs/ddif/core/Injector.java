@@ -212,7 +212,11 @@ public class Injector {
    *
    * If there are unresolvable dependencies, or registering this class
    * would result in ambigious dependencies for previously registered
-   * classes, then this method will throw an exception.
+   * classes, then this method will throw an exception.<p>
+   *
+   * Note that if the given class implements {@link Provider} that
+   * the class it provides is held to the same restrictions or registration
+   * will fail.
    *
    * @param concreteClass the class to register with the Injector
    * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
@@ -229,7 +233,11 @@ public class Injector {
    *
    * If there are unresolvable dependencies, or registering this provider
    * would result in ambigious dependencies for previously registered
-   * classes, then this method will throw an exception.
+   * classes, then this method will throw an exception.<p>
+   *
+   * Note that if the provided class implements {@link Provider} that
+   * the class it provides is held to the same restrictions or registration
+   * will fail.
    *
    * @param provider the provider to register with the Injector
    * @param qualifiers the qualifiers for this provider
@@ -246,7 +254,10 @@ public class Injector {
    * result.<p>
    *
    * If registering this instance would result in ambigious dependencies for
-   * previously registered classes, then this method will throw an exception.
+   * previously registered classes, then this method will throw an exception.<p>
+   *
+   * Note that if the instance implements {@link Provider} that the class it
+   * provides is held to the same restrictions or registration will fail.
    *
    * @param provider the provider to register with the Injector
    * @param qualifiers the qualifiers for this provider
@@ -264,6 +275,21 @@ public class Injector {
         if(binding.getRequiredKey() != null) {
           consistencyPolicy.addReference(binding.getRequiredKey());
         }
+      }
+    }
+
+    /*
+     * Recursively register a Provider if the injectable's class implements it:
+     */
+
+    if(Provider.class.isAssignableFrom(injectable.getInjectableClass())) {
+      try {
+        register((Provider<?>)getInstance(injectable.getInjectableClass()));
+      }
+      catch(Exception e) {
+        remove(injectable);  // Clean up original registration if Provider registration failed
+
+        throw e;  // Rethrow exception
       }
     }
   }
@@ -289,7 +315,7 @@ public class Injector {
    * If there would be broken dependencies then the removal will fail
    * and an exception is thrown.
    *
-   * @param concreteClass the class to remove from the Injector
+   * @param provider the provider to remove from the Injector
    * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
    */
   public void remove(Provider<?> provider) {
