@@ -1,5 +1,9 @@
 package hs.ddif.core;
 
+import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.store.StoreConsistencyPolicy;
+import hs.ddif.core.util.AnnotationDescriptor;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
@@ -38,7 +42,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<Sc
         Key requiredKey = binding.getRequiredKey();
 
         if(requiredKey != null) {
-          Set<ScopedInjectable> injectables = injectableStore.resolve(requiredKey);
+          Set<ScopedInjectable> injectables = injectableStore.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray());
 
           if(injectables.isEmpty()) {
             throw new UnresolvedDependencyException(injectable, entry.getKey(), requiredKey);

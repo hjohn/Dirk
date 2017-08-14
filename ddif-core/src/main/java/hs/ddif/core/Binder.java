@@ -1,12 +1,14 @@
 package hs.ddif.core;
 
+import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.TypeUtils;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,22 +81,8 @@ public class Binder {
     return constructorBindings.toArray(new Binding[constructorBindings.size()]);
   }
 
-  public static final Class<?> determineClassFromType(Type type) {
-    if(type instanceof Class) {
-      return (Class<?>)type;
-    }
-    else if(type instanceof ParameterizedType) {
-      return (Class<?>)((ParameterizedType)type).getRawType();
-    }
-    else if(type instanceof TypeVariable) {
-      return (Class<?>)((TypeVariable<?>)type).getBounds()[0];
-    }
-
-    throw new IllegalArgumentException("Unsupported type: " + type);
-  }
-
   private static Binding createBinding(final Type type, final boolean optional, final AnnotationDescriptor... qualifiers) {
-    final Class<?> cls = determineClassFromType(type);
+    final Class<?> cls = TypeUtils.determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
       final Type elementType = getGenericType(type);

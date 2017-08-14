@@ -1,8 +1,8 @@
 package hs.ddif.plugins;
 
 import hs.ddif.core.ClassInjectable;
-import hs.ddif.core.Injectable;
-import hs.ddif.core.InjectableStore;
+import hs.ddif.core.store.Injectable;
+import hs.ddif.core.store.InjectableStore;
 import hs.ddif.scan.test.qualifiers.Big;
 import hs.ddif.scan.test.qualifiers.Red;
 

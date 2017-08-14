@@ -1,10 +1,5 @@
-package hs.ddif.core;
+package hs.ddif.core.util;
 
-import static hs.ddif.core.AnnotationDescriptor.describeAsMap;
-import static org.junit.Assert.assertEquals;
-
-import hs.ddif.core.AnnotationDescriptor;
-import hs.ddif.core.Value;
 import hs.ddif.core.test.qualifiers.Big;
 
 import java.lang.annotation.Annotation;
@@ -22,6 +17,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import static hs.ddif.core.util.AnnotationDescriptor.describeAsMap;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(value = Parameterized.class)
 public class AnnotationDescriptorTest {
@@ -43,23 +41,23 @@ public class AnnotationDescriptorTest {
       {
         Wierd.class,
         new HashMap<String, Object>() {{
-          put("", "hs.ddif.core.AnnotationDescriptorTest$Wierd");
+          put("", "hs.ddif.core.util.AnnotationDescriptorTest$Wierd");
           put("power", 15L);
           put("type", String.class);
         }},
         describeAsMap(Wierd.class, new Value("power", 15L), new Value("type", String.class)),
-        "@hs.ddif.core.AnnotationDescriptorTest$Wierd[power=15, type=class java.lang.String]"
+        "@hs.ddif.core.util.AnnotationDescriptorTest$Wierd[power=15, type=class java.lang.String]"
       },
 
       {
         Wierd.class,
         new HashMap<String, Object>() {{
-          put("", "hs.ddif.core.AnnotationDescriptorTest$Wierd");
+          put("", "hs.ddif.core.util.AnnotationDescriptorTest$Wierd");
           put("power", 15L);
           put("type", String.class);
         }},
         describeAsMap(Wierd.class, new Value("level", 5), new Value("power", 15L), new Value("type", String.class)),  // level=5 is default, gets automatically removed
-        "@hs.ddif.core.AnnotationDescriptorTest$Wierd[power=15, type=class java.lang.String]"
+        "@hs.ddif.core.util.AnnotationDescriptorTest$Wierd[power=15, type=class java.lang.String]"
       },
 
       {
@@ -84,15 +82,15 @@ public class AnnotationDescriptorTest {
       {
         Key.class,
         new HashMap<String, Object>() {{
-          put("", "hs.ddif.core.AnnotationDescriptorTest$Key");
+          put("", "hs.ddif.core.util.AnnotationDescriptorTest$Key");
           put("pairs", new ArrayList<Map<String, Object>>() {{
             add(new HashMap<String, Object>() {{
-              put("", "hs.ddif.core.AnnotationDescriptorTest$KeyValue");
+              put("", "hs.ddif.core.util.AnnotationDescriptorTest$KeyValue");
               put("key", "a");
               put("value", "1");
             }});
             add(new HashMap<String, Object>() {{
-              put("", "hs.ddif.core.AnnotationDescriptorTest$KeyValue");
+              put("", "hs.ddif.core.util.AnnotationDescriptorTest$KeyValue");
               put("key", "b");
               put("value", "2");
             }});
@@ -102,7 +100,7 @@ public class AnnotationDescriptorTest {
           describeAsMap(KeyValue.class, new Value("key", "a"), new Value("value", "1")),
           describeAsMap(KeyValue.class, new Value("key", "b"), new Value("value", "2"))
         })),
-        "@hs.ddif.core.AnnotationDescriptorTest$Key[pairs={@hs.ddif.core.AnnotationDescriptorTest$KeyValue[key=a, value=1], @hs.ddif.core.AnnotationDescriptorTest$KeyValue[key=b, value=2]}]"
+        "@hs.ddif.core.util.AnnotationDescriptorTest$Key[pairs={@hs.ddif.core.util.AnnotationDescriptorTest$KeyValue[key=a, value=1], @hs.ddif.core.util.AnnotationDescriptorTest$KeyValue[key=b, value=2]}]"
       }
     };
 

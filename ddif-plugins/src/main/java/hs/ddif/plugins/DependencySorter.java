@@ -2,9 +2,9 @@ package hs.ddif.plugins;
 
 import hs.ddif.core.Binding;
 import hs.ddif.core.ClassInjectable;
-import hs.ddif.core.Injectable;
-import hs.ddif.core.InjectableStore;
 import hs.ddif.core.Key;
+import hs.ddif.core.store.Injectable;
+import hs.ddif.core.store.InjectableStore;
 
 import java.util.List;
 import java.util.Set;

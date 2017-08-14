@@ -1,4 +1,6 @@
-package hs.ddif.core;
+package hs.ddif.core.store;
+
+import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.util.Set;
 

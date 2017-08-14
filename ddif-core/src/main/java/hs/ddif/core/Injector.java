@@ -1,5 +1,9 @@
 package hs.ddif.core;
 
+import hs.ddif.core.store.DiscoveryPolicy;
+import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.util.AnnotationDescriptor;
+
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;

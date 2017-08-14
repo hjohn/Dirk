@@ -1,13 +1,13 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.Binder;
 import hs.ddif.core.Binding;
 import hs.ddif.core.ClassInjectable;
 import hs.ddif.core.DependencyException;
-import hs.ddif.core.Injectable;
-import hs.ddif.core.InjectableStore;
 import hs.ddif.core.Injector;
 import hs.ddif.core.Key;
+import hs.ddif.core.store.Injectable;
+import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.util.TypeUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;
@@ -131,7 +131,7 @@ public class PluginManager {
 
               if(key != null) {
                 Type type = key.getType();
-                Class<?> typeClass = Binder.determineClassFromType(type);
+                Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
                 if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
                   putInStore(store, typeClass);

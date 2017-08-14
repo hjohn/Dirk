@@ -1,4 +1,6 @@
-package hs.ddif.core;
+package hs.ddif.core.store;
+
+import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
@@ -47,10 +49,6 @@ public class InjectableStore<T extends Injectable> {
     this(null, null);
   }
 
-  Set<T> resolve(Key key) {
-    return resolve(key.getType(), (Object[])key.getQualifiersAsArray());
-  }
-
   /**
    * Looks up Injectables by type and by the given criteria.  The empty set is returned if
    * there were no matches.  Supported criteria are:
@@ -68,7 +66,7 @@ public class InjectableStore<T extends Injectable> {
    * @return a set of Injectables matching the given type and critera
    */
   public Set<T> resolve(Type type, Object... criteria) {
-    Class<?> cls = Binder.determineClassFromType(type);
+    Class<?> cls = hs.ddif.core.util.TypeUtils.determineClassFromType(type);
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
 
     if(injectablesByDescriptor == null) {
@@ -213,7 +211,7 @@ public class InjectableStore<T extends Injectable> {
       Class<?> scanClassType = toScan.remove(toScan.size() - 1);
       superClassesAndInterfaces.add(scanClassType);
 
-      Class<?> scanClass = Binder.determineClassFromType(scanClassType);
+      Class<?> scanClass = hs.ddif.core.util.TypeUtils.determineClassFromType(scanClassType);
 
       for(Class<?> iface : scanClass.getInterfaces()) {
         toScan.add(iface);

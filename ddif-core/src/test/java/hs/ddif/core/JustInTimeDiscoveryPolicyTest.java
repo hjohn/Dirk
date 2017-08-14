@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithEmptyAndAnnotatedConstructor;
@@ -26,13 +27,13 @@ public class JustInTimeDiscoveryPolicyTest {
 
   @Test
   public void shouldDiscoverNewTypes() {
-    assertFalse(store.resolve(new Key(BigRedBean.class)).isEmpty());
+    assertFalse(store.resolve(BigRedBean.class).isEmpty());
     assertTrue(store.contains(BigRedBean.class));
   }
 
   @Test
   public void shouldDiscoverNewTypesAndDependentTypes() {
-    assertFalse(store.resolve(new Key(BeanWithInjection.class)).isEmpty());
+    assertFalse(store.resolve(BeanWithInjection.class).isEmpty());
     assertTrue(store.contains(BeanWithInjection.class));
     assertTrue(store.contains(SimpleBean.class));
   }
@@ -40,7 +41,7 @@ public class JustInTimeDiscoveryPolicyTest {
   @Test
   public void shouldNotDiscoverNewTypeWithoutAnyConstructorMatch() {
     try {
-      assertTrue(store.resolve(new Key(SampleWithDependencyOnSampleWithoutConstructorMatch.class)).isEmpty());
+      assertTrue(store.resolve(SampleWithDependencyOnSampleWithoutConstructorMatch.class).isEmpty());
       fail("expected UnresolvedDependencyException");
     }
     catch(BindingException e) {
@@ -52,7 +53,7 @@ public class JustInTimeDiscoveryPolicyTest {
   @Test
   public void shouldNotDiscoverNewTypeWithMultipleConstructorMatch() {
     try {
-      assertTrue(store.resolve(new Key(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class)).isEmpty());
+      assertTrue(store.resolve(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class).isEmpty());
       fail("expected UnresolvedDependencyException");
     }
     catch(BindingException e) {
@@ -68,6 +69,6 @@ public class JustInTimeDiscoveryPolicyTest {
 
   @Test
   public void shouldDiscoverNewTypeWithEmptyUnannotatedConstructorAndAnnotatedConstructor() {
-    assertFalse(store.resolve(new Key(SampleWithDependencyOnSampleWithEmptyAndAnnotatedConstructor.class)).isEmpty());
+    assertFalse(store.resolve(SampleWithDependencyOnSampleWithEmptyAndAnnotatedConstructor.class).isEmpty());
   }
 }

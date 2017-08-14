@@ -21,16 +21,14 @@ import org.junit.rules.ExpectedException;
 
 import hs.ddif.core.AmbigiousBeanException;
 import hs.ddif.core.AmbigiousDependencyException;
-import hs.ddif.core.AnnotationDescriptor;
 import hs.ddif.core.BindingException;
 import hs.ddif.core.DependencyException;
-import hs.ddif.core.DuplicateBeanException;
 import hs.ddif.core.Injector;
 import hs.ddif.core.NoSuchBeanException;
-import hs.ddif.core.NoSuchInjectableException;
 import hs.ddif.core.UnresolvedDependencyException;
-import hs.ddif.core.Value;
 import hs.ddif.core.ViolatesSingularDependencyException;
+import hs.ddif.core.store.DuplicateBeanException;
+import hs.ddif.core.store.NoSuchInjectableException;
 import hs.ddif.core.test.injectables.BeanWithBigInjection;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BeanWithCollection;
@@ -66,6 +64,8 @@ import hs.ddif.core.test.injectables.SubclassOfBeanWithInjection;
 import hs.ddif.core.test.injectables.SubclassOfBeanWithInjectionWithSameNamedInjection;
 import hs.ddif.core.test.injectables.UnavailableBean;
 import hs.ddif.core.test.injectables.UnregisteredParentBean;
+import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Value;
 
 public class InjectorTest {
   private Injector injector;

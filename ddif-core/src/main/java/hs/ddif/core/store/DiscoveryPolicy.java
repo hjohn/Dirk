@@ -1,4 +1,4 @@
-package hs.ddif.core;
+package hs.ddif.core.store;
 
 import java.lang.reflect.Type;
 

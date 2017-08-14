@@ -1,5 +1,8 @@
 package hs.ddif.core;
 
+import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Value;
+
 import java.sql.Connection;
 
 import javax.inject.Inject;

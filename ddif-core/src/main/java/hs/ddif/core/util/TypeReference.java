@@ -1,4 +1,4 @@
-package hs.ddif.core;
+package hs.ddif.core.util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

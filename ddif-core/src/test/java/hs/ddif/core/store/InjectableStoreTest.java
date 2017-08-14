@@ -1,9 +1,15 @@
-package hs.ddif.core;
+package hs.ddif.core.store;
 
+import hs.ddif.core.Binding;
+import hs.ddif.core.ClassInjectable;
+import hs.ddif.core.InstanceInjectable;
+import hs.ddif.core.Key;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Value;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
@@ -40,7 +46,9 @@ public class InjectableStoreTest {
 
     for(Map.Entry<AccessibleObject, Binding[]> entry : injectable.getBindings().entrySet()) {
       if(!(entry.getKey() instanceof Constructor)) {
-        assertThat(store.resolve(entry.getValue()[0].getRequiredKey()), empty());
+        Key requiredKey = entry.getValue()[0].getRequiredKey();
+
+        assertThat(store.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray()), empty());
       }
     }
 
@@ -50,7 +58,7 @@ public class InjectableStoreTest {
 
     for(Map.Entry<AccessibleObject, Binding[]> entry : injectable.getBindings().entrySet()) {
       if(!(entry.getKey() instanceof Constructor)) {
-        assertThat(store.resolve(entry.getValue()[0].getRequiredKey()), hasSize(1));
+        assertThat(store.resolve(entry.getValue()[0].getRequiredKey().getType()), hasSize(1));
       }
     }
   }

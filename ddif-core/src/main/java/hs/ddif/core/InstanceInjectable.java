@@ -1,5 +1,7 @@
 package hs.ddif.core;
 
+import hs.ddif.core.util.AnnotationDescriptor;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.util.ArrayList;

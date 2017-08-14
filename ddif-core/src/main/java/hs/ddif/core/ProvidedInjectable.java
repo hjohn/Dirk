@@ -1,5 +1,8 @@
 package hs.ddif.core;
 
+import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.TypeUtils;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
@@ -25,7 +28,7 @@ public class ProvidedInjectable implements ScopedInjectable {
 
     this.type = provider.getClass().getGenericInterfaces()[0];
     this.provider = provider;
-    this.injectableClass = Binder.determineClassFromType(Binder.getGenericType(type));
+    this.injectableClass = TypeUtils.determineClassFromType(Binder.getGenericType(type));
     this.descriptors = new ArrayList<>(Arrays.asList(descriptors));
   }
 

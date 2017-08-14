@@ -1,5 +1,9 @@
 package hs.ddif.core;
 
+import hs.ddif.core.store.DiscoveryPolicy;
+import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.util.TypeUtils;
+
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 
@@ -22,7 +26,7 @@ public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy<ScopedInjectab
 
   @Override
   public void discoverType(InjectableStore<ScopedInjectable> injectableStore, Type type) {
-    Class<?> typeClass = Binder.determineClassFromType(type);
+    Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
     if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
       injectableStore.put(new ClassInjectable(typeClass));
