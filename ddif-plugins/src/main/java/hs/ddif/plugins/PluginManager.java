@@ -4,6 +4,7 @@ import hs.ddif.core.Binder;
 import hs.ddif.core.Binding;
 import hs.ddif.core.ClassInjectable;
 import hs.ddif.core.DependencyException;
+import hs.ddif.core.Injectable;
 import hs.ddif.core.InjectableStore;
 import hs.ddif.core.Injector;
 import hs.ddif.core.Key;
@@ -92,7 +93,7 @@ public class PluginManager {
         classNames.add(name.substring(0, name.lastIndexOf('.')));
       }
 
-      InjectableStore store = new InjectableStore();
+      InjectableStore<Injectable> store = new InjectableStore<>();
 
       for(String className : classNames) {
         LOGGER.finer("found " + className);
@@ -110,7 +111,7 @@ public class PluginManager {
       return new Plugin(injector, registeredClasses, classLoader);
     }
 
-    private void putInStore(InjectableStore store, Class<?> cls) {
+    private void putInStore(InjectableStore<Injectable> store, Class<?> cls) {
       if(!store.contains(cls) && reflections.getAllTypes().contains(cls.getName())) {
         try {
           LOGGER.finest("adding " + cls.getName());

@@ -17,11 +17,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class JustInTimeDiscoveryPolicyTest {
-  private InjectableStore store;
+  private InjectableStore<Injectable> store;
 
   @Before
   public void before() {
-    store = new InjectableStore(new InjectorStoreConsistencyPolicy(), new JustInTimeDiscoveryPolicy());
+    store = new InjectableStore<>(new InjectorStoreConsistencyPolicy(), new JustInTimeDiscoveryPolicy());
   }
 
   @Test

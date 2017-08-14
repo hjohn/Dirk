@@ -15,7 +15,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * Policy that makes sure the InjectableStore at all times contains
  * injectables that can be fully resolved.
  */
-public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
+public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<Injectable> {
 
   /**
    * Map containing the number of times a specific Key (a reference to a specific class
@@ -24,7 +24,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
   private final Map<Key, Integer> referenceCounters = new HashMap<>();
 
   @Override
-  public void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
+  public void checkAddition(InjectableStore<Injectable> injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
 
     Map<AccessibleObject, Binding[]> bindings = injectable.getBindings();
@@ -85,7 +85,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy {
   }
 
   @Override
-  public void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
+  public void checkRemoval(InjectableStore<Injectable> injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
   }
 

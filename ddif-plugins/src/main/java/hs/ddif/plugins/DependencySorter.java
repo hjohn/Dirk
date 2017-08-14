@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class DependencySorter {
 
-  public static List<Class<?>> getInTopologicalOrder(InjectableStore store, Set<ClassInjectable> classInjectables) {
+  public static List<Class<?>> getInTopologicalOrder(InjectableStore<Injectable> store, Set<ClassInjectable> classInjectables) {
     DirectedGraph<Class<?>> dg = new DirectedGraph<>();
 
     for(ClassInjectable injectable : classInjectables) {

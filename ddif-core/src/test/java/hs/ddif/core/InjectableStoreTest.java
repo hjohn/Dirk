@@ -25,11 +25,11 @@ public class InjectableStoreTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  private InjectableStore store;
+  private InjectableStore<Injectable> store;
 
   @Before
   public void before() {
-    this.store = new InjectableStore();
+    this.store = new InjectableStore<>();
   }
 
   @Test

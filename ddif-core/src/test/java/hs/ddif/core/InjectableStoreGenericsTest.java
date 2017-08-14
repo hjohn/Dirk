@@ -1,7 +1,5 @@
 package hs.ddif.core;
 
-import static org.junit.Assert.assertTrue;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -10,20 +8,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import hs.ddif.core.ClassInjectable;
-import hs.ddif.core.InjectableStore;
-import hs.ddif.core.Key;
-import hs.ddif.core.TypeReference;
+import static org.junit.Assert.assertTrue;
 
 public class InjectableStoreGenericsTest {
-  private InjectableStore store;
+  private InjectableStore<Injectable> store;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void before() {
-    this.store = new InjectableStore();
+    this.store = new InjectableStore<>();
   }
 
   /**

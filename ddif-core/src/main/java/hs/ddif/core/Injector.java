@@ -24,14 +24,14 @@ public class Injector {
    * InjectableStore used by this Injector.  The Injector will safeguard that this store
    * only contains injectables that can be fully resolved.
    */
-  private final InjectableStore store;
+  private final InjectableStore<Injectable> store;
 
   /**
    * Map containing {@link ScopeResolver}s this injector can use.
    */
   private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
 
-  public Injector(DiscoveryPolicy discoveryPolicy, ScopeResolver... scopeResolvers) {
+  public Injector(DiscoveryPolicy<Injectable> discoveryPolicy, ScopeResolver... scopeResolvers) {
     for(ScopeResolver scopeResolver : scopeResolvers) {
       scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
     }
@@ -65,7 +65,7 @@ public class Injector {
     });
 
     this.consistencyPolicy = new InjectorStoreConsistencyPolicy();
-    this.store = new InjectableStore(consistencyPolicy, discoveryPolicy);
+    this.store = new InjectableStore<>(consistencyPolicy, discoveryPolicy);
   }
 
   public Injector(ScopeResolver... scopeResolvers) {
@@ -73,7 +73,7 @@ public class Injector {
   }
 
   public Injector() {
-    this((DiscoveryPolicy)null);
+    this((DiscoveryPolicy<Injectable>)null);
   }
 
   /**

@@ -1,8 +1,8 @@
 package hs.ddif.plugins;
 
 import hs.ddif.core.ClassInjectable;
+import hs.ddif.core.Injectable;
 import hs.ddif.core.InjectableStore;
-import hs.ddif.plugins.DependencySorter;
 import hs.ddif.scan.test.qualifiers.Big;
 import hs.ddif.scan.test.qualifiers.Red;
 
@@ -20,7 +20,7 @@ public class DependencySorterTest {
 
   @Test
   public void shouldCreateDirectedGraph() {
-    InjectableStore store = new InjectableStore();
+    InjectableStore<Injectable> store = new InjectableStore<>();
     Set<ClassInjectable> classInjectables = new HashSet<>();
 
     for(Class<?> cls : new Class<?>[] {H.class, G.class, F.class, E.class, D.class, C.class, B.class, A.class}) {

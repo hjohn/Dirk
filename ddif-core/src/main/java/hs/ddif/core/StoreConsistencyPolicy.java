@@ -4,8 +4,10 @@ import java.util.Set;
 
 /**
  * Interface for applying consistency checks on an {@link InjectableStore}.
+ *
+ * @param <T> the type of {@link Injectable} the store holds
  */
-public interface StoreConsistencyPolicy {
+public interface StoreConsistencyPolicy<T extends Injectable> {
 
   /**
    * Called when an attempt is made to add a new {@link Injectable} to the store.  Implementors
@@ -15,7 +17,7 @@ public interface StoreConsistencyPolicy {
    * @param injectable the injectable being considered for addition to the store
    * @param qualifiers the qualifiers of the injectable
    */
-  void checkAddition(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers);
+  void checkAddition(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers);
 
   /**
    * Called when an attempt is made to remove an {@link Injectable} from the store.  Implementors
@@ -25,5 +27,5 @@ public interface StoreConsistencyPolicy {
    * @param injectable the injectable being considered for removal from the store
    * @param qualifiers the qualifiers of the injectable
    */
-  void checkRemoval(InjectableStore injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers);
+  void checkRemoval(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers);
 }
