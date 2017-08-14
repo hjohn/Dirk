@@ -18,10 +18,10 @@ import java.lang.reflect.Type;
  *
  * TODO just in time discovery can leave the store in a modified state when several dependencies are correctly discovered, but a failure occurs at a later stage resulting in the top level Injectable to remain unresolved.
  */
-public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy<Injectable> {
+public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy<ScopedInjectable> {
 
   @Override
-  public void discoverType(InjectableStore<Injectable> injectableStore, Type type) {
+  public void discoverType(InjectableStore<ScopedInjectable> injectableStore, Type type) {
     Class<?> typeClass = Binder.determineClassFromType(type);
 
     if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {

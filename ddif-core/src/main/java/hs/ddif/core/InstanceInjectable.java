@@ -11,7 +11,7 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 
-public class InstanceInjectable implements Injectable {
+public class InstanceInjectable implements ScopedInjectable {
   private static final Annotation SINGLETON_ANNOTATION = new Annotation() {
     @Override
     public Class<? extends Annotation> annotationType() {

@@ -17,7 +17,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class JustInTimeDiscoveryPolicyTest {
-  private InjectableStore<Injectable> store;
+  private InjectableStore<ScopedInjectable> store;
 
   @Before
   public void before() {

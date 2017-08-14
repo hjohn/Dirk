@@ -24,14 +24,14 @@ public class Injector {
    * InjectableStore used by this Injector.  The Injector will safeguard that this store
    * only contains injectables that can be fully resolved.
    */
-  private final InjectableStore<Injectable> store;
+  private final InjectableStore<ScopedInjectable> store;
 
   /**
    * Map containing {@link ScopeResolver}s this injector can use.
    */
   private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
 
-  public Injector(DiscoveryPolicy<Injectable> discoveryPolicy, ScopeResolver... scopeResolvers) {
+  public Injector(DiscoveryPolicy<ScopedInjectable> discoveryPolicy, ScopeResolver... scopeResolvers) {
     for(ScopeResolver scopeResolver : scopeResolvers) {
       scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
     }
@@ -73,7 +73,7 @@ public class Injector {
   }
 
   public Injector() {
-    this((DiscoveryPolicy<Injectable>)null);
+    this((DiscoveryPolicy<ScopedInjectable>)null);
   }
 
   /**
@@ -87,7 +87,7 @@ public class Injector {
    * @throws AmbigiousBeanException when the given class has multiple matching candidates
    */
   public <T> T getInstance(Type type, Object... criteria) {
-    Set<Injectable> injectables = store.resolve(type, criteria);
+    Set<ScopedInjectable> injectables = store.resolve(type, criteria);
 
     if(injectables.isEmpty()) {
       throw new NoSuchBeanException(type, criteria);
@@ -138,7 +138,7 @@ public class Injector {
   public <T> Set<T> getInstances(Type type, Object... criteria) {
     Set<T> instances = new HashSet<>();
 
-    for(Injectable injectable : store.resolve(type, criteria)) {
+    for(ScopedInjectable injectable : store.resolve(type, criteria)) {
       T instance = getInstance(injectable);
 
       if(instance != null) {
@@ -173,7 +173,7 @@ public class Injector {
     return store.contains(cls);
   }
 
-  protected <T> T getInstance(Injectable injectable) {
+  protected <T> T getInstance(ScopedInjectable injectable) {
     ScopeResolver scopeResolver = null;
 
     for(Map.Entry<Class<? extends Annotation>, ScopeResolver> entry : scopesResolversByAnnotation.entrySet()) {
@@ -267,7 +267,7 @@ public class Injector {
     register(new InstanceInjectable(instance, qualifiers));
   }
 
-  private void register(Injectable injectable) {
+  private void register(ScopedInjectable injectable) {
     store.put(injectable);
 
     for(Binding[] bindings : injectable.getBindings().values()) {
@@ -322,7 +322,7 @@ public class Injector {
     remove(new ProvidedInjectable(provider));
   }
 
-  private void remove(Injectable injectable) {
+  private void remove(ScopedInjectable injectable) {
     store.remove(injectable);
 
     for(Binding[] bindings : injectable.getBindings().values()) {

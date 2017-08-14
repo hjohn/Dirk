@@ -8,7 +8,7 @@ import java.util.Collection;
  */
 public class AmbigiousDependencyException extends DependencyException {
 
-  public AmbigiousDependencyException(Class<?> beanClass, Key key, Collection<Injectable> registeredBeanClasses) {
+  public AmbigiousDependencyException(Class<?> beanClass, Key key, Collection<? extends Injectable> registeredBeanClasses) {
     super(key + " is provided by " + registeredBeanClasses + ", but only one expected for: " + beanClass);
   }
 }

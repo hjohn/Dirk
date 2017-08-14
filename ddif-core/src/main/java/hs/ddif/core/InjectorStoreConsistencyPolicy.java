@@ -15,7 +15,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * Policy that makes sure the InjectableStore at all times contains
  * injectables that can be fully resolved.
  */
-public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<Injectable> {
+public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<ScopedInjectable> {
 
   /**
    * Map containing the number of times a specific Key (a reference to a specific class
@@ -24,7 +24,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<In
   private final Map<Key, Integer> referenceCounters = new HashMap<>();
 
   @Override
-  public void checkAddition(InjectableStore<Injectable> injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
+  public void checkAddition(InjectableStore<ScopedInjectable> injectableStore, ScopedInjectable injectable, Set<AnnotationDescriptor> qualifiers) {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
 
     Map<AccessibleObject, Binding[]> bindings = injectable.getBindings();
@@ -38,7 +38,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<In
         Key requiredKey = binding.getRequiredKey();
 
         if(requiredKey != null) {
-          Set<Injectable> injectables = injectableStore.resolve(requiredKey);
+          Set<ScopedInjectable> injectables = injectableStore.resolve(requiredKey);
 
           if(injectables.isEmpty()) {
             throw new UnresolvedDependencyException(injectable, entry.getKey(), requiredKey);
@@ -57,7 +57,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<In
            * thrown instead.
            */
 
-          Injectable dependentInjectable = injectables.iterator().next();  // Previous checks ensure there is only a single element in the set
+          ScopedInjectable dependentInjectable = injectables.iterator().next();  // Previous checks ensure there is only a single element in the set
 
           if(!binding.isProvider()) {  // When wrapped in a Provider, there are never any scope conflicts
             Annotation dependencyScopeAnnotation = dependentInjectable.getScope();
@@ -85,7 +85,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<In
   }
 
   @Override
-  public void checkRemoval(InjectableStore<Injectable> injectableStore, Injectable injectable, Set<AnnotationDescriptor> qualifiers) {
+  public void checkRemoval(InjectableStore<ScopedInjectable> injectableStore, ScopedInjectable injectable, Set<AnnotationDescriptor> qualifiers) {
     ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
   }
 

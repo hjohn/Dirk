@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ClassInjectable implements Injectable {
+public class ClassInjectable implements ScopedInjectable {
   private final Class<?> injectableClass;
   private final Annotation scopeAnnotation;
   private final Map<AccessibleObject, Binding[]> bindings;

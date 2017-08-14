@@ -12,7 +12,7 @@ import java.util.Set;
 
 import javax.inject.Provider;
 
-public class ProvidedInjectable implements Injectable {
+public class ProvidedInjectable implements ScopedInjectable {
   private final Provider<?> provider;
   private final Class<?> injectableClass;
   private final List<AnnotationDescriptor> descriptors;
