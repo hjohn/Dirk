@@ -88,18 +88,7 @@ public class ClassInjectable implements ScopedInjectable {
       Object[] values = new Object[constructorEntry.getValue().length];  // Parameters for constructor
 
       for(int i = 0; i < values.length; i++) {
-        Binding binding = constructorEntry.getValue()[i];
-
-        try {
-          values[i] = binding.getValue(injector);
-        }
-        catch(NoSuchBeanException e) {
-          if(!binding.isOptional()) {
-            throw e;
-          }
-
-          values[i] = null;
-        }
+        values[i] = constructorEntry.getValue()[i].getValue(injector);
       }
 
       Object bean = constructor.newInstance(values);

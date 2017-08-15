@@ -27,13 +27,6 @@ public interface Binding {
   Key getRequiredKey();
 
   /**
-   * Returns whether or not this binding is optional.
-   *
-   * @return whether or not this binding is optional
-   */
-  boolean isOptional();
-
-  /**
    * Returns whether this binding is for a Provider member or parameter (not whether or not
    * the value is *supplied* by a Provider).
    *

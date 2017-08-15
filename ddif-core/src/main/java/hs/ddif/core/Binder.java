@@ -94,11 +94,6 @@ public class Binder {
         }
 
         @Override
-        public boolean isOptional() {
-          return false;
-        }
-
-        @Override
         public boolean isProvider() {
           return false;
         }
@@ -116,11 +111,6 @@ public class Binder {
         @Override
         public Object getValue(Injector injector) {
           return new ArrayList<>(injector.getInstances(elementType, (Object[])qualifiers));
-        }
-
-        @Override
-        public boolean isOptional() {
-          return false;
         }
 
         @Override
@@ -149,11 +139,6 @@ public class Binder {
           };
 
           return injectObject;
-        }
-
-        @Override
-        public boolean isOptional() {
-          return false;
         }
 
         @Override
@@ -190,11 +175,6 @@ public class Binder {
         @Override
         public Key getRequiredKey() {
           return requiredKey;
-        }
-
-        @Override
-        public boolean isOptional() {
-          return optional;
         }
 
         @Override
