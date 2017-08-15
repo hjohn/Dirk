@@ -177,7 +177,7 @@ public class Injector {
     return store.contains(cls);
   }
 
-  protected <T> T getInstance(ScopedInjectable injectable) {
+  private <T> T getInstance(ScopedInjectable injectable) {
     ScopeResolver scopeResolver = null;
 
     for(Map.Entry<Class<? extends Annotation>, ScopeResolver> entry : scopesResolversByAnnotation.entrySet()) {
@@ -198,12 +198,15 @@ public class Injector {
     @SuppressWarnings("unchecked")
     T bean = (T)injectable.getInstance(this);
 
-    /*
-     * Store the result if scoped.
-     */
+    if(bean != null) {
 
-    if(scopeResolver != null) {
-      scopeResolver.put(injectable.getInjectableClass(), bean);
+      /*
+       * Store the result if scoped.
+       */
+
+      if(scopeResolver != null) {
+        scopeResolver.put(injectable.getInjectableClass(), bean);
+      }
     }
 
     return bean;

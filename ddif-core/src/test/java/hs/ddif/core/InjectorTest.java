@@ -1,32 +1,5 @@
 package hs.ddif.core;
 
-import static org.hamcrest.Matchers.isA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.inject.Named;
-import javax.inject.Provider;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import hs.ddif.core.AmbigiousBeanException;
-import hs.ddif.core.AmbigiousDependencyException;
-import hs.ddif.core.BindingException;
-import hs.ddif.core.DependencyException;
-import hs.ddif.core.Injector;
-import hs.ddif.core.NoSuchBeanException;
-import hs.ddif.core.UnresolvedDependencyException;
-import hs.ddif.core.ViolatesSingularDependencyException;
 import hs.ddif.core.store.DuplicateBeanException;
 import hs.ddif.core.store.NoSuchInjectableException;
 import hs.ddif.core.test.injectables.BeanWithBigInjection;
@@ -66,6 +39,25 @@ import hs.ddif.core.test.injectables.UnavailableBean;
 import hs.ddif.core.test.injectables.UnregisteredParentBean;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Value;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Named;
+import javax.inject.Provider;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import static org.hamcrest.Matchers.isA;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class InjectorTest {
   private Injector injector;
@@ -501,7 +493,7 @@ public class InjectorTest {
   @Test
   public void shouldThrowExceptionWhenMultipleConstructorsAnnotatedWithInject() {
     thrown.expect(DependencyException.class);
-    thrown.expectMessage("Multiple constructors found to be annotated with @Inject, but only one allowed: " + ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
+    thrown.expectMessage("Multiple @Inject annotated constructors found, but only one allowed: " + ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
 
     injector.register(ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
   }

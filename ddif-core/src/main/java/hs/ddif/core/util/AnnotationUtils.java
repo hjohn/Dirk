@@ -26,4 +26,19 @@ public class AnnotationUtils {
 
     return matchingAnnotations;
   }
+
+  /**
+   * Creates an annotation of the given class.
+   * 
+   * @param cls a {@link Class}
+   * @return an {@link Annotation}, never null
+   */
+  public static Annotation of(final Class<? extends Annotation> cls) {
+    return new Annotation() {
+      @Override
+      public Class<? extends Annotation> annotationType() {
+        return cls;
+      }
+    };
+  }
 }

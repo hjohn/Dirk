@@ -28,8 +28,11 @@ public class ClassInjectable implements ScopedInjectable {
    * @throws BindingException if the given class is not annotated and has no public empty constructor or is incorrectly annotated
    */
   public ClassInjectable(Class<?> injectableClass) {
+    if(injectableClass == null) {
+      throw new IllegalArgumentException("injectableClass cannot be null");
+    }
     if(injectableClass.isInterface() || Modifier.isAbstract(injectableClass.getModifiers())) {
-      throw new IllegalArgumentException("parameter 'injectableClass' must be a concrete class: " + injectableClass);
+      throw new IllegalArgumentException("injectableClass must be a concrete class: " + injectableClass);
     }
 
     this.injectableClass = injectableClass;
@@ -47,7 +50,7 @@ public class ClassInjectable implements ScopedInjectable {
       if(entry.getKey() instanceof Constructor) {
         constructorCount++;
       }
-      if(entry.getKey() instanceof Field) {
+      else if(entry.getKey() instanceof Field) {
         Field field = (Field)entry.getKey();
 
         if(Modifier.isFinal(field.getModifiers())) {
@@ -59,8 +62,8 @@ public class ClassInjectable implements ScopedInjectable {
     if(constructorCount < 1) {
       throw new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: " + injectableClass);
     }
-    else if(constructorCount > 1) {
-      throw new BindingException("Multiple constructors found to be annotated with @Inject, but only one allowed: " + injectableClass);
+    if(constructorCount > 1) {
+      throw new BindingException("Multiple @Inject annotated constructors found, but only one allowed: " + injectableClass);
     }
   }
 
@@ -81,7 +84,7 @@ public class ClassInjectable implements ScopedInjectable {
       }
     }
 
-    return null;
+    throw new IllegalStateException("Bindings must always contain a constructor entry");
   }
 
   @Override

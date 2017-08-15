@@ -142,7 +142,7 @@ public class InjectableStore<T extends Injectable> {
 
   public void put(T injectable) {
     if(injectable == null) {
-      throw new IllegalArgumentException("parameter 'injectable' cannot be null");
+      throw new IllegalArgumentException("injectable cannot be null");
     }
 
     Class<?> concreteClass = injectable.getInjectableClass();
@@ -174,7 +174,7 @@ public class InjectableStore<T extends Injectable> {
 
   public void remove(T injectable) {
     if(injectable == null) {
-      throw new IllegalArgumentException("parameter 'injectable' cannot be null");
+      throw new IllegalArgumentException("injectable cannot be null");
     }
 
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(Object.class);

@@ -14,7 +14,7 @@ public class Key {
 
   public Key(Type type, Set<AnnotationDescriptor> qualifiers) {
     if(type == null) {
-      throw new IllegalArgumentException("parameter 'type' cannot be null");
+      throw new IllegalArgumentException("type cannot be null");
     }
 
     this.type = type;
@@ -23,7 +23,7 @@ public class Key {
 
   public Key(Type type, AnnotationDescriptor... qualifiers) {
     if(type == null) {
-      throw new IllegalArgumentException("parameter 'type' cannot be null");
+      throw new IllegalArgumentException("type cannot be null");
     }
 
     this.type = type;
