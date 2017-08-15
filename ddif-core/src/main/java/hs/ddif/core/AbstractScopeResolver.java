@@ -21,7 +21,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   public abstract S getCurrentScope();
 
   @Override
-  public <T> T get(Class<?> injectableClass) throws OutOfScopeException {
+  public <T> T get(Class<?> injectableClass) {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
@@ -41,7 +41,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   }
 
   @Override
-  public <T> void put(Class<?> injectableClass, T instance) throws OutOfScopeException {
+  public <T> void put(Class<?> injectableClass, T instance) {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {

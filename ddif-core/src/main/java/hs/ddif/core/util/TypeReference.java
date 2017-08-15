@@ -14,7 +14,7 @@ public abstract class TypeReference<T> {
     Type superclass = getClass().getGenericSuperclass();
 
     if(superclass instanceof Class) {
-      throw new RuntimeException("Missing type parameter.");
+      throw new IllegalStateException("Missing type parameter.");
     }
 
     type = ((ParameterizedType)superclass).getActualTypeArguments()[0];

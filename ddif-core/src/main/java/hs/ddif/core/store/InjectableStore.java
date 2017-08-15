@@ -303,16 +303,19 @@ public class InjectableStore<T extends Injectable> {
   class NoStoreConsistencyPolicy implements StoreConsistencyPolicy<T> {
     @Override
     public void checkAddition(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers) {
+      // All additions are valid
     }
 
     @Override
     public void checkRemoval(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers) {
+      // All removals are valid
     }
   }
 
   class NoDiscoveryPolicy implements DiscoveryPolicy<T> {
     @Override
     public void discoverType(InjectableStore<T> injectableStore, Type type) {
+      // Discover nothing
     }
   }
 }
