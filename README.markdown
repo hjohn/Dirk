@@ -2,6 +2,7 @@ Dynamic Dependency Injection Framework
 ======================================
 
 [![Build Status](https://travis-ci.org/hjohn/hs.ddif.svg?branch=master)](https://travis-ci.org/hjohn/hs.ddif)
+[![Coverage Status](https://coveralls.io/repos/github/hjohn/hs.ddif/badge.svg?branch=master)](https://coveralls.io/github/hjohn/hs.ddif?branch=master)
 
 This is a light-weight framework that allows you to use standard JSR-330 javax.inject 
 Annotations to create instances of objects, even when they're dynamically loaded at 
