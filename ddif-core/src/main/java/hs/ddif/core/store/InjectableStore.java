@@ -87,53 +87,58 @@ public class InjectableStore<T extends Injectable> {
     Set<T> matches = new HashSet<>(injectablesByDescriptor.get(null));  // Make a copy as otherwise retainAll below will modify the map
 
     filterByGenericType(type, matches);
+    filterByCriteria(injectablesByDescriptor, matches, criteria);
 
+    return matches;
+  }
+
+  private void filterByCriteria(Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor, Set<T> matches, Object... criteria) {
     for(Object criterion : criteria) {
       if(matches.isEmpty()) {
         break;
       }
 
       if(criterion instanceof Matcher) {
-        Matcher matcher = (Matcher)criterion;
+        filterByMatcher(matches, (Matcher)criterion);
+        continue;  // Skip matches standard filtering
+      }
 
-        for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
-          Injectable injectable = iterator.next();
+      Set<T> qualifierMatches = null;
 
-          if(!matcher.matches(injectable.getInjectableClass())) {
-            iterator.remove();
-          }
+      if(criterion instanceof Class) {
+        Map<AnnotationDescriptor, Set<T>> map = injectablesByDescriptorByType.get(criterion);
+
+        if(map != null) {
+          qualifierMatches = map.get(null);
         }
+      }
+      else if(criterion instanceof Annotation) {
+        qualifierMatches = injectablesByDescriptor.get(new AnnotationDescriptor((Annotation)criterion));
+      }
+      else if(criterion instanceof AnnotationDescriptor) {
+        qualifierMatches = injectablesByDescriptor.get(criterion);
       }
       else {
-        Set<T> qualifierMatches = null;
+        throw new IllegalArgumentException("Unsupported criterion type, must be Class, Annotation or Matcher: " + criterion);
+      }
 
-        if(criterion instanceof Class) {
-          Map<AnnotationDescriptor, Set<T>> map = injectablesByDescriptorByType.get(criterion);
-
-          if(map != null) {
-            qualifierMatches = map.get(null);
-          }
-        }
-        else if(criterion instanceof Annotation) {
-          qualifierMatches = injectablesByDescriptor.get(new AnnotationDescriptor((Annotation)criterion));
-        }
-        else if(criterion instanceof AnnotationDescriptor) {
-          qualifierMatches = injectablesByDescriptor.get(criterion);
-        }
-        else {
-          throw new IllegalArgumentException("Unsupported criterion type, must be Class, Annotation or Matcher: " + criterion);
-        }
-
-        if(qualifierMatches != null) {
-          matches.retainAll(qualifierMatches);
-        }
-        else {
-          matches.clear();
-        }
+      if(qualifierMatches != null) {
+        matches.retainAll(qualifierMatches);
+      }
+      else {
+        matches.clear();
       }
     }
+  }
 
-    return matches;
+  private void filterByMatcher(Set<T> matches, Matcher matcher) {
+    for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
+      Injectable injectable = iterator.next();
+
+      if(!matcher.matches(injectable.getInjectableClass())) {
+        iterator.remove();
+      }
+    }
   }
 
   public boolean contains(Class<?> concreteClass) {

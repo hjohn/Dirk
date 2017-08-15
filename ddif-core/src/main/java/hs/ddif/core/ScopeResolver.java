@@ -24,7 +24,7 @@ public interface ScopeResolver {
    * @return an instance of the given class or <code>null</code> if no instance is associated with the current scope
    * @throws OutOfScopeException when there is no scope active
    */
-  <T> T get(Class<?> injectableClass) throws OutOfScopeException;
+  <T> T get(Class<?> injectableClass);
 
   /**
    * Stores the given instance for a given class in the current active scope.
@@ -33,5 +33,5 @@ public interface ScopeResolver {
    * @param instance an instance to associate with the current scope and given class
    * @throws OutOfScopeException when there is no scope active
    */
-  <T> void put(Class<?> injectableClass, T instance) throws OutOfScopeException;
+  <T> void put(Class<?> injectableClass, T instance);
 }

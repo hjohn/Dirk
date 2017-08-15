@@ -198,15 +198,13 @@ public class Injector {
     @SuppressWarnings("unchecked")
     T bean = (T)injectable.getInstance(this);
 
-    if(bean != null) {
+    if(bean != null && scopeResolver != null) {
 
       /*
        * Store the result if scoped.
        */
 
-      if(scopeResolver != null) {
-        scopeResolver.put(injectable.getInjectableClass(), bean);
-      }
+      scopeResolver.put(injectable.getInjectableClass(), bean);
     }
 
     return bean;
@@ -227,7 +225,7 @@ public class Injector {
    *
    * @param concreteClass the class to register with the Injector
    * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
-   * @throws UnresolvedDependencyException when one or more dependencies of the given class cannot be resolved
+   * @throws UnresolvableDependencyException when one or more dependencies of the given class cannot be resolved
    */
   public void register(Class<?> concreteClass) {
     register(new ClassInjectable(concreteClass));
@@ -249,7 +247,7 @@ public class Injector {
    * @param provider the provider to register with the Injector
    * @param qualifiers the qualifiers for this provider
    * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
-   * @throws UnresolvedDependencyException when one or more dependencies of the given provider cannot be resolved
+   * @throws UnresolvableDependencyException when one or more dependencies of the given provider cannot be resolved
    */
   public void register(Provider<?> provider, AnnotationDescriptor... qualifiers) {
     register(new ProvidedInjectable(provider, qualifiers));

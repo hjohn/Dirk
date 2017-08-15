@@ -19,6 +19,11 @@ public class Injectables {
       public Set<AnnotationDescriptor> getQualifiers() {
         return Collections.emptySet();
       }
+
+      @Override
+      public String toString() {
+        return "Injectable(String.class)";
+      }
     };
   }
 }

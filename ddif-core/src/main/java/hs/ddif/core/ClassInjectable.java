@@ -89,12 +89,33 @@ public class ClassInjectable implements ScopedInjectable {
 
   @Override
   public Object getInstance(Injector injector) {
+    Object bean = constructInstance(injector);
+
+    injectInstance(injector, bean);
+
+    return bean;
+  }
+
+  private void injectInstance(Injector injector, Object bean) {
+    for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
+      try {
+        AccessibleObject accessibleObject = entry.getKey();
+
+        if(accessibleObject instanceof Field) {
+          Field field = (Field)accessibleObject;
+
+          field.setAccessible(true);
+          field.set(bean, entry.getValue()[0].getValue(injector));
+        }
+      }
+      catch(IllegalArgumentException | IllegalAccessException e) {
+        throw new IllegalStateException("Unable to set field " + entry.getKey() + " of: " + injectableClass, e);
+      }
+    }
+  }
+
+  private Object constructInstance(Injector injector) {
     try {
-
-      /*
-       * Look for a constructor injection to create the object, and instantiate it.
-       */
-
       Map.Entry<AccessibleObject, Binding[]> constructorEntry = findConstructorEntry(bindings);
       Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
       Object[] values = new Object[constructorEntry.getValue().length];  // Parameters for constructor
@@ -103,29 +124,7 @@ public class ClassInjectable implements ScopedInjectable {
         values[i] = constructorEntry.getValue()[i].getValue(injector);
       }
 
-      Object bean = constructor.newInstance(values);
-
-      /*
-       * Do field/method injections.
-       */
-
-      for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
-        try {
-          AccessibleObject accessibleObject = entry.getKey();
-
-          if(accessibleObject instanceof Field) {
-            Field field = (Field)accessibleObject;
-
-            field.setAccessible(true);
-            field.set(bean, entry.getValue()[0].getValue(injector));
-          }
-        }
-        catch(IllegalArgumentException | IllegalAccessException e) {
-          throw new IllegalStateException("Unable to set field " + entry.getKey() + " of: " + injectableClass, e);
-        }
-      }
-
-      return bean;
+      return constructor.newInstance(values);
     }
     catch(IllegalAccessException | InstantiationException | InvocationTargetException e) {
       throw new IllegalStateException("Unable to construct: " + injectableClass, e);

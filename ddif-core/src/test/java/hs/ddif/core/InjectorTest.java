@@ -173,7 +173,7 @@ public class InjectorTest {
 
   @Test  // Providers cannot be made optional with @Nullable as a provider can always be created; it's only the result of the Provider that could be optional but that requires a different approach (new annotation of sub-interface)
   public void shouldThrowUnresolvedDependencyExceptionWhenRegisteringBeanWithNullableProviderDependencyWhenNoProviderAvailableBecauseProvidersCannotBeMadeOptional() {
-    thrown.expect(UnresolvedDependencyException.class);
+    thrown.expect(UnresolvableDependencyException.class);
 
     injector.register(BeanWithUnsupportedOptionalProviderDependency.class);
   }
@@ -227,7 +227,7 @@ public class InjectorTest {
       injector.remove(SimpleBean.class);
       fail();
     }
-    catch(UnresolvedDependencyException e) {
+    catch(UnresolvableDependencyException e) {
       // expected
     }
 
@@ -287,28 +287,28 @@ public class InjectorTest {
     injector.register(List.class);
   }
 
-  @Test(expected = UnresolvedDependencyException.class)
+  @Test(expected = UnresolvableDependencyException.class)
   public void shouldThrowExceptionWhenRegisteringBeanWithUnresolvedDependencies() {
     injector.register(BeanWithUnresolvedDependency.class);
   }
 
-  @Test(expected = UnresolvedDependencyException.class)
+  @Test(expected = UnresolvableDependencyException.class)
   public void shouldThrowExceptionWhenRegisteringBeanWithUnresolvedProviderDependencies() {
     injector.register(BeanWithUnresolvedProviderDependency.class);
   }
 
-  @Test(expected = AmbigiousDependencyException.class)
+  @Test(expected = UnresolvableDependencyException.class)
   public void shouldThrowExceptionWhenRegisteringBeanWithAmbigiousDependencies() {
     injector.register(BeanWithDirectCollectionItemDependency.class);
   }
 
-  @Test(expected = UnresolvedDependencyException.class)
+  @Test(expected = UnresolvableDependencyException.class)
   public void shouldRepeatedlyThrowExceptionWhenRegisteringBeanWithUnresolvedDependencies() {
     try {
       injector.register(BeanWithUnresolvedDependency.class);
       fail();
     }
-    catch(UnresolvedDependencyException e) {
+    catch(UnresolvableDependencyException e) {
       // expected
     }
 
@@ -326,7 +326,7 @@ public class InjectorTest {
       injector.register(SimpleChildBean.class);
       fail();
     }
-    catch(AmbigiousDependencyException e) {
+    catch(UnresolvableDependencyException e) {
       // expected
     }
 
@@ -366,7 +366,7 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenRegisteringDependentBeanWithNoMatchForAllQualifiers() {
     injector.register(BigBean.class);
 
-    thrown.expect(UnresolvedDependencyException.class);
+    thrown.expect(UnresolvableDependencyException.class);
 
     injector.register(BeanWithBigRedInjection.class);  // Won't match BigBean, so won't match anything
   }

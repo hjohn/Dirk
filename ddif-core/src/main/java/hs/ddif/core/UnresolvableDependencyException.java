@@ -6,15 +6,21 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.Set;
 
 /**
  * Thrown when not all dependencies of a class can be resolved.  This occurs when
- * a class requires a specific dependency but no such dependency is available.
+ * a class requires a specific dependency but no such dependency is available or
+ * more than one matching dependency is available.
  */
-public class UnresolvedDependencyException extends DependencyException {
+public class UnresolvableDependencyException extends DependencyException {
 
-  public UnresolvedDependencyException(Injectable injectable, AccessibleObject accessibleObject, Key key) {
-    super(key + " required for: " + formatInjectionPoint(injectable.getInjectableClass(), accessibleObject));
+  public UnresolvableDependencyException(Injectable injectable, AccessibleObject accessibleObject, Key key, Set<? extends Injectable> candidates) {
+    super(
+      (candidates.isEmpty() ? "Missing" : "Multiple candidates for") + " dependency of type: " + key
+        + " required for: " + formatInjectionPoint(injectable.getInjectableClass(), accessibleObject)
+        + (candidates.isEmpty() ? "" : ": " + candidates)
+    );
   }
 
   private static String formatInjectionPoint(Class<?> concreteClass, AccessibleObject accessibleObject) {

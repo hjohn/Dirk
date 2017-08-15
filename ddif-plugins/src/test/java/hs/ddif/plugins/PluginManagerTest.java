@@ -1,9 +1,9 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.AmbigiousDependencyException;
 import hs.ddif.core.Injector;
 import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.ddif.core.NoSuchBeanException;
+import hs.ddif.core.UnresolvableDependencyException;
 import hs.ddif.core.ViolatesSingularDependencyException;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
@@ -145,7 +145,7 @@ public class PluginManagerTest {
       injector.register(BeanWithDatabase.class);  // Fails, requires an unambigious Database dependency
       fail();
     }
-    catch(AmbigiousDependencyException e) {
+    catch(UnresolvableDependencyException e) {
     }
 
     injector.remove(DatabaseBean.class);  // Removes one of the Database beans

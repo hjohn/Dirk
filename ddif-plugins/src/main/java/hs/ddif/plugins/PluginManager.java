@@ -101,7 +101,7 @@ public class PluginManager {
           putInStore(store, classLoader.loadClass(className));
         }
         catch(ClassNotFoundException e) {
-          throw new RuntimeException(e);
+          throw new IllegalStateException(e);
         }
       }
 
@@ -173,7 +173,7 @@ public class PluginManager {
         e.addSuppressed(e2);
       }
 
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 

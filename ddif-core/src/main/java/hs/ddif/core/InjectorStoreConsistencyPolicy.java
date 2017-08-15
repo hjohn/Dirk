@@ -34,7 +34,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<Sc
     Map<AccessibleObject, Binding[]> bindings = injectable.getBindings();
 
     /*
-     * Check the created bindings for unresolved or ambigious dependencies:
+     * Check the created bindings for unresolved or ambigious dependencies and scope problems:
      */
 
     for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
@@ -44,35 +44,39 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<Sc
         if(requiredKey != null) {
           Set<ScopedInjectable> injectables = injectableStore.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray());
 
-          if(injectables.isEmpty()) {
-            throw new UnresolvedDependencyException(injectable, entry.getKey(), requiredKey);
-          }
-          if(injectables.size() > 1) {
-            throw new AmbigiousDependencyException(injectable.getInjectableClass(), requiredKey, injectables);
-          }
-
-          /*
-           * Perform scope check.  Having a dependency on a narrower scoped injectable would mean the injected
-           * dependency of narrower scope is not updated when the scope changes, resulting in unpredictable
-           * behaviour.
-           *
-           * Other frameworks solve this by injecting an adapter instead that relays calls to a specific instance
-           * of the dependency based on current scope.  As this is non-trivial a ScopeConflictException is
-           * thrown instead.
-           */
-
-          ScopedInjectable dependentInjectable = injectables.iterator().next();  // Previous checks ensure there is only a single element in the set
+          ensureBindingIsSingular(injectable, entry.getKey(), requiredKey, injectables);
 
           if(!binding.isProvider()) {  // When wrapped in a Provider, there are never any scope conflicts
-            Annotation dependencyScopeAnnotation = dependentInjectable.getScope();
-            Annotation injectableScopeAnnotation = injectable.getScope();
-
-            if(isNarrowerScope(injectableScopeAnnotation, dependencyScopeAnnotation)) {
-              throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getInjectableClass());
-            }
+            ensureBindingScopeIsValid(injectable, injectables.iterator().next());  // Previous check ensures there is only a single element in the set
           }
         }
       }
+    }
+  }
+
+  private static void ensureBindingScopeIsValid(ScopedInjectable injectable, ScopedInjectable dependentInjectable) {
+
+    /*
+     * Perform scope check.  Having a dependency on a narrower scoped injectable would mean the injected
+     * dependency of narrower scope is not updated when the scope changes, resulting in unpredictable
+     * behaviour.
+     *
+     * Other frameworks solve this by injecting an adapter instead that relays calls to a specific instance
+     * of the dependency based on current scope.  As this is non-trivial a ScopeConflictException is
+     * thrown instead.
+     */
+
+    Annotation dependencyScopeAnnotation = dependentInjectable.getScope();
+    Annotation injectableScopeAnnotation = injectable.getScope();
+
+    if(isNarrowerScope(injectableScopeAnnotation, dependencyScopeAnnotation)) {
+      throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getInjectableClass());
+    }
+  }
+
+  private static void ensureBindingIsSingular(ScopedInjectable injectable, AccessibleObject accessibleObject, Key requiredKey, Set<ScopedInjectable> injectables) {
+    if(injectables.size() != 1) {
+      throw new UnresolvableDependencyException(injectable, accessibleObject, requiredKey, injectables);
     }
   }
 
@@ -110,7 +114,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<Sc
     Integer referenceCounter = referenceCounters.remove(key);
 
     if(referenceCounter == null) {
-      throw new RuntimeException("Assertion error");
+      throw new IllegalStateException("Assertion error");
     }
 
     referenceCounter--;
@@ -122,10 +126,8 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<Sc
 
   private void ensureSingularDependenciesHold(Type type, Set<AnnotationDescriptor> qualifiers) {
     for(Key key : referenceCounters.keySet()) {
-      if(TypeUtils.isAssignable(type, key.getType())) {
-        if(qualifiers.containsAll(key.getQualifiers())) {
-          throw new ViolatesSingularDependencyException(type, key, true);
-        }
+      if(TypeUtils.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
+        throw new ViolatesSingularDependencyException(type, key, true);
       }
     }
   }

@@ -84,108 +84,18 @@ public class Binder {
     final Class<?> cls = TypeUtils.determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
-      final Type elementType = TypeUtils.getGenericType(type);
-
-      return new Binding() {
-        @Override
-        public Object getValue(Injector injector) {
-          return injector.getInstances(elementType, (Object[])qualifiers);
-        }
-
-        @Override
-        public boolean isProvider() {
-          return false;
-        }
-
-        @Override
-        public Key getRequiredKey() {
-          return null;
-        }
-      };
+      return new HashSetBinding(TypeUtils.getGenericType(type), qualifiers);
     }
     else if(List.class.isAssignableFrom(cls)) {
-      final Type elementType = TypeUtils.getGenericType(type);
-
-      return new Binding() {
-        @Override
-        public Object getValue(Injector injector) {
-          return new ArrayList<>(injector.getInstances(elementType, (Object[])qualifiers));
-        }
-
-        @Override
-        public boolean isProvider() {
-          return false;
-        }
-
-        @Override
-        public Key getRequiredKey() {
-          return null;
-        }
-      };
+      return new ArrayListBinding(TypeUtils.getGenericType(type), qualifiers);
     }
     else if(Provider.class.isAssignableFrom(cls)) {
-      final Type genericType = TypeUtils.getGenericType(type);
-      final Binding binding = createBinding(genericType, false, qualifiers);
-
-      return new Binding() {
-        @Override
-        public Object getValue(final Injector injector) {
-          Object injectObject = new Provider<Object>() {
-            @Override
-            public Object get() {
-              return binding.getValue(injector);
-            }
-          };
-
-          return injectObject;
-        }
-
-        @Override
-        public boolean isProvider() {
-          return true;
-        }
-
-        @Override
-        public Key getRequiredKey() {
-          return binding.getRequiredKey();
-        }
-      };
+      return new ProviderBinding(createBinding(TypeUtils.getGenericType(type), false, qualifiers));
     }
     else {
-      final Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
-      final Key requiredKey = optional ? null : new Key(finalType, qualifiers);
+      Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
 
-      return new Binding() {
-        @Override
-        public Object getValue(Injector injector) {
-          if(optional) {
-            try {
-              return injector.getInstance(finalType, (Object[])qualifiers);
-            }
-            catch(NoSuchBeanException e) {
-              return null;
-            }
-          }
-          else {
-            return injector.getInstance(finalType, (Object[])qualifiers);
-          }
-        }
-
-        @Override
-        public Key getRequiredKey() {
-          return requiredKey;
-        }
-
-        @Override
-        public boolean isProvider() {
-          return false;
-        }
-
-        @Override
-        public String toString() {
-          return "DirectBinding[cls=" + cls + "; key=" + getRequiredKey() + "]";
-        }
-      };
+      return new DirectBinding(new Key(finalType, qualifiers), optional);
     }
   }
 
@@ -226,5 +136,123 @@ public class Binder {
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(long.class, Long.class);
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(float.class, Float.class);
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(double.class, Double.class);
+  }
+
+  private static final class HashSetBinding implements Binding {
+    private final AnnotationDescriptor[] qualifiers;
+    private final Type elementType;
+
+    private HashSetBinding(Type elementType, AnnotationDescriptor[] qualifiers) {
+      this.qualifiers = qualifiers;
+      this.elementType = elementType;
+    }
+
+    @Override
+    public Object getValue(Injector injector) {
+      return injector.getInstances(elementType, (Object[])qualifiers);
+    }
+
+    @Override
+    public boolean isProvider() {
+      return false;
+    }
+
+    @Override
+    public Key getRequiredKey() {
+      return null;
+    }
+  }
+
+  private static final class ArrayListBinding implements Binding {
+    private final Type elementType;
+    private final AnnotationDescriptor[] qualifiers;
+
+    private ArrayListBinding(Type elementType, AnnotationDescriptor[] qualifiers) {
+      this.elementType = elementType;
+      this.qualifiers = qualifiers;
+    }
+
+    @Override
+    public Object getValue(Injector injector) {
+      return new ArrayList<>(injector.getInstances(elementType, (Object[])qualifiers));
+    }
+
+    @Override
+    public boolean isProvider() {
+      return false;
+    }
+
+    @Override
+    public Key getRequiredKey() {
+      return null;
+    }
+  }
+
+  private static final class ProviderBinding implements Binding {
+    private final Binding binding;
+
+    private ProviderBinding(Binding binding) {
+      this.binding = binding;
+    }
+
+    @Override
+    public Object getValue(final Injector injector) {
+      return new Provider<Object>() {
+        @Override
+        public Object get() {
+          return binding.getValue(injector);
+        }
+      };
+    }
+
+    @Override
+    public boolean isProvider() {
+      return true;
+    }
+
+    @Override
+    public Key getRequiredKey() {
+      return binding.getRequiredKey();
+    }
+  }
+
+  private static final class DirectBinding implements Binding {
+    private final Key key;
+    private final boolean optional;
+
+    private DirectBinding(Key requiredKey, boolean optional) {
+      this.key = requiredKey;
+      this.optional = optional;
+    }
+
+    @Override
+    public Object getValue(Injector injector) {
+      if(optional) {
+        try {
+          return injector.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
+        }
+        catch(NoSuchBeanException e) {
+          return null;
+        }
+      }
+      else {
+        return injector.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
+      }
+    }
+
+    @Override
+    public Key getRequiredKey() {
+      return optional ? null : key;
+    }
+
+    @Override
+    public boolean isProvider() {
+      return false;
+    }
+
+    @Override
+    public String toString() {
+      return "DirectBinding[cls=" + key.getType() + "; key=" + getRequiredKey() + "]";
+    }
   }
 }
