@@ -7,7 +7,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,7 +84,7 @@ public class Binder {
     final Class<?> cls = TypeUtils.determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
-      final Type elementType = getGenericType(type);
+      final Type elementType = TypeUtils.getGenericType(type);
 
       return new Binding() {
         @Override
@@ -105,7 +104,7 @@ public class Binder {
       };
     }
     else if(List.class.isAssignableFrom(cls)) {
-      final Type elementType = getGenericType(type);
+      final Type elementType = TypeUtils.getGenericType(type);
 
       return new Binding() {
         @Override
@@ -125,7 +124,7 @@ public class Binder {
       };
     }
     else if(Provider.class.isAssignableFrom(cls)) {
-      final Type genericType = getGenericType(type);
+      final Type genericType = TypeUtils.getGenericType(type);
       final Binding binding = createBinding(genericType, false, qualifiers);
 
       return new Binding() {
@@ -214,19 +213,6 @@ public class Binder {
     }
 
     return false;
-  }
-
-  public static Type getGenericType(Type type) {
-    if(type instanceof ParameterizedType) {
-      ParameterizedType genericType = (ParameterizedType)type;
-      return genericType.getActualTypeArguments()[0];
-    }
-    else if(type instanceof Class) {
-      Class<?> cls = (Class<?>)type;
-      return cls.getTypeParameters()[0];
-    }
-
-    throw new RuntimeException("Could not get generic type for: " + type);
   }
 
   private static final Map<Class<?>, Class<?>> WRAPPER_CLASS_BY_PRIMITIVE_CLASS = new HashMap<>();

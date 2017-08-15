@@ -28,7 +28,7 @@ public class ProvidedInjectable implements ScopedInjectable {
 
     this.type = provider.getClass().getGenericInterfaces()[0];
     this.provider = provider;
-    this.injectableClass = TypeUtils.determineClassFromType(Binder.getGenericType(type));
+    this.injectableClass = TypeUtils.determineClassFromType(TypeUtils.getGenericType(type));
     this.descriptors = new ArrayList<>(Arrays.asList(descriptors));
   }
 
