@@ -108,7 +108,7 @@ public class InjectorScopeTest {
       injector.register(SomeUserBeanWithTestScope2.class);
     }
 
-    @Test(expected = MultipleScopesException.class)
+    @Test(expected = BindingException.class)
     public void shouldThrowExceptionWhenMultipleScopesDefinedOnBean() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = new Injector(scopeResolver);

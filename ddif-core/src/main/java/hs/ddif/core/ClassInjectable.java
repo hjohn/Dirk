@@ -117,18 +117,15 @@ public class ClassInjectable implements ScopedInjectable {
             field.set(bean, entry.getValue()[0].getValue(injector));
           }
         }
-        catch(IllegalArgumentException e) {
-          throw new InjectionException("Incompatible types", e);
-        }
-        catch(IllegalAccessException e) {
-          throw new InjectionException("Illegal access", e);
+        catch(IllegalArgumentException | IllegalAccessException e) {
+          throw new IllegalStateException("Unable to set field " + entry.getKey() + " of: " + injectableClass, e);
         }
       }
 
       return bean;
     }
     catch(IllegalAccessException | InstantiationException | InvocationTargetException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException("Unable to construct: " + injectableClass, e);
     }
   }
 
@@ -168,7 +165,7 @@ public class ClassInjectable implements ScopedInjectable {
     List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(cls, javax.inject.Scope.class);
 
     if(matchingAnnotations.size() > 1) {
-      throw new MultipleScopesException("Multiple scope annotations found on class while only one is allowed: " + cls + ", found: " + matchingAnnotations);
+      throw new BindingException("Multiple scope annotations found, but only one allowed: " + cls + ", found: " + matchingAnnotations);
     }
 
     return matchingAnnotations.isEmpty() ? null : matchingAnnotations.get(0);
