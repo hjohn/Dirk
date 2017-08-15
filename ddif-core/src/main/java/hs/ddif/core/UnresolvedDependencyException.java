@@ -7,6 +7,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
+/**
+ * Thrown when not all dependencies of a class can be resolved.  This occurs when
+ * a class requires a specific dependency but no such dependency is available.
+ */
 public class UnresolvedDependencyException extends DependencyException {
 
   public UnresolvedDependencyException(Injectable injectable, AccessibleObject accessibleObject, Key key) {

@@ -6,6 +6,9 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Set;
 
+/**
+ * Thrown when multiple beans are available but only one was expected.
+ */
 public class AmbigiousBeanException extends RuntimeException {
 
   public AmbigiousBeanException(Set<? extends Injectable> injectables, Type type, Object... criteria) {

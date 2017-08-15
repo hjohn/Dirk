@@ -14,14 +14,14 @@ public interface Injectable {
   /**
    * Returns the type of the resulting instance provided by this {@link Injectable}.
    *
-   * @return the type of the resulting instance provided by this {@link Injectable}
+   * @return the type of the resulting instance provided by this {@link Injectable}, never null
    */
   Class<?> getInjectableClass();
 
   /**
    * Returns the qualifiers associated with this Injectable.
    *
-   * @return the qualifiers associated with this Injectable
+   * @return the qualifiers associated with this Injectable, never null but can be empty
    */
   Set<AnnotationDescriptor> getQualifiers();
 }

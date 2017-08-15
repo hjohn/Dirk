@@ -13,11 +13,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * A {@link ScopedInjectable} for creating instances based on a {@link Class}.
+ */
 public class ClassInjectable implements ScopedInjectable {
   private final Class<?> injectableClass;
   private final Annotation scopeAnnotation;
   private final Map<AccessibleObject, Binding[]> bindings;
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param injectableClass the {@link Class}, cannot be null, cannot be an interface or be abstract
+   * @throws BindingException if the given class is not annotated and has no public empty constructor or is incorrectly annotated
+   */
   public ClassInjectable(Class<?> injectableClass) {
     if(injectableClass.isInterface() || Modifier.isAbstract(injectableClass.getModifiers())) {
       throw new IllegalArgumentException("parameter 'injectableClass' must be a concrete class: " + injectableClass);
