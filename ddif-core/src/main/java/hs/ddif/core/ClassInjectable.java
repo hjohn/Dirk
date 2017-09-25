@@ -8,16 +8,24 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.PostConstruct;
+
+import org.apache.commons.lang3.reflect.MethodUtils;
 
 /**
  * A {@link ScopedInjectable} for creating instances based on a {@link Class}.
  */
 public class ClassInjectable implements ScopedInjectable {
   private final Class<?> injectableClass;
+  private final List<Method> postConstructMethods;
   private final Annotation scopeAnnotation;
   private final Map<AccessibleObject, Binding[]> bindings;
 
@@ -65,6 +73,24 @@ public class ClassInjectable implements ScopedInjectable {
     if(constructorCount > 1) {
       throw new BindingException("Multiple @Inject annotated constructors found, but only one allowed: " + injectableClass);
     }
+
+    List<Method> methods = MethodUtils.getMethodsListWithAnnotation(injectableClass, PostConstruct.class, true, true);
+
+    Collections.sort(methods, new Comparator<Method>() {
+      @Override
+      public int compare(Method a, Method b) {
+        if(a.getDeclaringClass().isAssignableFrom(b.getDeclaringClass())) {
+          return -1;
+        }
+        else if(b.getDeclaringClass().isAssignableFrom(a.getDeclaringClass())) {
+          return 1;
+        }
+
+        return 0;
+      }
+    });
+
+    this.postConstructMethods = methods;
   }
 
   @Override
@@ -124,7 +150,14 @@ public class ClassInjectable implements ScopedInjectable {
         values[i] = constructorEntry.getValue()[i].getValue(injector);
       }
 
-      return constructor.newInstance(values);
+      Object instance = constructor.newInstance(values);
+
+      for(Method method : postConstructMethods) {
+        method.setAccessible(true);
+        method.invoke(instance);
+      }
+
+      return instance;
     }
     catch(IllegalAccessException | InstantiationException | InvocationTargetException e) {
       throw new IllegalStateException("Unable to construct: " + injectableClass, e);

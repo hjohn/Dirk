@@ -12,6 +12,7 @@ import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BeanWithInterfaceBasedInjection;
 import hs.ddif.core.test.injectables.BeanWithOptionalConstructorDependency;
 import hs.ddif.core.test.injectables.BeanWithOptionalDependency;
+import hs.ddif.core.test.injectables.BeanWithPostConstruct;
 import hs.ddif.core.test.injectables.BeanWithProvider;
 import hs.ddif.core.test.injectables.BeanWithProviderWithoutMatch;
 import hs.ddif.core.test.injectables.BeanWithUnregisteredParent;
@@ -402,6 +403,18 @@ public class InjectorTest {
   /*
    * PostConstruct/PreDestroy tests
    */
+
+  @Test
+  public void shouldCallPostConstruct() {
+    injector.register(BeanWithPostConstruct.class);
+
+    BeanWithPostConstruct instance = injector.getInstance(BeanWithPostConstruct.class);
+
+    assertTrue(instance.isPostConstructCalled());
+    assertTrue(instance.isPrivatePostConstructCalled());
+    assertTrue(instance.isPostConstructOrderCorrect());
+    assertTrue(instance.isPrivatePostConstructOrderCorrect());
+  }
 
   /*
    * Collection tests
