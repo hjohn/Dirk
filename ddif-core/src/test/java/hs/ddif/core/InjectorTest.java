@@ -2,6 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.core.store.DuplicateBeanException;
 import hs.ddif.core.store.NoSuchInjectableException;
+import hs.ddif.core.test.injectables.AbstractBean;
 import hs.ddif.core.test.injectables.BeanWithBigInjection;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BeanWithCollection;
@@ -34,6 +35,7 @@ import hs.ddif.core.test.injectables.SimpleCollectionItemImpl3;
 import hs.ddif.core.test.injectables.SimpleCollectionItemInterface;
 import hs.ddif.core.test.injectables.SimpleImpl;
 import hs.ddif.core.test.injectables.SimpleInterface;
+import hs.ddif.core.test.injectables.SubclassOfAbstractBean;
 import hs.ddif.core.test.injectables.SubclassOfBeanWithInjection;
 import hs.ddif.core.test.injectables.SubclassOfBeanWithInjectionWithSameNamedInjection;
 import hs.ddif.core.test.injectables.UnavailableBean;
@@ -43,6 +45,7 @@ import hs.ddif.core.util.Value;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -406,6 +409,7 @@ public class InjectorTest {
 
   @Test
   public void shouldCallPostConstruct() {
+    injector.registerInstance("Hello World");
     injector.register(BeanWithPostConstruct.class);
 
     BeanWithPostConstruct instance = injector.getInstance(BeanWithPostConstruct.class);
@@ -612,6 +616,30 @@ public class InjectorTest {
 
     assertEquals(simpleBean, bean.getInjectedValue());
     assertEquals(simpleBean, bean.getInjectedValueInSubClass());
+  }
+
+  @Test
+  public void shouldFindInstanceBySuperClass() {
+    injector.register(Bla2.class);
+
+    Set<Bla> beans = injector.getInstances(Bla.class);
+
+    assertEquals(1, beans.size());
+  }
+
+  public static abstract class Bla<T> {
+  }
+
+  public static class Bla2 extends Bla<String> {
+  }
+
+  @Test
+  public void shouldFindInstanceByAbstractSuperClass() {
+    injector.register(SubclassOfAbstractBean.class);
+
+    Set<AbstractBean> beans = injector.getInstances(AbstractBean.class);
+
+    assertEquals(1, beans.size());
   }
 
   @Test
