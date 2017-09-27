@@ -1,13 +1,20 @@
 package hs.ddif.core.test.injectables;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
+import static org.junit.Assert.assertNotNull;
 
 public class BeanWithPostConstruct extends ParentBeanWithPostConstruct {
+  @Inject private String test;
+
   private boolean postConstructCalled;
   private boolean privatePostConstructCalled;
 
   @PostConstruct
   public void postConstruct2() {
+    assertNotNull(test);  // Ensures post construct is called *after* injection
+
     postConstructCalled = true;
     postConstructOrderVerifier *= 5;
   }

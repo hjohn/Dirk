@@ -406,6 +406,7 @@ public class InjectorTest {
 
   @Test
   public void shouldCallPostConstruct() {
+    injector.registerInstance("Hello World");
     injector.register(BeanWithPostConstruct.class);
 
     BeanWithPostConstruct instance = injector.getInstance(BeanWithPostConstruct.class);
