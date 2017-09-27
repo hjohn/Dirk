@@ -119,16 +119,6 @@ public class ClassInjectable implements ScopedInjectable {
 
     injectInstance(injector, bean);
 
-    try {
-      for(Method method : postConstructMethods) {
-        method.setAccessible(true);
-        method.invoke(bean);
-      }
-    }
-    catch(Exception e) {
-      throw new IllegalStateException("PostConstruct call failed: " + injectableClass, e);
-    }
-
     return bean;
   }
 
@@ -160,7 +150,14 @@ public class ClassInjectable implements ScopedInjectable {
         values[i] = constructorEntry.getValue()[i].getValue(injector);
       }
 
-      return constructor.newInstance(values);
+      Object instance = constructor.newInstance(values);
+
+      for(Method method : postConstructMethods) {
+        method.setAccessible(true);
+        method.invoke(instance);
+      }
+
+      return instance;
     }
     catch(IllegalAccessException | InstantiationException | InvocationTargetException e) {
       throw new IllegalStateException("Unable to construct: " + injectableClass, e);
