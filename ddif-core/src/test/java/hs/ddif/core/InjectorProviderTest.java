@@ -4,6 +4,7 @@ import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Value;
 
 import java.sql.Connection;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -15,6 +16,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -59,6 +61,29 @@ public class InjectorProviderTest {
     injector.registerInstance(new SimpleDatabaseProvider());
 
     assertNotNull(injector.getInstance(Database.class));
+  }
+
+  public static class BeanWithProvidedListOfString {
+    @Inject private Provider<List<String>> texts;
+
+    List<String> getTexts() {
+      return texts.get();
+    }
+  }
+
+  @Test
+  public void getInstanceShouldReturnInstanceInjectedWithProviderOfList() {
+    injector.register(BeanWithProvidedListOfString.class);
+    injector.registerInstance("a");
+    injector.registerInstance("b");
+
+    BeanWithProvidedListOfString bean = injector.getInstance(BeanWithProvidedListOfString.class);
+
+    assertEquals(2, bean.getTexts().size());
+
+    injector.registerInstance("c");
+
+    assertEquals(3, bean.getTexts().size());
   }
 
   @Test
