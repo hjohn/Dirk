@@ -44,6 +44,8 @@ import hs.ddif.core.util.Value;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
@@ -620,5 +622,27 @@ public class InjectorTest {
     SimpleBean simpleBean = injector.getInstance(BeanWithInjection.class).getInjectedValue();
 
     assertEquals(simpleBean, injector.getInstance(BeanWithInjection.class).getInjectedValue());
+  }
+
+  @Test(expected = ConstructionException.class)
+  public void shouldThrowConstructionExceptionWhenPostConstructHasACircularDependency() {
+    injector.register(BeanWithBadPostConstruct.class);
+    injector.register(BeanDependentOnBeanWithBadPostConstruct.class);
+
+    injector.getInstance(BeanWithBadPostConstruct.class);
+  }
+
+  public static class BeanWithBadPostConstruct {
+    private Provider<BeanDependentOnBeanWithBadPostConstruct> provider;
+
+    @PostConstruct
+    private void postConstruct() {
+      provider.get();
+    }
+  }
+
+  public static class BeanDependentOnBeanWithBadPostConstruct {
+    @SuppressWarnings("unused")
+    @Inject private BeanWithBadPostConstruct dependency;
   }
 }

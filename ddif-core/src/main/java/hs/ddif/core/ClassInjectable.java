@@ -7,7 +7,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -28,6 +27,15 @@ public class ClassInjectable implements ScopedInjectable {
   private final List<Method> postConstructMethods;
   private final Annotation scopeAnnotation;
   private final Map<AccessibleObject, Binding[]> bindings;
+
+  /**
+   * When true, the object is currently being constructed.  This is used to
+   * detect loops in {@link PostConstruct} annotated methods, where another
+   * depedency is created that depends on this object, which isn't fully
+   * constructed yet (and thus not yet available as dependency, triggering
+   * another creation).
+   */
+  private boolean underConstruction;
 
   /**
    * Constructs a new instance.
@@ -115,21 +123,32 @@ public class ClassInjectable implements ScopedInjectable {
 
   @Override
   public Object getInstance(Injector injector) {
-    Object bean = constructInstance(injector);
-
-    injectInstance(injector, bean);
+    if(underConstruction) {
+      throw new ConstructionException("Object already under construction (dependency creation loop in @PostConstruct method!): " + injectableClass);
+    }
 
     try {
-      for(Method method : postConstructMethods) {
-        method.setAccessible(true);
-        method.invoke(bean);
-      }
-    }
-    catch(Exception e) {
-      throw new IllegalStateException("PostConstruct call failed: " + injectableClass, e);
-    }
+      underConstruction = true;
 
-    return bean;
+      Object bean = constructInstance(injector);
+
+      injectInstance(injector, bean);
+
+      try {
+        for(Method method : postConstructMethods) {
+          method.setAccessible(true);
+          method.invoke(bean);
+        }
+      }
+      catch(Exception e) {
+        throw new ConstructionException("PostConstruct call failed: " + injectableClass, e);
+      }
+
+      return bean;
+    }
+    finally {
+      underConstruction = false;
+    }
   }
 
   private void injectInstance(Injector injector, Object bean) {
@@ -144,8 +163,8 @@ public class ClassInjectable implements ScopedInjectable {
           field.set(bean, entry.getValue()[0].getValue(injector));
         }
       }
-      catch(IllegalArgumentException | IllegalAccessException e) {
-        throw new IllegalStateException("Unable to set field " + entry.getKey() + " of: " + injectableClass, e);
+      catch(Exception e) {
+        throw new ConstructionException("Unable to set field [" + entry.getKey() + "] of: " + injectableClass, e);
       }
     }
   }
@@ -162,8 +181,8 @@ public class ClassInjectable implements ScopedInjectable {
 
       return constructor.newInstance(values);
     }
-    catch(IllegalAccessException | InstantiationException | InvocationTargetException e) {
-      throw new IllegalStateException("Unable to construct: " + injectableClass, e);
+    catch(Exception e) {
+      throw new ConstructionException("Unable to construct: " + injectableClass, e);
     }
   }
 
