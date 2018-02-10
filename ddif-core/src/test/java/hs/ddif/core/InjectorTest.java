@@ -632,6 +632,18 @@ public class InjectorTest {
     injector.getInstance(BeanWithBadPostConstruct.class);
   }
 
+  @Test
+  public void getInstancesShouldSilentlyProvidersThatReturnNull() {
+    injector.register(new Provider<String>() {
+      @Override
+      public String get() {
+        return null;
+      }
+    });
+
+    assertEquals(10, injector.getInstances(Object.class).size());
+  }
+
   public static class BeanWithBadPostConstruct {
     private Provider<BeanDependentOnBeanWithBadPostConstruct> provider;
 

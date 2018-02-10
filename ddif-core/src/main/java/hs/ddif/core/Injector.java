@@ -145,7 +145,7 @@ public class Injector {
     for(ScopedInjectable injectable : store.resolve(type, criteria)) {
       T instance = getInstance(injectable);
 
-      if(instance != null) {
+      if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
         instances.add(instance);
       }
     }
