@@ -30,7 +30,7 @@ public interface ScopedInjectable extends Injectable {
   /**
    * Returns the scope of this {@link Injectable}.
    *
-   * @return the scope of this {@link Injectable}
+   * @return the scope of this {@link Injectable}, can be <code>null</code>
    */
   Annotation getScope();
 }
