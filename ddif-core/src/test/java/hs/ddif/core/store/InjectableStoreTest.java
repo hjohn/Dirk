@@ -153,6 +153,13 @@ public class InjectableStoreTest {
     assertEquals(0, store.resolve(Serializable.class, RandomAccess.class).size());
   }
 
+  @Test
+  public void resolveShouldFindInjectablesWhenCriteriaIsAnAnnotationClass() {  // Tests that Annotation classes are converted to a descriptor internally
+    setupStore();
+
+    assertEquals(2, store.resolve(Object.class, Red.class).size());
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void resolveShouldThrowExceptionWhenCriteriaIsUnsupported() {
     setupStore();

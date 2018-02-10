@@ -105,6 +105,13 @@ public class InjectableStore<T extends Injectable> {
 
       Set<T> qualifierMatches = null;
 
+      if(criterion instanceof Class && ((Class<?>)criterion).isAnnotation()) {  // If an annotation is passed in as a class, convert it to its descriptor
+        @SuppressWarnings("unchecked")
+        Class<? extends Annotation> castedCriterion = (Class<? extends Annotation>)criterion;
+
+        criterion = AnnotationDescriptor.describe(castedCriterion);
+      }
+
       if(criterion instanceof Class) {
         Map<AnnotationDescriptor, Set<T>> map = injectablesByDescriptorByType.get(criterion);
 
