@@ -1,5 +1,7 @@
 package hs.ddif.core;
 
+import com.googlecode.gentyref.GenericTypeReflector;
+
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.TypeUtils;
 
@@ -33,7 +35,9 @@ public class Binder {
         Nullable nullable = field.getAnnotation(Nullable.class);
 
         if(inject != null) {
-          bindings.put(field, new Binding[] {createBinding(field.getGenericType(), nullable != null, extractQualifiers(field))});
+          Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
+
+          bindings.put(field, new Binding[] {createBinding(type, nullable != null, extractQualifiers(field))});
         }
       }
 
