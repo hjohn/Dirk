@@ -1,6 +1,7 @@
 package hs.ddif.core.test.injectables;
 
-import javax.annotation.Nullable;
+import hs.ddif.core.util.Nullable;
+
 import javax.inject.Inject;
 
 public class BeanWithOptionalDependency {

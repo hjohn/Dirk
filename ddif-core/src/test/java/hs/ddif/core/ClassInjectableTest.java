@@ -2,11 +2,11 @@ package hs.ddif.core;
 
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Nullable;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 

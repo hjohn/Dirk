@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
@@ -32,12 +31,11 @@ public class Binder {
     while(currentInjectableClass != null) {
       for(final Field field : currentInjectableClass.getDeclaredFields()) {
         Inject inject = field.getAnnotation(Inject.class);
-        Nullable nullable = field.getAnnotation(Nullable.class);
 
         if(inject != null) {
           Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
 
-          bindings.put(field, new Binding[] {createBinding(type, nullable != null, extractQualifiers(field))});
+          bindings.put(field, new Binding[] {createBinding(type, isOptional(field.getAnnotations()), extractQualifiers(field))});
         }
       }
 
@@ -121,7 +119,7 @@ public class Binder {
 
   private static boolean isOptional(Annotation[] annotations) {
     for(Annotation annotation : annotations) {
-      if(Nullable.class.isInstance(annotation)) {
+      if(annotation.annotationType().getSimpleName().equals("Nullable")) {
         return true;
       }
     }
