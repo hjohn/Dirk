@@ -120,7 +120,7 @@ public class Injector {
    * Returns an instance of the given class matching the given criteria (if any) in
    * which all dependencies are injected.
    *
-   * @param type the class of the instance required
+   * @param cls the class of the instance required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return an instance of the given class matching the given criteria (if any)
    * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
@@ -135,7 +135,7 @@ public class Injector {
    * which all dependencies are injected.  When there are no matches, an empty set is
    * returned.
    *
-   * @param cls the type of the instances required
+   * @param type the type of the instances required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return all instances of the given class matching the given criteria (if any)
    */
