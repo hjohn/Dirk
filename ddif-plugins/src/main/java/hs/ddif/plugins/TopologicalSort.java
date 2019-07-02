@@ -27,6 +27,8 @@ import java.util.Set;
  * cycle.
  *
  * Originally by: Keith Schwarz (htiek@cs.stanford.edu), adapted to fit coding standards.
+ *
+ * Modifications: better error reporting (John Hendrikx)
  */
 public final class TopologicalSort {
 
@@ -36,9 +38,10 @@ public final class TopologicalSort {
    *
    * @param g A directed acyclic graph.
    * @return A topological sort of that graph.
+   * @throws CyclicGraphException when a cycle is detected in the graph
    * @throws IllegalArgumentException If the graph is not a DAG.
    */
-  public static <T> List<T> sort(DirectedGraph<T> g) {
+  public static <T> List<T> sort(DirectedGraph<T> g) throws CyclicGraphException {
     /* Construct the reverse graph from the input graph. */
     DirectedGraph<T> gRev = reverseGraph(g);
 
@@ -59,8 +62,9 @@ public final class TopologicalSort {
     Set<T> expanded = new HashSet<>();
 
     /* Fire off a DFS from each node in the graph. */
-    for(T node : gRev)
+    for(T node : gRev) {
       explore(node, gRev, result, visited, expanded);
+    }
 
     /* Hand back the resulting ordering. */
     return result;
@@ -74,8 +78,9 @@ public final class TopologicalSort {
    * @param ordering A list holding the topological sort of the graph.
    * @param visited A set of nodes that have already been visited.
    * @param expanded A set of nodes that have been fully expanded.
+   * @throws CyclicGraphException when a cycle is detected in the graph
    */
-  private static <T> void explore(T node, DirectedGraph<T> g, List<T> ordering, Set<T> visited, Set<T> expanded) {
+  private static <T> void explore(T node, DirectedGraph<T> g, List<T> ordering, Set<T> visited, Set<T> expanded) throws CyclicGraphException {
     /*
      * Check whether we've been here before.  If so, we should stop the
      * search.
@@ -90,17 +95,27 @@ public final class TopologicalSort {
        * and therefore is part of a cycle.  In that case, we should
        * report an error.
        */
-      if(expanded.contains(node))
+      if(expanded.contains(node)) {
         return;
-      throw new IllegalArgumentException("Graph contains a cycle.");
+      }
+
+      throw new CyclicGraphException(node);
     }
 
     /* Mark that we've been here */
     visited.add(node);
 
     /* Recursively explore all of the node's predecessors. */
-    for(T predecessor : g.edgesFrom(node))
-      explore(predecessor, g, ordering, visited, expanded);
+    for(T predecessor : g.edgesFrom(node)) {
+      try {
+        explore(predecessor, g, ordering, visited, expanded);
+      }
+      catch(CyclicGraphException e) {
+        e.addPredecessor(node);
+
+        throw e;
+      }
+    }
 
     /*
      * Having explored all of the node's predecessors, we can now add this
@@ -122,16 +137,19 @@ public final class TopologicalSort {
     DirectedGraph<T> result = new DirectedGraph<>();
 
     /* Add all the nodes from the original graph. */
-    for(T node : g)
+    for(T node : g) {
       result.addNode(node);
+    }
 
     /*
      * Scan over all the edges in the graph, adding their reverse to the
      * reverse graph.
      */
-    for(T node : g)
-      for(T endpoint : g.edgesFrom(node))
+    for(T node : g) {
+      for(T endpoint : g.edgesFrom(node)) {
         result.addEdge(endpoint, node);
+      }
+    }
 
     return result;
   }
