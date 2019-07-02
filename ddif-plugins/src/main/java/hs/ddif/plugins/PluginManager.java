@@ -25,8 +25,8 @@ import java.util.logging.Logger;
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
 import org.reflections.scanners.MethodAnnotationsScanner;
-import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.scanners.TypeElementsScanner;
 
 public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
@@ -47,7 +47,8 @@ public class PluginManager {
       packageNamePrefix,
       new TypeAnnotationsScanner(),
       new FieldAnnotationsScanner(),
-      new MethodAnnotationsScanner()
+      new MethodAnnotationsScanner(),
+      new TypeElementsScanner()
     );
 
     return new PluginLoader(reflections, classLoader).loadPlugin();
@@ -64,7 +65,7 @@ public class PluginManager {
       new TypeAnnotationsScanner(),
       new FieldAnnotationsScanner(),
       new MethodAnnotationsScanner(),
-      new SubTypesScanner(false)
+      new TypeElementsScanner()
     );
 
     return new PluginLoader(reflections, classLoader).loadPlugin();
@@ -84,6 +85,7 @@ public class PluginManager {
       Set<String> classNames = new HashSet<>();
 
       classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Named"));
+      classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Singleton"));
 
       for(String name : reflections.getStore().get("FieldAnnotationsScanner").get("javax.inject.Inject")) {
         classNames.add(name.substring(0, name.lastIndexOf('.')));
