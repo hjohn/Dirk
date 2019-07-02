@@ -15,6 +15,7 @@ import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -37,51 +38,58 @@ public class PluginManager {
     this.injector = injector;
   }
 
-  @SuppressWarnings("resource")
   public Plugin loadPluginAndScan(String packageNamePrefix) {
-    URLClassLoader classLoader = (URLClassLoader)this.getClass().getClassLoader();
+    return loadPluginAndScan(new String[] {packageNamePrefix});
+  }
 
-    LOGGER.fine("scanning " + packageNamePrefix);
+  public Plugin loadPluginAndScan(String... packageNamePrefixes) {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+
+    LOGGER.fine("Scanning packages: " + Arrays.toString(packageNamePrefixes));
 
     Reflections reflections = new Reflections(
-      packageNamePrefix,
+      packageNamePrefixes,
       new TypeAnnotationsScanner(),
       new FieldAnnotationsScanner(),
       new MethodAnnotationsScanner(),
       new TypeElementsScanner()
     );
 
-    return new PluginLoader(reflections, classLoader).loadPlugin();
+    return new PluginLoader(reflections, classLoader).loadPlugin(Arrays.toString(packageNamePrefixes));
+  }
+
+  public Plugin loadPluginAndScan(URL url) {
+    return loadPluginAndScan(new URL[] {url});
   }
 
   @SuppressWarnings("resource")
-  public Plugin loadPluginAndScan(URL url) {
-    URLClassLoader classLoader = new UnloadTrackingClassLoader(url);
+  public Plugin loadPluginAndScan(URL... urls) {
+    URLClassLoader classLoader = new UnloadTrackingClassLoader(urls);
 
-    LOGGER.fine("scanning " + url);
+    LOGGER.fine("Scanning Plugin at: " + Arrays.toString(urls));
 
     Reflections reflections = new Reflections(
-      url,
+      urls,
       new TypeAnnotationsScanner(),
       new FieldAnnotationsScanner(),
       new MethodAnnotationsScanner(),
       new TypeElementsScanner()
     );
 
-    return new PluginLoader(reflections, classLoader).loadPlugin();
+    return new PluginLoader(reflections, classLoader).loadPlugin(Arrays.toString(urls));
   }
 
   private class PluginLoader {
     private final Set<ClassInjectable> classInjectables = new HashSet<>();
     private final Reflections reflections;
-    private final URLClassLoader classLoader;
+    private final ClassLoader classLoader;
 
-    public PluginLoader(Reflections reflections, URLClassLoader classLoader) {
+    public PluginLoader(Reflections reflections, ClassLoader classLoader) {
       this.reflections = reflections;
       this.classLoader = classLoader;
     }
 
-    public Plugin loadPlugin() {
+    public Plugin loadPlugin(String pluginName) {
       Set<String> classNames = new HashSet<>();
 
       classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Named"));
@@ -97,8 +105,9 @@ public class PluginManager {
 
       InjectableStore<Injectable> store = new InjectableStore<>();
 
+      LOGGER.fine("Registering classes with Injector: " + classNames);
+
       for(String className : classNames) {
-        LOGGER.finer("found " + className);
         try {
           putInStore(store, classLoader.loadClass(className));
         }
@@ -110,43 +119,47 @@ public class PluginManager {
       List<Class<?>> matchingClasses = DependencySorter.getInTopologicalOrder(store, classInjectables);
       List<Class<?>> registeredClasses = registerClasses(matchingClasses);
 
-      return new Plugin(injector, registeredClasses, classLoader);
+      return new Plugin(injector, pluginName, registeredClasses, classLoader);
     }
 
     private void putInStore(InjectableStore<Injectable> store, Class<?> cls) {
-      if(!store.contains(cls) && reflections.getAllTypes().contains(cls.getName())) {
-        try {
-          LOGGER.finest("adding " + cls.getName());
+      if(!store.contains(cls)) {
+        if(reflections.getStore().get("TypeElementsScanner").containsKey(cls.getName())) {
+          try {
+            ClassInjectable classInjectable = new ClassInjectable(cls);
 
-          ClassInjectable classInjectable = new ClassInjectable(cls);
+            store.put(classInjectable);
+            classInjectables.add(classInjectable);
 
-          store.put(classInjectable);
-          classInjectables.add(classInjectable);
+            /*
+             * Self discovery of other injectables
+             */
 
-          /*
-           * Self discovery of other injectables
-           */
+            for(Binding[] bindings : classInjectable.getBindings().values()) {
+              for(Binding binding : bindings) {
+                Key key = binding.getRequiredKey();
 
-          for(Binding[] bindings : classInjectable.getBindings().values()) {
-            for(Binding binding : bindings) {
-              Key key = binding.getRequiredKey();
+                if(key != null) {
+                  Type type = key.getType();
+                  Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
-              if(key != null) {
-                Type type = key.getType();
-                Class<?> typeClass = TypeUtils.determineClassFromType(type);
-
-                if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
-                  putInStore(store, typeClass);
+                  if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
+                    putInStore(store, typeClass);
+                  }
                 }
               }
             }
           }
-        }
-        catch(Exception e) {
-          throw new IllegalStateException("Exception while loading plugin class: " + cls, e);
+          catch(Exception e) {
+            throw new IllegalStateException("Exception while loading plugin class: " + cls, e);
+          }
         }
       }
     }
+  }
+
+  public Plugin loadPlugin(URL url) {
+    return loadPlugin(new URL[] {url});
   }
 
   /**
@@ -156,8 +169,8 @@ public class PluginManager {
    * @return a {@link Plugin}
    */
   @SuppressWarnings("resource")
-  public Plugin loadPlugin(URL url) {
-    URLClassLoader classLoader = new UnloadTrackingClassLoader(url);
+  public Plugin loadPlugin(URL... urls) {
+    URLClassLoader classLoader = new UnloadTrackingClassLoader(urls);
 
     try {
       @SuppressWarnings("unchecked")
@@ -165,7 +178,7 @@ public class PluginManager {
       Module module = moduleClass.newInstance();
       List<Class<?>> registeredClasses = registerClasses(module.getClasses());
 
-      return new Plugin(injector, registeredClasses, classLoader);
+      return new Plugin(injector, Arrays.toString(urls), registeredClasses, classLoader);
     }
     catch(ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       try {
@@ -212,8 +225,8 @@ public class PluginManager {
   static class UnloadTrackingClassLoader extends URLClassLoader {
     private final AtomicBoolean unloaded = new AtomicBoolean();
 
-    public UnloadTrackingClassLoader(URL url) {
-      super(new URL[] {url});
+    public UnloadTrackingClassLoader(URL[] urls) {
+      super(urls);
     }
 
     @Override
