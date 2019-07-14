@@ -3,6 +3,8 @@ package hs.ddif.core.util;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TypeUtils {
 
@@ -43,5 +45,63 @@ public class TypeUtils {
     }
 
     throw new IllegalStateException("Could not get generic type for: " + type);
+  }
+
+  /**
+   * Returns the concrete class of a generic parameter of a specific implemented type.
+   *
+   * @param type a type to examine
+   * @param implementedType the implemented type's generic parameter of interest
+   * @return a concrete class if found, otherwise <code>null</code>
+   */
+  public static Class<?> determineTypeOfImplementedType(Type type, Class<?> implementedType) {
+    if(implementedType.getTypeParameters().length == 0) {
+      throw new IllegalArgumentException("implementedType must be generic");
+    }
+    if(implementedType.getTypeParameters().length > 1) {
+      throw new IllegalArgumentException("implementedType must have exactly one type parameter");
+    }
+
+    return determineTypeOfImplementedType(type, implementedType, new HashSet<Type>());
+  }
+
+  private static Class<?> determineTypeOfImplementedType(Type type, Class<?> implementedType, Set<Type> visitedTypes) {
+    if(type instanceof Class) {
+      Class<?> cls = (Class<?>)type;
+
+      for(Type iface : cls.getGenericInterfaces()) {
+        Class<?> resultType = determineTypeOfImplementedType(iface, implementedType, visitedTypes);
+
+        if(resultType != null) {
+          return resultType;
+        }
+      }
+    }
+    else if(type instanceof ParameterizedType) {
+      if(visitedTypes.add(type)) {
+        ParameterizedType parameterizedType = (ParameterizedType)type;
+
+        if(parameterizedType.getRawType() instanceof Class && implementedType.isAssignableFrom((Class<?>)parameterizedType.getRawType())) {
+          Type finalType = parameterizedType.getActualTypeArguments()[0];
+
+          if(finalType instanceof Class) {
+            return (Class<?>)parameterizedType.getActualTypeArguments()[0];
+          }
+          else {
+            return null;
+          }
+        }
+
+        for(Type arg : parameterizedType.getActualTypeArguments()) {
+          Class<?> resultType = determineTypeOfImplementedType(arg, implementedType, visitedTypes);
+
+          if(resultType != null) {
+            return resultType;
+          }
+        }
+      }
+    }
+
+    return null;
   }
 }
