@@ -54,7 +54,11 @@ public class ProvidedInjectable implements ScopedInjectable {
 
   @Override
   public Set<AnnotationDescriptor> getQualifiers() {
-    return AnnotationDescriptor.extractQualifiers(injectableClass);
+    Set<AnnotationDescriptor> qualifiers = AnnotationDescriptor.extractQualifiers(injectableClass);
+
+    qualifiers.addAll(descriptors);
+
+    return qualifiers;
   }
 
   @Override

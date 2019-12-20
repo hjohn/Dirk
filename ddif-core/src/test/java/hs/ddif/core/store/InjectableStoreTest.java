@@ -4,6 +4,7 @@ import hs.ddif.core.Binding;
 import hs.ddif.core.ClassInjectable;
 import hs.ddif.core.InstanceInjectable;
 import hs.ddif.core.Key;
+import hs.ddif.core.ProvidedInjectable;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;
@@ -21,6 +22,7 @@ import java.util.RandomAccess;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -73,12 +75,15 @@ public class InjectableStoreTest {
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.put(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(new ProvidedInjectable(new StringProvider(), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(new ProvidedInjectable(new StringProvider(), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
 
-    assertThat(store.resolve(String.class), hasSize(3));
+    assertThat(store.resolve(String.class), hasSize(5));
     assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))), hasSize(1));
     assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))), hasSize(1));
-    assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))), hasSize(1));
+    assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))), hasSize(2));
     assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-d"))), hasSize(0));
+    assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))), hasSize(1));
   }
 
   @Test
@@ -93,13 +98,20 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldRemoveWithQualifier() {
+    StringProvider provider1 = new StringProvider();
+    StringProvider provider2 = new StringProvider();
+
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.put(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(new ProvidedInjectable(provider1, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(new ProvidedInjectable(provider2, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
 
     store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.remove(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.remove(new ProvidedInjectable(provider1, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.remove(new ProvidedInjectable(provider2, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
   }
 
   private void setupStore() {
@@ -229,4 +241,13 @@ public class InjectableStoreTest {
     @Inject
     G injection3;
   }
+
+  private static class StringProvider implements Provider<String> {
+    @Override
+    public String get() {
+      return "string";
+    }
+
+  }
+
 }
