@@ -669,4 +669,123 @@ public class InjectorTest {
     @SuppressWarnings("unused")
     @Inject private BeanWithBadPostConstruct dependency;
   }
+
+  interface SomeInterface {
+  }
+
+  interface SomeInterfaceProvider extends Provider<SomeInterface> {
+  }
+
+  static class Bean1 implements SomeInterface {
+    @Inject public Bean1() {}
+  }
+
+  static class Bean2 implements Provider<SomeInterface> {
+    @Inject public Bean2() {}
+
+    @Override
+    public SomeInterface get() {
+      return null;
+    }
+  }
+
+  static class Bean3 implements SomeInterfaceProvider {
+    @Inject public Bean3() {}
+
+    @Override
+    public SomeInterface get() {
+      return new SomeInterface() {
+      };
+    }
+  }
+
+  static class BeanThatNeedsInterface {
+    @Inject SomeInterface someInterface;
+
+    public BeanThatNeedsInterface() {}
+  }
+
+  static class BeanThatNeedsProviderOfSomeInterface {
+    @Inject Provider<SomeInterface> someInterface;
+
+    public BeanThatNeedsProviderOfSomeInterface() {}
+
+    public SomeInterface callProvider() {
+      return someInterface.get();
+    }
+  }
+
+  static class BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider {
+    @Inject Provider<Bean3> bean3;
+
+    public BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider() {}
+
+    public Bean3 callProvider() {
+      return bean3.get();
+    }
+  }
+
+  @Test
+  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface() {
+    // First register interface implementor, then interface provider
+    injector.register(Bean1.class);
+    injector.register(BeanThatNeedsInterface.class);
+
+    thrown.expect(ViolatesSingularDependencyException.class);
+
+    injector.register(Bean2.class);
+  }
+
+  @Test
+  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface_2() {
+    // First register interface provider, then implementor
+    injector.register(Bean2.class);
+    injector.register(BeanThatNeedsInterface.class);
+
+    thrown.expect(ViolatesSingularDependencyException.class);
+
+    injector.register(Bean1.class);
+  }
+
+  @Test
+  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface_3() {
+    // First register interface implementor, then indirect interface provider
+    injector.register(Bean1.class);
+    injector.register(BeanThatNeedsInterface.class);
+
+    thrown.expect(ViolatesSingularDependencyException.class);
+
+    injector.register(Bean3.class);
+  }
+
+  @Test
+  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface_4() {
+    // First register indirect interface provider, then implementor
+    injector.register(Bean3.class);
+    injector.register(BeanThatNeedsInterface.class);
+
+    thrown.expect(ViolatesSingularDependencyException.class);
+
+    injector.register(Bean1.class);
+  }
+
+  @Test
+  public void shouldInjectCorrectProvider() {
+    injector.register(Bean3.class);
+    injector.register(BeanThatNeedsProviderOfSomeInterface.class);
+
+    BeanThatNeedsProviderOfSomeInterface b = injector.getInstance(BeanThatNeedsProviderOfSomeInterface.class);
+
+    assertTrue(SomeInterface.class.isInstance(b.callProvider()));
+  }
+
+  @Test
+  public void shouldInjectCorrectProvider2() {
+    injector.register(Bean3.class);
+    injector.register(BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider.class);
+
+    BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider b = injector.getInstance(BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider.class);
+
+    assertTrue(Bean3.class.isInstance(b.callProvider()));
+  }
 }

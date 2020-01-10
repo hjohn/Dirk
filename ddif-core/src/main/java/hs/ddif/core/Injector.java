@@ -282,21 +282,6 @@ public class Injector {
         }
       }
     }
-
-    /*
-     * Recursively register a Provider if the injectable's class implements it:
-     */
-
-    if(Provider.class.isAssignableFrom(injectable.getInjectableClass())) {
-      try {
-        register((Provider<?>)getInstance(injectable.getInjectableClass()));
-      }
-      catch(Exception e) {
-        remove(injectable);  // Clean up original registration if Provider registration failed
-
-        throw e;  // Rethrow exception
-      }
-    }
   }
 
   /**

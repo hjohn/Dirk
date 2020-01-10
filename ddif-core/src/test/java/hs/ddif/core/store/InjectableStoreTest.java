@@ -126,6 +126,27 @@ public class InjectableStoreTest {
   }
 
   @Test
+  public void resolveShouldFindProviderType() {
+    store.put(new InstanceInjectable(new StringProvider()));
+
+    assertEquals(1, store.resolve(String.class).size());
+  }
+
+  @Test
+  public void resolveShouldFindProviderTypeWhenIndirectlyExtended() {
+    store.put(new InstanceInjectable(new IndirectExtendsStringProvider()));
+
+    assertEquals(1, store.resolve(String.class).size());
+  }
+
+  @Test
+  public void resolveShouldFindProviderTypeWhenIndirectlyImplemented() {
+    store.put(new InstanceInjectable(new IndirectImplementsStringProvider()));
+
+    assertEquals(1, store.resolve(String.class).size());
+  }
+
+  @Test
   public void shouldResolve() {
     setupStore();
 
@@ -242,12 +263,23 @@ public class InjectableStoreTest {
     G injection3;
   }
 
+  interface StringProviderInterface extends Provider<String> {
+  }
+
   private static class StringProvider implements Provider<String> {
     @Override
     public String get() {
       return "string";
     }
-
   }
 
+  private static class IndirectExtendsStringProvider extends StringProvider {
+  }
+
+  private static class IndirectImplementsStringProvider implements StringProviderInterface {
+    @Override
+    public String get() {
+      return "string";
+    }
+  }
 }

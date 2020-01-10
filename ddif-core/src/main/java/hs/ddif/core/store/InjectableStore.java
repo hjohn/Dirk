@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Provider;
+
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
@@ -216,23 +218,28 @@ public class InjectableStore<T extends Injectable> {
   }
 
   private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
-    List<Class<?>> toScan = new ArrayList<>();
+    List<Type> toScan = new ArrayList<>();
     Set<Class<?>> superClassesAndInterfaces = new HashSet<>();
 
     toScan.add(cls);
 
     while(!toScan.isEmpty()) {
-      Class<?> scanClassType = toScan.remove(toScan.size() - 1);
-      superClassesAndInterfaces.add(scanClassType);
+      Type scanClassType = toScan.remove(toScan.size() - 1);
 
       Class<?> scanClass = hs.ddif.core.util.TypeUtils.determineClassFromType(scanClassType);
 
-      for(Class<?> iface : scanClass.getInterfaces()) {
+      superClassesAndInterfaces.add(scanClass);
+
+      for(Type iface : scanClass.getGenericInterfaces()) {
         toScan.add(iface);
       }
 
       if(scanClass.getSuperclass() != null) {
-        toScan.add(scanClass.getSuperclass());
+        toScan.add(scanClass.getGenericSuperclass());
+      }
+
+      if(scanClass.equals(Provider.class)) {
+        toScan.add(hs.ddif.core.util.TypeUtils.getGenericType(scanClassType));
       }
     }
 

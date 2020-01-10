@@ -83,22 +83,25 @@ public class Binder {
   }
 
   private static Binding createBinding(final Type type, final boolean optional, final AnnotationDescriptor... qualifiers) {
+    return createBinding(false, type, optional, qualifiers);
+  }
+
+  private static Binding createBinding(boolean isProviderAlready, final Type type, final boolean optional, final AnnotationDescriptor... qualifiers) {
     final Class<?> cls = TypeUtils.determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
       return new HashSetBinding(TypeUtils.getGenericType(type), qualifiers);
     }
-    else if(List.class.isAssignableFrom(cls)) {
+    if(List.class.isAssignableFrom(cls)) {
       return new ArrayListBinding(TypeUtils.getGenericType(type), qualifiers);
     }
-    else if(Provider.class.isAssignableFrom(cls)) {
-      return new ProviderBinding(createBinding(TypeUtils.getGenericType(type), false, qualifiers));
+    if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
+      return new ProviderBinding(createBinding(true, TypeUtils.getGenericType(type), false, qualifiers));
     }
-    else {
-      Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
 
-      return new DirectBinding(new Key(finalType, qualifiers), optional);
-    }
+    Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
+
+    return new DirectBinding(new Key(finalType, qualifiers), optional);
   }
 
   private static AnnotationDescriptor[] extractQualifiers(Field field) {
@@ -199,6 +202,23 @@ public class Binder {
 
     @Override
     public Object getValue(final Injector injector) {
+
+      /*
+       * When supplying a Provider<X>, check if such a provider is implemented by a concrete class first, otherwise
+       * create one.
+       */
+
+      try {
+        if(binding.getRequiredKey() != null) {
+          Type searchType = org.apache.commons.lang3.reflect.TypeUtils.parameterize(Provider.class, binding.getRequiredKey().getType());
+
+          return injector.getInstance(searchType, (Object[])binding.getRequiredKey().getQualifiersAsArray());
+        }
+      }
+      catch(NoSuchBeanException e) {
+        // Ignore
+      }
+
       return new Provider<Object>() {
         @Override
         public Object get() {
@@ -215,6 +235,11 @@ public class Binder {
     @Override
     public Key getRequiredKey() {
       return binding.getRequiredKey();
+    }
+
+    @Override
+    public String toString() {
+      return "ProviderBinding[binding=" + binding + "]";
     }
   }
 
