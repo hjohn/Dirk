@@ -167,7 +167,9 @@ public class InjectableStore<T extends Injectable> {
 
     policy.checkAddition(this, injectable, qualifiers);
 
-    for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
+    Set<Class<?>> superClassesAndInterfaces = getSuperClassesAndInterfaces(concreteClass);
+
+    for(Class<?> type : superClassesAndInterfaces) {
       ensureRegistrationIsPossible(type, injectable);
     }
 
@@ -175,7 +177,7 @@ public class InjectableStore<T extends Injectable> {
      * Beyond this point, modifications are made to the store, nothing should go wrong or the store's state could become inconsistent.
      */
 
-    for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
+    for(Class<?> type : superClassesAndInterfaces) {
       register(type, null, injectable);
 
       for(AnnotationDescriptor qualifier : qualifiers) {
