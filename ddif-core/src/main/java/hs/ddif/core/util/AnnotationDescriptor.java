@@ -11,14 +11,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Named;
 import javax.inject.Qualifier;
 
 public class AnnotationDescriptor {
   private final String description;
   private final Class<? extends Annotation> annotationType;
 
+  /**
+   * Creates a new AnnotationDescriptor for the given annotation and values.  For example:<p>
+   *
+   *   AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a")))
+   *
+   * @param annotation an annotation, cannot be null
+   * @param annotationValues zero or more values that are part of the annotation
+   * @return an {@link AnnotationDescriptor}, never null
+   */
   public static AnnotationDescriptor describe(Class<? extends Annotation> annotation, Value... annotationValues) {
     return new AnnotationDescriptor(annotation, mapToString(describeAsMap(annotation, annotationValues)));
+  }
+
+  /**
+   * Convience method that creates an AnnotationDescriptor for the {@link Named} annotation
+   * with the given name.
+   *
+   * @param name a name, cannot be null
+   * @return an {@link AnnotationDescriptor}, never null
+   */
+  public static AnnotationDescriptor named(String name) {
+    return AnnotationDescriptor.describe(Named.class, new Value("value", name));
   }
 
   AnnotationDescriptor(Class<? extends Annotation> annotationType, String description) {
