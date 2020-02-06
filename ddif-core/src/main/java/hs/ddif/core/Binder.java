@@ -90,10 +90,10 @@ public class Binder {
     final Class<?> cls = TypeUtils.determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
-      return new HashSetBinding(TypeUtils.getGenericType(type), qualifiers);
+      return new HashSetBinding(TypeUtils.getGenericType(type), qualifiers, optional);
     }
     if(List.class.isAssignableFrom(cls)) {
-      return new ArrayListBinding(TypeUtils.getGenericType(type), qualifiers);
+      return new ArrayListBinding(TypeUtils.getGenericType(type), qualifiers, optional);
     }
     if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
       return new ProviderBinding(createBinding(true, TypeUtils.getGenericType(type), false, qualifiers));
@@ -146,15 +146,19 @@ public class Binder {
   private static final class HashSetBinding implements Binding {
     private final AnnotationDescriptor[] qualifiers;
     private final Type elementType;
+    private final boolean optional;
 
-    private HashSetBinding(Type elementType, AnnotationDescriptor[] qualifiers) {
+    private HashSetBinding(Type elementType, AnnotationDescriptor[] qualifiers, boolean optional) {
       this.qualifiers = qualifiers;
       this.elementType = elementType;
+      this.optional = optional;
     }
 
     @Override
     public Object getValue(Injector injector) {
-      return injector.getInstances(elementType, (Object[])qualifiers);
+      Set<Object> instances = injector.getInstances(elementType, (Object[])qualifiers);
+
+      return instances.isEmpty() && optional ? null : instances;
     }
 
     @Override
@@ -171,15 +175,19 @@ public class Binder {
   private static final class ArrayListBinding implements Binding {
     private final Type elementType;
     private final AnnotationDescriptor[] qualifiers;
+    private final boolean optional;
 
-    private ArrayListBinding(Type elementType, AnnotationDescriptor[] qualifiers) {
+    private ArrayListBinding(Type elementType, AnnotationDescriptor[] qualifiers, boolean optional) {
       this.elementType = elementType;
       this.qualifiers = qualifiers;
+      this.optional = optional;
     }
 
     @Override
     public Object getValue(Injector injector) {
-      return new ArrayList<>(injector.getInstances(elementType, (Object[])qualifiers));
+      Set<Object> instances = injector.getInstances(elementType, (Object[])qualifiers);
+
+      return instances.isEmpty() && optional ? null : new ArrayList<>(instances);
     }
 
     @Override

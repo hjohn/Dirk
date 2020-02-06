@@ -158,9 +158,13 @@ public class ClassInjectable implements ScopedInjectable {
 
         if(accessibleObject instanceof Field) {
           Field field = (Field)accessibleObject;
+          Binding binding = entry.getValue()[0];
+          Object valueToSet = binding.getValue(injector);
 
-          field.setAccessible(true);
-          field.set(bean, entry.getValue()[0].getValue(injector));
+          if(valueToSet != null) {  // Donot set fields to null, leave default value instead
+            field.setAccessible(true);
+            field.set(bean, valueToSet);
+          }
         }
       }
       catch(Exception e) {

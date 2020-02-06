@@ -41,9 +41,13 @@ import hs.ddif.core.test.injectables.SubclassOfBeanWithInjectionWithSameNamedInj
 import hs.ddif.core.test.injectables.UnavailableBean;
 import hs.ddif.core.test.injectables.UnregisteredParentBean;
 import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Nullable;
 import hs.ddif.core.util.Value;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -52,7 +56,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,6 +64,7 @@ import org.junit.rules.ExpectedException;
 import static org.hamcrest.Matchers.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -110,24 +114,24 @@ public class InjectorTest {
   public void shouldGetBeanWithInjection() {
     BeanWithInjection bean = injector.getInstance(BeanWithInjection.class);
 
-    Assert.assertNotNull(bean.getInjectedValue());
-    Assert.assertEquals(SimpleBean.class, bean.getInjectedValue().getClass());
+    assertNotNull(bean.getInjectedValue());
+    assertEquals(SimpleBean.class, bean.getInjectedValue().getClass());
   }
 
   @Test
   public void shouldGetBeanWithInterfaceBasedInjection() {
     BeanWithInterfaceBasedInjection bean = injector.getInstance(BeanWithInterfaceBasedInjection.class);
 
-    Assert.assertNotNull(bean.getInjectedValue());
-    Assert.assertEquals(SimpleImpl.class, bean.getInjectedValue().getClass());
+    assertNotNull(bean.getInjectedValue());
+    assertEquals(SimpleImpl.class, bean.getInjectedValue().getClass());
   }
 
   @Test
   public void shouldGetBeanWithProviderInjection() {
     BeanWithProvider bean = injector.getInstance(BeanWithProvider.class);
 
-    Assert.assertNotNull(bean.getSimpleBean());
-    Assert.assertEquals(SimpleBean.class, bean.getSimpleBean().getClass());
+    assertNotNull(bean.getSimpleBean());
+    assertEquals(SimpleBean.class, bean.getSimpleBean().getClass());
   }
 
   @Test
@@ -140,21 +144,60 @@ public class InjectorTest {
       }
     });
 
-    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
+    assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
   }
 
   @Test
   public void shouldGetBeanWithOptionalDependencyWhenNoProviderAvailable() {
     injector.register(BeanWithOptionalDependency.class);
 
-    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
+    assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
+  }
+
+  public static class OptionalDependent {
+    @Inject @Nullable private String string = "default";
+    @Inject @Nullable private List<String> stringList = Arrays.asList("A", "B", "C");
+    @Inject @Nullable private Set<String> stringSet = new HashSet<>(Arrays.asList("A", "B", "C"));
+    @Inject private List<String> nonOptionalStringList = Arrays.asList("A", "B", "C");
+    @Inject private Set<String> nonOptionalStringSet = new HashSet<>(Arrays.asList("A", "B", "C"));
+  }
+
+  @Test
+  public void shouldLeaveDefaultFieldValuesIntactForOptionalDependencies() {
+    injector.register(OptionalDependent.class);
+
+    OptionalDependent instance = injector.getInstance(OptionalDependent.class);
+
+    assertNotNull(instance);
+
+    // Leave default values on Nullable fields:
+    assertEquals("default", instance.string);
+    assertEquals(Arrays.asList("A", "B", "C"), instance.stringList);
+    assertEquals(new HashSet<>(Arrays.asList("A", "B", "C")), instance.stringSet);
+
+    // Overwrite defaults on required fields:
+    assertEquals(Collections.emptyList(), instance.nonOptionalStringList);
+    assertEquals(Collections.emptySet(), instance.nonOptionalStringSet);
+
+    injector.registerInstance("new");
+
+    instance = injector.getInstance(OptionalDependent.class);  // get again (it is not a singleton, so will be constructed again)
+
+    assertNotNull(instance);
+
+    // Overwrite all fields as a suitable dependency is available:
+    assertEquals("new", instance.string);
+    assertEquals(Arrays.asList("new"), instance.stringList);
+    assertEquals(new HashSet<>(Arrays.asList("new")), instance.stringSet);
+    assertEquals(Arrays.asList("new"), instance.nonOptionalStringList);
+    assertEquals(new HashSet<>(Arrays.asList("new")), instance.nonOptionalStringSet);
   }
 
   @Test
   public void shouldGetBeanWithOptionalConstructorDependencyWhenNoProviderAvailable() {
     injector.register(BeanWithOptionalConstructorDependency.class);
 
-    Assert.assertNotNull(injector.getInstance(BeanWithOptionalConstructorDependency.class));
+    assertNotNull(injector.getInstance(BeanWithOptionalConstructorDependency.class));
   }
 
   @Test  // @Nullable annotation on Provider is just ignored as it makes no sense for Providers
@@ -169,8 +212,8 @@ public class InjectorTest {
 
     BeanWithUnsupportedOptionalProviderDependency instance = injector.getInstance(BeanWithUnsupportedOptionalProviderDependency.class);
 
-    Assert.assertNotNull(instance);
-    Assert.assertNotNull(instance.getUnavailableBeanProvider());
+    assertNotNull(instance);
+    assertNotNull(instance.getUnavailableBeanProvider());
 
     thrown.expect(NoSuchBeanException.class);
 
@@ -206,7 +249,7 @@ public class InjectorTest {
 
     try {
       injector.getInstance(BeanWithInjection.class);
-      Assert.fail();
+      fail();
     }
     catch(NoSuchBeanException e) {
     }
@@ -252,13 +295,13 @@ public class InjectorTest {
     injector.register(provider);
     injector.register(BeanWithOptionalDependency.class);
 
-    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
-    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class).getUnavailableBean());
+    assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
+    assertNotNull(injector.getInstance(BeanWithOptionalDependency.class).getUnavailableBean());
 
     injector.remove(provider);
 
-    Assert.assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
-    Assert.assertNull(injector.getInstance(BeanWithOptionalDependency.class).getUnavailableBean());
+    assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
+    assertNull(injector.getInstance(BeanWithOptionalDependency.class).getUnavailableBean());
   }
 
   /*
@@ -430,31 +473,31 @@ public class InjectorTest {
   public void shouldInjectCollection() {
     BeanWithCollection bean = injector.getInstance(BeanWithCollection.class);
 
-    Assert.assertNotNull(bean.getInjectedValues());
-    Assert.assertEquals(2, bean.getInjectedValues().size());
+    assertNotNull(bean.getInjectedValues());
+    assertEquals(2, bean.getInjectedValues().size());
 
     injector.remove(SimpleCollectionItemImpl2.class);
 
     BeanWithCollection bean2 = injector.getInstance(BeanWithCollection.class);
 
-    Assert.assertEquals(2, bean.getInjectedValues().size());
-    Assert.assertEquals(1, bean2.getInjectedValues().size());
+    assertEquals(2, bean.getInjectedValues().size());
+    assertEquals(1, bean2.getInjectedValues().size());
   }
 
   @Test
   public void shouldInjectEmptyCollection() {
     BeanWithCollection bean = injector.getInstance(BeanWithCollection.class);
 
-    Assert.assertNotNull(bean.getInjectedValues());
-    Assert.assertEquals(2, bean.getInjectedValues().size());
+    assertNotNull(bean.getInjectedValues());
+    assertEquals(2, bean.getInjectedValues().size());
 
     injector.remove(SimpleCollectionItemImpl1.class);
     injector.remove(SimpleCollectionItemImpl2.class);
 
     BeanWithCollection bean2 = injector.getInstance(BeanWithCollection.class);
 
-    Assert.assertEquals(2, bean.getInjectedValues().size());
-    Assert.assertEquals(0, bean2.getInjectedValues().size());
+    assertEquals(2, bean.getInjectedValues().size());
+    assertEquals(0, bean2.getInjectedValues().size());
   }
 
   @Test
@@ -463,15 +506,15 @@ public class InjectorTest {
 
     BeanWithCollectionProvider bean = injector.getInstance(BeanWithCollectionProvider.class);
 
-    Assert.assertNotNull(bean.getInjectedValues());
-    Assert.assertEquals(2, bean.getInjectedValues().size());
+    assertNotNull(bean.getInjectedValues());
+    assertEquals(2, bean.getInjectedValues().size());
 
     injector.remove(SimpleCollectionItemImpl2.class);
 
     BeanWithCollectionProvider bean2 = injector.getInstance(BeanWithCollectionProvider.class);
 
-    Assert.assertEquals(1, bean.getInjectedValues().size());  // provider resolves dynamically, so this is now 1 after the removal of SimpleCollectionItemImpl2.class
-    Assert.assertEquals(1, bean2.getInjectedValues().size());
+    assertEquals(1, bean.getInjectedValues().size());  // provider resolves dynamically, so this is now 1 after the removal of SimpleCollectionItemImpl2.class
+    assertEquals(1, bean2.getInjectedValues().size());
   }
 
   /*
