@@ -71,19 +71,25 @@ public class InjectableStore<T extends Injectable> {
     Class<?> cls = hs.ddif.core.util.TypeUtils.determineClassFromType(type);
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
 
-    if(injectablesByDescriptor == null) {
+    if(injectablesByDescriptor == null && criteria.length == 0) {  // injectables with criteria cannot be auto discovered
 
       /*
-       * Attempt auto discovery
+       * Attempt auto discovery, only for beans without criteria.
+       * 
+       * As discovering means attempting to instantiate a class of the required type, there can only 
+       * ever be one instance of such a class.  Distinguishing such a class with criteria therefore
+       * is near useless, as such criteria can only be annotated directly on the class.  It would only 
+       * serve to restrict whether the class could be auto discovered or not -- all other combinations
+       * of criteria would always fail as a class can only be annotated in one way (unlike Providers).
        */
 
       discoveryPolicy.discoverType(this, type);
 
       injectablesByDescriptor = injectablesByDescriptorByType.get(cls);  // Check again for matches after discovery
+    }
 
-      if(injectablesByDescriptor == null) {
-        return Collections.emptySet();
-      }
+    if(injectablesByDescriptor == null) {
+      return Collections.emptySet();
     }
 
     Set<T> matches = new HashSet<>(injectablesByDescriptor.get(null));  // Make a copy as otherwise retainAll below will modify the map
