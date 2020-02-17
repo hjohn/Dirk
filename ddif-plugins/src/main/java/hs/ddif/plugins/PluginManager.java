@@ -105,7 +105,7 @@ public class PluginManager {
 
       InjectableStore<Injectable> store = new InjectableStore<>();
 
-      LOGGER.fine("Registering classes with Injector: " + classNames);
+      LOGGER.fine("Found classes: " + classNames);
 
       for(String className : classNames) {
         try {
@@ -117,6 +117,9 @@ public class PluginManager {
       }
 
       List<Class<?>> matchingClasses = DependencySorter.getInTopologicalOrder(store, classInjectables);
+
+      LOGGER.fine("Registering classes with Injector (in order): " + matchingClasses);
+
       List<Class<?>> registeredClasses = registerClasses(matchingClasses);
 
       return new Plugin(injector, pluginName, registeredClasses, classLoader);
