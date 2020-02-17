@@ -170,11 +170,23 @@ public class Injector {
    * Returns <code>true</code> when the given class is part of this Injector, otherwise
    * <code>false</code>.
    *
-   * @param cls a class to check
+   * @param cls a class to check for, cannot be null
    * @return <code>true</code> when the given class is part of this Injector, otherwise <code>false</code>
    */
   public boolean contains(Class<?> cls) {
     return store.contains(cls);
+  }
+
+  /**
+   * Returns <code>true</code> when the given type with the given criteria is part of this
+   * Injector, otherwise <code>false</code>.
+   *
+   * @param type a type to check for, cannot be null
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @return <code>true</code> when the given type with the given criteria is part of this Injector, otherwise <code>false</code>
+   */
+  public boolean contains(Type type, Object... criteria) {
+    return store.contains(type, criteria);
   }
 
   private <T> T getInstance(ScopedInjectable injectable) {

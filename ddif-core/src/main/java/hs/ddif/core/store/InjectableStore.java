@@ -158,6 +158,22 @@ public class InjectableStore<T extends Injectable> {
     return injectablesByDescriptorByType.containsKey(concreteClass);
   }
 
+  public boolean contains(Type type, Object... criteria) {
+    Class<?> cls = TypeUtils.getRawType(type, null);
+    Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
+
+    if(injectablesByDescriptor == null) {
+      return false;
+    }
+
+    Set<T> matches = new HashSet<>(injectablesByDescriptor.get(null));  // Make a copy as otherwise retainAll below will modify the map
+
+    filterByGenericType(type, matches);
+    filterByCriteria(injectablesByDescriptor, matches, criteria);
+
+    return !matches.isEmpty();
+  }
+
   public void put(T injectable) {
     if(injectable == null) {
       throw new IllegalArgumentException("injectable cannot be null");
