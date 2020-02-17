@@ -138,7 +138,7 @@ public class InjectorScopeTest {
     public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsPrototype() {
       Injector injector = new Injector();
 
-      injector.register(new XProvider());
+      injector.registerInstance(new XProvider());
       injector.register(PrototypeBeanDependantOnX.class);
     }
 
@@ -156,7 +156,7 @@ public class InjectorScopeTest {
     public void shouldThrowExceptionWhenRegisteringSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() {
       Injector injector = new Injector();
 
-      injector.register(new XProvider());
+      injector.registerInstance(new XProvider());
       injector.register(SingletonBeanDependentOnX.class);
     }
 
@@ -174,7 +174,7 @@ public class InjectorScopeTest {
     public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsPrototype() {
       Injector injector = new Injector();
 
-      injector.register(new XProvider());
+      injector.registerInstance(new XProvider());
       injector.register(PrototypeBeanDependantOnXProvider.class);
     }
 
@@ -192,7 +192,7 @@ public class InjectorScopeTest {
     public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsPrototype() {
       Injector injector = new Injector();
 
-      injector.register(new XProvider());
+      injector.registerInstance(new XProvider());
       injector.register(SingletonBeanDependentOnXProvider.class);
     }
 

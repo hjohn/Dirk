@@ -1,7 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.core.util.AnnotationDescriptor;
-import hs.ddif.core.util.Value;
 
 import java.sql.Connection;
 import java.util.List;
@@ -10,6 +9,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -31,36 +31,117 @@ public class InjectorProviderTest {
     injector = new Injector();
   }
 
-  private void setupDatabaseProvider() {
-    injector.register(new Provider<Connection>() {
+  @Test
+  public void getInstanceShouldReturnInjectedProviderClass() {
+    Provider<Connection> anonymousProvider = new Provider<Connection>() {
       @Override
       public Connection get() {
         return null;
       }
-    });
-    injector.registerInstance(Boolean.TRUE, AnnotationDescriptor.describe(Named.class, new Value("value", "db.readonly")));
-    injector.register(DatabaseProvider.class);
-  }
+    };
 
-  @Test
-  public void getInstanceShouldReturnInjectedProviderClass() {
-    setupDatabaseProvider();
+    injector.registerInstance(anonymousProvider);
+    injector.registerInstance(Boolean.TRUE, AnnotationDescriptor.named("db.readonly"));
 
-    assertNotNull(injector.getInstance(DatabaseProvider.class));
-  }
+    for(int i = 0; i < 2; i++) {
+      injector.register(DatabaseProvider.class);
 
-  @Test
-  public void getInstanceShouldReturnInjectableFromProviderClass() {
-    setupDatabaseProvider();
+      assertEquals(DatabaseProvider.class, injector.getInstance(DatabaseProvider.class).getClass());
+      assertEquals(Database.class, injector.getInstance(Database.class).getClass());
+      assertEquals(DatabaseProvider.class, injector.getInstance(TypeUtils.parameterize(Provider.class, Database.class)).getClass());
+      assertEquals(2, injector.getInstances(Provider.class).size());
+      assertEquals(anonymousProvider.getClass(), injector.getInstance(TypeUtils.parameterize(Provider.class, Connection.class)).getClass());
 
-    assertNotNull(injector.getInstance(Database.class));
+      injector.remove(DatabaseProvider.class);
+
+      try {
+        injector.getInstance(DatabaseProvider.class);
+        fail();
+      }
+      catch(NoSuchBeanException e) {
+      }
+
+      try {
+        injector.getInstance(Database.class);
+        fail();
+      }
+      catch(NoSuchBeanException e) {
+      }
+
+      assertEquals(anonymousProvider.getClass(), injector.getInstance(Provider.class).getClass());
+    }
   }
 
   @Test
   public void getInstanceShouldReturnInjectableFromProviderInstance() {
     injector.registerInstance(new SimpleDatabaseProvider());
 
-    assertNotNull(injector.getInstance(Database.class));
+    assertEquals(Database.class, injector.getInstance(Database.class).getClass());
+  }
+
+  @Test
+  public void classRegistrationShouldFailWhenImplicitProviderWouldViolatesDependencies() {
+    for(int i = 0; i < 2; i++) {
+      SimpleDatabaseProvider provider = new SimpleDatabaseProvider();
+
+      injector.registerInstance(provider);
+      injector.register(BeanWithDatabase.class);
+
+      try {
+        injector.register(SimpleDatabaseProvider.class);
+        fail();
+      }
+      catch(ViolatesSingularDependencyException e) {
+      }
+
+      assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
+
+      try {
+        injector.removeInstance(provider);
+        fail();
+      }
+      catch(ViolatesSingularDependencyException e) {
+      }
+
+      injector.remove(BeanWithDatabase.class);
+      injector.removeInstance(provider);
+
+      try {
+        injector.getInstance(BeanWithDatabase.class).getClass();
+        fail();
+      }
+      catch(NoSuchBeanException e) {
+      }
+    }
+  }
+
+  @Test
+  public void classRemovalShouldFailWhenImplicitProviderRemovalWouldViolatesDependencies() {
+    for(int i = 0; i < 2; i++) {
+      injector.register(SimpleDatabaseProvider.class);
+      injector.register(BeanWithDatabase.class);
+
+      assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
+
+      try {
+        injector.remove(SimpleDatabaseProvider.class);
+        fail();
+      }
+      catch(ViolatesSingularDependencyException e) {
+      }
+
+      assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
+
+      injector.remove(BeanWithDatabase.class);
+      injector.remove(SimpleDatabaseProvider.class);
+
+      try {
+        injector.getInstance(BeanWithDatabase.class).getClass();
+        fail();
+      }
+      catch(NoSuchBeanException e) {
+      }
+    }
   }
 
   public static class BeanWithProvidedListOfString {
@@ -104,7 +185,7 @@ public class InjectorProviderTest {
 
   @Test
   public void registerShouldThrowExceptionWhenDatabaseIsCreatedAndProvided() {
-    injector.registerInstance(new Database());
+    injector.registerInstance(new Database("jdbc:localhost"));
     injector.register(BeanWithDatabase.class);
 
     try {
@@ -127,12 +208,12 @@ public class InjectorProviderTest {
     injector.register(SimpleDatabaseProvider.class);
     injector.register(BeanWithDatabase.class);
 
-    injector.registerInstance(new Database());  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
+    injector.registerInstance(new Database("jdbc:localhost"));  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
   }
 
   @Test
   public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndProvided() {
-    injector.registerInstance(new Database());
+    injector.registerInstance(new Database("jdbc:localhost"));
     injector.register(BeanWithDatabase.class);
 
     try {
@@ -155,13 +236,13 @@ public class InjectorProviderTest {
     injector.registerInstance(new SimpleDatabaseProvider());
     injector.register(BeanWithDatabase.class);
 
-    injector.registerInstance(new Database());  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
+    injector.registerInstance(new Database("jdbc:localhost"));  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
   }
 
   @Test
   @Ignore("Nested Providers require support for Injectables with type parameters")
   public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndNestedProvided() {
-    injector.registerInstance(new Database());
+    injector.registerInstance(new Database("jdbc:localhost"));
     injector.register(BeanWithDatabase.class);
 
     try {
@@ -185,13 +266,13 @@ public class InjectorProviderTest {
     injector.registerInstance(new NestedDatabaseProvider());
     injector.register(BeanWithDatabase.class);
 
-    injector.registerInstance(new Database());  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
+    injector.registerInstance(new Database("jdbc:localhost"));  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
   }
 
   @Test
   @Ignore("Nested Providers require support for Injectables with type parameters")
   public void registerShouldThrowExceptionWhenDatabaseIsProvidedAndNestedProvided() {
-    injector.register(new SimpleDatabaseProvider());
+    injector.registerInstance(new SimpleDatabaseProvider());
     injector.register(BeanWithProvidedDatabase.class);
 
     try {
@@ -227,6 +308,8 @@ public class InjectorProviderTest {
   }
 
   public static class Database {
+    public Database(String url) {
+    }
   }
 
   public static class NestedDatabaseProvider implements Provider<Provider<Provider<Database>>> {
@@ -245,7 +328,7 @@ public class InjectorProviderTest {
   public static class SimpleDatabaseProvider implements Provider<Database> {
     @Override
     public Database get() {
-      return new Database();
+      return new Database("jdbc:localhost");
     }
   }
 
@@ -257,8 +340,7 @@ public class InjectorProviderTest {
 
     @Override
     public Database get() {
-      return new Database();
+      return new Database("jdbc:localhost");
     }
   }
-
 }

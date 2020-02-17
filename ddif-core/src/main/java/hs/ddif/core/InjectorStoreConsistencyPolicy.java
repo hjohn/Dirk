@@ -7,12 +7,10 @@ import hs.ddif.core.util.AnnotationDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -124,16 +122,6 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<Sc
     if(referenceCounter > 0) {
       referenceCounters.put(key, referenceCounter);
     }
-  }
-
-  private void ensureSingularDependenciesHold(Class<?> type, Set<AnnotationDescriptor> qualifiers) {
-    if(Provider.class.isAssignableFrom(type)) {
-      Type genericType = hs.ddif.core.util.TypeUtils.determineTypeOfImplementedType(type, Provider.class);
-
-      ensureSingularDependenciesHold(genericType, Collections.<AnnotationDescriptor>emptySet());
-    }
-
-    ensureSingularDependenciesHold((Type)type, qualifiers);
   }
 
   private void ensureSingularDependenciesHold(Type type, Set<AnnotationDescriptor> qualifiers) {

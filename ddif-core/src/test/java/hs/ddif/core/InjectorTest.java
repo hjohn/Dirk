@@ -57,6 +57,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -137,7 +138,7 @@ public class InjectorTest {
   @Test
   public void shouldGetBeanWithOptionalDependencyWhenProviderReturnsNull() {
     injector.register(BeanWithOptionalDependency.class);
-    injector.register(new Provider<UnavailableBean>() {
+    injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
         return null;
@@ -202,7 +203,7 @@ public class InjectorTest {
 
   @Test  // @Nullable annotation on Provider is just ignored as it makes no sense for Providers
   public void shouldGetBeanWithOptionalProviderDependency() {
-    injector.register(new Provider<UnavailableBean>() {
+    injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
         return null;  // this provider breaks its contract
@@ -215,9 +216,10 @@ public class InjectorTest {
     assertNotNull(instance);
     assertNotNull(instance.getUnavailableBeanProvider());
 
-    thrown.expect(NoSuchBeanException.class);
-
-    instance.getUnavailableBeanProvider().get();  // Make sure that null is not returned as that is not part of the Provider contract
+    // Previously the call below would throw a NoSuchBeanException (because the provider was wrapped in another provider),
+    // however, now the given provider is injected unaltered.  As it is injected as-is, there is no way to prevent
+    // it from returning null, so it returning null is the expected behaviour now.
+    assertNull(instance.getUnavailableBeanProvider().get());
   }
 
   @Test  // Providers cannot be made optional with @Nullable as a provider can always be created; it's only the result of the Provider that could be optional but that requires a different approach (new annotation of sub-interface)
@@ -229,7 +231,7 @@ public class InjectorTest {
 
   @Test(expected = NoSuchBeanException.class)
   public void shouldThrowExceptionWhenGettingUnavailableBean() {
-    injector.register(new Provider<UnavailableBean>() {
+    injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
         return null;
@@ -292,13 +294,13 @@ public class InjectorTest {
       }
     };
 
-    injector.register(provider);
+    injector.registerInstance(provider);
     injector.register(BeanWithOptionalDependency.class);
 
     assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
     assertNotNull(injector.getInstance(BeanWithOptionalDependency.class).getUnavailableBean());
 
-    injector.remove(provider);
+    injector.removeInstance(provider);
 
     assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
     assertNull(injector.getInstance(BeanWithOptionalDependency.class).getUnavailableBean());
@@ -566,7 +568,7 @@ public class InjectorTest {
 
   @Test
   public void shouldRegisterAndUseProvider() {
-    injector.register(new Provider<String>() {
+    injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
@@ -585,13 +587,13 @@ public class InjectorTest {
       }
     };
 
-    injector.register(provider);
-    injector.remove(provider);
+    injector.registerInstance(provider);
+    injector.removeInstance(provider);
   }
 
   @Test(expected = ViolatesSingularDependencyException.class)
   public void shouldThrowExceptionWhenRegisteringProviderWouldViolateSingularDependencies() {
-    injector.register(new Provider<SimpleChildBean>() {
+    injector.registerInstance(new Provider<SimpleChildBean>() {
       @Override
       public SimpleChildBean get() {
         return new SimpleChildBean();
@@ -601,14 +603,14 @@ public class InjectorTest {
 
   @Test(expected = NoSuchInjectableException.class)
   public void shouldThrowExceptionWhenRemovingSimilarProvider() {
-    injector.register(new Provider<String>() {
+    injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
       }
     });
 
-    injector.remove(new Provider<String>() {
+    injector.removeInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
@@ -618,7 +620,7 @@ public class InjectorTest {
 
   @Test(expected = NoSuchInjectableException.class)
   public void shouldThrowExceptionWhenRemovingProviderByClass() {
-    injector.register(new Provider<String>() {
+    injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
@@ -688,8 +690,9 @@ public class InjectorTest {
   }
 
   @Test
-  public void getInstancesShouldSilentlyProvidersThatReturnNull() {
-    injector.register(new Provider<String>() {
+  @Ignore("This test is no longer valid; Providers are injected directly now (no indirection that could check their result) and so null instances can be part of the results if a Provider breaks its contract.")
+  public void getInstancesShouldSilentlyIgnoreProvidersThatReturnNull() {
+    injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
         return null;

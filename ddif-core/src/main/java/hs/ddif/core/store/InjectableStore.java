@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Provider;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
@@ -68,17 +66,17 @@ public class InjectableStore<T extends Injectable> {
    * @return a set of Injectables matching the given type and critera
    */
   public Set<T> resolve(Type type, Object... criteria) {
-    Class<?> cls = hs.ddif.core.util.TypeUtils.determineClassFromType(type);
+    Class<?> cls = TypeUtils.getRawType(type, null);
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
 
     if(injectablesByDescriptor == null && criteria.length == 0) {  // injectables with criteria cannot be auto discovered
 
       /*
        * Attempt auto discovery, only for beans without criteria.
-       * 
-       * As discovering means attempting to instantiate a class of the required type, there can only 
+       *
+       * As discovering means attempting to instantiate a class of the required type, there can only
        * ever be one instance of such a class.  Distinguishing such a class with criteria therefore
-       * is near useless, as such criteria can only be annotated directly on the class.  It would only 
+       * is near useless, as such criteria can only be annotated directly on the class.  It would only
        * serve to restrict whether the class could be auto discovered or not -- all other combinations
        * of criteria would always fail as a class can only be annotated in one way (unlike Providers).
        */
@@ -232,7 +230,7 @@ public class InjectableStore<T extends Injectable> {
     while(!toScan.isEmpty()) {
       Type scanClassType = toScan.remove(toScan.size() - 1);
 
-      Class<?> scanClass = hs.ddif.core.util.TypeUtils.determineClassFromType(scanClassType);
+      Class<?> scanClass = TypeUtils.getRawType(scanClassType, null);
 
       superClassesAndInterfaces.add(scanClass);
 
@@ -242,10 +240,6 @@ public class InjectableStore<T extends Injectable> {
 
       if(scanClass.getSuperclass() != null) {
         toScan.add(scanClass.getGenericSuperclass());
-      }
-
-      if(scanClass.equals(Provider.class)) {
-        toScan.add(hs.ddif.core.util.TypeUtils.getGenericType(scanClassType));
       }
     }
 

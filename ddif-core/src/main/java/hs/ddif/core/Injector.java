@@ -232,28 +232,6 @@ public class Injector {
   }
 
   /**
-   * Registers a provider with this Injector if all its dependencies can be
-   * resolved and it would not cause existing registered classes to have
-   * ambigious dependencies as a result of registering the given provider.<p>
-   *
-   * If there are unresolvable dependencies, or registering this provider
-   * would result in ambigious dependencies for previously registered
-   * classes, then this method will throw an exception.<p>
-   *
-   * Note that if the provided class implements {@link Provider} that
-   * the class it provides is held to the same restrictions or registration
-   * will fail.
-   *
-   * @param provider the provider to register with the Injector
-   * @param qualifiers the qualifiers for this provider
-   * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
-   * @throws UnresolvableDependencyException when one or more dependencies of the given provider cannot be resolved
-   */
-  public void register(Provider<?> provider, AnnotationDescriptor... qualifiers) {
-    register(new ProvidedInjectable(provider, qualifiers));
-  }
-
-  /**
    * Registers an instance with this Injector as a Singleton if it would not
    * cause existing registered classes to have ambigious dependencies as a
    * result.<p>
@@ -272,7 +250,71 @@ public class Injector {
     register(new InstanceInjectable(instance, qualifiers));
   }
 
+  /**
+   * Removes a class from this Injector if doing so would not result in
+   * broken dependencies in the remaining registered classes.<p>
+   *
+   * If there would be broken dependencies then the removal will fail
+   * and an exception is thrown.<p>
+   *
+   * Note that if the class implements {@link Provider} that the class it
+   * provides is held to the same restrictions or removal will fail.
+   *
+   * @param concreteClass the class to remove from the Injector
+   * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
+   */
+  public void remove(Class<?> concreteClass) {
+    remove(new ClassInjectable(concreteClass));
+  }
+
+  /**
+   * Removes an instance from this Injector if doing so would not result in
+   * broken dependencies in the remaining registered classes.<p>
+   *
+   * If there would be broken dependencies then the removal will fail
+   * and an exception is thrown.<p>
+   *
+   * Note that if the instance implements {@link Provider} that the class it
+   * provides is held to the same restrictions or removal will fail.
+   *
+   * @param instance the instance to remove from the Injector
+   * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
+   */
+  public void removeInstance(Object instance) {
+    remove(new InstanceInjectable(instance));
+  }
+
   private void register(ScopedInjectable injectable) {
+    registerSingle(injectable);
+
+    if(Provider.class.isAssignableFrom(injectable.getInjectableClass())) {
+      try {
+        register(new ProvidedInjectable(injectable.getInjectableClass()));
+      }
+      catch(Exception e) {
+        removeSingle(injectable);
+
+        throw e;
+      }
+    }
+  }
+
+  private void remove(ScopedInjectable injectable) {
+    removeSingle(injectable);
+
+    if(Provider.class.isAssignableFrom(injectable.getInjectableClass())) {
+      try {
+        remove(new ProvidedInjectable(injectable.getInjectableClass()));
+      }
+      catch(Exception e) {
+        registerSingle(injectable);
+
+        throw e;
+      }
+    }
+  }
+
+  private void registerSingle(ScopedInjectable injectable) {
     store.put(injectable);
 
     for(Binding[] bindings : injectable.getBindings().values()) {
@@ -284,35 +326,7 @@ public class Injector {
     }
   }
 
-  /**
-   * Removes a class from this Injector if doing so would not result in
-   * broken dependencies in the remaining registered classes.<p>
-   *
-   * If there would be broken dependencies then the removal will fail
-   * and an exception is thrown.
-   *
-   * @param concreteClass the class to remove from the Injector
-   * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
-   */
-  public void remove(Class<?> concreteClass) {
-    remove(new ClassInjectable(concreteClass));
-  }
-
-  /**
-   * Removes a provider from this Injector if doing so would not result in
-   * broken dependencies in the remaining registered classes.<p>
-   *
-   * If there would be broken dependencies then the removal will fail
-   * and an exception is thrown.
-   *
-   * @param provider the provider to remove from the Injector
-   * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
-   */
-  public void remove(Provider<?> provider) {
-    remove(new ProvidedInjectable(provider));
-  }
-
-  private void remove(ScopedInjectable injectable) {
+  private void removeSingle(ScopedInjectable injectable) {
     store.remove(injectable);
 
     for(Binding[] bindings : injectable.getBindings().values()) {
