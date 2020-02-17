@@ -52,52 +52,35 @@ public class DependencySorterTest {
   }
 
   public static class B {
-    @Inject @Big @Red
-    Object injection;
+    @Inject @Big @Red Object injection;
   }
 
   public static class C {
-    @Inject
-    A injection1;
-
-    @Inject
-    B injection2;
+    @Inject A injection1;
+    @Inject B injection2;
   }
 
   public static class D {
-    @Inject
-    C injection;
+    @Inject C injection;
   }
 
   public static class E {
-    @Inject
-    B injection;
+    @Inject B injection;
   }
 
   public static class F {
-    @Inject
-    C injection1;
-
-    @Inject
-    E injection2;
+    @Inject C injection1;
+    @Inject E injection2;
   }
 
   public static class G {
-    @Inject @Big
-    Object injection1;
-
-    @Inject
-    C injection2;
+    @Inject @Big Object injection1;
+    @Inject C injection2;
   }
 
   public static class H {
-    @Inject
-    D injection1;
-
-    @Inject
-    F injection2;
-
-    @Inject
-    G injection3;
+    @Inject D injection1;
+    @Inject F injection2;
+    @Inject G injection3;
   }
 }

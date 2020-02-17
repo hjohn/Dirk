@@ -78,6 +78,11 @@ public class ProvidedInjectable implements ScopedInjectable {
     return null;
   }
 
+  /**
+   * Returns the class which implements the Provider interface.
+   *
+   * @return the class which implements the Provider interface, never null
+   */
   public Class<?> getClassImplementingProvider() {
     return classImplementingProvider;
   }

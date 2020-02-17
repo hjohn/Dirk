@@ -5,6 +5,7 @@ import hs.ddif.core.ClassInjectable;
 import hs.ddif.core.DependencyException;
 import hs.ddif.core.Injector;
 import hs.ddif.core.Key;
+import hs.ddif.core.ProvidedInjectable;
 import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.TypeUtils;
@@ -22,6 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
+
+import javax.inject.Provider;
 
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
@@ -51,8 +54,7 @@ public class PluginManager {
       packageNamePrefixes,
       new TypeAnnotationsScanner(),
       new FieldAnnotationsScanner(),
-      new MethodAnnotationsScanner(),
-      new TypeElementsScanner()
+      new MethodAnnotationsScanner()
     );
 
     return new PluginLoader(reflections, classLoader).loadPlugin(Arrays.toString(packageNamePrefixes));
@@ -109,7 +111,11 @@ public class PluginManager {
 
       for(String className : classNames) {
         try {
-          putInStore(store, classLoader.loadClass(className));
+          Class<?> cls = classLoader.loadClass(className);
+
+          if(!Modifier.isAbstract(cls.getModifiers())) {
+            putInStore(store, cls);
+          }
         }
         catch(ClassNotFoundException e) {
           throw new IllegalStateException(e);
@@ -127,35 +133,43 @@ public class PluginManager {
 
     private void putInStore(InjectableStore<Injectable> store, Class<?> cls) {
       if(!store.contains(cls)) {
-        if(reflections.getStore().get("TypeElementsScanner").containsKey(cls.getName())) {
-          try {
-            ClassInjectable classInjectable = new ClassInjectable(cls);
+        try {
+          ClassInjectable classInjectable = new ClassInjectable(cls);
 
-            store.put(classInjectable);
-            classInjectables.add(classInjectable);
+          store.put(classInjectable);
+          classInjectables.add(classInjectable);
 
-            /*
-             * Self discovery of other injectables
-             */
+          /*
+           * Self discovery of other injectables
+           */
 
-            for(Binding[] bindings : classInjectable.getBindings().values()) {
-              for(Binding binding : bindings) {
+          for(Binding[] bindings : classInjectable.getBindings().values()) {
+            for(Binding binding : bindings) {
+              if(!binding.isProvider()) {
                 Key key = binding.getRequiredKey();
 
                 if(key != null) {
                   Type type = key.getType();
                   Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
-                  if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
+                  if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers()) && !injector.contains(key.getType(), (Object[])key.getQualifiersAsArray())) {
                     putInStore(store, typeClass);
                   }
                 }
               }
             }
           }
-          catch(Exception e) {
-            throw new IllegalStateException("Exception while loading plugin class: " + cls, e);
+
+          /*
+           * Self discovery of providers:
+           */
+
+          if(Provider.class.isAssignableFrom(cls)) {
+            store.put(new ProvidedInjectable(cls));
           }
+        }
+        catch(Exception e) {
+          throw new IllegalStateException("Exception while loading plugin class: " + cls, e);
         }
       }
     }

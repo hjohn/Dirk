@@ -3,6 +3,7 @@ package hs.ddif.plugins;
 import hs.ddif.core.Binding;
 import hs.ddif.core.ClassInjectable;
 import hs.ddif.core.Key;
+import hs.ddif.core.ProvidedInjectable;
 import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.InjectableStore;
 
@@ -25,7 +26,15 @@ public class DependencySorter {
 
           if(requiredKey != null) {
             for(Injectable injectable : store.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray())) {
-              dg.addEdge(injectable.getInjectableClass(), classInjectable.getInjectableClass());
+              Class<?> requiredClass = injectable.getInjectableClass();
+
+              if(injectable instanceof ProvidedInjectable) {
+                ProvidedInjectable providedInjectable = (ProvidedInjectable)injectable;
+
+                requiredClass = providedInjectable.getClassImplementingProvider();
+              }
+
+              dg.addEdge(requiredClass, classInjectable.getInjectableClass());
             }
           }
         }
