@@ -7,8 +7,11 @@ import hs.ddif.core.util.AnnotationDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -18,6 +21,26 @@ import javax.inject.Singleton;
 
 // TODO JSR-330: Named without value is treated differently ... some use field name, others default to empty?
 public class Injector {
+
+  /**
+   * Allows simple extension to an {@link Injector}.
+   */
+  public interface Extension {
+
+    /**
+     * Gets another {@link ScopedInjectable} derived from the given injectable, or
+     * <code>null</code> if no other injectable could be derived.<p>
+     *
+     * During this method call the supplied {@link Injector} should not be modified
+     * as this method is called during modification of the injectors internal state.<p>
+     *
+     * @param injector an {@link Injector}, never null
+     * @param injectable a {@link ScopedInjectable}, never null
+     * @return another {@link ScopedInjectable} derived from the given injectable, or
+     *   <code>null</code> if no other injectable could be derived
+     */
+    ScopedInjectable getDerived(Injector injector, ScopedInjectable injectable);
+  }
 
   /**
    * The store consistency policy this injector uses.
@@ -34,6 +57,8 @@ public class Injector {
    * Map containing {@link ScopeResolver}s this injector can use.
    */
   private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
+
+  private final List<Extension> extensions;
 
   public Injector(DiscoveryPolicy<ScopedInjectable> discoveryPolicy, ScopeResolver... scopeResolvers) {
     for(ScopeResolver scopeResolver : scopeResolvers) {
@@ -70,6 +95,7 @@ public class Injector {
 
     this.consistencyPolicy = new InjectorStoreConsistencyPolicy();
     this.store = new InjectableStore<>(consistencyPolicy, discoveryPolicy);
+    this.extensions = Arrays.asList(new Extension[] {new ProviderInjectorExtension()});
   }
 
   public Injector(ScopeResolver... scopeResolvers) {
@@ -299,12 +325,23 @@ public class Injector {
   private void register(ScopedInjectable injectable) {
     registerSingle(injectable);
 
-    if(Provider.class.isAssignableFrom(injectable.getInjectableClass())) {
+    List<ScopedInjectable> registered = new ArrayList<>();
+
+    registered.add(injectable);
+
+    for(Extension extension : extensions) {
       try {
-        register(new ProvidedInjectable(injectable.getInjectableClass()));
+        ScopedInjectable derived = extension.getDerived(this, injectable);
+
+        if(derived != null) {
+          register(derived);
+          registered.add(derived);
+        }
       }
       catch(Exception e) {
-        removeSingle(injectable);
+        for(int i = registered.size() - 1; i >= 0; i--) {
+          removeSingle(registered.get(i));
+        }
 
         throw e;
       }
@@ -314,12 +351,23 @@ public class Injector {
   private void remove(ScopedInjectable injectable) {
     removeSingle(injectable);
 
-    if(Provider.class.isAssignableFrom(injectable.getInjectableClass())) {
+    List<ScopedInjectable> removed = new ArrayList<>();
+
+    removed.add(injectable);
+
+    for(Extension extension : extensions) {
       try {
-        remove(new ProvidedInjectable(injectable.getInjectableClass()));
+        ScopedInjectable derived = extension.getDerived(this, injectable);
+
+        if(derived != null) {
+          remove(derived);
+          removed.add(derived);
+        }
       }
       catch(Exception e) {
-        registerSingle(injectable);
+        for(int i = removed.size() - 1; i >= 0; i--) {
+          registerSingle(removed.get(i));
+        }
 
         throw e;
       }
