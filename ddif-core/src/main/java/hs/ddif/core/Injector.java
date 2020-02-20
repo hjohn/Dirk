@@ -96,7 +96,7 @@ public class Injector {
 
     this.consistencyPolicy = new InjectorStoreConsistencyPolicy();
     this.store = new InjectableStore<>(consistencyPolicy, discoveryPolicy);
-    this.extensions = Arrays.asList(new Extension[] {new ProviderInjectorExtension()});
+    this.extensions = Arrays.asList(new Extension[] {new ProviderInjectorExtension(), new ProducerInjectorExtension()});
   }
 
   public Injector(ScopeResolver... scopeResolvers) {
