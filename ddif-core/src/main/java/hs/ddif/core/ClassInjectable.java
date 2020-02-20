@@ -49,7 +49,7 @@ public class ClassInjectable implements ScopedInjectable {
     if(injectableClass == null) {
       throw new IllegalArgumentException("injectableClass cannot be null");
     }
-    if(injectableClass.isInterface() || Modifier.isAbstract(injectableClass.getModifiers())) {
+    if(Modifier.isAbstract(injectableClass.getModifiers())) {
       throw new IllegalArgumentException("injectableClass must be a concrete class: " + injectableClass);
     }
 

@@ -28,7 +28,7 @@ public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy<ScopedInjectab
   public void discoverType(InjectableStore<ScopedInjectable> injectableStore, Type type) {
     Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
-    if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers())) {
+    if(!Modifier.isAbstract(typeClass.getModifiers())) {
       injectableStore.put(new ClassInjectable(typeClass));
     }
   }

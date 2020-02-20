@@ -152,7 +152,7 @@ public class PluginManager {
                   Type type = key.getType();
                   Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
-                  if(!typeClass.isInterface() && !Modifier.isAbstract(typeClass.getModifiers()) && !injector.contains(key.getType(), (Object[])key.getQualifiersAsArray())) {
+                  if(!Modifier.isAbstract(typeClass.getModifiers()) && !injector.contains(key.getType(), (Object[])key.getQualifiersAsArray())) {
                     putInStore(store, typeClass);
                   }
                 }
