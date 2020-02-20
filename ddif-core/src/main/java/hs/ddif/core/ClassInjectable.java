@@ -9,6 +9,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -101,6 +103,16 @@ public class ClassInjectable implements ScopedInjectable {
     this.postConstructMethods = methods;
   }
 
+  private static String determineParameterName(java.lang.reflect.Parameter parameter) {
+    Parameter parameterAnnotation = parameter.getAnnotation(Parameter.class);
+
+    if((parameterAnnotation == null || parameterAnnotation.value().isEmpty()) && !parameter.isNamePresent()) {
+      return null;
+    }
+
+    return parameterAnnotation != null && !parameterAnnotation.value().isEmpty() ? parameterAnnotation.value() : parameter.getName();
+  }
+
   @Override
   public Class<?> getInjectableClass() {
     return injectableClass;
@@ -122,7 +134,7 @@ public class ClassInjectable implements ScopedInjectable {
   }
 
   @Override
-  public Object getInstance(Injector injector) {
+  public Object getInstance(Injector injector, NamedParameter... parameters) {
     if(underConstruction) {
       throw new ConstructionException("Object already under construction (dependency creation loop in @PostConstruct method!): " + injectableClass);
     }
@@ -130,9 +142,15 @@ public class ClassInjectable implements ScopedInjectable {
     try {
       underConstruction = true;
 
-      Object bean = constructInstance(injector);
+      List<NamedParameter> namedParameters = new ArrayList<>(Arrays.asList(parameters));
 
-      injectInstance(injector, bean);
+      Object bean = constructInstance(injector, namedParameters);
+
+      injectInstance(injector, bean, namedParameters);
+
+      if(!namedParameters.isEmpty()) {
+        throw new ConstructionException("Superflous parameters supplied, expected " + (parameters.length - namedParameters.size()) + " but got: " + parameters.length);
+      }
 
       try {
         for(Method method : postConstructMethods) {
@@ -151,7 +169,7 @@ public class ClassInjectable implements ScopedInjectable {
     }
   }
 
-  private void injectInstance(Injector injector, Object bean) {
+  private void injectInstance(Injector injector, Object bean, List<NamedParameter> namedParameters) {
     for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
       try {
         AccessibleObject accessibleObject = entry.getKey();
@@ -159,7 +177,15 @@ public class ClassInjectable implements ScopedInjectable {
         if(accessibleObject instanceof Field) {
           Field field = (Field)accessibleObject;
           Binding binding = entry.getValue()[0];
-          Object valueToSet = binding.getValue(injector);
+
+          Object valueToSet;
+
+          if(binding.isParameter()) {
+            valueToSet = findAndRemoveNamedParameterValue(field.getName(), namedParameters);
+          }
+          else {
+            valueToSet = binding.getValue(injector);
+          }
 
           if(valueToSet != null) {  // Donot set fields to null, leave default value instead
             field.setAccessible(true);
@@ -167,23 +193,53 @@ public class ClassInjectable implements ScopedInjectable {
           }
         }
       }
+      catch(ConstructionException e) {
+        throw e;
+      }
       catch(Exception e) {
         throw new ConstructionException("Unable to set field [" + entry.getKey() + "] of: " + injectableClass, e);
       }
     }
   }
 
-  private Object constructInstance(Injector injector) {
+  private static Object findAndRemoveNamedParameterValue(String name, List<NamedParameter> namedParameters) {
+    for(int i = 0; i < namedParameters.size(); i++) {
+      if(namedParameters.get(i).getName().equals(name)) {
+        return namedParameters.remove(i).getValue();
+      }
+    }
+
+    throw new ConstructionException("Parameter '" + name + "' was not supplied");
+  }
+
+  private Object constructInstance(Injector injector, List<NamedParameter> namedParameters) {
     try {
       Map.Entry<AccessibleObject, Binding[]> constructorEntry = findConstructorEntry(bindings);
       Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
+      java.lang.reflect.Parameter[] parameters = constructor.getParameters();
       Object[] values = new Object[constructorEntry.getValue().length];  // Parameters for constructor
 
       for(int i = 0; i < values.length; i++) {
-        values[i] = constructorEntry.getValue()[i].getValue(injector);
+        Binding binding = constructorEntry.getValue()[i];
+
+        if(binding.isParameter()) {
+          String name = determineParameterName(parameters[i]);
+
+          if(name == null) {
+            throw new ConstructionException("Missing parameter name.  Unable to construct {" + injectableClass + "}, name cannot be determined for: " + parameters[i] + "; specify one with @Parameter or compile classes with parameter name information");
+          }
+
+          values[i] = findAndRemoveNamedParameterValue(name, namedParameters);
+        }
+        else {
+          values[i] = binding.getValue(injector);
+        }
       }
 
       return constructor.newInstance(values);
+    }
+    catch(ConstructionException e) {
+      throw e;
     }
     catch(Exception e) {
       throw new ConstructionException("Unable to construct: " + injectableClass, e);

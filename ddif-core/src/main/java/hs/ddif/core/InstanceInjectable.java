@@ -44,7 +44,7 @@ public class InstanceInjectable implements ScopedInjectable {
   }
 
   @Override
-  public Object getInstance(Injector injector) {
+  public Object getInstance(Injector injector, NamedParameter... namedParameters) {
     return instance;
   }
 

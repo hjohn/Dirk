@@ -41,7 +41,7 @@ public class InjectorStoreConsistencyPolicy implements StoreConsistencyPolicy<Sc
       for(Binding binding : entry.getValue()) {
         Key requiredKey = binding.getRequiredKey();
 
-        if(requiredKey != null) {
+        if(requiredKey != null && !binding.isParameter()) {
           Set<ScopedInjectable> injectables = injectableStore.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray());
 
           ensureBindingIsSingular(injectable, entry.getKey(), requiredKey, injectables);

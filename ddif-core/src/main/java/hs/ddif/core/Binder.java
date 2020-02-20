@@ -23,6 +23,7 @@ import javax.inject.Qualifier;
 
 public class Binder {
 
+  // Binding array is returned because a constructor has 0 or more bindings, although fields always only have a single binding
   public static Map<AccessibleObject, Binding[]> resolve(Class<?> injectableClass) {
     Map<AccessibleObject, Binding[]> bindings = new HashMap<>();
 
@@ -35,7 +36,7 @@ public class Binder {
         if(inject != null) {
           Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
 
-          bindings.put(field, new Binding[] {createBinding(type, isOptional(field.getAnnotations()), extractQualifiers(field))});
+          bindings.put(field, new Binding[] {createBinding(type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))});
         }
       }
 
@@ -68,13 +69,14 @@ public class Binder {
 
   private static Binding[] createConstructorBinding(Constructor<?> constructor) {
     Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
+    java.lang.reflect.Parameter[] parameters = constructor.getParameters();
     Type[] genericParameterTypes = constructor.getGenericParameterTypes();
     List<Binding> constructorBindings = new ArrayList<>();
 
     for(int i = 0; i < genericParameterTypes.length; i++) {
       Type type = genericParameterTypes[i];
       AnnotationDescriptor[] qualifiers = extractQualifiers(parameterAnnotations[i]);
-      Binding binding = createBinding(type, isOptional(parameterAnnotations[i]), qualifiers);
+      Binding binding = createBinding(type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, qualifiers);
 
       constructorBindings.add(binding);
     }
@@ -82,11 +84,11 @@ public class Binder {
     return constructorBindings.toArray(new Binding[constructorBindings.size()]);
   }
 
-  private static Binding createBinding(final Type type, final boolean optional, final AnnotationDescriptor... qualifiers) {
-    return createBinding(false, type, optional, qualifiers);
+  private static Binding createBinding(Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
+    return createBinding(false, type, optional, isParameter, qualifiers);
   }
 
-  private static Binding createBinding(boolean isProviderAlready, final Type type, final boolean optional, final AnnotationDescriptor... qualifiers) {
+  private static Binding createBinding(boolean isProviderAlready, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
     final Class<?> cls = TypeUtils.determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
@@ -96,12 +98,12 @@ public class Binder {
       return new ArrayListBinding(TypeUtils.getGenericType(type), qualifiers, optional);
     }
     if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
-      return new ProviderBinding(createBinding(true, TypeUtils.getGenericType(type), false, qualifiers));
+      return new ProviderBinding(createBinding(true, TypeUtils.getGenericType(type), false, false, qualifiers));
     }
 
     Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
 
-    return new DirectBinding(new Key(finalType, qualifiers), optional);
+    return new DirectBinding(new Key(finalType, qualifiers), optional, isParameter);
   }
 
   private static AnnotationDescriptor[] extractQualifiers(Field field) {
@@ -167,8 +169,18 @@ public class Binder {
     }
 
     @Override
+    public Type getType() {
+      return Set.class;
+    }
+
+    @Override
     public Key getRequiredKey() {
       return null;
+    }
+
+    @Override
+    public boolean isParameter() {
+      return false;
     }
   }
 
@@ -196,8 +208,18 @@ public class Binder {
     }
 
     @Override
+    public Type getType() {
+      return ArrayList.class;
+    }
+
+    @Override
     public Key getRequiredKey() {
       return null;
+    }
+
+    @Override
+    public boolean isParameter() {
+      return false;
     }
   }
 
@@ -241,8 +263,18 @@ public class Binder {
     }
 
     @Override
+    public Type getType() {
+      return binding.getType();
+    }
+
+    @Override
     public Key getRequiredKey() {
       return binding.getRequiredKey();
+    }
+
+    @Override
+    public boolean isParameter() {
+      return false;
     }
 
     @Override
@@ -254,10 +286,12 @@ public class Binder {
   private static final class DirectBinding implements Binding {
     private final Key key;
     private final boolean optional;
+    private final boolean isParameter;
 
-    private DirectBinding(Key requiredKey, boolean optional) {
+    private DirectBinding(Key requiredKey, boolean optional, boolean isParameter) {
       this.key = requiredKey;
       this.optional = optional;
+      this.isParameter = isParameter;
     }
 
     @Override
@@ -276,6 +310,11 @@ public class Binder {
     }
 
     @Override
+    public Type getType() {
+      return key.getType();
+    }
+
+    @Override
     public Key getRequiredKey() {
       return optional ? null : key;
     }
@@ -283,6 +322,11 @@ public class Binder {
     @Override
     public boolean isProvider() {
       return false;
+    }
+
+    @Override
+    public boolean isParameter() {
+      return isParameter;
     }
 
     @Override

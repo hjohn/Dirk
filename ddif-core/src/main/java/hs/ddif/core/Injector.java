@@ -21,6 +21,7 @@ import javax.inject.Singleton;
 
 // TODO JSR-330: Named without value is treated differently ... some use field name, others default to empty?
 public class Injector {
+  private static final NamedParameter[] NO_PARAMETERS = new NamedParameter[] {};
 
   /**
    * Allows simple extension to an {@link Injector}.
@@ -108,15 +109,16 @@ public class Injector {
 
   /**
    * Returns an instance of the given type matching the given criteria (if any) in
-   * which all dependencies are injected.
+   * which all dependencies and parameters are injected.
    *
    * @param type the type of the instance required
+   * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return an instance of the given class matching the given criteria, never null
    * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
    * @throws AmbigiousBeanException when the given class has multiple matching candidates
    */
-  public <T> T getInstance(Type type, Object... criteria) {
+  public <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) {
     Set<ScopedInjectable> injectables = store.resolve(type, criteria);
 
     if(injectables.isEmpty()) {
@@ -129,7 +131,7 @@ public class Injector {
     T instance;
 
     try {
-      instance = getInstance(injectables.iterator().next());
+      instance = getInstance(injectables.iterator().next(), parameters);
     }
     catch(NoSuchBeanException e) {
       throw new NoSuchBeanException(type, e, criteria);
@@ -140,6 +142,20 @@ public class Injector {
     }
 
     return instance;
+  }
+
+  /**
+   * Returns an instance of the given type matching the given criteria (if any) in
+   * which all dependencies are injected.
+   *
+   * @param type the type of the instance required
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @return an instance of the given class matching the given criteria, never null
+   * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
+   * @throws AmbigiousBeanException when the given class has multiple matching candidates
+   */
+  public <T> T getInstance(Type type, Object... criteria) {
+    return getParameterizedInstance(type, NO_PARAMETERS, criteria);
   }
 
   /**
@@ -169,7 +185,7 @@ public class Injector {
     Set<T> instances = new HashSet<>();
 
     for(ScopedInjectable injectable : store.resolve(type, criteria)) {
-      T instance = getInstance(injectable);
+      T instance = getInstance(injectable, NO_PARAMETERS);
 
       if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
         instances.add(instance);
@@ -215,7 +231,7 @@ public class Injector {
     return store.contains(type, criteria);
   }
 
-  private <T> T getInstance(ScopedInjectable injectable) {
+  private <T> T getInstance(ScopedInjectable injectable, NamedParameter[] namedParameters) {
     ScopeResolver scopeResolver = null;
 
     for(Map.Entry<Class<? extends Annotation>, ScopeResolver> entry : scopesResolversByAnnotation.entrySet()) {
@@ -234,7 +250,7 @@ public class Injector {
     }
 
     @SuppressWarnings("unchecked")
-    T bean = (T)injectable.getInstance(this);
+    T bean = (T)injectable.getInstance(this, namedParameters);
 
     if(bean != null && scopeResolver != null) {
 

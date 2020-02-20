@@ -55,9 +55,9 @@ public class ProvidedInjectable implements ScopedInjectable {
   }
 
   @Override
-  public Object getInstance(Injector injector) {
+  public Object getInstance(Injector injector, NamedParameter... namedParameters) {
     try {
-      return provider == null ? ((Provider<?>)injector.getInstance(classImplementingProvider)).get() : provider.get();
+      return provider == null ? ((Provider<?>)injector.getParameterizedInstance(classImplementingProvider, namedParameters)).get() : provider.get();
     }
     catch(Exception e) {
       throw new NoSuchBeanException(type, e);
