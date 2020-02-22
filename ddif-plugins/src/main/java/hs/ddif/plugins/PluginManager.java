@@ -1,10 +1,10 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.Injector;
 import hs.ddif.core.ProvidedInjectable;
 import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.Key;
 import hs.ddif.core.inject.consistency.InjectorStoreConsistencyException;
+import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.store.Injectable;
@@ -36,10 +36,10 @@ import org.reflections.scanners.TypeElementsScanner;
 public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
 
-  private final Injector injector;
+  private final BeanDefinitionStore store;
 
-  public PluginManager(Injector injector) {
-    this.injector = injector;
+  public PluginManager(BeanDefinitionStore store) {
+    this.store = store;
   }
 
   public Plugin loadPluginAndScan(String packageNamePrefix) {
@@ -106,7 +106,7 @@ public class PluginManager {
         classNames.add(name.substring(0, name.lastIndexOf('.')));
       }
 
-      InjectableStore<Injectable> store = new InjectableStore<>();
+      InjectableStore<Injectable> injectableStore = new InjectableStore<>();
 
       LOGGER.fine("Found classes: " + classNames);
 
@@ -115,7 +115,7 @@ public class PluginManager {
           Class<?> cls = classLoader.loadClass(className);
 
           if(!Modifier.isAbstract(cls.getModifiers())) {
-            putInStore(store, cls);
+            putInStore(injectableStore, cls);
           }
         }
         catch(ClassNotFoundException e) {
@@ -123,13 +123,13 @@ public class PluginManager {
         }
       }
 
-      List<Class<?>> matchingClasses = DependencySorter.getInTopologicalOrder(store, classInjectables);
+      List<Class<?>> matchingClasses = DependencySorter.getInTopologicalOrder(injectableStore, classInjectables);
 
       LOGGER.fine("Registering classes with Injector (in order): " + matchingClasses);
 
       List<Class<?>> registeredClasses = registerClasses(matchingClasses);
 
-      return new Plugin(injector, pluginName, registeredClasses, classLoader);
+      return new Plugin(store, pluginName, registeredClasses, classLoader);
     }
 
     private void putInStore(InjectableStore<Injectable> store, Class<?> cls) {
@@ -153,7 +153,7 @@ public class PluginManager {
                   Type type = key.getType();
                   Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
-                  if(!Modifier.isAbstract(typeClass.getModifiers()) && !injector.contains(key.getType(), (Object[])key.getQualifiersAsArray())) {
+                  if(!Modifier.isAbstract(typeClass.getModifiers()) && !store.contains(key.getType(), (Object[])key.getQualifiersAsArray())) {
                     putInStore(store, typeClass);
                   }
                 }
@@ -196,7 +196,7 @@ public class PluginManager {
       Module module = moduleClass.newInstance();
       List<Class<?>> registeredClasses = registerClasses(module.getClasses());
 
-      return new Plugin(injector, Arrays.toString(urls), registeredClasses, classLoader);
+      return new Plugin(store, Arrays.toString(urls), registeredClasses, classLoader);
     }
     catch(ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       try {
@@ -216,8 +216,8 @@ public class PluginManager {
 
     try {
       for(Class<?> cls : classes) {
-        if(!injector.contains(cls)) {
-          injector.register(cls);
+        if(!store.contains(cls)) {
+          store.register(cls);
           registeredClasses.add(cls);
         }
       }
@@ -233,7 +233,7 @@ public class PluginManager {
       Collections.reverse(registeredClasses);
 
       for(Class<?> cls : registeredClasses) {
-        injector.remove(cls);
+        store.remove(cls);
       }
 
       throw e;

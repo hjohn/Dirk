@@ -1,6 +1,6 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.Injector;
+import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.plugins.PluginManager.UnloadTrackingClassLoader;
 
 import java.io.IOException;
@@ -11,14 +11,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Plugin {
   private final AtomicBoolean unloaded;
-  private final Injector injector;
+  private final BeanDefinitionStore store;
   private final String name;
 
   private List<Class<?>> classes;
   private ClassLoader classLoader;
 
-  public Plugin(Injector injector, String name, List<Class<?>> classes, ClassLoader classLoader) {
-    this.injector = injector;
+  public Plugin(BeanDefinitionStore store, String name, List<Class<?>> classes, ClassLoader classLoader) {
+    this.store = store;
     this.name = name;
     this.classLoader = classLoader;
     this.classes = classes;
@@ -50,7 +50,7 @@ public class Plugin {
     Collections.reverse(classes);
 
     for(Class<?> cls : classes) {
-      injector.remove(cls);
+      store.remove(cls);
     }
 
     try {

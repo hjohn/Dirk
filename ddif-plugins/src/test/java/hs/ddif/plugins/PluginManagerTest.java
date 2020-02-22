@@ -45,7 +45,7 @@ public class PluginManagerTest {
   @Before
   public void before() {
     injector = new Injector(new JustInTimeDiscoveryPolicy());
-    pluginManager = new PluginManager(injector);
+    pluginManager = new PluginManager(injector.getStore());
 
     injector.register(BeanWithTextProviders.class);
   }

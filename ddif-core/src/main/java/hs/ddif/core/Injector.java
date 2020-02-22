@@ -86,6 +86,16 @@ public class Injector {
   }
 
   /**
+   * Returns a {@link BeanDefinitionStore}, which can be shared instead of this class
+   * to share only methods that can be used to register and remove objects.
+   *
+   * @return a {@link BeanDefinitionStore}, never null
+   */
+  public BeanDefinitionStore getStore() {
+    return store;
+  }
+
+  /**
    * Returns an instance of the given type matching the given criteria (if any) in
    * which all dependencies and parameters are injected.
    *
