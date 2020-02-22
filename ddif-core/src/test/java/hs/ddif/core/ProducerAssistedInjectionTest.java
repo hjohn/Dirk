@@ -1,5 +1,10 @@
 package hs.ddif.core;
 
+import hs.ddif.core.bind.Parameter;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.store.ConstructionException;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -13,7 +18,7 @@ public class ProducerAssistedInjectionTest {
   private Injector injector = new Injector();
 
   @Test
-  public void shouldAcceptProducerInterface() {
+  public void shouldAcceptProducerInterface() throws BeanResolutionException {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestAssistedSample.class);
@@ -38,7 +43,7 @@ public class ProducerAssistedInjectionTest {
   }
 
   @Test
-  public void shouldAcceptProducerAbstractClass() {
+  public void shouldAcceptProducerAbstractClass() throws BeanResolutionException {
     injector.register(ValueSupplier.class);
     injector.register(TestService.class);
     injector.register(TestAssistedAbstractSample.class);
@@ -202,7 +207,7 @@ public class ProducerAssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptProducerWhichNeedsNoFurtherConstruction() {
+  public void registerShouldAcceptProducerWhichNeedsNoFurtherConstruction() throws BeanResolutionException {
     injector.register(TestTargetWithAutonomousProducer.class);
 
     AutonomousProducer producer = injector.getInstance(AutonomousProducer.class);
@@ -229,7 +234,7 @@ public class ProducerAssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptAbstractProducerWithNoParametersWhichNeedsNoFurtherConstruction() {
+  public void registerShouldAcceptAbstractProducerWithNoParametersWhichNeedsNoFurtherConstruction() throws BeanResolutionException {
     injector.register(TestTargetWithAbstactProducerAndNoParameters.class);
 
     AbstractProducerWithNoParameters producer = injector.getInstance(AbstractProducerWithNoParameters.class);
@@ -254,7 +259,7 @@ public class ProducerAssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptInterfaceProducerWithNoParametersWhichNeedsNoFurtherConstruction() {
+  public void registerShouldAcceptInterfaceProducerWithNoParametersWhichNeedsNoFurtherConstruction() throws BeanResolutionException {
     injector.register(TestTargetWithInterfaceProducerAndNoParameters.class);
 
     InterfaceProducerWithNoParameters producer = injector.getInstance(InterfaceProducerWithNoParameters.class);

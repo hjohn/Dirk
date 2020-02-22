@@ -1,4 +1,7 @@
-package hs.ddif.core;
+package hs.ddif.core.bind;
+
+import hs.ddif.core.inject.store.ClassInjectableBinding;
+import hs.ddif.core.inject.store.ClassInjectableBindingProvider;
 
 import java.lang.reflect.AccessibleObject;
 import java.util.Map;
@@ -22,7 +25,7 @@ public class BinderTest {
 
   @Test
   public void resolveShouldBindToGenericFieldInSubclass() throws NoSuchFieldException, SecurityException {
-    Map<AccessibleObject, Binding[]> map = Binder.resolve(Subclass.class);
+    Map<AccessibleObject, ClassInjectableBinding[]> map = ClassInjectableBindingProvider.resolve(Subclass.class);
 
     assertEquals(2, map.size());
 

@@ -1,9 +1,9 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.Binding;
-import hs.ddif.core.ClassInjectable;
-import hs.ddif.core.Key;
 import hs.ddif.core.ProvidedInjectable;
+import hs.ddif.core.bind.Binding;
+import hs.ddif.core.bind.Key;
+import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.InjectableStore;
 

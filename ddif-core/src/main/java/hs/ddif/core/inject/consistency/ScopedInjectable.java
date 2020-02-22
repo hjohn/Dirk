@@ -1,5 +1,6 @@
-package hs.ddif.core;
+package hs.ddif.core.inject.consistency;
 
+import hs.ddif.core.bind.Binding;
 import hs.ddif.core.store.Injectable;
 
 import java.lang.annotation.Annotation;
@@ -8,18 +9,9 @@ import java.util.Map;
 
 /**
  * An {@link Injectable} with associated scope and binding information needed by
- * {@link Injector}.
+ * Injector.
  */
 public interface ScopedInjectable extends Injectable {
-
-  /**
-   * Returns an instance of the type provided by this {@link Injectable}.
-   *
-   * @param injector the injector to use to resolve dependencies
-   * @param parameters zero or more {@link NamedParameter} required for constructing the provided instance
-   * @return an instance of the type provided by this {@link Injectable}, or <code>null</code> if the bean could not be provided
-   */
-  Object getInstance(Injector injector, NamedParameter... parameters);
 
   /**
    * Returns the {@link Binding}s required.

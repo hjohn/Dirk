@@ -1,7 +1,11 @@
-package hs.ddif.core;
+package hs.ddif.core.inject.store;
 
 import com.googlecode.gentyref.GenericTypeReflector;
 
+import hs.ddif.core.bind.Key;
+import hs.ddif.core.bind.Parameter;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.TypeUtils;
 
@@ -21,12 +25,11 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
 
-public class Binder {
+public class ClassInjectableBindingProvider {
 
   // Binding array is returned because a constructor has 0 or more bindings, although fields always only have a single binding
-  public static Map<AccessibleObject, Binding[]> resolve(Class<?> injectableClass) {
-    Map<AccessibleObject, Binding[]> bindings = new HashMap<>();
-
+  public static Map<AccessibleObject, ClassInjectableBinding[]> resolve(Class<?> injectableClass) {
+    Map<AccessibleObject, ClassInjectableBinding[]> bindings = new HashMap<>();
     Class<?> currentInjectableClass = injectableClass;
 
     while(currentInjectableClass != null) {
@@ -36,7 +39,7 @@ public class Binder {
         if(inject != null) {
           Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
 
-          bindings.put(field, new Binding[] {createBinding(type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))});
+          bindings.put(field, new ClassInjectableBinding[] {createBinding(type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))});
         }
       }
 
@@ -67,28 +70,28 @@ public class Binder {
     return bindings;
   }
 
-  private static Binding[] createConstructorBinding(Constructor<?> constructor) {
+  private static ClassInjectableBinding[] createConstructorBinding(Constructor<?> constructor) {
     Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
     java.lang.reflect.Parameter[] parameters = constructor.getParameters();
     Type[] genericParameterTypes = constructor.getGenericParameterTypes();
-    List<Binding> constructorBindings = new ArrayList<>();
+    List<ClassInjectableBinding> constructorBindings = new ArrayList<>();
 
     for(int i = 0; i < genericParameterTypes.length; i++) {
       Type type = genericParameterTypes[i];
       AnnotationDescriptor[] qualifiers = extractQualifiers(parameterAnnotations[i]);
-      Binding binding = createBinding(type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, qualifiers);
+      ClassInjectableBinding binding = createBinding(type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, qualifiers);
 
       constructorBindings.add(binding);
     }
 
-    return constructorBindings.toArray(new Binding[constructorBindings.size()]);
+    return constructorBindings.toArray(new ClassInjectableBinding[constructorBindings.size()]);
   }
 
-  private static Binding createBinding(Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
+  private static ClassInjectableBinding createBinding(Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
     return createBinding(false, type, optional, isParameter, qualifiers);
   }
 
-  private static Binding createBinding(boolean isProviderAlready, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
+  private static ClassInjectableBinding createBinding(boolean isProviderAlready, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
     final Class<?> cls = TypeUtils.determineClassFromType(type);
 
     if(Set.class.isAssignableFrom(cls)) {
@@ -145,7 +148,7 @@ public class Binder {
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(double.class, Double.class);
   }
 
-  private static final class HashSetBinding implements Binding {
+  private static final class HashSetBinding implements ClassInjectableBinding {
     private final AnnotationDescriptor[] qualifiers;
     private final Type elementType;
     private final boolean optional;
@@ -157,8 +160,8 @@ public class Binder {
     }
 
     @Override
-    public Object getValue(Injector injector) {
-      Set<Object> instances = injector.getInstances(elementType, (Object[])qualifiers);
+    public Object getValue(Instantiator instantiator) throws BeanResolutionException {
+      Set<Object> instances = instantiator.getInstances(elementType, (Object[])qualifiers);
 
       return instances.isEmpty() && optional ? null : instances;
     }
@@ -184,7 +187,7 @@ public class Binder {
     }
   }
 
-  private static final class ArrayListBinding implements Binding {
+  private static final class ArrayListBinding implements ClassInjectableBinding {
     private final Type elementType;
     private final AnnotationDescriptor[] qualifiers;
     private final boolean optional;
@@ -196,8 +199,8 @@ public class Binder {
     }
 
     @Override
-    public Object getValue(Injector injector) {
-      Set<Object> instances = injector.getInstances(elementType, (Object[])qualifiers);
+    public Object getValue(Instantiator instantiator) throws BeanResolutionException {
+      Set<Object> instances = instantiator.getInstances(elementType, (Object[])qualifiers);
 
       return instances.isEmpty() && optional ? null : new ArrayList<>(instances);
     }
@@ -223,15 +226,15 @@ public class Binder {
     }
   }
 
-  private static final class ProviderBinding implements Binding {
-    private final Binding binding;
+  private static final class ProviderBinding implements ClassInjectableBinding {
+    private final ClassInjectableBinding binding;
 
-    private ProviderBinding(Binding binding) {
+    private ProviderBinding(ClassInjectableBinding binding) {
       this.binding = binding;
     }
 
     @Override
-    public Object getValue(final Injector injector) {
+    public Object getValue(final Instantiator instantiator) {
 
       /*
        * When supplying a Provider<X>, check if such a provider is implemented by a concrete class first, otherwise
@@ -242,17 +245,22 @@ public class Binder {
         if(binding.getRequiredKey() != null) {
           Type searchType = org.apache.commons.lang3.reflect.TypeUtils.parameterize(Provider.class, binding.getRequiredKey().getType());
 
-          return injector.getInstance(searchType, (Object[])binding.getRequiredKey().getQualifiersAsArray());
+          return instantiator.getInstance(searchType, (Object[])binding.getRequiredKey().getQualifiersAsArray());
         }
       }
-      catch(NoSuchBeanException e) {
-        // Ignore
+      catch(BeanResolutionException e) {
+        // Ignore, create Provider on demand below
       }
 
       return new Provider<Object>() {
         @Override
         public Object get() {
-          return binding.getValue(injector);
+          try {
+            return binding.getValue(instantiator);
+          }
+          catch(BeanResolutionException e) {
+            throw new IllegalStateException("Exception while retrieving bean through provider", e);
+          }
         }
       };
     }
@@ -283,7 +291,7 @@ public class Binder {
     }
   }
 
-  private static final class DirectBinding implements Binding {
+  private static final class DirectBinding implements ClassInjectableBinding {
     private final Key key;
     private final boolean optional;
     private final boolean isParameter;
@@ -295,17 +303,17 @@ public class Binder {
     }
 
     @Override
-    public Object getValue(Injector injector) {
+    public Object getValue(Instantiator instantiator) throws BeanResolutionException {
       if(optional) {
         try {
-          return injector.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
+          return instantiator.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
         }
-        catch(NoSuchBeanException e) {
+        catch(BeanResolutionException e) {
           return null;
         }
       }
       else {
-        return injector.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
+        return instantiator.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
       }
     }
 
@@ -316,7 +324,7 @@ public class Binder {
 
     @Override
     public Key getRequiredKey() {
-      return optional ? null : key;
+      return optional || isParameter ? null : key;
     }
 
     @Override

@@ -1,5 +1,8 @@
 package hs.ddif.core;
 
+import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Nullable;
@@ -19,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ClassInjectableTest {
   private Injector injector = new Injector();
+  private Instantiator instantiator = injector.getInstantiator();
 
   @Before
   public void before() {
@@ -35,7 +39,7 @@ public class ClassInjectableTest {
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
     assertEquals(SimpleClass.class.getAnnotation(Singleton.class), injectable.getScope());
     assertEquals(1, injectable.getBindings().size());
-    assertTrue(injectable.getInstance(injector) instanceof SimpleClass);
+    assertTrue(injectable.getInstance(instantiator) instanceof SimpleClass);
 
     injectable = new ClassInjectable(ClassWithDependencies.class);
 
@@ -44,7 +48,7 @@ public class ClassInjectableTest {
     assertNull(injectable.getScope());
     assertEquals(2, injectable.getBindings().size());
 
-    ClassWithDependencies instance = (ClassWithDependencies)injectable.getInstance(injector);
+    ClassWithDependencies instance = (ClassWithDependencies)injectable.getInstance(instantiator);
 
     assertEquals("a string", instance.s);
     assertEquals(2, instance.a);
@@ -53,7 +57,7 @@ public class ClassInjectableTest {
 
     injector.registerInstance(new BigDecimal(5));
 
-    instance = (ClassWithDependencies)injectable.getInstance(injector);
+    instance = (ClassWithDependencies)injectable.getInstance(instantiator);
 
     assertEquals(new BigDecimal(5), instance.bd);
   }

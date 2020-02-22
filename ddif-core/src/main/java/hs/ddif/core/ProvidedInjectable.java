@@ -1,28 +1,24 @@
 package hs.ddif.core;
 
+import hs.ddif.core.bind.Binding;
+import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.store.AbstractResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.inject.Provider;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
-public class ProvidedInjectable implements ScopedInjectable {
+public class ProvidedInjectable extends AbstractResolvableInjectable {
   private final Provider<?> provider;
   private final Class<?> classImplementingProvider;
-  private final Class<?> providedClass;
-  private final List<AnnotationDescriptor> descriptors;
-  private final Type type;
 
   public ProvidedInjectable(Provider<?> provider, AnnotationDescriptor... descriptors) {
     this(provider.getClass(), provider, descriptors);
@@ -33,49 +29,30 @@ public class ProvidedInjectable implements ScopedInjectable {
   }
 
   private ProvidedInjectable(Class<?> classImplementingProvider, Provider<?> provider, AnnotationDescriptor... descriptors) {
+    super(Collections.<AccessibleObject, Binding[]>emptyMap(), null, determineProvidedClass(classImplementingProvider), descriptors);
+
+    this.classImplementingProvider = classImplementingProvider;
+    this.provider = provider;
+  }
+
+  private static Class<?> determineProvidedClass(Class<?> classImplementingProvider) {
     if(classImplementingProvider == null) {
       throw new IllegalArgumentException("classImplementingProvider cannot be null");
     }
 
-    this.classImplementingProvider = classImplementingProvider;
-    this.provider = provider;
-    this.type = TypeUtils.getTypeArguments(classImplementingProvider, Provider.class).get(Provider.class.getTypeParameters()[0]);
-    this.providedClass = TypeUtils.getRawType(type, null);
-    this.descriptors = new ArrayList<>(Arrays.asList(descriptors));
+    Type type = TypeUtils.getTypeArguments(classImplementingProvider, Provider.class).get(Provider.class.getTypeParameters()[0]);
+
+    return TypeUtils.getRawType(type, null);
   }
 
   @Override
-  public Map<AccessibleObject, Binding[]> getBindings() {
-    return Collections.emptyMap();
-  }
-
-  @Override
-  public Class<?> getInjectableClass() {
-    return providedClass;
-  }
-
-  @Override
-  public Object getInstance(Injector injector, NamedParameter... namedParameters) {
+  public Object getInstance(Instantiator instatiator, NamedParameter... namedParameters) throws BeanResolutionException {
     try {
-      return provider == null ? ((Provider<?>)injector.getParameterizedInstance(classImplementingProvider, namedParameters)).get() : provider.get();
+      return provider == null ? ((Provider<?>)instatiator.getParameterizedInstance(classImplementingProvider, namedParameters)).get() : provider.get();
     }
     catch(Exception e) {
-      throw new NoSuchBeanException(type, e);
+      throw new BeanResolutionException(getInjectableClass(), e);
     }
-  }
-
-  @Override
-  public Set<AnnotationDescriptor> getQualifiers() {
-    Set<AnnotationDescriptor> qualifiers = AnnotationDescriptor.extractQualifiers(providedClass);
-
-    qualifiers.addAll(descriptors);
-
-    return qualifiers;
-  }
-
-  @Override
-  public Annotation getScope() {
-    return null;
   }
 
   /**
@@ -89,7 +66,7 @@ public class ProvidedInjectable implements ScopedInjectable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(providedClass, provider, descriptors, classImplementingProvider);
+    return Objects.hash(provider, getDescriptors(), classImplementingProvider);
   }
 
   @Override
@@ -103,14 +80,13 @@ public class ProvidedInjectable implements ScopedInjectable {
 
     ProvidedInjectable other = (ProvidedInjectable)obj;
 
-    return providedClass.equals(other.providedClass)
-        && descriptors.equals(other.descriptors)
+    return getDescriptors().equals(other.getDescriptors())
         && Objects.equals(provider, other.provider)
         && Objects.equals(classImplementingProvider, other.classImplementingProvider);
   }
 
   @Override
   public String toString() {
-    return "Injectable-Provider(" + getInjectableClass() + " + " + descriptors + ")";
+    return "Injectable-Provider(" + getInjectableClass() + " + " + getDescriptors() + ")";
   }
 }

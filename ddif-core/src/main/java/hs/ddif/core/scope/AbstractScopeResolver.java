@@ -1,4 +1,4 @@
-package hs.ddif.core;
+package hs.ddif.core.scope;
 
 import java.util.Map;
 import java.util.WeakHashMap;

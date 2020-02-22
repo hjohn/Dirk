@@ -1,4 +1,4 @@
-package hs.ddif.core;
+package hs.ddif.core.bind;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

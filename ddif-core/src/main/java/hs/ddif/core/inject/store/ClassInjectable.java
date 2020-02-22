@@ -1,5 +1,10 @@
-package hs.ddif.core;
+package hs.ddif.core.inject.store;
 
+import hs.ddif.core.bind.Binding;
+import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.bind.Parameter;
+import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.AnnotationUtils;
 
@@ -7,28 +12,26 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.lang3.reflect.MethodUtils;
-
 /**
- * A {@link ScopedInjectable} for creating instances based on a {@link Class}.
+ * A {@link ResolvableInjectable} for creating instances based on a {@link Class}.<p>
  */
-public class ClassInjectable implements ScopedInjectable {
+public class ClassInjectable implements ResolvableInjectable {
   private final Class<?> injectableClass;
-  private final List<Method> postConstructMethods;
+  private final Map<AccessibleObject, Binding[]> externalBindings;
+  private final Map<AccessibleObject, ClassInjectableBinding[]> bindings;
   private final Annotation scopeAnnotation;
-  private final Map<AccessibleObject, Binding[]> bindings;
+  private final PostConstructor postConstructor;
 
   /**
    * When true, the object is currently being constructed.  This is used to
@@ -45,6 +48,7 @@ public class ClassInjectable implements ScopedInjectable {
    * @param injectableClass the {@link Class}, cannot be null, cannot be an interface or be abstract
    * @throws BindingException if the given class is not annotated and has no public empty constructor or is incorrectly annotated
    */
+  @SuppressWarnings("unchecked")
   public ClassInjectable(Class<?> injectableClass) {
     if(injectableClass == null) {
       throw new IllegalArgumentException("injectableClass cannot be null");
@@ -54,9 +58,10 @@ public class ClassInjectable implements ScopedInjectable {
     }
 
     this.injectableClass = injectableClass;
+    this.bindings = ClassInjectableBindingProvider.resolve(injectableClass);
+    this.externalBindings = (Map<AccessibleObject, Binding[]>)(Map<?, ?>)Collections.unmodifiableMap(bindings);
     this.scopeAnnotation = findScopeAnnotation(injectableClass);
-
-    this.bindings = Binder.resolve(injectableClass);
+    this.postConstructor = new PostConstructor(injectableClass);
 
     /*
      * Check bindings to see if this injectable can be instantiated and injected.
@@ -64,7 +69,7 @@ public class ClassInjectable implements ScopedInjectable {
 
     int constructorCount = 0;
 
-    for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, ClassInjectableBinding[]> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         constructorCount++;
       }
@@ -83,24 +88,6 @@ public class ClassInjectable implements ScopedInjectable {
     if(constructorCount > 1) {
       throw new BindingException("Multiple @Inject annotated constructors found, but only one allowed: " + injectableClass);
     }
-
-    List<Method> methods = MethodUtils.getMethodsListWithAnnotation(injectableClass, PostConstruct.class, true, true);
-
-    Collections.sort(methods, new Comparator<Method>() {
-      @Override
-      public int compare(Method a, Method b) {
-        if(a.getDeclaringClass().isAssignableFrom(b.getDeclaringClass())) {
-          return -1;
-        }
-        else if(b.getDeclaringClass().isAssignableFrom(a.getDeclaringClass())) {
-          return 1;
-        }
-
-        return 0;
-      }
-    });
-
-    this.postConstructMethods = methods;
   }
 
   private static String determineParameterName(java.lang.reflect.Parameter parameter) {
@@ -113,18 +100,8 @@ public class ClassInjectable implements ScopedInjectable {
     return parameterAnnotation != null && !parameterAnnotation.value().isEmpty() ? parameterAnnotation.value() : parameter.getName();
   }
 
-  @Override
-  public Class<?> getInjectableClass() {
-    return injectableClass;
-  }
-
-  @Override
-  public Map<AccessibleObject, Binding[]> getBindings() {
-    return bindings;
-  }
-
-  private static Map.Entry<AccessibleObject, Binding[]> findConstructorEntry(Map<AccessibleObject, Binding[]> bindings) {
-    for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
+  private static Map.Entry<AccessibleObject, ClassInjectableBinding[]> findConstructorEntry(Map<AccessibleObject, ClassInjectableBinding[]> bindings) {
+    for(Map.Entry<AccessibleObject, ClassInjectableBinding[]> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         return entry;
       }
@@ -134,7 +111,7 @@ public class ClassInjectable implements ScopedInjectable {
   }
 
   @Override
-  public Object getInstance(Injector injector, NamedParameter... parameters) {
+  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) {
     if(underConstruction) {
       throw new ConstructionException("Object already under construction (dependency creation loop in @PostConstruct method!): " + injectableClass);
     }
@@ -144,23 +121,15 @@ public class ClassInjectable implements ScopedInjectable {
 
       List<NamedParameter> namedParameters = new ArrayList<>(Arrays.asList(parameters));
 
-      Object bean = constructInstance(injector, namedParameters);
+      Object bean = constructInstance(instantiator, namedParameters);
 
-      injectInstance(injector, bean, namedParameters);
+      injectInstance(instantiator, bean, namedParameters);
 
       if(!namedParameters.isEmpty()) {
         throw new ConstructionException("Superflous parameters supplied, expected " + (parameters.length - namedParameters.size()) + " but got: " + parameters.length);
       }
 
-      try {
-        for(Method method : postConstructMethods) {
-          method.setAccessible(true);
-          method.invoke(bean);
-        }
-      }
-      catch(Exception e) {
-        throw new ConstructionException("PostConstruct call failed: " + injectableClass, e);
-      }
+      postConstructor.call(bean);
 
       return bean;
     }
@@ -169,14 +138,14 @@ public class ClassInjectable implements ScopedInjectable {
     }
   }
 
-  private void injectInstance(Injector injector, Object bean, List<NamedParameter> namedParameters) {
-    for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
+  private void injectInstance(Instantiator instantiator, Object bean, List<NamedParameter> namedParameters) {
+    for(Map.Entry<AccessibleObject, ClassInjectableBinding[]> entry : bindings.entrySet()) {
       try {
         AccessibleObject accessibleObject = entry.getKey();
 
         if(accessibleObject instanceof Field) {
           Field field = (Field)accessibleObject;
-          Binding binding = entry.getValue()[0];
+          ClassInjectableBinding binding = entry.getValue()[0];
 
           Object valueToSet;
 
@@ -184,7 +153,7 @@ public class ClassInjectable implements ScopedInjectable {
             valueToSet = findAndRemoveNamedParameterValue(field.getName(), namedParameters);
           }
           else {
-            valueToSet = binding.getValue(injector);
+            valueToSet = binding.getValue(instantiator);
           }
 
           if(valueToSet != null) {  // Donot set fields to null, leave default value instead
@@ -212,15 +181,15 @@ public class ClassInjectable implements ScopedInjectable {
     throw new ConstructionException("Parameter '" + name + "' was not supplied");
   }
 
-  private Object constructInstance(Injector injector, List<NamedParameter> namedParameters) {
+  private Object constructInstance(Instantiator instantiator, List<NamedParameter> namedParameters) {
     try {
-      Map.Entry<AccessibleObject, Binding[]> constructorEntry = findConstructorEntry(bindings);
+      Map.Entry<AccessibleObject, ClassInjectableBinding[]> constructorEntry = findConstructorEntry(bindings);
       Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
       java.lang.reflect.Parameter[] parameters = constructor.getParameters();
       Object[] values = new Object[constructorEntry.getValue().length];  // Parameters for constructor
 
       for(int i = 0; i < values.length; i++) {
-        Binding binding = constructorEntry.getValue()[i];
+        ClassInjectableBinding binding = constructorEntry.getValue()[i];
 
         if(binding.isParameter()) {
           String name = determineParameterName(parameters[i]);
@@ -232,7 +201,7 @@ public class ClassInjectable implements ScopedInjectable {
           values[i] = findAndRemoveNamedParameterValue(name, namedParameters);
         }
         else {
-          values[i] = binding.getValue(injector);
+          values[i] = binding.getValue(instantiator);
         }
       }
 
@@ -246,9 +215,19 @@ public class ClassInjectable implements ScopedInjectable {
     }
   }
 
+  private static Annotation findScopeAnnotation(Class<?> cls) {
+    List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(cls, javax.inject.Scope.class);
+
+    if(matchingAnnotations.size() > 1) {
+      throw new BindingException("Multiple scope annotations found, but only one allowed: " + cls + ", found: " + matchingAnnotations);
+    }
+
+    return matchingAnnotations.isEmpty() ? null : matchingAnnotations.get(0);
+  }
+
   @Override
-  public Set<AnnotationDescriptor> getQualifiers() {
-    return AnnotationDescriptor.extractQualifiers(injectableClass);
+  public Map<AccessibleObject, Binding[]> getBindings() {
+    return externalBindings;
   }
 
   @Override
@@ -257,8 +236,18 @@ public class ClassInjectable implements ScopedInjectable {
   }
 
   @Override
+  public Class<?> getInjectableClass() {
+    return injectableClass;
+  }
+
+  @Override
+  public Set<AnnotationDescriptor> getQualifiers() {
+    return AnnotationDescriptor.extractQualifiers(injectableClass);
+  }
+
+  @Override
   public int hashCode() {
-    return injectableClass.toString().hashCode();
+    return Objects.hash(injectableClass);
   }
 
   @Override
@@ -275,16 +264,6 @@ public class ClassInjectable implements ScopedInjectable {
 
   @Override
   public String toString() {
-    return "Injectable-Class(" + getInjectableClass() + ")";
-  }
-
-  private static Annotation findScopeAnnotation(Class<?> cls) {
-    List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(cls, javax.inject.Scope.class);
-
-    if(matchingAnnotations.size() > 1) {
-      throw new BindingException("Multiple scope annotations found, but only one allowed: " + cls + ", found: " + matchingAnnotations);
-    }
-
-    return matchingAnnotations.isEmpty() ? null : matchingAnnotations.get(0);
+    return "Injectable-Class(" + injectableClass + ")";
   }
 }

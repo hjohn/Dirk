@@ -1,5 +1,10 @@
 package hs.ddif.core;
 
+import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
+import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.store.ConstructionException;
 import hs.ddif.core.store.DuplicateBeanException;
 import hs.ddif.core.store.NoSuchInjectableException;
 import hs.ddif.core.test.injectables.AbstractBean;
@@ -97,22 +102,22 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldGetSimpleBean() {
+  public void shouldGetSimpleBean() throws BeanResolutionException {
     assertNotNull(injector.getInstance(SimpleBean.class));
   }
 
-  @Test(expected = NoSuchBeanException.class)
-  public void shouldThrowExceptionWhenGettingUnregisteredBean() {
+  @Test(expected = BeanResolutionException.class)
+  public void shouldThrowExceptionWhenGettingUnregisteredBean() throws BeanResolutionException {
     injector.getInstance(ArrayList.class);
   }
 
-  @Test(expected = AmbigiousBeanException.class)
-  public void shouldThrowExceptionWhenBeanIsAmbigious() {
+  @Test(expected = BeanResolutionException.class)
+  public void shouldThrowExceptionWhenBeanIsAmbigious() throws BeanResolutionException {
     injector.getInstance(SimpleCollectionItemInterface.class);
   }
 
   @Test
-  public void shouldGetBeanWithInjection() {
+  public void shouldGetBeanWithInjection() throws BeanResolutionException {
     BeanWithInjection bean = injector.getInstance(BeanWithInjection.class);
 
     assertNotNull(bean.getInjectedValue());
@@ -120,7 +125,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithInterfaceBasedInjection() {
+  public void shouldGetBeanWithInterfaceBasedInjection() throws BeanResolutionException {
     BeanWithInterfaceBasedInjection bean = injector.getInstance(BeanWithInterfaceBasedInjection.class);
 
     assertNotNull(bean.getInjectedValue());
@@ -128,7 +133,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithProviderInjection() {
+  public void shouldGetBeanWithProviderInjection() throws BeanResolutionException {
     BeanWithProvider bean = injector.getInstance(BeanWithProvider.class);
 
     assertNotNull(bean.getSimpleBean());
@@ -136,7 +141,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithOptionalDependencyWhenProviderReturnsNull() {
+  public void shouldGetBeanWithOptionalDependencyWhenProviderReturnsNull() throws BeanResolutionException {
     injector.register(BeanWithOptionalDependency.class);
     injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
@@ -149,7 +154,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithOptionalDependencyWhenNoProviderAvailable() {
+  public void shouldGetBeanWithOptionalDependencyWhenNoProviderAvailable() throws BeanResolutionException {
     injector.register(BeanWithOptionalDependency.class);
 
     assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
@@ -164,7 +169,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldLeaveDefaultFieldValuesIntactForOptionalDependencies() {
+  public void shouldLeaveDefaultFieldValuesIntactForOptionalDependencies() throws BeanResolutionException {
     injector.register(OptionalDependent.class);
 
     OptionalDependent instance = injector.getInstance(OptionalDependent.class);
@@ -195,14 +200,14 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithOptionalConstructorDependencyWhenNoProviderAvailable() {
+  public void shouldGetBeanWithOptionalConstructorDependencyWhenNoProviderAvailable() throws BeanResolutionException {
     injector.register(BeanWithOptionalConstructorDependency.class);
 
     assertNotNull(injector.getInstance(BeanWithOptionalConstructorDependency.class));
   }
 
   @Test  // @Nullable annotation on Provider is just ignored as it makes no sense for Providers
-  public void shouldGetBeanWithOptionalProviderDependency() {
+  public void shouldGetBeanWithOptionalProviderDependency() throws BeanResolutionException {
     injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
@@ -216,7 +221,7 @@ public class InjectorTest {
     assertNotNull(instance);
     assertNotNull(instance.getUnavailableBeanProvider());
 
-    // Previously the call below would throw a NoSuchBeanException (because the provider was wrapped in another provider),
+    // Previously the call below would throw a BeanResolutionException (because the provider was wrapped in another provider),
     // however, now the given provider is injected unaltered.  As it is injected as-is, there is no way to prevent
     // it from returning null, so it returning null is the expected behaviour now.
     assertNull(instance.getUnavailableBeanProvider().get());
@@ -229,8 +234,8 @@ public class InjectorTest {
     injector.register(BeanWithUnsupportedOptionalProviderDependency.class);
   }
 
-  @Test(expected = NoSuchBeanException.class)
-  public void shouldThrowExceptionWhenGettingUnavailableBean() {
+  @Test(expected = BeanResolutionException.class)
+  public void shouldThrowExceptionWhenGettingUnavailableBean() throws BeanResolutionException {
     injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
@@ -253,7 +258,7 @@ public class InjectorTest {
       injector.getInstance(BeanWithInjection.class);
       fail();
     }
-    catch(NoSuchBeanException e) {
+    catch(BeanResolutionException e) {
     }
   }
 
@@ -286,7 +291,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldBeAbleToRemoveProviderWhichIsOnlyOptionallyDependedOn() {
+  public void shouldBeAbleToRemoveProviderWhichIsOnlyOptionallyDependedOn() throws BeanResolutionException {
     Provider<UnavailableBean> provider = new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
@@ -389,7 +394,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldRespectSingletonAnnotation() {
+  public void shouldRespectSingletonAnnotation() throws BeanResolutionException {
     SimpleBean bean1 = injector.getInstance(SimpleBean.class);
 
     assertTrue(bean1 == injector.getInstance(SimpleBean.class));
@@ -443,7 +448,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithInjectionWithMultipleTypeMatchesWhenDisambiguatedWithQualifier() {
+  public void shouldGetBeanWithInjectionWithMultipleTypeMatchesWhenDisambiguatedWithQualifier() throws BeanResolutionException {
     injector.register(SimpleCollectionItemImpl3.class);  // One of several, this one qualified
     injector.register(BeanWithDirectRedCollectionItemDependency.class);  // Depends on the specific one above using qualifier
 
@@ -455,7 +460,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldCallPostConstruct() {
+  public void shouldCallPostConstruct() throws BeanResolutionException {
     injector.registerInstance("Hello World");
     injector.register(BeanWithPostConstruct.class);
 
@@ -472,7 +477,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldInjectCollection() {
+  public void shouldInjectCollection() throws BeanResolutionException {
     BeanWithCollection bean = injector.getInstance(BeanWithCollection.class);
 
     assertNotNull(bean.getInjectedValues());
@@ -487,7 +492,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectEmptyCollection() {
+  public void shouldInjectEmptyCollection() throws BeanResolutionException {
     BeanWithCollection bean = injector.getInstance(BeanWithCollection.class);
 
     assertNotNull(bean.getInjectedValues());
@@ -503,7 +508,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectCollectionProvider() {
+  public void shouldInjectCollectionProvider() throws BeanResolutionException {
     injector.register(BeanWithCollectionProvider.class);
 
     BeanWithCollectionProvider bean = injector.getInstance(BeanWithCollectionProvider.class);
@@ -545,7 +550,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldInjectConstructor() {
+  public void shouldInjectConstructor() throws BeanResolutionException {
     injector.register(ConstructorInjectionSample.class);
 
     ConstructorInjectionSample instance = injector.getInstance(ConstructorInjectionSample.class);
@@ -556,7 +561,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenMultipleConstructorsAnnotatedWithInject() {
-    thrown.expect(DependencyException.class);
+    thrown.expect(BindingException.class);
     thrown.expectMessage("Multiple @Inject annotated constructors found, but only one allowed: " + ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
 
     injector.register(ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class);
@@ -567,7 +572,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldRegisterAndUseProvider() {
+  public void shouldRegisterAndUseProvider() throws BeanResolutionException {
     injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
@@ -646,7 +651,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectSuperClass() {
+  public void shouldInjectSuperClass() throws BeanResolutionException {
     injector.register(SubclassOfBeanWithInjection.class);
 
     SubclassOfBeanWithInjection bean = injector.getInstance(SubclassOfBeanWithInjection.class);
@@ -655,7 +660,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectSuperAndSubClassEvenIfFieldsAreSameName() {
+  public void shouldInjectSuperAndSubClassEvenIfFieldsAreSameName() throws BeanResolutionException {
     injector.register(SubclassOfBeanWithInjectionWithSameNamedInjection.class);
 
     SubclassOfBeanWithInjectionWithSameNamedInjection bean = injector.getInstance(SubclassOfBeanWithInjectionWithSameNamedInjection.class);
@@ -666,7 +671,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldFindInstanceByAbstractSuperClass() {
+  public void shouldFindInstanceByAbstractSuperClass() throws BeanResolutionException {
     injector.register(SubclassOfAbstractBean.class);
 
     Set<AbstractBean> beans = injector.getInstances(AbstractBean.class);
@@ -675,14 +680,14 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectSameSingletonEachTime() {
+  public void shouldInjectSameSingletonEachTime() throws BeanResolutionException {
     SimpleBean simpleBean = injector.getInstance(BeanWithInjection.class).getInjectedValue();
 
     assertEquals(simpleBean, injector.getInstance(BeanWithInjection.class).getInjectedValue());
   }
 
   @Test(expected = ConstructionException.class)
-  public void shouldThrowConstructionExceptionWhenPostConstructHasACircularDependency() {
+  public void shouldThrowConstructionExceptionWhenPostConstructHasACircularDependency() throws BeanResolutionException {
     injector.register(BeanWithBadPostConstruct.class);
     injector.register(BeanDependentOnBeanWithBadPostConstruct.class);
 
@@ -691,7 +696,7 @@ public class InjectorTest {
 
   @Test
   @Ignore("This test is no longer valid; Providers are injected directly now (no indirection that could check their result) and so null instances can be part of the results if a Provider breaks its contract.")
-  public void getInstancesShouldSilentlyIgnoreProvidersThatReturnNull() {
+  public void getInstancesShouldSilentlyIgnoreProvidersThatReturnNull() throws BeanResolutionException {
     injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
@@ -735,7 +740,7 @@ public class InjectorTest {
     }
   }
 
-  static class Bean3 implements SomeInterfaceProvider {
+  public static class Bean3 implements SomeInterfaceProvider {
     @Inject public Bean3() {}
 
     @Override
@@ -751,7 +756,7 @@ public class InjectorTest {
     public BeanThatNeedsInterface() {}
   }
 
-  static class BeanThatNeedsProviderOfSomeInterface {
+  public static class BeanThatNeedsProviderOfSomeInterface {
     @Inject Provider<SomeInterface> someInterface;
 
     public BeanThatNeedsProviderOfSomeInterface() {}
@@ -761,7 +766,7 @@ public class InjectorTest {
     }
   }
 
-  static class BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider {
+  public static class BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider {
     @Inject Provider<Bean3> bean3;
 
     public BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider() {}
@@ -816,7 +821,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectCorrectProvider() {
+  public void shouldInjectCorrectProvider() throws BeanResolutionException {
     injector.register(Bean3.class);
     injector.register(BeanThatNeedsProviderOfSomeInterface.class);
 
@@ -826,7 +831,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectCorrectProvider2() {
+  public void shouldInjectCorrectProvider2() throws BeanResolutionException {
     injector.register(Bean3.class);
     injector.register(BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider.class);
 

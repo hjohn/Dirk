@@ -1,5 +1,7 @@
 package hs.ddif.core;
 
+import hs.ddif.core.bind.Parameter;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 

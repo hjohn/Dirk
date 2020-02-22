@@ -1,4 +1,4 @@
-package hs.ddif.core;
+package hs.ddif.core.bind;
 
 import hs.ddif.core.util.AnnotationDescriptor;
 

@@ -1,5 +1,14 @@
 package hs.ddif.core;
 
+import hs.ddif.core.bind.Binding;
+import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.bind.Parameter;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.store.ClassInjectable;
+
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -21,7 +30,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
   private static final Map<Class<?>, ClassInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
 
   @Override
-  public ScopedInjectable getDerived(final Injector injector, final ScopedInjectable injectable) {
+  public ResolvableInjectable getDerived(final Instantiator instantiator, final ResolvableInjectable injectable) {
     final Producer producer = injectable.getInjectableClass().getAnnotation(Producer.class);
 
     if(producer == null) {
@@ -40,7 +49,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
         producerInjectable = new ClassInjectable(new ByteBuddy()
           .subclass(producer.value())
           .method(ElementMatchers.returns(injectable.getInjectableClass()).and(ElementMatchers.isAbstract()))
-          .intercept(MethodDelegation.to(new Interceptor(injector, injectable, names)))
+          .intercept(MethodDelegation.to(new Interceptor(instantiator, injectable, names)))
           .make()
           .load(getClass().getClassLoader())
           .getLoaded()
@@ -54,32 +63,32 @@ public class ProducerInjectorExtension implements Injector.Extension {
   }
 
   public static class Interceptor {
-    private final Injector injector;
-    private final ScopedInjectable injectable;
+    private final Instantiator instantiator;
+    private final ResolvableInjectable injectable;
     private final String[] names;
 
-    Interceptor(Injector injector, ScopedInjectable injectable, String[] names) {
-      this.injector = injector;
+    Interceptor(Instantiator instantiator, ResolvableInjectable injectable, String[] names) {
+      this.instantiator = instantiator;
       this.injectable = injectable;
       this.names = names;
     }
 
     @RuntimeType
-    public Object intercept(@AllArguments Object[] args) {
+    public Object intercept(@AllArguments Object[] args) throws BeanResolutionException {
       NamedParameter[] namedParameters = new NamedParameter[args.length];
 
       for(int i = 0; i < args.length; i++) {
         namedParameters[i] = new NamedParameter(names[i], args[i]);
       }
 
-      return injector.getParameterizedInstance((Type)injectable.getInjectableClass(), namedParameters);
+      return instantiator.getParameterizedInstance((Type)injectable.getInjectableClass(), namedParameters);
     }
   }
 
   // Does validation on an optional Producer class, checking if has only a single abstract
   // method.  This method furthermore must exactly match the required injections annotated
   // with @Parameter and must return an instance of this injectable's class.
-  private static String[] validateProducerAndReturnParameterNames(ScopedInjectable injectable, Producer producer) {
+  private static String[] validateProducerAndReturnParameterNames(ResolvableInjectable injectable, Producer producer) {
     Class<?> producerClass = producer.value();
     Method factoryMethod = null;
     int abstractMethodCount = 0;
@@ -100,7 +109,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
     }
 
     Class<?> injectableClass = injectable.getInjectableClass();
-    Map<String, Binding> parameterBindings = createBindingNameMap(injectable);
+    Map<String, Type> parameterBindings = createBindingNameMap(injectable);
     String[] names = new String[parameterBindings.size()];
 
     if(!factoryMethod.getReturnType().equals(injectableClass)) {
@@ -124,8 +133,8 @@ public class ProducerInjectorExtension implements Injector.Extension {
         throw new BindingException("Factory method is missing required parameter.  Producer {" + producerClass + "} method {" + factoryMethod + "} is missing required parameter with name: " + name);
       }
 
-      if(!parameterBindings.get(name).getType().equals(parameters[i].getType())) {
-        throw new BindingException("Factory method has parameter of wrong type.  Producer {" + producerClass + "} with method {" + factoryMethod + "} has parameter {" + parameters[i] + "} with name '" + name + "' that should be of type {" + parameterBindings.get(name).getType() + "} but was: " + parameters[i].getType());
+      if(!parameterBindings.get(name).equals(parameters[i].getType())) {
+        throw new BindingException("Factory method has parameter of wrong type.  Producer {" + producerClass + "} with method {" + factoryMethod + "} has parameter {" + parameters[i] + "} with name '" + name + "' that should be of type {" + parameterBindings.get(name) + "} but was: " + parameters[i].getType());
       }
 
       names[i] = name;
@@ -134,10 +143,10 @@ public class ProducerInjectorExtension implements Injector.Extension {
     return names;
   }
 
-  private static Map<String, Binding> createBindingNameMap(ScopedInjectable injectable) {
+  private static Map<String, Type> createBindingNameMap(ResolvableInjectable injectable) {
     Class<?> injectableClass = injectable.getInjectableClass();
     Map<AccessibleObject, Binding[]> bindings = injectable.getBindings();
-    Map<String, Binding> parameterBindings = new HashMap<>();
+    Map<String, Type> parameterBindings = new HashMap<>();
 
     for(Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
       Constructor<?> constructor = entry.getKey() instanceof Constructor ? (Constructor<?>)entry.getKey() : null;
@@ -154,7 +163,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
             throw new BindingException("Missing parameter name.  Name cannot be determined for {" + injectableClass + "} constructor parameter " + i + "; specify one with @Parameter or compile classes with parameter name information");
           }
 
-          parameterBindings.put(name, binding);
+          parameterBindings.put(name, binding.getType());
         }
       }
     }

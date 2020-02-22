@@ -1,5 +1,7 @@
 package hs.ddif.core;
 
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.store.DiscoveryPolicy;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.TypeUtils;
@@ -22,10 +24,10 @@ import java.lang.reflect.Type;
  *
  * TODO just in time discovery can leave the store in a modified state when several dependencies are correctly discovered, but a failure occurs at a later stage resulting in the top level Injectable to remain unresolved.
  */
-public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy<ScopedInjectable> {
+public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy<ResolvableInjectable> {
 
   @Override
-  public void discoverType(InjectableStore<ScopedInjectable> injectableStore, Type type) {
+  public void discoverType(InjectableStore<ResolvableInjectable> injectableStore, Type type) {
     Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
     if(!Modifier.isAbstract(typeClass.getModifiers())) {

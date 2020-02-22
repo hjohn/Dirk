@@ -1,10 +1,10 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.Binding;
-import hs.ddif.core.ClassInjectable;
-import hs.ddif.core.InstanceInjectable;
-import hs.ddif.core.Key;
 import hs.ddif.core.ProvidedInjectable;
+import hs.ddif.core.bind.Binding;
+import hs.ddif.core.bind.Key;
+import hs.ddif.core.inject.store.ClassInjectable;
+import hs.ddif.core.inject.store.InstanceInjectable;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;

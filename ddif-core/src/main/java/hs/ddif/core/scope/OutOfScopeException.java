@@ -1,4 +1,4 @@
-package hs.ddif.core;
+package hs.ddif.core.scope;
 
 /**
  * Thrown when a scoped bean is required without the appropriate scope being active.

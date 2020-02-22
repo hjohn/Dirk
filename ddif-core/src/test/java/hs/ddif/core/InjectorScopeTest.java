@@ -1,5 +1,11 @@
 package hs.ddif.core;
 
+import hs.ddif.core.inject.consistency.ScopeConflictException;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.scope.AbstractScopeResolver;
+import hs.ddif.core.scope.OutOfScopeException;
+
 import java.lang.annotation.Annotation;
 
 import javax.inject.Inject;
@@ -16,7 +22,7 @@ public class InjectorScopeTest {
   public static class Classes {
 
     @Test(expected = OutOfScopeException.class)
-    public void shouldThrowOutOfScopeExceptionWhenNoScopeActive() {
+    public void shouldThrowOutOfScopeExceptionWhenNoScopeActive() throws BeanResolutionException {
       TestScopeResolver scopeResolver = new TestScopeResolver();
 
       scopeResolver.currentScope = null;
@@ -29,7 +35,7 @@ public class InjectorScopeTest {
     }
 
     @Test
-    public void shouldKeepScopesSeparated() {
+    public void shouldKeepScopesSeparated() throws BeanResolutionException {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = new Injector(scopeResolver);
 
@@ -60,7 +66,7 @@ public class InjectorScopeTest {
     }
 
     @Test
-    public void shouldKeepScopesSeparatedInReferences() {
+    public void shouldKeepScopesSeparatedInReferences() throws BeanResolutionException {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = new Injector(scopeResolver);
 

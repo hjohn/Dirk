@@ -1,5 +1,6 @@
-package hs.ddif.core;
+package hs.ddif.core.inject.consistency;
 
+import hs.ddif.core.bind.Key;
 import hs.ddif.core.store.Injectable;
 
 import java.lang.reflect.AccessibleObject;
@@ -13,7 +14,7 @@ import java.util.Set;
  * a class requires a specific dependency but no such dependency is available or
  * more than one matching dependency is available.
  */
-public class UnresolvableDependencyException extends DependencyException {
+public class UnresolvableDependencyException extends InjectorStoreConsistencyException {
 
   public UnresolvableDependencyException(Injectable injectable, AccessibleObject accessibleObject, Key key, Set<? extends Injectable> candidates) {
     super(

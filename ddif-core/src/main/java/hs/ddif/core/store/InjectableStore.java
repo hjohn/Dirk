@@ -206,6 +206,8 @@ public class InjectableStore<T extends Injectable> {
         register(type, qualifier, injectable);
       }
     }
+
+    policy.add(injectable);
   }
 
   public void remove(T injectable) {
@@ -235,6 +237,8 @@ public class InjectableStore<T extends Injectable> {
         removeInternal(type, qualifier, injectable);
       }
     }
+
+    policy.remove(injectable);
   }
 
   private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
@@ -341,6 +345,16 @@ public class InjectableStore<T extends Injectable> {
     @Override
     public void checkRemoval(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers) {
       // All removals are valid
+    }
+
+    @Override
+    public void add(T injectable) {
+      // No-op
+    }
+
+    @Override
+    public void remove(T injectable) {
+      // No-op
     }
   }
 

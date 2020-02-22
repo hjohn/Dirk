@@ -2,9 +2,9 @@ package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.JustInTimeDiscoveryPolicy;
-import hs.ddif.core.NoSuchBeanException;
-import hs.ddif.core.UnresolvableDependencyException;
-import hs.ddif.core.ViolatesSingularDependencyException;
+import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
+import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
 
@@ -60,7 +60,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldLoadThenUnloadPlugin() {
+  public void shouldLoadThenUnloadPlugin() throws BeanResolutionException {
     BeanWithTextProviders beanBefore = injector.getInstance(BeanWithTextProviders.class);
 
     Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);
@@ -91,7 +91,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldLoadPluginAgainAfterUnload() {
+  public void shouldLoadPluginAgainAfterUnload() throws BeanResolutionException {
     assertBeanDoesNotExist(Database.class);
 
     Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);
@@ -126,7 +126,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldLoadPluginAfterFixingSingularDependencyViolations() {
+  public void shouldLoadPluginAfterFixingSingularDependencyViolations() throws BeanResolutionException {
     injector.register(DatabaseBean.class);
     injector.register(BeanWithDatabase.class);  // Requires an unambigious Database dependency
 
@@ -160,7 +160,7 @@ public class PluginManagerTest {
       injector.getInstance(beanClass);
       fail();
     }
-    catch(NoSuchBeanException e) {
+    catch(BeanResolutionException e) {
     }
   }
 

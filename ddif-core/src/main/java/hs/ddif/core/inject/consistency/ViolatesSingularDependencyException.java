@@ -1,4 +1,6 @@
-package hs.ddif.core;
+package hs.ddif.core.inject.consistency;
+
+import hs.ddif.core.bind.Key;
 
 import java.lang.reflect.Type;
 
@@ -11,7 +13,7 @@ import java.lang.reflect.Type;
  * the only Database implementation is removed, the requirements of this injectable can no
  * longer be met.
  */
-public class ViolatesSingularDependencyException extends DependencyException {
+public class ViolatesSingularDependencyException extends InjectorStoreConsistencyException {
 
   public ViolatesSingularDependencyException(Type type, Key key, boolean isRegistration) {
     // TODO would be great if the message could show which injectables use this singular dependency.

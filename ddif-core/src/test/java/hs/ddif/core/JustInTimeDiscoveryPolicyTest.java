@@ -1,5 +1,9 @@
 package hs.ddif.core;
 
+import hs.ddif.core.inject.consistency.InjectorStoreConsistencyPolicy;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
@@ -18,11 +22,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class JustInTimeDiscoveryPolicyTest {
-  private InjectableStore<ScopedInjectable> store;
+  private InjectableStore<ResolvableInjectable> store;
 
   @Before
   public void before() {
-    store = new InjectableStore<>(new InjectorStoreConsistencyPolicy(), new JustInTimeDiscoveryPolicy());
+    store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<ResolvableInjectable>(), new JustInTimeDiscoveryPolicy());
   }
 
   @Test

@@ -1,5 +1,10 @@
 package hs.ddif.core;
 
+import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.bind.Parameter;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.store.ConstructionException;
+
 import javax.inject.Inject;
 
 import org.junit.Test;
@@ -12,7 +17,7 @@ public class ParameterizedInjectionTest {
   private Injector injector = new Injector();
 
   @Test
-  public void registerShouldAcceptParameterizedClass() {
+  public void registerShouldAcceptParameterizedClass() throws BeanResolutionException {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestParameterizedFieldSample.class);
@@ -52,7 +57,7 @@ public class ParameterizedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptParameterizedConstructorClass() {
+  public void registerShouldAcceptParameterizedConstructorClass() throws BeanResolutionException {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestParameterizedConstructorSample.class);
@@ -101,7 +106,7 @@ public class ParameterizedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptParameterizedMixedClass() {
+  public void registerShouldAcceptParameterizedMixedClass() throws BeanResolutionException {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestParameterizedMixedSample.class);
@@ -146,6 +151,21 @@ public class ParameterizedInjectionTest {
       this.testService = testService;
       this.interval = interval;
     }
+  }
+
+  @Test
+  public void registerShouldNotCheckParameterTypesForSingularDependencyViolations() throws BeanResolutionException {
+    injector.register(TestService.class);
+    injector.register(TestParameterizedFieldSample.class);
+
+    // Normal case:
+    TestParameterizedFieldSample instance = injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("interval", 30)});
+
+    assertEquals(TestParameterizedFieldSample.class, instance.getClass());
+    assertEquals((Integer)30, instance.interval);
+
+    injector.registerInstance(new Integer(5));  // Should be fine, even though an Integer is need as parameter
+    injector.registerInstance(new Integer(6));  // Should still be fine, as nothing requires a single Integer
   }
 
   public static class TestService {

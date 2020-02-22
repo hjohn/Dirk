@@ -1,5 +1,8 @@
 package hs.ddif.core;
 
+import hs.ddif.core.bind.Key;
+import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.store.Injectables;
 
 import java.util.Arrays;
@@ -18,7 +21,7 @@ public class UnresolvableDependencyExceptionTest {
       Injectables.create(),
       String.class.getConstructor(char[].class, int.class, int.class),
       new Key(String.class),
-      Collections.<ScopedInjectable>emptySet()
+      Collections.<ResolvableInjectable>emptySet()
     );
 
     assertEquals("Missing dependency of type: [class java.lang.String] required for: java.lang.String#<init>(class [C, int, int)", e.getMessage());
@@ -36,7 +39,7 @@ public class UnresolvableDependencyExceptionTest {
       Injectables.create(),
       String.class.getDeclaredMethod("startsWith", String.class),
       new Key(String.class),
-      Collections.<ScopedInjectable>emptySet()
+      Collections.<ResolvableInjectable>emptySet()
     );
 
     assertEquals("Missing dependency of type: [class java.lang.String] required for: java.lang.String->public boolean java.lang.String.startsWith(java.lang.String)", e.getMessage());

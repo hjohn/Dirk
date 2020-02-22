@@ -30,4 +30,20 @@ public interface StoreConsistencyPolicy<T extends Injectable> {
    * @param qualifiers the qualifiers of the injectable
    */
   void checkRemoval(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers);
+
+  /**
+   * Called to indicate the given {@link Injectable} was added to the store.  Always call
+   * {@link #checkAddition(InjectableStore, Injectable, Set)} first before adding.
+   *
+   * @param injectable the injectable that was added to the store
+   */
+  void add(T injectable);
+
+  /**
+   * Called to indicate the given {@link Injectable} was removed from the store.  Always
+   * call {@link #checkRemoval(InjectableStore, Injectable, Set)} first before removing.
+   *
+   * @param injectable the injectable that was remove from the store
+   */
+  void remove(T injectable);
 }

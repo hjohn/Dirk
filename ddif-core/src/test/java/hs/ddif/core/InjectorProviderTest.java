@@ -1,5 +1,7 @@
 package hs.ddif.core;
 
+import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.sql.Connection;
@@ -32,7 +34,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void getInstanceShouldReturnInjectedProviderClass() {
+  public void getInstanceShouldReturnInjectedProviderClass() throws BeanResolutionException {
     Provider<Connection> anonymousProvider = new Provider<Connection>() {
       @Override
       public Connection get() {
@@ -58,14 +60,14 @@ public class InjectorProviderTest {
         injector.getInstance(DatabaseProvider.class);
         fail();
       }
-      catch(NoSuchBeanException e) {
+      catch(BeanResolutionException e) {
       }
 
       try {
         injector.getInstance(Database.class);
         fail();
       }
-      catch(NoSuchBeanException e) {
+      catch(BeanResolutionException e) {
       }
 
       assertEquals(anonymousProvider.getClass(), injector.getInstance(Provider.class).getClass());
@@ -73,14 +75,14 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void getInstanceShouldReturnInjectableFromProviderInstance() {
+  public void getInstanceShouldReturnInjectableFromProviderInstance() throws BeanResolutionException {
     injector.registerInstance(new SimpleDatabaseProvider());
 
     assertEquals(Database.class, injector.getInstance(Database.class).getClass());
   }
 
   @Test
-  public void classRegistrationShouldFailWhenImplicitProviderWouldViolatesDependencies() {
+  public void classRegistrationShouldFailWhenImplicitProviderWouldViolatesDependencies() throws BeanResolutionException {
     for(int i = 0; i < 2; i++) {
       SimpleDatabaseProvider provider = new SimpleDatabaseProvider();
 
@@ -110,13 +112,13 @@ public class InjectorProviderTest {
         injector.getInstance(BeanWithDatabase.class).getClass();
         fail();
       }
-      catch(NoSuchBeanException e) {
+      catch(BeanResolutionException e) {
       }
     }
   }
 
   @Test
-  public void classRemovalShouldFailWhenImplicitProviderRemovalWouldViolatesDependencies() {
+  public void classRemovalShouldFailWhenImplicitProviderRemovalWouldViolatesDependencies() throws BeanResolutionException {
     for(int i = 0; i < 2; i++) {
       injector.register(SimpleDatabaseProvider.class);
       injector.register(BeanWithDatabase.class);
@@ -139,7 +141,7 @@ public class InjectorProviderTest {
         injector.getInstance(BeanWithDatabase.class).getClass();
         fail();
       }
-      catch(NoSuchBeanException e) {
+      catch(BeanResolutionException e) {
       }
     }
   }
@@ -153,7 +155,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void getInstanceShouldReturnInstanceInjectedWithProviderOfList() {
+  public void getInstanceShouldReturnInstanceInjectedWithProviderOfList() throws BeanResolutionException {
     injector.register(BeanWithProvidedListOfString.class);
     injector.registerInstance("a");
     injector.registerInstance("b");
@@ -169,7 +171,7 @@ public class InjectorProviderTest {
 
   @Test
   @Ignore("Nested Providers require support for Injectables with type parameters")
-  public void getInstanceShouldReturnInjectableFromNestedProviderInstance() {
+  public void getInstanceShouldReturnInjectableFromNestedProviderInstance() throws BeanResolutionException {
     injector.registerInstance(new NestedDatabaseProvider());
 
     assertNotNull(injector.getInstance(Database.class));
@@ -177,7 +179,7 @@ public class InjectorProviderTest {
 
   @Test
   @Ignore("Nested Providers require support for Injectables with type parameters")
-  public void getInstanceShouldReturnInjectableFromNestedProvider() {
+  public void getInstanceShouldReturnInjectableFromNestedProvider() throws BeanResolutionException {
     injector.register(NestedDatabaseProvider.class);
 
     assertNotNull(injector.getInstance(Database.class));
@@ -197,7 +199,7 @@ public class InjectorProviderTest {
         injector.getInstance(SimpleDatabaseProvider.class);  // Should not be part of Injector when registration fails
         fail("Expected NoSuchBeanException");
       }
-      catch(NoSuchBeanException e2) {
+      catch(BeanResolutionException e2) {
         // Expected
       }
     }
@@ -225,7 +227,7 @@ public class InjectorProviderTest {
         injector.getInstance(SimpleDatabaseProvider.class);  // Should not be part of Injector when registration fails
         fail("Expected NoSuchBeanException");
       }
-      catch(NoSuchBeanException e2) {
+      catch(BeanResolutionException e2) {
         // Expected
       }
     }
@@ -254,7 +256,7 @@ public class InjectorProviderTest {
         injector.getInstance(SimpleDatabaseProvider.class);  // Should not be part of Injector when registration fails
         fail("Expected NoSuchBeanException");
       }
-      catch(NoSuchBeanException e2) {
+      catch(BeanResolutionException e2) {
         // Expected
       }
     }
@@ -284,7 +286,7 @@ public class InjectorProviderTest {
         injector.getInstance(SimpleDatabaseProvider.class);  // Should not be part of Injector when registration fails
         fail("Expected NoSuchBeanException");
       }
-      catch(NoSuchBeanException e2) {
+      catch(BeanResolutionException e2) {
         // Expected
       }
     }
@@ -308,7 +310,7 @@ public class InjectorProviderTest {
   }
 
   public static class Database {
-    public Database(String url) {
+    public Database(@SuppressWarnings("unused") String url) {
     }
   }
 

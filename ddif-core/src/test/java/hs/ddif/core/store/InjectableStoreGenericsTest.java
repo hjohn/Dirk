@@ -1,7 +1,7 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.ClassInjectable;
-import hs.ddif.core.InstanceInjectable;
+import hs.ddif.core.inject.store.ClassInjectable;
+import hs.ddif.core.inject.store.InstanceInjectable;
 import hs.ddif.core.util.TypeReference;
 
 import java.io.Serializable;

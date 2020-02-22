@@ -1,11 +1,9 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.DependencyException;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class CyclicGraphException extends DependencyException {
+public class CyclicGraphException extends RuntimeException {
   private final List<Object> location = new ArrayList<>();
 
   public CyclicGraphException(Object root) {

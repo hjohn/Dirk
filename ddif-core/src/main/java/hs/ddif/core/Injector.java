@@ -1,102 +1,55 @@
 package hs.ddif.core;
 
+import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.inject.consistency.InjectorStoreConsistencyPolicy;
+import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
+import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.inject.store.BeanDefinitionStore;
+import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.DiscoveryPolicy;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.AnnotationDescriptor;
 
-import java.lang.annotation.Annotation;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 import javax.inject.Provider;
-import javax.inject.Singleton;
 
 // TODO JSR-330: Named without value is treated differently ... some use field name, others default to empty?
 public class Injector {
-  private static final NamedParameter[] NO_PARAMETERS = new NamedParameter[] {};
 
   /**
-   * Allows simple extension to an {@link Injector}.
+   * Allows simple extensions to a {@link Injector}.
    */
   public interface Extension {
 
     /**
-     * Gets another {@link ScopedInjectable} derived from the given injectable, or
+     * Gets another {@link ResolvableInjectable} derived from the given injectable, or
      * <code>null</code> if no other injectable could be derived.<p>
      *
-     * During this method call the supplied {@link Injector} should not be modified
-     * as this method is called during modification of the injectors internal state.<p>
-     *
-     * @param injector an {@link Injector}, never null
-     * @param injectable a {@link ScopedInjectable}, never null
-     * @return another {@link ScopedInjectable} derived from the given injectable, or
+     * @param instantiator an {@link Instantiator}, never null
+     * @param injectable a {@link ResolvableInjectable}, never null
+     * @return another {@link ResolvableInjectable} derived from the given injectable, or
      *   <code>null</code> if no other injectable could be derived
      */
-    ScopedInjectable getDerived(Injector injector, ScopedInjectable injectable);
+    ResolvableInjectable getDerived(Instantiator instantiator, ResolvableInjectable injectable);
   }
 
-  /**
-   * The store consistency policy this injector uses.
-   */
-  private final InjectorStoreConsistencyPolicy consistencyPolicy;
+  private final Instantiator instantiator;
+  private final BeanDefinitionStore store;
 
-  /**
-   * InjectableStore used by this Injector.  The Injector will safeguard that this store
-   * only contains injectables that can be fully resolved.
-   */
-  private final InjectableStore<ScopedInjectable> store;
+  public Injector(DiscoveryPolicy<ResolvableInjectable> discoveryPolicy, ScopeResolver... scopeResolvers) {
+    InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<ResolvableInjectable>(), discoveryPolicy);
 
-  /**
-   * Map containing {@link ScopeResolver}s this injector can use.
-   */
-  private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
-
-  private final List<Extension> extensions;
-
-  public Injector(DiscoveryPolicy<ScopedInjectable> discoveryPolicy, ScopeResolver... scopeResolvers) {
-    for(ScopeResolver scopeResolver : scopeResolvers) {
-      scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
-    }
-
-    scopesResolversByAnnotation.put(Singleton.class, new ScopeResolver() {
-      private final Map<Class<?>, WeakReference<Object>> singletons = new WeakHashMap<>();
-
-      @Override
-      public <T> T get(Class<?> injectableClass) {
-        WeakReference<Object> reference = singletons.get(injectableClass);
-
-        if(reference != null) {
-          @SuppressWarnings("unchecked")
-          T bean = (T)reference.get();
-
-          return bean;  // This may still return null
-        }
-
-        return null;
-      }
-
-      @Override
-      public <T> void put(Class<?> injectableClass, T instance) {
-        singletons.put(injectableClass, new WeakReference<Object>(instance));
-      }
-
-      @Override
-      public Class<? extends Annotation> getScopeAnnotationClass() {
-        return Singleton.class;
-      }
-    });
-
-    this.consistencyPolicy = new InjectorStoreConsistencyPolicy();
-    this.store = new InjectableStore<>(consistencyPolicy, discoveryPolicy);
-    this.extensions = Arrays.asList(new Extension[] {new ProviderInjectorExtension(), new ProducerInjectorExtension()});
+    this.instantiator = new Instantiator(store, scopeResolvers);
+    this.store = new BeanDefinitionStore(store, Arrays.asList(new BeanDefinitionStore.Extension[] {
+      new ProviderInjectorExtension(),
+      new StoreExtensionAdapter(new ProducerInjectorExtension(), instantiator)
+    }));
   }
 
   public Injector(ScopeResolver... scopeResolvers) {
@@ -104,7 +57,32 @@ public class Injector {
   }
 
   public Injector() {
-    this((DiscoveryPolicy<ScopedInjectable>)null);
+    this((DiscoveryPolicy<ResolvableInjectable>)null);
+  }
+
+  private static class StoreExtensionAdapter implements BeanDefinitionStore.Extension {
+    private final Extension extension;
+    private final Instantiator instantiator;
+
+    StoreExtensionAdapter(Extension extension, Instantiator instantiator) {
+      this.extension = extension;
+      this.instantiator = instantiator;
+    }
+
+    @Override
+    public ResolvableInjectable getDerived(ResolvableInjectable injectable) {
+      return extension.getDerived(instantiator, injectable);
+    }
+  }
+
+  /**
+   * Returns an {@link Instantiator}, which can be shared instead of this class
+   * to share only methods that can be used to instantiate objects.
+   *
+   * @return an {@link Instantiator}, never null
+   */
+  public Instantiator getInstantiator() {
+    return instantiator;
   }
 
   /**
@@ -115,33 +93,11 @@ public class Injector {
    * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return an instance of the given class matching the given criteria, never null
-   * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
-   * @throws AmbigiousBeanException when the given class has multiple matching candidates
+   * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
+   *   or when the given class has multiple matching candidates
    */
-  public <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) {
-    Set<ScopedInjectable> injectables = store.resolve(type, criteria);
-
-    if(injectables.isEmpty()) {
-      throw new NoSuchBeanException(type, criteria);
-    }
-    if(injectables.size() > 1) {
-      throw new AmbigiousBeanException(injectables, type, criteria);
-    }
-
-    T instance;
-
-    try {
-      instance = getInstance(injectables.iterator().next(), parameters);
-    }
-    catch(NoSuchBeanException e) {
-      throw new NoSuchBeanException(type, e, criteria);
-    }
-
-    if(instance == null) {
-      throw new NoSuchBeanException(type, criteria);
-    }
-
-    return instance;
+  public <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws BeanResolutionException {
+    return instantiator.getParameterizedInstance(type, parameters, criteria);
   }
 
   /**
@@ -151,11 +107,11 @@ public class Injector {
    * @param type the type of the instance required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return an instance of the given class matching the given criteria, never null
-   * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
-   * @throws AmbigiousBeanException when the given class has multiple matching candidates
+   * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
+   *   or when the given class has multiple matching candidates
    */
-  public <T> T getInstance(Type type, Object... criteria) {
-    return getParameterizedInstance(type, NO_PARAMETERS, criteria);
+  public <T> T getInstance(Type type, Object... criteria) throws BeanResolutionException {
+    return instantiator.getInstance(type, criteria);
   }
 
   /**
@@ -165,11 +121,11 @@ public class Injector {
    * @param cls the class of the instance required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return an instance of the given class matching the given criteria (if any)
-   * @throws NoSuchBeanException when the given class is not registered with this Injector or the bean cannot be provided
-   * @throws AmbigiousBeanException when the given class has multiple matching candidates
+   * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
+   *   or when the given class has multiple matching candidates
    */
-  public <T> T getInstance(Class<T> cls, Object... criteria) {  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
-    return getInstance((Type)cls, criteria);
+  public <T> T getInstance(Class<T> cls, Object... criteria) throws BeanResolutionException {  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
+    return instantiator.getInstance(cls, criteria);
   }
 
   /**
@@ -180,19 +136,10 @@ public class Injector {
    * @param type the type of the instances required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return all instances of the given class matching the given criteria (if any)
+   * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> Set<T> getInstances(Type type, Object... criteria) {
-    Set<T> instances = new HashSet<>();
-
-    for(ScopedInjectable injectable : store.resolve(type, criteria)) {
-      T instance = getInstance(injectable, NO_PARAMETERS);
-
-      if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
-        instances.add(instance);
-      }
-    }
-
-    return instances;
+  public <T> Set<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
+    return instantiator.getInstance(type, criteria);
   }
 
   /**
@@ -203,9 +150,10 @@ public class Injector {
    * @param cls the class of the instances required
    * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
    * @return all instances of the given class matching the given criteria (if any)
+   * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> Set<T> getInstances(Class<T> type, Object... criteria) {
-    return getInstances((Type)type, criteria);
+  public <T> Set<T> getInstances(Class<T> type, Object... criteria) throws BeanResolutionException {
+    return instantiator.getInstances(type, criteria);
   }
 
   /**
@@ -231,39 +179,6 @@ public class Injector {
     return store.contains(type, criteria);
   }
 
-  private <T> T getInstance(ScopedInjectable injectable, NamedParameter[] namedParameters) {
-    ScopeResolver scopeResolver = null;
-
-    for(Map.Entry<Class<? extends Annotation>, ScopeResolver> entry : scopesResolversByAnnotation.entrySet()) {
-      if(injectable.getInjectableClass().getAnnotation(entry.getKey()) != null) {
-        scopeResolver = entry.getValue();
-        break;  // There can only ever be one scope match as multiple scope annotations are not allowed by ClassInjectable
-      }
-    }
-
-    if(scopeResolver != null) {
-      T bean = scopeResolver.get(injectable.getInjectableClass());
-
-      if(bean != null) {
-        return bean;
-      }
-    }
-
-    @SuppressWarnings("unchecked")
-    T bean = (T)injectable.getInstance(this, namedParameters);
-
-    if(bean != null && scopeResolver != null) {
-
-      /*
-       * Store the result if scoped.
-       */
-
-      scopeResolver.put(injectable.getInjectableClass(), bean);
-    }
-
-    return bean;
-  }
-
   /**
    * Registers a class with this Injector if all its dependencies can be
    * resolved and it would not cause existing registered classes to have
@@ -282,7 +197,7 @@ public class Injector {
    * @throws UnresolvableDependencyException when one or more dependencies of the given class cannot be resolved
    */
   public void register(Class<?> concreteClass) {
-    register(new ClassInjectable(concreteClass));
+    store.register(concreteClass);
   }
 
   /**
@@ -301,7 +216,7 @@ public class Injector {
    * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
    */
   public void registerInstance(Object instance, AnnotationDescriptor... qualifiers) {
-    register(new InstanceInjectable(instance, qualifiers));
+    store.registerInstance(instance, qualifiers);
   }
 
   /**
@@ -318,7 +233,7 @@ public class Injector {
    * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
    */
   public void remove(Class<?> concreteClass) {
-    remove(new ClassInjectable(concreteClass));
+    store.remove(concreteClass);
   }
 
   /**
@@ -335,82 +250,6 @@ public class Injector {
    * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
    */
   public void removeInstance(Object instance) {
-    remove(new InstanceInjectable(instance));
-  }
-
-  private void register(ScopedInjectable injectable) {
-    registerSingle(injectable);
-
-    List<ScopedInjectable> registered = new ArrayList<>();
-
-    registered.add(injectable);
-
-    for(Extension extension : extensions) {
-      try {
-        ScopedInjectable derived = extension.getDerived(this, injectable);
-
-        if(derived != null) {
-          register(derived);
-          registered.add(derived);
-        }
-      }
-      catch(Exception e) {
-        for(int i = registered.size() - 1; i >= 0; i--) {
-          removeSingle(registered.get(i));
-        }
-
-        throw e;
-      }
-    }
-  }
-
-  private void remove(ScopedInjectable injectable) {
-    removeSingle(injectable);
-
-    List<ScopedInjectable> removed = new ArrayList<>();
-
-    removed.add(injectable);
-
-    for(Extension extension : extensions) {
-      try {
-        ScopedInjectable derived = extension.getDerived(this, injectable);
-
-        if(derived != null) {
-          remove(derived);
-          removed.add(derived);
-        }
-      }
-      catch(Exception e) {
-        for(int i = removed.size() - 1; i >= 0; i--) {
-          registerSingle(removed.get(i));
-        }
-
-        throw e;
-      }
-    }
-  }
-
-  private void registerSingle(ScopedInjectable injectable) {
-    store.put(injectable);
-
-    for(Binding[] bindings : injectable.getBindings().values()) {
-      for(Binding binding : bindings) {
-        if(binding.getRequiredKey() != null) {
-          consistencyPolicy.addReference(binding.getRequiredKey());
-        }
-      }
-    }
-  }
-
-  private void removeSingle(ScopedInjectable injectable) {
-    store.remove(injectable);
-
-    for(Binding[] bindings : injectable.getBindings().values()) {
-      for(Binding binding : bindings) {
-        if(binding.getRequiredKey() != null) {
-          consistencyPolicy.removeReference(binding.getRequiredKey());
-        }
-      }
-    }
+    store.removeInstance(instance);
   }
 }
