@@ -1,6 +1,7 @@
 Dynamic Dependency Injection Framework
 ======================================
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.hjohn.ddif/ddif-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.hjohn.ddif/ddif-core)
 [![Build Status](https://travis-ci.org/hjohn/hs.ddif.svg?branch=master)](https://travis-ci.org/hjohn/hs.ddif)
 [![Coverage Status](https://coveralls.io/repos/github/hjohn/hs.ddif/badge.svg?branch=master)](https://coveralls.io/github/hjohn/hs.ddif?branch=master)
 
