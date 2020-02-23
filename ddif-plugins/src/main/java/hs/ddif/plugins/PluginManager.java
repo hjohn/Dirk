@@ -36,10 +36,10 @@ import org.reflections.scanners.TypeElementsScanner;
 public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
 
-  private final BeanDefinitionStore store;
+  private final BeanDefinitionStore baseStore;  // the store to add the plugin classes to, but also may contain required dependencies
 
   public PluginManager(BeanDefinitionStore store) {
-    this.store = store;
+    this.baseStore = store;
   }
 
   public Plugin loadPluginAndScan(String packageNamePrefix) {
@@ -129,7 +129,7 @@ public class PluginManager {
 
       List<Class<?>> registeredClasses = registerClasses(matchingClasses);
 
-      return new Plugin(store, pluginName, registeredClasses, classLoader);
+      return new Plugin(baseStore, pluginName, registeredClasses, classLoader);
     }
 
     private void putInStore(InjectableStore<Injectable> store, Class<?> cls) {
@@ -153,7 +153,7 @@ public class PluginManager {
                   Type type = key.getType();
                   Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
-                  if(!Modifier.isAbstract(typeClass.getModifiers()) && !store.contains(key.getType(), (Object[])key.getQualifiersAsArray())) {
+                  if(!Modifier.isAbstract(typeClass.getModifiers()) && !baseStore.contains(key.getType(), (Object[])key.getQualifiersAsArray())) {
                     putInStore(store, typeClass);
                   }
                 }
@@ -196,7 +196,7 @@ public class PluginManager {
       Module module = moduleClass.newInstance();
       List<Class<?>> registeredClasses = registerClasses(module.getClasses());
 
-      return new Plugin(store, Arrays.toString(urls), registeredClasses, classLoader);
+      return new Plugin(baseStore, Arrays.toString(urls), registeredClasses, classLoader);
     }
     catch(ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       try {
@@ -216,8 +216,8 @@ public class PluginManager {
 
     try {
       for(Class<?> cls : classes) {
-        if(!store.contains(cls)) {
-          store.register(cls);
+        if(!baseStore.contains(cls)) {
+          baseStore.register(cls);
           registeredClasses.add(cls);
         }
       }
@@ -233,7 +233,7 @@ public class PluginManager {
       Collections.reverse(registeredClasses);
 
       for(Class<?> cls : registeredClasses) {
-        store.remove(cls);
+        baseStore.remove(cls);
       }
 
       throw e;
