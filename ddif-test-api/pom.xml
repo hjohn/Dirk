@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.github.hjohn.ddif</groupId>
     <artifactId>parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${revision}</version>
   </parent>
 
   <artifactId>ddif-test-api</artifactId>
