@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>com.github.hjohn.ddif</groupId>
@@ -8,24 +8,24 @@
     <version>1.0.0-SNAPSHOT</version>
   </parent>
 
-	<artifactId>ddif-test-plugin</artifactId>
+  <artifactId>ddif-test-plugin</artifactId>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.github.hjohn.ddif</groupId>
-			<artifactId>ddif-test-api</artifactId>
+  <dependencies>
+    <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-test-api</artifactId>
       <version>${project.version}</version>
-		</dependency>
+    </dependency>
     <dependency>
       <groupId>com.github.hjohn.ddif</groupId>
       <artifactId>ddif-plugins</artifactId>
       <version>${project.version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <version>1</version>
     </dependency>
-	</dependencies>
+  </dependencies>
 </project>
