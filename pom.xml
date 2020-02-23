@@ -37,7 +37,7 @@
 
   <scm>
     <url>https://github.com/hjohn/hs.ddif.git</url>
-    <connection>scm:git:git://github.com/hjohn/hs.ddif.git</connection>
+    <connection>scm:git:https://github.com/hjohn/hs.ddif.git</connection>
   </scm>
 
   <developers>
