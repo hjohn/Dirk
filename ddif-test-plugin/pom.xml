@@ -12,14 +12,14 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>hs.ddif</groupId>
+			<groupId>com.github.hjohn.ddif</groupId>
 			<artifactId>ddif-test-api</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+      <version>${project.version}</version>
 		</dependency>
     <dependency>
-      <groupId>hs.ddif</groupId>
+      <groupId>com.github.hjohn.ddif</groupId>
       <artifactId>ddif-plugins</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     
     <dependency>
