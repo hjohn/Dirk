@@ -13,6 +13,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,13 +48,14 @@ public class ClassInjectableBindingProvider {
     }
 
     Constructor<?> emptyConstructor = null;
-    Constructor<?>[] constructors = injectableClass.getConstructors();
+    Constructor<?>[] constructors = injectableClass.getDeclaredConstructors();
     boolean foundInjectableConstructor = false;
 
+    // Finds empty public constructor or any annotated ones regardless of visibility
     for(Constructor<?> constructor : constructors) {
       Inject inject = constructor.getAnnotation(Inject.class);
 
-      if(constructor.getParameterTypes().length == 0) {
+      if(constructor.getParameterTypes().length == 0 && Modifier.isPublic(constructor.getModifiers())) {
         emptyConstructor = constructor;
       }
 
@@ -65,6 +67,10 @@ public class ClassInjectableBindingProvider {
 
     if(!foundInjectableConstructor && emptyConstructor != null) {
       bindings.put(emptyConstructor, createConstructorBinding(emptyConstructor));
+    }
+
+    for(AccessibleObject accessibleObject : bindings.keySet()) {
+      accessibleObject.setAccessible(true);
     }
 
     return bindings;

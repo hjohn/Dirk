@@ -157,7 +157,6 @@ public class ClassInjectable implements ResolvableInjectable {
           }
 
           if(valueToSet != null) {  // Donot set fields to null, leave default value instead
-            field.setAccessible(true);
             field.set(bean, valueToSet);
           }
         }
