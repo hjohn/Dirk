@@ -124,6 +124,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
       throw new BindingException("Factory method has wrong number of parameters.  Producer {" + producerClass + "} method {" + factoryMethod + "} should have " + parameterBindings.size() + " parameter(s) of types: " + parameterBindings);
     }
 
+    Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
     java.lang.reflect.Parameter[] parameters = factoryMethod.getParameters();
 
     for(int i = 0; i < parameters.length; i++) {
@@ -137,8 +138,8 @@ public class ProducerInjectorExtension implements Injector.Extension {
         throw new BindingException("Factory method is missing required parameter.  Producer {" + producerClass + "} method {" + factoryMethod + "} is missing required parameter with name: " + name);
       }
 
-      if(!parameterBindings.get(name).equals(parameters[i].getType())) {
-        throw new BindingException("Factory method has parameter of wrong type.  Producer {" + producerClass + "} with method {" + factoryMethod + "} has parameter {" + parameters[i] + "} with name '" + name + "' that should be of type {" + parameterBindings.get(name) + "} but was: " + parameters[i].getType());
+      if(!parameterBindings.get(name).equals(genericParameterTypes[i])) {
+        throw new BindingException("Factory method has parameter of wrong type.  Producer {" + producerClass + "} with method {" + factoryMethod + "} has parameter {" + parameters[i] + "} with name '" + name + "' that should be of type {" + parameterBindings.get(name) + "} but was: " + genericParameterTypes[i]);
       }
 
       names[i] = name;
