@@ -20,7 +20,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.WeakHashMap;
 
+import javax.inject.Singleton;
+
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
@@ -48,6 +51,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
       else {
         producerInjectable = new ClassInjectable(new ByteBuddy()
           .subclass(producer.value())
+          .annotateType(AnnotationDescription.Builder.ofType(Singleton.class).build())  // It is a singleton, avoids scope problems
           .method(ElementMatchers.returns(injectable.getInjectableClass()).and(ElementMatchers.isAbstract()))
           .intercept(MethodDelegation.to(new Interceptor(instantiator, injectable, names)))
           .make()
