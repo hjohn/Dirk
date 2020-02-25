@@ -100,14 +100,16 @@ public class ClassInjectableBindingProvider {
   private static ClassInjectableBinding createBinding(boolean isProviderAlready, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
     final Class<?> cls = TypeUtils.determineClassFromType(type);
 
-    if(Set.class.isAssignableFrom(cls)) {
-      return new HashSetBinding(TypeUtils.getGenericType(type), qualifiers, optional);
-    }
-    if(List.class.isAssignableFrom(cls)) {
-      return new ArrayListBinding(TypeUtils.getGenericType(type), qualifiers, optional);
-    }
-    if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
-      return new ProviderBinding(createBinding(true, TypeUtils.getGenericType(type), false, false, qualifiers));
+    if(!isParameter) {
+      if(Set.class.isAssignableFrom(cls)) {
+        return new HashSetBinding(TypeUtils.getGenericType(type), qualifiers, optional);
+      }
+      if(List.class.isAssignableFrom(cls)) {
+        return new ArrayListBinding(TypeUtils.getGenericType(type), qualifiers, optional);
+      }
+      if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
+        return new ProviderBinding(createBinding(true, TypeUtils.getGenericType(type), false, false, qualifiers));
+      }
     }
 
     Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
