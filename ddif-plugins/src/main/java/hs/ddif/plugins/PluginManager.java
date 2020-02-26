@@ -12,6 +12,7 @@ import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.TypeUtils;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -194,12 +195,13 @@ public class PluginManager {
     try {
       @SuppressWarnings("unchecked")
       Class<Module> moduleClass = (Class<Module>)classLoader.loadClass("PluginModule");
-      Module module = moduleClass.newInstance();
+      Constructor<Module> constructor = moduleClass.getConstructor();
+      Module module = constructor.newInstance();
       List<Class<?>> registeredClasses = registerClasses(module.getClasses());
 
       return new Plugin(baseStore, Arrays.toString(urls), registeredClasses, classLoader);
     }
-    catch(ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+    catch(Exception e) {
       try {
         classLoader.close();
       }

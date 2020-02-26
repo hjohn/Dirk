@@ -164,8 +164,8 @@ public class ParameterizedInjectionTest {
     assertEquals(TestParameterizedFieldSample.class, instance.getClass());
     assertEquals((Integer)30, instance.interval);
 
-    injector.registerInstance(new Integer(5));  // Should be fine, even though an Integer is need as parameter
-    injector.registerInstance(new Integer(6));  // Should still be fine, as nothing requires a single Integer
+    injector.registerInstance(Integer.valueOf(5));  // Should be fine, even though an Integer is need as parameter
+    injector.registerInstance(Integer.valueOf(6));  // Should still be fine, as nothing requires a single Integer
   }
 
   public static class TestService {
