@@ -20,6 +20,7 @@ public interface ScopeResolver {
    * Returns an instance of the given class or <code>null</code> if no instance is
    * associated with the current scope.
    *
+   * @param <T> the type of the instance
    * @param injectableClass a {@link Class}
    * @return an instance of the given class or <code>null</code> if no instance is associated with the current scope
    * @throws OutOfScopeException when there is no scope active
@@ -29,6 +30,7 @@ public interface ScopeResolver {
   /**
    * Stores the given instance for a given class in the current active scope.
    *
+   * @param <T> the type of the instance
    * @param injectableClass a {@link Class}
    * @param instance an instance to associate with the current scope and given class
    * @throws OutOfScopeException when there is no scope active

@@ -184,8 +184,8 @@ public class PluginManager {
   /**
    * Loads classes from a plugin defined by a Module.
    *
-   * @param url a jar file
-   * @return a {@link Plugin}
+   * @param urls one or more jar files
+   * @return a {@link Plugin}, never null
    */
   @SuppressWarnings("resource")
   public Plugin loadPlugin(URL... urls) {

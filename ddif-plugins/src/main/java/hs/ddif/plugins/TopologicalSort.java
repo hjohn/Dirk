@@ -36,6 +36,7 @@ public final class TopologicalSort {
    * Given a directed acyclic graph, returns a topological sorting of the nodes in the graph. If the input graph is not
    * a DAG, throws an IllegalArgumentException.
    *
+   * @param <T> the element type
    * @param g A directed acyclic graph.
    * @return A topological sort of that graph.
    * @throws CyclicGraphException when a cycle is detected in the graph

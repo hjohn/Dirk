@@ -24,7 +24,7 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 
 /**
- * A {@link ResolvableInjectable} for creating instances based on a {@link Class}.<p>
+ * A {@link ResolvableInjectable} for creating instances based on a {@link Class}.
  */
 public class ClassInjectable implements ResolvableInjectable {
   private final Class<?> injectableClass;

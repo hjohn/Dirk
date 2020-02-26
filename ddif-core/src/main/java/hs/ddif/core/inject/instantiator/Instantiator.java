@@ -69,9 +69,10 @@ public class Instantiator {
    * Returns an instance of the given type matching the given criteria (if any) in
    * which all dependencies and parameters are injected.
    *
+   * @param <T> the type of the instance
    * @param type the type of the instance required
    * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return an instance of the given class matching the given criteria, never null
    * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
    *   or when the given class has multiple matching candidates
@@ -106,8 +107,9 @@ public class Instantiator {
    * Returns an instance of the given type matching the given criteria (if any) in
    * which all dependencies are injected.
    *
+   * @param <T> the type of the instance
    * @param type the type of the instance required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return an instance of the given class matching the given criteria, never null
    * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
    *   or when the given class has multiple matching candidates
@@ -120,8 +122,9 @@ public class Instantiator {
    * Returns an instance of the given class matching the given criteria (if any) in
    * which all dependencies are injected.
    *
+   * @param <T> the type of the instance
    * @param cls the class of the instance required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return an instance of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
    *   or when the given class has multiple matching candidates
@@ -135,8 +138,9 @@ public class Instantiator {
    * which all dependencies are injected.  When there are no matches, an empty set is
    * returned.
    *
+   * @param <T> the type of the instance
    * @param type the type of the instances required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
@@ -159,13 +163,14 @@ public class Instantiator {
    * which all dependencies are injected.  When there are no matches, an empty set is
    * returned.
    *
+   * @param <T> the type of the instances
    * @param cls the class of the instances required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> Set<T> getInstances(Class<T> type, Object... criteria) throws BeanResolutionException {
-    return getInstances((Type)type, criteria);
+  public <T> Set<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
+    return getInstances((Type)cls, criteria);
   }
 
   private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters) throws BeanResolutionException {

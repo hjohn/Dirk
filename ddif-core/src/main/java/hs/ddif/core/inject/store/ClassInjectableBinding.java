@@ -10,12 +10,12 @@ public interface ClassInjectableBinding extends Binding {
    * Returns the current value of this binding.<p>
    *
    * If <code>null</code> is returned, any default value should be left intact (only relevant
-   * for field injection).  Whether <code>null</code> can be returned (as opposed to a {@link NoSuchBeanException})
+   * for field injection).  Whether <code>null</code> can be returned (as opposed to a {@link BeanResolutionException})
    * is determined by the presence of a <code>Nullable</code> annotation at the injection site.<p>
    *
    * Bindings determine how and when they return <code>null</code>.  For a List or Set binding for
    * example, a binding could return an empty list or set or <code>null</code> depending on the
-   * presence of the <code>Nullable</code> annotation.  Some examples:<p>
+   * presence of the <code>Nullable</code> annotation.  Some examples:
    *
    * <ul>
    * <li>

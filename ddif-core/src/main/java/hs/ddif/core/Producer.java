@@ -15,7 +15,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * of this class.<p>
  *
  * If the producer has a single abstract method (either in an interface or in an abstract class)
- * which has the correct signature:<p>
+ * which has the correct signature:
  * <ul>
  * <li>return type must match the annotated class</li>
  * <li>the number of parameters of the abstract method matches the number of {@link Parameter} and {@link Inject} annotated injections in the annotated class</li>

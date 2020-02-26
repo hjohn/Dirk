@@ -21,7 +21,7 @@ public class BeanDefinitionStore {
 
     /**
      * Gets another {@link ResolvableInjectable} derived from the given injectable, or
-     * <code>null</code> if no other injectable could be derived.<p>
+     * <code>null</code> if no other injectable could be derived.
      *
      * @param injectable a {@link ResolvableInjectable}, never null
      * @return another {@link ResolvableInjectable} derived from the given injectable, or
@@ -54,7 +54,7 @@ public class BeanDefinitionStore {
    * Injector, otherwise <code>false</code>.
    *
    * @param type a type to check for, cannot be null
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return <code>true</code> when the given type with the given criteria is part of this Injector, otherwise <code>false</code>
    */
   public boolean contains(Type type, Object... criteria) {
@@ -93,7 +93,7 @@ public class BeanDefinitionStore {
    * Note that if the instance implements {@link Provider} that the class it
    * provides is held to the same restrictions or registration will fail.
    *
-   * @param provider the provider to register with the Injector
+   * @param instance the instance to register with the Injector
    * @param qualifiers the qualifiers for this provider
    * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
    */

@@ -99,9 +99,10 @@ public class Injector {
    * Returns an instance of the given type matching the given criteria (if any) in
    * which all dependencies and parameters are injected.
    *
+   * @param <T> the type of the instance
    * @param type the type of the instance required
    * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return an instance of the given class matching the given criteria, never null
    * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
    *   or when the given class has multiple matching candidates
@@ -114,8 +115,9 @@ public class Injector {
    * Returns an instance of the given type matching the given criteria (if any) in
    * which all dependencies are injected.
    *
+   * @param <T> the type of the instance
    * @param type the type of the instance required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return an instance of the given class matching the given criteria, never null
    * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
    *   or when the given class has multiple matching candidates
@@ -128,8 +130,9 @@ public class Injector {
    * Returns an instance of the given class matching the given criteria (if any) in
    * which all dependencies are injected.
    *
+   * @param <T> the type of the instance
    * @param cls the class of the instance required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return an instance of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
    *   or when the given class has multiple matching candidates
@@ -143,8 +146,9 @@ public class Injector {
    * which all dependencies are injected.  When there are no matches, an empty set is
    * returned.
    *
+   * @param <T> the type of the instance
    * @param type the type of the instances required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
@@ -157,13 +161,14 @@ public class Injector {
    * which all dependencies are injected.  When there are no matches, an empty set is
    * returned.
    *
+   * @param <T> the type of the instances
    * @param cls the class of the instances required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> Set<T> getInstances(Class<T> type, Object... criteria) throws BeanResolutionException {
-    return instantiator.getInstances(type, criteria);
+  public <T> Set<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
+    return instantiator.getInstances(cls, criteria);
   }
 
   /**
@@ -182,7 +187,7 @@ public class Injector {
    * Injector, otherwise <code>false</code>.
    *
    * @param type a type to check for, cannot be null
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Class, Object...)}
+   * @param criteria optional list of criteria, see {@link hs.ddif.core.store.InjectableStore#resolve(Type, Object...)}
    * @return <code>true</code> when the given type with the given criteria is part of this Injector, otherwise <code>false</code>
    */
   public boolean contains(Type type, Object... criteria) {
@@ -221,7 +226,7 @@ public class Injector {
    * Note that if the instance implements {@link Provider} that the class it
    * provides is held to the same restrictions or registration will fail.
    *
-   * @param provider the provider to register with the Injector
+   * @param instance the instance to register with the Injector
    * @param qualifiers the qualifiers for this provider
    * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
    */
