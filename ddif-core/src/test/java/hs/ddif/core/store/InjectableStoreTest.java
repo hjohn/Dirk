@@ -29,13 +29,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 public class InjectableStoreTest {
-  @Rule
+  @Rule @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
   private InjectableStore<Injectable> store;

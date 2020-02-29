@@ -201,7 +201,7 @@ public class PluginManager {
 
       return new Plugin(baseStore, Arrays.toString(urls), registeredClasses, classLoader);
     }
-    catch(Exception e) {
+    catch(ReflectiveOperationException e) {
       try {
         classLoader.close();
       }
@@ -210,6 +210,16 @@ public class PluginManager {
       }
 
       throw new IllegalStateException(e);
+    }
+    catch(Exception e) {
+      try {
+        classLoader.close();
+      }
+      catch(IOException e2) {
+        e.addSuppressed(e2);
+      }
+
+      throw e;
     }
   }
 

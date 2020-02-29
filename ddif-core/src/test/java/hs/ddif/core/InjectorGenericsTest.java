@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 public class InjectorGenericsTest {
   private Injector injector;
 
-  @Rule
+  @Rule @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
   @Before

@@ -7,6 +7,7 @@ import hs.ddif.core.util.TypeReference;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,7 +18,7 @@ import static org.junit.Assert.assertTrue;
 public class InjectableStoreGenericsTest {
   private InjectableStore<Injectable> store;
 
-  @Rule
+  @Rule @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
   @Before

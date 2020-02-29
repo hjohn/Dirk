@@ -25,7 +25,7 @@ import static org.junit.Assert.fail;
 public class InjectorProviderTest {
   private Injector injector;
 
-  @Rule
+  @Rule @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
   @Before
