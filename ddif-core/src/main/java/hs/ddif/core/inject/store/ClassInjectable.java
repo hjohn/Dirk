@@ -13,6 +13,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -50,6 +51,20 @@ public class ClassInjectable implements ResolvableInjectable {
   private boolean underConstruction;
 
   /**
+   * Creates a new {@link ClassInjectable} from the given {@link Method}.  The
+   * resulting injectable could be used in an implementation of the method as
+   * its {@link #getInstance(Instantiator, NamedParameter...)} would match the
+   * return type of the method.
+   * 
+   * @param method a {@link Method}, cannot be null
+   * @return a new {@link ClassInjectable}, never null
+   * @throws BindingException if the type indicated by the method return type is not annotated and has no public empty constructor or is incorrectly annotated
+   */
+  public static ClassInjectable of(Method method) {
+    return new ClassInjectable(method.getGenericReturnType(), method);
+  }
+
+  /**
    * Creates a new {@link ClassInjectable} from the given {@link Type}.
    *
    * @param type a {@link Type}, cannot be null
@@ -57,11 +72,11 @@ public class ClassInjectable implements ResolvableInjectable {
    * @throws BindingException if the given type is not annotated and has no public empty constructor or is incorrectly annotated
    */
   public static ClassInjectable of(Type type) {
-    return new ClassInjectable(type);
+    return new ClassInjectable(type, type instanceof AnnotatedElement ? (AnnotatedElement)type : null);
   }
 
   @SuppressWarnings("unchecked")
-  private ClassInjectable(Type injectableType) {
+  private ClassInjectable(Type injectableType, AnnotatedElement annotatedElement) {
     if(injectableType == null) {
       throw new IllegalArgumentException("injectableType cannot be null");
     }
@@ -73,10 +88,10 @@ public class ClassInjectable implements ResolvableInjectable {
     }
 
     this.injectableType = injectableType;
-    this.qualifiers = extractQualifiers(injectableClass);
+    this.qualifiers = annotatedElement == null ? Collections.<AnnotationDescriptor>emptySet() : extractQualifiers(annotatedElement);
     this.bindings = ClassInjectableBindingProvider.resolve(injectableClass);
     this.externalBindings = (Map<AccessibleObject, Binding[]>)(Map<?, ?>)Collections.unmodifiableMap(bindings);
-    this.scopeAnnotation = findScopeAnnotation(injectableClass);
+    this.scopeAnnotation = annotatedElement == null ? null : findScopeAnnotation(annotatedElement);
     this.postConstructor = new PostConstructor(injectableClass);
 
     /*
