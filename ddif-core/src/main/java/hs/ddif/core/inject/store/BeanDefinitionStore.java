@@ -79,7 +79,7 @@ public class BeanDefinitionStore {
    * @throws UnresolvableDependencyException when one or more dependencies of the given class cannot be resolved
    */
   public void register(Class<?> concreteClass) {
-    register(new ClassInjectable(concreteClass));
+    register(ClassInjectable.of(concreteClass));
   }
 
   /**
@@ -115,7 +115,7 @@ public class BeanDefinitionStore {
    * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
    */
   public void remove(Class<?> concreteClass) {
-    remove(new ClassInjectable(concreteClass));
+    remove(ClassInjectable.of(concreteClass));
   }
 
   /**

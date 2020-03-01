@@ -7,6 +7,7 @@ import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Nullable;
 
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.Collections;
 
@@ -33,7 +34,7 @@ public class ClassInjectableTest {
 
   @Test
   public void constructorShouldAcceptValidParameters() {
-    ClassInjectable injectable = new ClassInjectable(SimpleClass.class);
+    ClassInjectable injectable = ClassInjectable.of(SimpleClass.class);
 
     assertEquals(SimpleClass.class, injectable.getInjectableClass());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
@@ -41,7 +42,7 @@ public class ClassInjectableTest {
     assertEquals(1, injectable.getBindings().size());
     assertTrue(injectable.getInstance(instantiator) instanceof SimpleClass);
 
-    injectable = new ClassInjectable(ClassWithDependencies.class);
+    injectable = ClassInjectable.of(ClassWithDependencies.class);
 
     assertEquals(ClassWithDependencies.class, injectable.getInjectableClass());
     assertEquals(Collections.singleton(new AnnotationDescriptor(ClassWithDependencies.class.getAnnotation(Red.class))), injectable.getQualifiers());
@@ -62,39 +63,39 @@ public class ClassInjectableTest {
     assertEquals(new BigDecimal(5), instance.bd);
   }
 
-  @Test(expected = IllegalArgumentException.class) @SuppressWarnings("unused")
+  @Test(expected = IllegalArgumentException.class)
   public void constructorShouldRejectNullInjectableClass() {
-    new ClassInjectable(null);
+    ClassInjectable.of((Type)null);
   }
 
-  @Test(expected = IllegalArgumentException.class) @SuppressWarnings("unused")
+  @Test(expected = IllegalArgumentException.class)
   public void constructorShouldRejectInterfaceAsInjectableClass() {
-    new ClassInjectable(SimpleInterface.class);
+    ClassInjectable.of(SimpleInterface.class);
   }
 
-  @Test(expected = IllegalArgumentException.class) @SuppressWarnings("unused")
+  @Test(expected = IllegalArgumentException.class)
   public void constructorShouldRejectAbstractClassAsInjectableClass() {
-    new ClassInjectable(SimpleAbstractClass.class);
+    ClassInjectable.of(SimpleAbstractClass.class);
   }
 
-  @Test(expected = BindingException.class) @SuppressWarnings("unused")
+  @Test(expected = BindingException.class)
   public void constructorShouldRejectInjectableClassWithoutConstructors() {
-    new ClassInjectable(ClassWithoutPublicConstructors.class);
+    ClassInjectable.of(ClassWithoutPublicConstructors.class);
   }
 
-  @Test(expected = BindingException.class) @SuppressWarnings("unused")
+  @Test(expected = BindingException.class)
   public void constructorShouldRejectInjectableClassWithMultipleAnnotatedConstructors() {
-    new ClassInjectable(ClassWithTooManyAnnotatedConstructors.class);
+    ClassInjectable.of(ClassWithTooManyAnnotatedConstructors.class);
   }
 
-  @Test(expected = BindingException.class) @SuppressWarnings("unused")
+  @Test(expected = BindingException.class)
   public void constructorShouldRejectInjectableClassWithAnnotatedFinalFields() {
-    new ClassInjectable(ClassWithAnnotatedFinalField.class);
+    ClassInjectable.of(ClassWithAnnotatedFinalField.class);
   }
 
-  @Test(expected = BindingException.class) @SuppressWarnings("unused")
+  @Test(expected = BindingException.class)
   public void constructorShouldRejectInjectableClassWithMultipleScopes() {
-    new ClassInjectable(ClassWithMultipleScopes.class);
+    ClassInjectable.of(ClassWithMultipleScopes.class);
   }
 
   @Singleton

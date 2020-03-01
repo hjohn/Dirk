@@ -10,9 +10,11 @@ import hs.ddif.core.util.AnnotationUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +24,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * A {@link ResolvableInjectable} for creating instances based on a {@link Class}.
@@ -43,21 +47,28 @@ public class ClassInjectable implements ResolvableInjectable {
   private boolean underConstruction;
 
   /**
-   * Constructs a new instance.
+   * Creates a new {@link ClassInjectable} from the given {@link Type}.
    *
-   * @param injectableClass the {@link Class}, cannot be null, cannot be an interface or be abstract
-   * @throws BindingException if the given class is not annotated and has no public empty constructor or is incorrectly annotated
+   * @param type a {@link Type}, cannot be null
+   * @return a new {@link ClassInjectable}, never null
+   * @throws BindingException if the given type is not annotated and has no public empty constructor or is incorrectly annotated
    */
+  public static ClassInjectable of(Type type) {
+    return new ClassInjectable(type);
+  }
+
   @SuppressWarnings("unchecked")
-  public ClassInjectable(Class<?> injectableClass) {
-    if(injectableClass == null) {
-      throw new IllegalArgumentException("injectableClass cannot be null");
-    }
-    if(Modifier.isAbstract(injectableClass.getModifiers())) {
-      throw new IllegalArgumentException("injectableClass must be a concrete class: " + injectableClass);
+  private ClassInjectable(Type injectableType) {
+    if(injectableType == null) {
+      throw new IllegalArgumentException("injectableType cannot be null");
     }
 
-    this.injectableClass = injectableClass;
+    this.injectableClass = TypeUtils.getRawType(injectableType, null);
+
+    if(Modifier.isAbstract(injectableClass.getModifiers())) {
+      throw new IllegalArgumentException("injectableType must be a concrete type: " + injectableType);
+    }
+
     this.bindings = ClassInjectableBindingProvider.resolve(injectableClass);
     this.externalBindings = (Map<AccessibleObject, Binding[]>)(Map<?, ?>)Collections.unmodifiableMap(bindings);
     this.scopeAnnotation = findScopeAnnotation(injectableClass);
@@ -214,11 +225,11 @@ public class ClassInjectable implements ResolvableInjectable {
     }
   }
 
-  private static Annotation findScopeAnnotation(Class<?> cls) {
-    List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(cls, javax.inject.Scope.class);
+  private static Annotation findScopeAnnotation(AnnotatedElement element) {
+    List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(element, javax.inject.Scope.class);
 
     if(matchingAnnotations.size() > 1) {
-      throw new BindingException("Multiple scope annotations found, but only one allowed: " + cls + ", found: " + matchingAnnotations);
+      throw new BindingException("Multiple scope annotations found, but only one allowed: " + element + ", found: " + matchingAnnotations);
     }
 
     return matchingAnnotations.isEmpty() ? null : matchingAnnotations.get(0);

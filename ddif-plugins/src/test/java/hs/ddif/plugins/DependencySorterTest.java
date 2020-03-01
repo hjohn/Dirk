@@ -24,7 +24,7 @@ public class DependencySorterTest {
     Set<ClassInjectable> classInjectables = new HashSet<>();
 
     for(Class<?> cls : new Class<?>[] {H.class, G.class, F.class, E.class, D.class, C.class, B.class, A.class}) {
-      ClassInjectable injectable = new ClassInjectable(cls);
+      ClassInjectable injectable = ClassInjectable.of(cls);
 
       classInjectables.add(injectable);
       store.put(injectable);

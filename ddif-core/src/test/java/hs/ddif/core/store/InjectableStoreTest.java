@@ -47,7 +47,7 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldStore() {
-    ClassInjectable injectable = new ClassInjectable(BeanWithBigRedInjection.class);
+    ClassInjectable injectable = ClassInjectable.of(BeanWithBigRedInjection.class);
 
     store.put(injectable);
 
@@ -59,7 +59,7 @@ public class InjectableStoreTest {
       }
     }
 
-    injectable = new ClassInjectable(BigRedBean.class);
+    injectable = ClassInjectable.of(BigRedBean.class);
 
     store.put(injectable);
 

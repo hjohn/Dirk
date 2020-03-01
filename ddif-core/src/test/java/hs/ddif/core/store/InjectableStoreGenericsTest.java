@@ -32,7 +32,7 @@ public class InjectableStoreGenericsTest {
    */
   @Test
   public void shouldResolveToStringWhenUsingGenerics() {
-    store.put(new ClassInjectable(String.class));   // String extends Object implements CharSequence, Serializable, Comparable<String>
+    store.put(ClassInjectable.of(String.class));   // String extends Object implements CharSequence, Serializable, Comparable<String>
     store.put(new InstanceInjectable(Integer.MAX_VALUE));  // Integer extends Number implements Serializable, Comparable<Integer>
 
     // Resolvables
@@ -69,7 +69,7 @@ public class InjectableStoreGenericsTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("class java.util.ArrayList has type parameters [E]: Injection candidates with type parameters are not supported.");
 
-    store.put(new ClassInjectable(ArrayList.class));
+    store.put(ClassInjectable.of(ArrayList.class));
   }
 
   /**
@@ -78,8 +78,8 @@ public class InjectableStoreGenericsTest {
    */
   @Test
   public void shouldResolveInjectablesWithMultipleGenericParameters() {
-    store.put(new ClassInjectable(OrangeToOrangeJuiceConverter.class));
-    store.put(new ClassInjectable(AppleToSlicedAppleConverter.class));
+    store.put(ClassInjectable.of(OrangeToOrangeJuiceConverter.class));
+    store.put(ClassInjectable.of(AppleToSlicedAppleConverter.class));
 
     assertTrue(store.resolve(OrangeToOrangeJuiceConverter.class).size() == 1);
     assertTrue(store.resolve(new TypeReference<Converter<? extends Fruit, ? extends Juice<?>>>() {}.getType()).size() == 1);
