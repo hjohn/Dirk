@@ -15,8 +15,6 @@ import java.util.WeakHashMap;
 
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
-
 /**
  * Supplies fully injected classes from the supplied store (usually managed by an
  * Injector).  The instances are returned from cache or created as needed.
@@ -176,14 +174,7 @@ public class Instantiator {
   }
 
   private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters) throws BeanResolutionException {
-    ScopeResolver scopeResolver = null;
-
-    for(Map.Entry<Class<? extends Annotation>, ScopeResolver> entry : scopesResolversByAnnotation.entrySet()) {
-      if(TypeUtils.getRawType(injectable.getType(), null).getAnnotation(entry.getKey()) != null) {
-        scopeResolver = entry.getValue();
-        break;  // There can only ever be one scope match as multiple scope annotations are not allowed by ClassInjectable
-      }
-    }
+    ScopeResolver scopeResolver = scopesResolversByAnnotation.get(injectable.getScope() == null ? null : injectable.getScope().annotationType());
 
     if(scopeResolver != null) {
       T bean = scopeResolver.get(injectable.getType());

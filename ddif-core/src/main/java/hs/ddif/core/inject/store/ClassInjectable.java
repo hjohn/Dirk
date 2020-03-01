@@ -55,7 +55,7 @@ public class ClassInjectable implements ResolvableInjectable {
    * resulting injectable could be used in an implementation of the method as
    * its {@link #getInstance(Instantiator, NamedParameter...)} would match the
    * return type of the method.
-   * 
+   *
    * @param method a {@link Method}, cannot be null
    * @return a new {@link ClassInjectable}, never null
    * @throws BindingException if the type indicated by the method return type is not annotated and has no public empty constructor or is incorrectly annotated
@@ -273,6 +273,11 @@ public class ClassInjectable implements ResolvableInjectable {
   @Override
   public Set<AnnotationDescriptor> getQualifiers() {
     return qualifiers;
+  }
+
+  @Override
+  public boolean isTemplate() {
+    return true;
   }
 
   @Override

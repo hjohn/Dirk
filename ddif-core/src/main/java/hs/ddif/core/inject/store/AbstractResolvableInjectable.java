@@ -17,8 +17,9 @@ public abstract class AbstractResolvableInjectable implements ResolvableInjectab
   private final Annotation scope;
   private final Type injectableType;
   private final Set<AnnotationDescriptor> descriptors;
+  private final boolean isTemplate;
 
-  protected AbstractResolvableInjectable(Map<AccessibleObject, Binding[]> bindings, Annotation scope, Type injectableType, Set<AnnotationDescriptor> descriptors) {
+  protected AbstractResolvableInjectable(Map<AccessibleObject, Binding[]> bindings, Annotation scope, Type injectableType, boolean isTemplate, Set<AnnotationDescriptor> descriptors) {
     if(bindings == null) {
       throw new IllegalArgumentException("bindings cannot be null");
     }
@@ -29,11 +30,12 @@ public abstract class AbstractResolvableInjectable implements ResolvableInjectab
     this.bindings = bindings;
     this.scope = scope;
     this.injectableType = injectableType;
+    this.isTemplate = isTemplate;
     this.descriptors = descriptors;
   }
 
-  protected AbstractResolvableInjectable(Map<AccessibleObject, Binding[]> bindings, Annotation scope, Class<?> injectableClass, AnnotationDescriptor... descriptors) {
-    this(bindings, scope, injectableClass, new HashSet<>(Arrays.asList(descriptors)));
+  protected AbstractResolvableInjectable(Map<AccessibleObject, Binding[]> bindings, Annotation scope, Class<?> injectableClass, boolean isTemplate, AnnotationDescriptor... descriptors) {
+    this(bindings, scope, injectableClass, isTemplate, new HashSet<>(Arrays.asList(descriptors)));
   }
 
   @Override
@@ -54,5 +56,10 @@ public abstract class AbstractResolvableInjectable implements ResolvableInjectab
   @Override
   public final Set<AnnotationDescriptor> getQualifiers() {
     return descriptors;
+  }
+
+  @Override
+  public boolean isTemplate() {
+    return isTemplate;
   }
 }

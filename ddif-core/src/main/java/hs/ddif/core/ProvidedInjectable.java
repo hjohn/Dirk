@@ -29,7 +29,7 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
   }
 
   private ProvidedInjectable(Class<?> classImplementingProvider, Provider<?> provider, AnnotationDescriptor... descriptors) {
-    super(Collections.<AccessibleObject, Binding[]>emptyMap(), null, determineProvidedClass(classImplementingProvider), descriptors);
+    super(Collections.<AccessibleObject, Binding[]>emptyMap(), null, determineProvidedClass(classImplementingProvider), true, descriptors);
 
     this.classImplementingProvider = classImplementingProvider;
     this.provider = provider;

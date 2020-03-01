@@ -5,25 +5,15 @@ import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.util.AnnotationDescriptor;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.util.Collections;
 import java.util.Objects;
 
-import javax.inject.Singleton;
-
 public class InstanceInjectable extends AbstractResolvableInjectable {
-  private static final Annotation SINGLETON_ANNOTATION = new Annotation() {
-    @Override
-    public Class<? extends Annotation> annotationType() {
-      return Singleton.class;
-    }
-  };
-
   private final Object instance;
 
   public InstanceInjectable(Object instance, AnnotationDescriptor... descriptors) {
-    super(Collections.<AccessibleObject, Binding[]>emptyMap(), SINGLETON_ANNOTATION, instance.getClass(), descriptors);
+    super(Collections.<AccessibleObject, Binding[]>emptyMap(), null, instance.getClass(), false, descriptors);
 
     this.instance = instance;
   }

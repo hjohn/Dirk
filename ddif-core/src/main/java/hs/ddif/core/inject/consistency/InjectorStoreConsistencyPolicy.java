@@ -49,7 +49,11 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
           ensureBindingIsSingular(injectable, entry.getKey(), requiredKey, injectables);
 
           if(!binding.isProvider()) {  // When wrapped in a Provider, there are never any scope conflicts
-            ensureBindingScopeIsValid(injectable, injectables.iterator().next());  // Previous check ensures there is only a single element in the set
+            T dependency = injectables.iterator().next();  // Previous check ensures there is only a single element in the set
+
+            if(dependency.isTemplate()) {  // When there is only a single instance (with no way to create more), there are never any scope conflicts
+              ensureBindingScopeIsValid(injectable, dependency);
+            }
           }
         }
       }
