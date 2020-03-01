@@ -18,6 +18,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -72,7 +73,7 @@ public class ClassInjectable implements ResolvableInjectable {
     }
 
     this.injectableType = injectableType;
-    this.qualifiers = AnnotationDescriptor.extractQualifiers(injectableClass);
+    this.qualifiers = extractQualifiers(injectableClass);
     this.bindings = ClassInjectableBindingProvider.resolve(injectableClass);
     this.externalBindings = (Map<AccessibleObject, Binding[]>)(Map<?, ?>)Collections.unmodifiableMap(bindings);
     this.scopeAnnotation = findScopeAnnotation(injectableClass);
@@ -279,5 +280,21 @@ public class ClassInjectable implements ResolvableInjectable {
   @Override
   public String toString() {
     return "Injectable-Class(" + injectableType + ")";
+  }
+
+  private static Set<AnnotationDescriptor> extractQualifiers(AnnotatedElement element) {
+    return extractQualifiers(element.getAnnotations());
+  }
+
+  private static Set<AnnotationDescriptor> extractQualifiers(Annotation[] annotations) {
+    Set<AnnotationDescriptor> qualifiers = new HashSet<>();
+
+    for(Annotation annotation : annotations) {
+      if(annotation.annotationType().getAnnotation(Qualifier.class) != null) {
+        qualifiers.add(new AnnotationDescriptor(annotation));
+      }
+    }
+
+    return qualifiers;
   }
 }

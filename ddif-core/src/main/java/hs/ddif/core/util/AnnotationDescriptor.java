@@ -6,13 +6,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Named;
-import javax.inject.Qualifier;
 
 public class AnnotationDescriptor {
   private final String description;
@@ -220,21 +217,5 @@ public class AnnotationDescriptor {
     catch(IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(method.toString(), e);
     }
-  }
-
-  public static Set<AnnotationDescriptor> extractQualifiers(Class<?> cls) {
-    return extractQualifiers(cls.getAnnotations());
-  }
-
-  private static Set<AnnotationDescriptor> extractQualifiers(Annotation[] annotations) {
-    Set<AnnotationDescriptor> qualifiers = new HashSet<>();
-
-    for(Annotation annotation : annotations) {
-      if(annotation.annotationType().getAnnotation(Qualifier.class) != null) {
-        qualifiers.add(new AnnotationDescriptor(annotation));
-      }
-    }
-
-    return qualifiers;
   }
 }
