@@ -62,9 +62,9 @@ public class BeanDefinitionStore {
   }
 
   /**
-   * Registers a class with this Injector if all its dependencies can be
+   * Registers a type with this Injector if all its dependencies can be
    * resolved and it would not cause existing registered classes to have
-   * ambigious dependencies as a result of registering the given class.<p>
+   * ambigious dependencies as a result of registering the given type.<p>
    *
    * If there are unresolvable dependencies, or registering this class
    * would result in ambigious dependencies for previously registered
@@ -74,12 +74,12 @@ public class BeanDefinitionStore {
    * the class it provides is held to the same restrictions or registration
    * will fail.
    *
-   * @param concreteClass the class to register with the Injector
+   * @param concreteType the type to register with the Injector; the type cannot have unresolved type variables
    * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
    * @throws UnresolvableDependencyException when one or more dependencies of the given class cannot be resolved
    */
-  public void register(Class<?> concreteClass) {
-    register(ClassInjectable.of(concreteClass));
+  public void register(Type concreteType) {
+    register(ClassInjectable.of(concreteType));
   }
 
   /**
@@ -102,8 +102,8 @@ public class BeanDefinitionStore {
   }
 
   /**
-   * Removes a class from this Injector if doing so would not result in
-   * broken dependencies in the remaining registered classes.<p>
+   * Removes a type from this Injector if doing so would not result in
+   * broken dependencies in the remaining registered types.<p>
    *
    * If there would be broken dependencies then the removal will fail
    * and an exception is thrown.<p>
@@ -111,11 +111,11 @@ public class BeanDefinitionStore {
    * Note that if the class implements {@link Provider} that the class it
    * provides is held to the same restrictions or removal will fail.
    *
-   * @param concreteClass the class to remove from the Injector
+   * @param concreteType the type to remove from the Injector; the type cannot have unresolved type variables
    * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
    */
-  public void remove(Class<?> concreteClass) {
-    remove(ClassInjectable.of(concreteClass));
+  public void remove(Type concreteType) {
+    remove(ClassInjectable.of(concreteType));
   }
 
   /**

@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.store;
 
 import com.googlecode.gentyref.GenericTypeReflector;
+import com.googlecode.gentyref.TypeFactory;
 
 import hs.ddif.core.bind.Key;
 import hs.ddif.core.bind.Parameter;
@@ -251,7 +252,7 @@ public class ClassInjectableBindingProvider {
 
       try {
         if(binding.getRequiredKey() != null) {
-          Type searchType = org.apache.commons.lang3.reflect.TypeUtils.parameterize(Provider.class, binding.getRequiredKey().getType());
+          Type searchType = TypeFactory.parameterizedClass(Provider.class, binding.getRequiredKey().getType());
 
           return instantiator.getInstance(searchType, (Object[])binding.getRequiredKey().getQualifiersAsArray());
         }

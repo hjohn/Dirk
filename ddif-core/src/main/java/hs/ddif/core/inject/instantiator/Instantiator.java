@@ -15,6 +15,8 @@ import java.util.WeakHashMap;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
+
 /**
  * Supplies fully injected classes from the supplied store (usually managed by an
  * Injector).  The instances are returned from cache or created as needed.
@@ -37,11 +39,11 @@ public class Instantiator {
     }
 
     scopesResolversByAnnotation.put(Singleton.class, new ScopeResolver() {
-      private final Map<Class<?>, WeakReference<Object>> singletons = new WeakHashMap<>();
+      private final Map<Type, WeakReference<Object>> singletons = new WeakHashMap<>();
 
       @Override
-      public <T> T get(Class<?> injectableClass) {
-        WeakReference<Object> reference = singletons.get(injectableClass);
+      public <T> T get(Type injectableType) {
+        WeakReference<Object> reference = singletons.get(injectableType);
 
         if(reference != null) {
           @SuppressWarnings("unchecked")
@@ -54,8 +56,8 @@ public class Instantiator {
       }
 
       @Override
-      public <T> void put(Class<?> injectableClass, T instance) {
-        singletons.put(injectableClass, new WeakReference<Object>(instance));
+      public <T> void put(Type injectableType, T instance) {
+        singletons.put(injectableType, new WeakReference<Object>(instance));
       }
 
       @Override
@@ -177,14 +179,14 @@ public class Instantiator {
     ScopeResolver scopeResolver = null;
 
     for(Map.Entry<Class<? extends Annotation>, ScopeResolver> entry : scopesResolversByAnnotation.entrySet()) {
-      if(injectable.getInjectableClass().getAnnotation(entry.getKey()) != null) {
+      if(TypeUtils.getRawType(injectable.getType(), null).getAnnotation(entry.getKey()) != null) {
         scopeResolver = entry.getValue();
         break;  // There can only ever be one scope match as multiple scope annotations are not allowed by ClassInjectable
       }
     }
 
     if(scopeResolver != null) {
-      T bean = scopeResolver.get(injectable.getInjectableClass());
+      T bean = scopeResolver.get(injectable.getType());
 
       if(bean != null) {
         return bean;
@@ -200,7 +202,7 @@ public class Instantiator {
        * Store the result if scoped.
        */
 
-      scopeResolver.put(injectable.getInjectableClass(), bean);
+      scopeResolver.put(injectable.getType(), bean);
     }
 
     return bean;

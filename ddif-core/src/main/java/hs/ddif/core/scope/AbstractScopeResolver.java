@@ -1,5 +1,6 @@
 package hs.ddif.core.scope;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -11,7 +12,7 @@ import java.util.WeakHashMap;
  * @param <S> the type of the scope discriminator object
  */
 public abstract class AbstractScopeResolver<S> implements ScopeResolver {
-  private final Map<S, Map<Class<?>, Object>> beansByScope = new WeakHashMap<>();
+  private final Map<S, Map<Type, Object>> beansByScope = new WeakHashMap<>();
 
   /**
    * Returns the current scope, or <code>null</code> if there is no current scope.
@@ -21,18 +22,18 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   public abstract S getCurrentScope();
 
   @Override
-  public <T> T get(Class<?> injectableClass) {
+  public <T> T get(Type injectableType) {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
       throw new OutOfScopeException("No scope active for: " + getScopeAnnotationClass());
     }
 
-    Map<Class<?>, Object> beans = beansByScope.get(currentScope);
+    Map<Type, Object> beans = beansByScope.get(currentScope);
 
     if(beans != null) {
       @SuppressWarnings("unchecked")
-      T bean = (T)beans.get(injectableClass);
+      T bean = (T)beans.get(injectableType);
 
       return bean;  // This may still return null
     }
@@ -41,21 +42,21 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   }
 
   @Override
-  public <T> void put(Class<?> injectableClass, T instance) {
+  public <T> void put(Type injectableType, T instance) {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
       throw new OutOfScopeException("No scope active for: " + getScopeAnnotationClass());
     }
 
-    Map<Class<?>, Object> beans = beansByScope.get(currentScope);
+    Map<Type, Object> beans = beansByScope.get(currentScope);
 
     if(beans == null) {
       beans = new WeakHashMap<>();
       beansByScope.put(currentScope, beans);
     }
 
-    beans.put(injectableClass, instance);
+    beans.put(injectableType, instance);
   }
 
   protected void clear() {

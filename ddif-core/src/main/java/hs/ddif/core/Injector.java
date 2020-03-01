@@ -153,7 +153,7 @@ public class Injector {
    * @throws BeanResolutionException when a required bean could not be found
    */
   public <T> Set<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
-    return instantiator.getInstance(type, criteria);
+    return instantiator.getInstances(type, criteria);
   }
 
   /**

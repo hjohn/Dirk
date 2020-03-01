@@ -11,7 +11,7 @@ public class Injectables {
     return new Injectable() {
 
       @Override
-      public Class<?> getInjectableClass() {
+      public Class<?> getType() {
         return String.class;
       }
 

@@ -6,6 +6,7 @@ import hs.ddif.core.store.InjectableStore;
 import hs.ddif.scan.test.qualifiers.Big;
 import hs.ddif.scan.test.qualifiers.Red;
 
+import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,7 +31,7 @@ public class DependencySorterTest {
       store.put(injectable);
     }
 
-    List<Class<?>> list = DependencySorter.getInTopologicalOrder(store, classInjectables);
+    List<Type> list = DependencySorter.getInTopologicalOrder(store, classInjectables);
 
     assertTrue(list.size() == 8);
     assertTrue(list.indexOf(A.class) == 0);

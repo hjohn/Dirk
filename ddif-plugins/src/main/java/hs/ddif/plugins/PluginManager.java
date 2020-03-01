@@ -125,11 +125,11 @@ public class PluginManager {
         }
       }
 
-      List<Class<?>> matchingClasses = DependencySorter.getInTopologicalOrder(injectableStore, classInjectables);
+      List<Type> matchingClasses = DependencySorter.getInTopologicalOrder(injectableStore, classInjectables);
 
       LOGGER.fine("Registering classes with Injector (in order): " + matchingClasses);
 
-      List<Class<?>> registeredClasses = registerClasses(matchingClasses);
+      List<Type> registeredClasses = registerTypes(matchingClasses);
 
       return new Plugin(baseStore, pluginName, registeredClasses, classLoader);
     }
@@ -197,9 +197,9 @@ public class PluginManager {
       Class<Module> moduleClass = (Class<Module>)classLoader.loadClass("PluginModule");
       Constructor<Module> constructor = moduleClass.getConstructor();
       Module module = constructor.newInstance();
-      List<Class<?>> registeredClasses = registerClasses(module.getClasses());
+      List<Type> registeredTypes = registerTypes(module.getTypes());
 
-      return new Plugin(baseStore, Arrays.toString(urls), registeredClasses, classLoader);
+      return new Plugin(baseStore, Arrays.toString(urls), registeredTypes, classLoader);
     }
     catch(ReflectiveOperationException e) {
       try {
@@ -223,19 +223,19 @@ public class PluginManager {
     }
   }
 
-  // Registers classes with the injector and returns the classes actually registered (could be a subset of classes if classes were already registered).
-  private List<Class<?>> registerClasses(List<Class<?>> classes) {
-    List<Class<?>> registeredClasses = new ArrayList<>();
+  // Registers types with the injector and returns the types actually registered (could be a subset of classes if classes were already registered).
+  private List<Type> registerTypes(List<Type> types) {
+    List<Type> registeredTypes = new ArrayList<>();
 
     try {
-      for(Class<?> cls : classes) {
-        if(!baseStore.contains(cls)) {
-          baseStore.register(cls);
-          registeredClasses.add(cls);
+      for(Type type : types) {
+        if(!baseStore.contains(type)) {
+          baseStore.register(type);
+          registeredTypes.add(type);
         }
       }
 
-      return registeredClasses;
+      return registeredTypes;
     }
     catch(BindingException | InjectorStoreConsistencyException e) {
 
@@ -243,10 +243,10 @@ public class PluginManager {
        * Registration failed, rolling back:
        */
 
-      Collections.reverse(registeredClasses);
+      Collections.reverse(registeredTypes);
 
-      for(Class<?> cls : registeredClasses) {
-        baseStore.remove(cls);
+      for(Type type : registeredTypes) {
+        baseStore.remove(type);
       }
 
       throw e;

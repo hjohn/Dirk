@@ -3,6 +3,7 @@ package hs.ddif.core;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.TypeReference;
 
 import java.sql.Connection;
 import java.util.List;
@@ -11,7 +12,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -50,9 +50,11 @@ public class InjectorProviderTest {
 
       assertEquals(DatabaseProvider.class, injector.getInstance(DatabaseProvider.class).getClass());
       assertEquals(Database.class, injector.getInstance(Database.class).getClass());
-      assertEquals(DatabaseProvider.class, injector.getInstance(TypeUtils.parameterize(Provider.class, Database.class)).getClass());
+      assertEquals(DatabaseProvider.class, injector.getInstance(new TypeReference<Provider<Database>>() {}.getType()).getClass());
+      assertEquals(anonymousProvider.getClass(), injector.getInstance(new TypeReference<Provider<Connection>>() {}.getType()).getClass());
       assertEquals(2, injector.getInstances(Provider.class).size());
-      assertEquals(anonymousProvider.getClass(), injector.getInstance(TypeUtils.parameterize(Provider.class, Connection.class)).getClass());
+      assertEquals(1, injector.getInstances(new TypeReference<Provider<Database>>() {}.getType()).size());
+      assertEquals(1, injector.getInstances(new TypeReference<Provider<Connection>>() {}.getType()).size());
 
       injector.remove(DatabaseProvider.class);
 
@@ -70,7 +72,7 @@ public class InjectorProviderTest {
       catch(BeanResolutionException e) {
       }
 
-      assertEquals(anonymousProvider.getClass(), injector.getInstance(Provider.class).getClass());
+      assertEquals(anonymousProvider.getClass(), injector.getInstance(new TypeReference<Provider<Connection>>() {}.getType()).getClass());
     }
   }
 

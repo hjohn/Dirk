@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Qualifier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -31,9 +32,10 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * A {@link ResolvableInjectable} for creating instances based on a {@link Class}.
  */
 public class ClassInjectable implements ResolvableInjectable {
-  private final Class<?> injectableClass;
+  private final Type injectableType;
   private final Map<AccessibleObject, Binding[]> externalBindings;
   private final Map<AccessibleObject, ClassInjectableBinding[]> bindings;
+  private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
   private final PostConstructor postConstructor;
 
@@ -63,12 +65,14 @@ public class ClassInjectable implements ResolvableInjectable {
       throw new IllegalArgumentException("injectableType cannot be null");
     }
 
-    this.injectableClass = TypeUtils.getRawType(injectableType, null);
+    Class<?> injectableClass = TypeUtils.getRawType(injectableType, null);
 
     if(Modifier.isAbstract(injectableClass.getModifiers())) {
       throw new IllegalArgumentException("injectableType must be a concrete type: " + injectableType);
     }
 
+    this.injectableType = injectableType;
+    this.qualifiers = AnnotationDescriptor.extractQualifiers(injectableClass);
     this.bindings = ClassInjectableBindingProvider.resolve(injectableClass);
     this.externalBindings = (Map<AccessibleObject, Binding[]>)(Map<?, ?>)Collections.unmodifiableMap(bindings);
     this.scopeAnnotation = findScopeAnnotation(injectableClass);
@@ -124,7 +128,7 @@ public class ClassInjectable implements ResolvableInjectable {
   @Override
   public Object getInstance(Instantiator instantiator, NamedParameter... parameters) {
     if(underConstruction) {
-      throw new ConstructionException("Object already under construction (dependency creation loop in @PostConstruct method!): " + injectableClass);
+      throw new ConstructionException("Object already under construction (dependency creation loop in @PostConstruct method!): " + injectableType);
     }
 
     try {
@@ -176,7 +180,7 @@ public class ClassInjectable implements ResolvableInjectable {
         throw e;
       }
       catch(Exception e) {
-        throw new ConstructionException("Unable to set field [" + entry.getKey() + "] of: " + injectableClass, e);
+        throw new ConstructionException("Unable to set field [" + entry.getKey() + "] of: " + injectableType, e);
       }
     }
   }
@@ -205,7 +209,7 @@ public class ClassInjectable implements ResolvableInjectable {
           String name = determineParameterName(parameters[i]);
 
           if(name == null) {
-            throw new ConstructionException("Missing parameter name.  Unable to construct {" + injectableClass + "}, name cannot be determined for: " + parameters[i] + "; specify one with @Parameter or compile classes with parameter name information");
+            throw new ConstructionException("Missing parameter name.  Unable to construct {" + injectableType + "}, name cannot be determined for: " + parameters[i] + "; specify one with @Parameter or compile classes with parameter name information");
           }
 
           values[i] = findAndRemoveNamedParameterValue(name, namedParameters);
@@ -221,7 +225,7 @@ public class ClassInjectable implements ResolvableInjectable {
       throw e;
     }
     catch(Exception e) {
-      throw new ConstructionException("Unable to construct: " + injectableClass, e);
+      throw new ConstructionException("Unable to construct: " + injectableType, e);
     }
   }
 
@@ -246,18 +250,18 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Class<?> getInjectableClass() {
-    return injectableClass;
+  public Type getType() {
+    return injectableType;
   }
 
   @Override
   public Set<AnnotationDescriptor> getQualifiers() {
-    return AnnotationDescriptor.extractQualifiers(injectableClass);
+    return qualifiers;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(injectableClass);
+    return Objects.hash(injectableType);
   }
 
   @Override
@@ -269,11 +273,11 @@ public class ClassInjectable implements ResolvableInjectable {
       return false;
     }
 
-    return injectableClass.equals(((ClassInjectable)obj).injectableClass);
+    return injectableType.equals(((ClassInjectable)obj).injectableType);
   }
 
   @Override
   public String toString() {
-    return "Injectable-Class(" + injectableClass + ")";
+    return "Injectable-Class(" + injectableType + ")";
   }
 }

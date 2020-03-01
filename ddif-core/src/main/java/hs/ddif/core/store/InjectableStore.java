@@ -148,7 +148,7 @@ public class InjectableStore<T extends Injectable> {
     for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
       Injectable injectable = iterator.next();
 
-      if(!matcher.matches(injectable.getInjectableClass())) {
+      if(!matcher.matches(TypeUtils.getRawType(injectable.getType(), null))) {
         iterator.remove();
       }
     }
@@ -179,10 +179,11 @@ public class InjectableStore<T extends Injectable> {
       throw new IllegalArgumentException("injectable cannot be null");
     }
 
-    Class<?> concreteClass = injectable.getInjectableClass();
+    Type type = injectable.getType();
+    Class<?> concreteClass = TypeUtils.getRawType(type, null);
 
-    if(concreteClass.getTypeParameters().length > 0) {
-      throw new IllegalArgumentException(concreteClass + " has type parameters " + Arrays.toString(concreteClass.getTypeParameters()) + ": Injection candidates with type parameters are not supported.");
+    if(TypeUtils.containsTypeVariables(type)) {
+      throw new IllegalArgumentException(type + " has type variables " + Arrays.toString(concreteClass.getTypeParameters()) + ": Injection candidates with type variables are not supported.");
     }
 
     Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();
@@ -191,19 +192,19 @@ public class InjectableStore<T extends Injectable> {
 
     Set<Class<?>> superClassesAndInterfaces = getSuperClassesAndInterfaces(concreteClass);
 
-    for(Class<?> type : superClassesAndInterfaces) {
-      ensureRegistrationIsPossible(type, injectable);
+    for(Class<?> superType : superClassesAndInterfaces) {
+      ensureRegistrationIsPossible(superType, injectable);
     }
 
     /*
      * Beyond this point, modifications are made to the store, nothing should go wrong or the store's state could become inconsistent.
      */
 
-    for(Class<?> type : superClassesAndInterfaces) {
-      register(type, null, injectable);
+    for(Class<?> superType : superClassesAndInterfaces) {
+      register(superType, null, injectable);
 
       for(AnnotationDescriptor qualifier : qualifiers) {
-        register(type, qualifier, injectable);
+        register(superType, qualifier, injectable);
       }
     }
 
@@ -221,7 +222,7 @@ public class InjectableStore<T extends Injectable> {
       throw new NoSuchInjectableException(injectable);
     }
 
-    Class<?> concreteClass = injectable.getInjectableClass();
+    Class<?> concreteClass = TypeUtils.getRawType(injectable.getType(), null);
     Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();  // TODO extractQualifiers might simply add ConcreteClass to the set?
 
     policy.checkRemoval(this, injectable, qualifiers);
@@ -329,7 +330,7 @@ public class InjectableStore<T extends Injectable> {
       for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
         Injectable injectable = iterator.next();
 
-        if(!TypeUtils.isAssignable(injectable.getInjectableClass(), type)) {
+        if(!TypeUtils.isAssignable(injectable.getType(), type)) {
           iterator.remove();
         }
       }

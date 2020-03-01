@@ -11,6 +11,7 @@ import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.AnnotationUtils;
+import hs.ddif.core.util.TypeReference;
 import hs.ddif.core.util.Value;
 
 import java.io.Serializable;
@@ -158,8 +159,17 @@ public class InjectableStoreTest {
     // All Red Numbers
     assertEquals(1, store.resolve(Number.class, AnnotationDescriptor.describe(Red.class)).size());
 
-    // All Comparable Serializables
-    assertEquals(7, store.resolve(Serializable.class, Comparable.class).size());
+    // All Serializables
+    assertEquals(8, store.resolve(Serializable.class).size());
+
+    // All Comparable
+    assertEquals(7, store.resolve(Comparable.class).size());
+
+    // All Comparable<Long>
+    assertEquals(2, store.resolve(new TypeReference<Comparable<Long>>() {}.getType()).size());
+
+    // All Comparable<String> Serializables (unsupported for now)
+    //    assertEquals(3, store.resolve(Serializable.class, new TypeReference<Comparable<String>>() {}.getType()).size());
 
     // All RandomAccess Serializables
     assertEquals(0, store.resolve(Serializable.class, RandomAccess.class).size());

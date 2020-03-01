@@ -34,13 +34,13 @@ public class ProducerInjectorExtension implements Injector.Extension {
 
   @Override
   public ResolvableInjectable getDerived(final Instantiator instantiator, final ResolvableInjectable injectable) {
-    final Producer producer = injectable.getInjectableClass().getAnnotation(Producer.class);
+    final Producer producer = ((Class<?>)injectable.getType()).getAnnotation(Producer.class);
 
     if(producer == null) {
       return null;
     }
 
-    ClassInjectable producerInjectable = PRODUCER_INJECTABLES.get(injectable.getInjectableClass());
+    ClassInjectable producerInjectable = PRODUCER_INJECTABLES.get(injectable.getType());
 
     if(producerInjectable == null) {
       String[] names = validateProducerAndReturnParameterNames(injectable, producer);
@@ -52,7 +52,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
         producerInjectable = ClassInjectable.of(new ByteBuddy()
           .subclass(producer.value())
           .annotateType(AnnotationDescription.Builder.ofType(Singleton.class).build())  // It is a singleton, avoids scope problems
-          .method(ElementMatchers.returns(injectable.getInjectableClass()).and(ElementMatchers.isAbstract()))
+          .method(ElementMatchers.returns((Class<?>)injectable.getType()).and(ElementMatchers.isAbstract()))
           .intercept(MethodDelegation.to(new Interceptor(instantiator, injectable, names)))
           .make()
           .load(getClass().getClassLoader())
@@ -60,7 +60,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
         );
       }
 
-      PRODUCER_INJECTABLES.put(injectable.getInjectableClass(), producerInjectable);
+      PRODUCER_INJECTABLES.put((Class<?>)injectable.getType(), producerInjectable);
     }
 
     return producerInjectable;
@@ -85,7 +85,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
         namedParameters[i] = new NamedParameter(names[i], args[i]);
       }
 
-      return instantiator.getParameterizedInstance((Type)injectable.getInjectableClass(), namedParameters);
+      return instantiator.getParameterizedInstance(injectable.getType(), namedParameters);
     }
   }
 
@@ -112,7 +112,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
       return new String[] {};
     }
 
-    Class<?> injectableClass = injectable.getInjectableClass();
+    Class<?> injectableClass = (Class<?>)injectable.getType();
     Map<String, Type> parameterBindings = createBindingNameMap(injectable);
     String[] names = new String[parameterBindings.size()];
 
@@ -149,7 +149,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
   }
 
   private static Map<String, Type> createBindingNameMap(ResolvableInjectable injectable) {
-    Class<?> injectableClass = injectable.getInjectableClass();
+    Class<?> injectableClass = (Class<?>)injectable.getType();
     Map<AccessibleObject, Binding[]> bindings = injectable.getBindings();
     Map<String, Type> parameterBindings = new HashMap<>();
 

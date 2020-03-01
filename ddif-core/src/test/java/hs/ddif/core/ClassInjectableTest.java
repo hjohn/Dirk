@@ -36,7 +36,7 @@ public class ClassInjectableTest {
   public void constructorShouldAcceptValidParameters() {
     ClassInjectable injectable = ClassInjectable.of(SimpleClass.class);
 
-    assertEquals(SimpleClass.class, injectable.getInjectableClass());
+    assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
     assertEquals(SimpleClass.class.getAnnotation(Singleton.class), injectable.getScope());
     assertEquals(1, injectable.getBindings().size());
@@ -44,7 +44,7 @@ public class ClassInjectableTest {
 
     injectable = ClassInjectable.of(ClassWithDependencies.class);
 
-    assertEquals(ClassWithDependencies.class, injectable.getInjectableClass());
+    assertEquals(ClassWithDependencies.class, injectable.getType());
     assertEquals(Collections.singleton(new AnnotationDescriptor(ClassWithDependencies.class.getAnnotation(Red.class))), injectable.getQualifiers());
     assertNull(injectable.getScope());
     assertEquals(2, injectable.getBindings().size());

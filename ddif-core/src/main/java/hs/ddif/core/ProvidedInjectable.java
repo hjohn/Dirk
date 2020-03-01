@@ -51,7 +51,7 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
       return provider == null ? ((Provider<?>)instatiator.getParameterizedInstance(classImplementingProvider, namedParameters)).get() : provider.get();
     }
     catch(Exception e) {
-      throw new BeanResolutionException(getInjectableClass(), e);
+      throw new BeanResolutionException(getType(), e);
     }
   }
 
@@ -87,6 +87,6 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
 
   @Override
   public String toString() {
-    return "Injectable-Provider(" + getInjectableClass() + " + " + getDescriptors() + ")";
+    return "Injectable-Provider(" + getType() + " + " + getDescriptors() + ")";
   }
 }

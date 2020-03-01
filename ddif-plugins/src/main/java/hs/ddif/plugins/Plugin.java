@@ -4,6 +4,7 @@ import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.plugins.PluginManager.UnloadTrackingClassLoader;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.List;
@@ -14,14 +15,14 @@ public class Plugin {
   private final BeanDefinitionStore store;
   private final String name;
 
-  private List<Class<?>> classes;
+  private List<Type> types;
   private ClassLoader classLoader;
 
-  public Plugin(BeanDefinitionStore store, String name, List<Class<?>> classes, ClassLoader classLoader) {
+  public Plugin(BeanDefinitionStore store, String name, List<Type> types, ClassLoader classLoader) {
     this.store = store;
     this.name = name;
     this.classLoader = classLoader;
-    this.classes = classes;
+    this.types = types;
 
     if(classLoader instanceof UnloadTrackingClassLoader) {
       this.unloaded = ((UnloadTrackingClassLoader)classLoader).getUnloadedAtomicBoolean();
@@ -39,18 +40,18 @@ public class Plugin {
   public String toString() {
     StringBuilder sb = new StringBuilder();
 
-    for(Class<?> cls : classes) {
-      sb.append(" - ").append(cls.getName()).append("\n");
+    for(Type type : types) {
+      sb.append(" - ").append(type.toString()).append("\n");
     }
 
     return "Plugin: " + name + "\n" + sb.toString();
   }
 
   public void unload() {
-    Collections.reverse(classes);
+    Collections.reverse(types);
 
-    for(Class<?> cls : classes) {
-      store.remove(cls);
+    for(Type type : types) {
+      store.remove(type);
     }
 
     try {
@@ -62,8 +63,8 @@ public class Plugin {
       throw new IllegalStateException(e);
     }
     finally {
-      classes.clear();
-      classes = null;
+      types.clear();
+      types = null;
       classLoader = null;
     }
   }

@@ -9,6 +9,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Set;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
+
 /**
  * Thrown when not all dependencies of a class can be resolved.  This occurs when
  * a class requires a specific dependency but no such dependency is available or
@@ -19,12 +21,14 @@ public class UnresolvableDependencyException extends InjectorStoreConsistencyExc
   public UnresolvableDependencyException(Injectable injectable, AccessibleObject accessibleObject, Key key, Set<? extends Injectable> candidates) {
     super(
       (candidates.isEmpty() ? "Missing" : "Multiple candidates for") + " dependency of type: " + key
-        + " required for: " + formatInjectionPoint(injectable.getInjectableClass(), accessibleObject)
+        + " required for: " + formatInjectionPoint(injectable.getType(), accessibleObject)
         + (candidates.isEmpty() ? "" : ": " + candidates)
     );
   }
 
-  private static String formatInjectionPoint(Class<?> concreteClass, AccessibleObject accessibleObject) {
+  private static String formatInjectionPoint(Type type, AccessibleObject accessibleObject) {
+    Class<?> concreteClass = TypeUtils.getRawType(type, null);
+
     if(accessibleObject instanceof Constructor) {
       Constructor<?> constructor = (Constructor<?>)accessibleObject;
 

@@ -2,6 +2,7 @@ package hs.ddif.core.store;
 
 import hs.ddif.core.util.AnnotationDescriptor;
 
+import java.lang.reflect.Type;
 import java.util.Set;
 
 /**
@@ -16,7 +17,7 @@ public interface Injectable {
    *
    * @return the type of the resulting instance provided by this {@link Injectable}, never null
    */
-  Class<?> getInjectableClass();
+  Type getType();
 
   /**
    * Returns the qualifiers associated with this Injectable.

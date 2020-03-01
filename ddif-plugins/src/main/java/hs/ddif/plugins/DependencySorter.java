@@ -8,6 +8,7 @@ import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.InjectableStore;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,8 @@ import java.util.Set;
 
 public class DependencySorter {
 
-  public static List<Class<?>> getInTopologicalOrder(InjectableStore<Injectable> store, Set<ClassInjectable> classInjectables) {
-    DirectedGraph<Class<?>> dg = new DirectedGraph<>();
+  public static List<Type> getInTopologicalOrder(InjectableStore<Injectable> store, Set<ClassInjectable> classInjectables) {
+    DirectedGraph<Type> dg = new DirectedGraph<>();
 
     /*
      * Keep track of a Map which links a Producer class to the annotated production result class (the
@@ -26,15 +27,15 @@ public class DependencySorter {
      * (which is depended on) as well.
      */
 
-    Map<Class<?>, Class<?>> annotatedClassByProducerClass = new HashMap<>();
+    Map<Class<?>, Type> annotatedClassByProducerClass = new HashMap<>();
 
     for(ClassInjectable injectable : classInjectables) {
-      dg.addNode(injectable.getInjectableClass());
+      dg.addNode(injectable.getType());
 
-      Producer producer = injectable.getInjectableClass().getAnnotation(Producer.class);
+      Producer producer = ((Class<?>)injectable.getType()).getAnnotation(Producer.class);
 
       if(producer != null) {
-        annotatedClassByProducerClass.put(producer.value(), injectable.getInjectableClass());
+        annotatedClassByProducerClass.put(producer.value(), injectable.getType());
       }
     }
 
@@ -45,15 +46,15 @@ public class DependencySorter {
 
           if(requiredKey != null) {
             for(Injectable injectable : store.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray())) {
-              Class<?> requiredClass = injectable.getInjectableClass();
+              Type requiredType = injectable.getType();
 
               if(injectable instanceof ProvidedInjectable) {
                 ProvidedInjectable providedInjectable = (ProvidedInjectable)injectable;
 
-                requiredClass = providedInjectable.getClassImplementingProvider();
+                requiredType = providedInjectable.getClassImplementingProvider();
               }
 
-              dg.addEdge(requiredClass, classInjectable.getInjectableClass());
+              dg.addEdge(requiredType, classInjectable.getType());
             }
 
             /*
@@ -62,10 +63,10 @@ public class DependencySorter {
              * not added to the store, only its annotated result class.
              */
 
-            Class<?> producerAnnotatedClass = annotatedClassByProducerClass.get(requiredKey.getType());
+            Type producerAnnotatedType = annotatedClassByProducerClass.get(requiredKey.getType());
 
-            if(producerAnnotatedClass != null) {
-              dg.addEdge(producerAnnotatedClass, classInjectable.getInjectableClass());
+            if(producerAnnotatedType != null) {
+              dg.addEdge(producerAnnotatedType, classInjectable.getType());
             }
           }
         }

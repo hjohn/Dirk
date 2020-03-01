@@ -31,7 +31,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
 
   @Override
   public void checkAddition(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers) {
-    ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
+    ensureSingularDependenciesHold(injectable.getType(), qualifiers);
 
     Map<AccessibleObject, Binding[]> bindings = injectable.getBindings();
 
@@ -58,7 +58,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
 
   @Override
   public void checkRemoval(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers) {
-    ensureSingularDependenciesHold(injectable.getInjectableClass(), qualifiers);
+    ensureSingularDependenciesHold(injectable.getType(), qualifiers);
   }
 
   @Override
@@ -144,7 +144,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
     Annotation injectableScopeAnnotation = injectable.getScope();
 
     if(isNarrowerScope(injectableScopeAnnotation, dependencyScopeAnnotation)) {
-      throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getInjectableClass());
+      throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getType());
     }
   }
 

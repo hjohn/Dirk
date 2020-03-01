@@ -62,14 +62,19 @@ public class InjectableStoreGenericsTest {
   }
 
   /**
-   * Tests that a store will not allow adding a class that has generic parameters.
+   * Tests that a store will not allow adding a class that has unresolved generic parameters.
    */
   @Test
-  public void shouldRejectTypesWithUnboundTypeParameters() {
+  public void shouldRejectGenericTypesWithTypeVariables() {
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("class java.util.ArrayList has type parameters [E]: Injection candidates with type parameters are not supported.");
+    thrown.expectMessage("class java.util.ArrayList has type variables [E]: Injection candidates with type variables are not supported.");
 
     store.put(ClassInjectable.of(ArrayList.class));
+  }
+
+  @Test
+  public void shouldAcceptGenericTypesWithoutTypeVariables() {
+    store.put(ClassInjectable.of(TypeUtils.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted
   }
 
   /**
