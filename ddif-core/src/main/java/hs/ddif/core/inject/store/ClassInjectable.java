@@ -262,7 +262,7 @@ public class ClassInjectable implements ResolvableInjectable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(injectableType);
+    return Objects.hash(injectableType, qualifiers);
   }
 
   @Override
@@ -274,7 +274,10 @@ public class ClassInjectable implements ResolvableInjectable {
       return false;
     }
 
-    return injectableType.equals(((ClassInjectable)obj).injectableType);
+    ClassInjectable other = (ClassInjectable)obj;
+
+    return injectableType.equals(other.injectableType)
+        && qualifiers.equals(other.qualifiers);
   }
 
   @Override
