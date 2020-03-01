@@ -46,9 +46,9 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
   }
 
   @Override
-  public Object getInstance(Instantiator instatiator, NamedParameter... namedParameters) throws BeanResolutionException {
+  public Object getInstance(Instantiator instantiator, NamedParameter... namedParameters) throws BeanResolutionException {
     try {
-      return provider == null ? ((Provider<?>)instatiator.getParameterizedInstance(classImplementingProvider, namedParameters)).get() : provider.get();
+      return provider == null ? ((Provider<?>)instantiator.getParameterizedInstance(classImplementingProvider, namedParameters, getQualifiers().toArray())).get() : provider.get();
     }
     catch(Exception e) {
       throw new BeanResolutionException(getType(), e);
@@ -66,7 +66,7 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(provider, getDescriptors(), classImplementingProvider);
+    return Objects.hash(provider, getQualifiers(), classImplementingProvider);
   }
 
   @Override
@@ -80,13 +80,13 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
 
     ProvidedInjectable other = (ProvidedInjectable)obj;
 
-    return getDescriptors().equals(other.getDescriptors())
+    return getQualifiers().equals(other.getQualifiers())
         && Objects.equals(provider, other.provider)
         && Objects.equals(classImplementingProvider, other.classImplementingProvider);
   }
 
   @Override
   public String toString() {
-    return "Injectable-Provider(" + getType() + " + " + getDescriptors() + ")";
+    return "Injectable-Provider(" + getType() + " + " + getQualifiers() + ")";
   }
 }

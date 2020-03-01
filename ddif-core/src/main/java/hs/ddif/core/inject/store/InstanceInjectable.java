@@ -35,7 +35,7 @@ public class InstanceInjectable extends AbstractResolvableInjectable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(instance, getDescriptors());
+    return Objects.hash(instance, getQualifiers());
   }
 
   @Override
@@ -50,11 +50,11 @@ public class InstanceInjectable extends AbstractResolvableInjectable {
     InstanceInjectable other = (InstanceInjectable)obj;
 
     return instance.equals(other.instance)
-        && getDescriptors().equals(other.getDescriptors());
+        && getQualifiers().equals(other.getQualifiers());
   }
 
   @Override
   public String toString() {
-    return "Injectable-Instance(" + instance.getClass() + " + " + getDescriptors() + ")";
+    return "Injectable-Instance(" + instance.getClass() + " + " + getQualifiers() + ")";
   }
 }
