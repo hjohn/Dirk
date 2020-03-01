@@ -1,8 +1,5 @@
 package hs.ddif.core.inject.store;
 
-import com.googlecode.gentyref.GenericTypeReflector;
-import com.googlecode.gentyref.TypeFactory;
-
 import hs.ddif.core.bind.Key;
 import hs.ddif.core.bind.Parameter;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
@@ -26,6 +23,9 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
+
+import io.leangen.geantyref.GenericTypeReflector;
+import io.leangen.geantyref.TypeFactory;
 
 public class ClassInjectableBindingProvider {
 
