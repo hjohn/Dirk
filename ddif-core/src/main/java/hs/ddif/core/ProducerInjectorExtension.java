@@ -50,10 +50,10 @@ public class ProducerInjectorExtension implements Injector.Extension {
       String[] names = validateProducerAndReturnParameterNames(injectable, producer);
 
       if(names.length == 0 && !Modifier.isAbstract(producer.value().getModifiers())) {
-        producerInjectable = ClassInjectable.of(producer.value());
+        producerInjectable = new ClassInjectable(producer.value());
       }
       else {
-        producerInjectable = ClassInjectable.of(new ByteBuddy()
+        producerInjectable = new ClassInjectable(new ByteBuddy()
           .subclass(producer.value())
           .annotateType(AnnotationDescription.Builder.ofType(Singleton.class).build())  // It is a singleton, avoids scope problems
           .method(ElementMatchers.returns((Class<?>)injectable.getType()).and(ElementMatchers.isAbstract()))

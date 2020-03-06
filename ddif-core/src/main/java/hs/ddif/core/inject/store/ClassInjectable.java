@@ -9,10 +9,8 @@ import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -33,7 +31,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 public class ClassInjectable implements ResolvableInjectable {
   private final Type injectableType;
   private final Map<AccessibleObject, Binding[]> externalBindings;
-  private final Map<AccessibleObject, ClassInjectableBinding[]> bindings;
+  private final Map<AccessibleObject, ResolvableBinding[]> bindings;
   private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
   private final PostConstructor postConstructor;
@@ -48,47 +46,27 @@ public class ClassInjectable implements ResolvableInjectable {
   private boolean underConstruction;
 
   /**
-   * Creates a new {@link ClassInjectable} from the given {@link Method}.  The
-   * resulting injectable could be used in an implementation of the method as
-   * its {@link #getInstance(Instantiator, NamedParameter...)} would match the
-   * return type of the method.
-   *
-   * @param method a {@link Method}, cannot be null
-   * @return a new {@link ClassInjectable}, never null
-   * @throws BindingException if the type indicated by the method return type is not annotated and has no public empty constructor or is incorrectly annotated
-   */
-  public static ClassInjectable of(Method method) {
-    return new ClassInjectable(method.getGenericReturnType(), method);
-  }
-
-  /**
    * Creates a new {@link ClassInjectable} from the given {@link Type}.
    *
    * @param type a {@link Type}, cannot be null
-   * @return a new {@link ClassInjectable}, never null
    * @throws BindingException if the given type is not annotated and has no public empty constructor or is incorrectly annotated
    */
-  public static ClassInjectable of(Type type) {
-    return new ClassInjectable(type, type instanceof AnnotatedElement ? (AnnotatedElement)type : null);
-  }
-
-  @SuppressWarnings("unchecked")
-  private ClassInjectable(Type injectableType, AnnotatedElement annotatedElement) {
-    if(injectableType == null) {
+  public ClassInjectable(Type type) {
+    if(type == null) {
       throw new IllegalArgumentException("injectableType cannot be null");
     }
 
-    Class<?> injectableClass = TypeUtils.getRawType(injectableType, null);
+    Class<?> injectableClass = TypeUtils.getRawType(type, null);
 
     if(Modifier.isAbstract(injectableClass.getModifiers())) {
-      throw new IllegalArgumentException("injectableType must be a concrete type: " + injectableType);
+      throw new IllegalArgumentException("injectableType must be a concrete type: " + type);
     }
 
-    this.injectableType = injectableType;
-    this.qualifiers = annotatedElement == null ? Collections.<AnnotationDescriptor>emptySet() : AnnotationExtractor.extractQualifiers(annotatedElement);
-    this.bindings = ClassInjectableBindingProvider.resolve(injectableClass);
+    this.injectableType = type;
+    this.qualifiers = AnnotationExtractor.extractQualifiers(injectableClass);
+    this.bindings = ResolvableBindingProvider.ofClass(injectableClass);
     this.externalBindings = (Map<AccessibleObject, Binding[]>)(Map<?, ?>)Collections.unmodifiableMap(bindings);
-    this.scopeAnnotation = annotatedElement == null ? null : AnnotationExtractor.findScopeAnnotation(annotatedElement);
+    this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(injectableClass);
     this.postConstructor = new PostConstructor(injectableClass);
 
     /*
@@ -97,7 +75,7 @@ public class ClassInjectable implements ResolvableInjectable {
 
     int constructorCount = 0;
 
-    for(Map.Entry<AccessibleObject, ClassInjectableBinding[]> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, ResolvableBinding[]> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         constructorCount++;
       }
@@ -128,8 +106,8 @@ public class ClassInjectable implements ResolvableInjectable {
     return parameterAnnotation != null && !parameterAnnotation.value().isEmpty() ? parameterAnnotation.value() : parameter.getName();
   }
 
-  private static Map.Entry<AccessibleObject, ClassInjectableBinding[]> findConstructorEntry(Map<AccessibleObject, ClassInjectableBinding[]> bindings) {
-    for(Map.Entry<AccessibleObject, ClassInjectableBinding[]> entry : bindings.entrySet()) {
+  private static Map.Entry<AccessibleObject, ResolvableBinding[]> findConstructorEntry(Map<AccessibleObject, ResolvableBinding[]> bindings) {
+    for(Map.Entry<AccessibleObject, ResolvableBinding[]> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         return entry;
       }
@@ -167,13 +145,13 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   private void injectInstance(Instantiator instantiator, Object bean, List<NamedParameter> namedParameters) {
-    for(Map.Entry<AccessibleObject, ClassInjectableBinding[]> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, ResolvableBinding[]> entry : bindings.entrySet()) {
       try {
         AccessibleObject accessibleObject = entry.getKey();
 
         if(accessibleObject instanceof Field) {
           Field field = (Field)accessibleObject;
-          ClassInjectableBinding binding = entry.getValue()[0];
+          ResolvableBinding binding = entry.getValue()[0];
 
           Object valueToSet;
 
@@ -210,13 +188,13 @@ public class ClassInjectable implements ResolvableInjectable {
 
   private Object constructInstance(Instantiator instantiator, List<NamedParameter> namedParameters) {
     try {
-      Map.Entry<AccessibleObject, ClassInjectableBinding[]> constructorEntry = findConstructorEntry(bindings);
+      Map.Entry<AccessibleObject, ResolvableBinding[]> constructorEntry = findConstructorEntry(bindings);
       Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
       java.lang.reflect.Parameter[] parameters = constructor.getParameters();
       Object[] values = new Object[constructorEntry.getValue().length];  // Parameters for constructor
 
       for(int i = 0; i < values.length; i++) {
-        ClassInjectableBinding binding = constructorEntry.getValue()[i];
+        ResolvableBinding binding = constructorEntry.getValue()[i];
 
         if(binding.isParameter()) {
           String name = determineParameterName(parameters[i]);

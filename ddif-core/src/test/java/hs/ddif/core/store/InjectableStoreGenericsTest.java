@@ -32,7 +32,7 @@ public class InjectableStoreGenericsTest {
    */
   @Test
   public void shouldResolveToStringWhenUsingGenerics() {
-    store.put(ClassInjectable.of(String.class));   // String extends Object implements CharSequence, Serializable, Comparable<String>
+    store.put(new ClassInjectable(String.class));   // String extends Object implements CharSequence, Serializable, Comparable<String>
     store.put(new InstanceInjectable(Integer.MAX_VALUE));  // Integer extends Number implements Serializable, Comparable<Integer>
 
     // Resolvables
@@ -69,12 +69,12 @@ public class InjectableStoreGenericsTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("class java.util.ArrayList has type variables [E]: Injection candidates with type variables are not supported.");
 
-    store.put(ClassInjectable.of(ArrayList.class));
+    store.put(new ClassInjectable(ArrayList.class));
   }
 
   @Test
   public void shouldAcceptGenericTypesWithoutTypeVariables() {
-    store.put(ClassInjectable.of(TypeUtils.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted
+    store.put(new ClassInjectable(TypeUtils.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted
   }
 
   /**
@@ -83,8 +83,8 @@ public class InjectableStoreGenericsTest {
    */
   @Test
   public void shouldResolveInjectablesWithMultipleGenericParameters() {
-    store.put(ClassInjectable.of(OrangeToOrangeJuiceConverter.class));
-    store.put(ClassInjectable.of(AppleToSlicedAppleConverter.class));
+    store.put(new ClassInjectable(OrangeToOrangeJuiceConverter.class));
+    store.put(new ClassInjectable(AppleToSlicedAppleConverter.class));
 
     assertTrue(store.resolve(OrangeToOrangeJuiceConverter.class).size() == 1);
     assertTrue(store.resolve(new TypeReference<Converter<? extends Fruit, ? extends Juice<?>>>() {}.getType()).size() == 1);

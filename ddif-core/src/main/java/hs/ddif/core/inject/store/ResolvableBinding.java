@@ -4,7 +4,7 @@ import hs.ddif.core.bind.Binding;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.Instantiator;
 
-public interface ClassInjectableBinding extends Binding {
+public interface ResolvableBinding extends Binding {
 
   /**
    * Returns the current value of this binding.<p>

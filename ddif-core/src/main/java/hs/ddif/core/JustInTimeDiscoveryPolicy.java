@@ -31,7 +31,7 @@ public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy<ResolvableInje
     Class<?> typeClass = TypeUtils.determineClassFromType(type);
 
     if(!Modifier.isAbstract(typeClass.getModifiers())) {
-      injectableStore.put(ClassInjectable.of(type));
+      injectableStore.put(new ClassInjectable(type));
     }
   }
 }

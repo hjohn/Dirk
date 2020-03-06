@@ -137,7 +137,7 @@ public class PluginManager {
     private void putInStore(InjectableStore<Injectable> store, Class<?> cls) {
       if(!store.contains(cls)) {
         try {
-          ClassInjectable classInjectable = ClassInjectable.of(cls);
+          ClassInjectable classInjectable = new ClassInjectable(cls);
 
           store.put(classInjectable);
           classInjectables.add(classInjectable);

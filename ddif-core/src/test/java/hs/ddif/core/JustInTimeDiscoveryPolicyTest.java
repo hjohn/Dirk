@@ -68,7 +68,7 @@ public class JustInTimeDiscoveryPolicyTest {
 
   @Test(expected = BindingException.class)
   public void shouldThrowBindingExceptionWhenAddingClassWithoutConstructorMatch() {
-    store.put(ClassInjectable.of(SampleWithoutConstructorMatch.class));
+    store.put(new ClassInjectable(SampleWithoutConstructorMatch.class));
   }
 
   @Test

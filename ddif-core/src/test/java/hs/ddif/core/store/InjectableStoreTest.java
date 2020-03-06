@@ -49,7 +49,7 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldStore() {
-    ClassInjectable injectable = ClassInjectable.of(BeanWithBigRedInjection.class);
+    ClassInjectable injectable = new ClassInjectable(BeanWithBigRedInjection.class);
 
     store.put(injectable);
 
@@ -61,7 +61,7 @@ public class InjectableStoreTest {
       }
     }
 
-    injectable = ClassInjectable.of(BigRedBean.class);
+    injectable = new ClassInjectable(BigRedBean.class);
 
     store.put(injectable);
 
@@ -201,19 +201,19 @@ public class InjectableStoreTest {
 
   @Test(expected = DuplicateBeanException.class)
   public void putShouldRejectDuplicateBeans() {
-    store.put(ClassInjectable.of(A.class));
-    store.put(ClassInjectable.of(A.class));
+    store.put(new ClassInjectable(A.class));
+    store.put(new ClassInjectable(A.class));
   }
 
   @Test(expected = DuplicateBeanException.class)
   public void putAllShouldRejectDuplicateBeans() {
-    store.putAll(List.of(ClassInjectable.of(A.class), ClassInjectable.of(A.class)));
+    store.putAll(List.of(new ClassInjectable(A.class), new ClassInjectable(A.class)));
   }
 
   @Test(expected = DuplicateBeanException.class)
   public void putAllShouldRejectDuplicateBeansWhenOnePresentAlready() {
-    store.put(ClassInjectable.of(A.class));
-    store.putAll(List.of(ClassInjectable.of(B.class), ClassInjectable.of(A.class)));
+    store.put(new ClassInjectable(A.class));
+    store.putAll(List.of(new ClassInjectable(B.class), new ClassInjectable(A.class)));
   }
 
   @Big @Red

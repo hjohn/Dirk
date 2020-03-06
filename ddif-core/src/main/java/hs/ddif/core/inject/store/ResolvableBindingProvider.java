@@ -10,6 +10,7 @@ import hs.ddif.core.util.TypeUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -27,11 +28,11 @@ import javax.inject.Qualifier;
 import io.leangen.geantyref.GenericTypeReflector;
 import io.leangen.geantyref.TypeFactory;
 
-public class ClassInjectableBindingProvider {
+public class ResolvableBindingProvider {
 
   // Binding array is returned because a constructor has 0 or more bindings, although fields always only have a single binding
-  public static Map<AccessibleObject, ClassInjectableBinding[]> resolve(Class<?> injectableClass) {
-    Map<AccessibleObject, ClassInjectableBinding[]> bindings = new HashMap<>();
+  public static Map<AccessibleObject, ResolvableBinding[]> ofClass(Class<?> injectableClass) {
+    Map<AccessibleObject, ResolvableBinding[]> bindings = new HashMap<>();
     Class<?> currentInjectableClass = injectableClass;
 
     while(currentInjectableClass != null) {
@@ -41,7 +42,7 @@ public class ClassInjectableBindingProvider {
         if(inject != null) {
           Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
 
-          bindings.put(field, new ClassInjectableBinding[] {createBinding(type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))});
+          bindings.put(field, new ResolvableBinding[] {createBinding(type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))});
         }
       }
 
@@ -62,12 +63,12 @@ public class ClassInjectableBindingProvider {
 
       if(inject != null) {
         foundInjectableConstructor = true;
-        bindings.put(constructor, createConstructorBinding(constructor));
+        bindings.put(constructor, ofExecutable(constructor));
       }
     }
 
     if(!foundInjectableConstructor && emptyConstructor != null) {
-      bindings.put(emptyConstructor, createConstructorBinding(emptyConstructor));
+      bindings.put(emptyConstructor, ofExecutable(emptyConstructor));
     }
 
     for(AccessibleObject accessibleObject : bindings.keySet()) {
@@ -77,28 +78,28 @@ public class ClassInjectableBindingProvider {
     return bindings;
   }
 
-  private static ClassInjectableBinding[] createConstructorBinding(Constructor<?> constructor) {
-    Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
-    java.lang.reflect.Parameter[] parameters = constructor.getParameters();
-    Type[] genericParameterTypes = constructor.getGenericParameterTypes();
-    List<ClassInjectableBinding> constructorBindings = new ArrayList<>();
+  public static ResolvableBinding[] ofExecutable(Executable executable) {
+    Annotation[][] parameterAnnotations = executable.getParameterAnnotations();
+    java.lang.reflect.Parameter[] parameters = executable.getParameters();
+    Type[] genericParameterTypes = executable.getGenericParameterTypes();
+    List<ResolvableBinding> bindings = new ArrayList<>();
 
     for(int i = 0; i < genericParameterTypes.length; i++) {
       Type type = genericParameterTypes[i];
       AnnotationDescriptor[] qualifiers = extractQualifiers(parameterAnnotations[i]);
-      ClassInjectableBinding binding = createBinding(type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, qualifiers);
+      ResolvableBinding binding = createBinding(type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, qualifiers);
 
-      constructorBindings.add(binding);
+      bindings.add(binding);
     }
 
-    return constructorBindings.toArray(new ClassInjectableBinding[constructorBindings.size()]);
+    return bindings.toArray(new ResolvableBinding[bindings.size()]);
   }
 
-  private static ClassInjectableBinding createBinding(Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
+  private static ResolvableBinding createBinding(Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
     return createBinding(false, type, optional, isParameter, qualifiers);
   }
 
-  private static ClassInjectableBinding createBinding(boolean isProviderAlready, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
+  private static ResolvableBinding createBinding(boolean isProviderAlready, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
     final Class<?> cls = TypeUtils.determineClassFromType(type);
 
     if(!isParameter) {
@@ -157,7 +158,7 @@ public class ClassInjectableBindingProvider {
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(double.class, Double.class);
   }
 
-  private static final class HashSetBinding implements ClassInjectableBinding {
+  private static final class HashSetBinding implements ResolvableBinding {
     private final AnnotationDescriptor[] qualifiers;
     private final Type elementType;
     private final boolean optional;
@@ -196,7 +197,7 @@ public class ClassInjectableBindingProvider {
     }
   }
 
-  private static final class ArrayListBinding implements ClassInjectableBinding {
+  private static final class ArrayListBinding implements ResolvableBinding {
     private final Type elementType;
     private final AnnotationDescriptor[] qualifiers;
     private final boolean optional;
@@ -235,10 +236,10 @@ public class ClassInjectableBindingProvider {
     }
   }
 
-  private static final class ProviderBinding implements ClassInjectableBinding {
-    private final ClassInjectableBinding binding;
+  private static final class ProviderBinding implements ResolvableBinding {
+    private final ResolvableBinding binding;
 
-    private ProviderBinding(ClassInjectableBinding binding) {
+    private ProviderBinding(ResolvableBinding binding) {
       this.binding = binding;
     }
 
@@ -261,7 +262,7 @@ public class ClassInjectableBindingProvider {
         // Ignore, create Provider on demand below
       }
 
-      return new Provider<Object>() {
+      return new Provider<>() {
         @Override
         public Object get() {
           try {
@@ -300,7 +301,7 @@ public class ClassInjectableBindingProvider {
     }
   }
 
-  private static final class DirectBinding implements ClassInjectableBinding {
+  private static final class DirectBinding implements ResolvableBinding {
     private final Key key;
     private final boolean optional;
     private final boolean isParameter;
