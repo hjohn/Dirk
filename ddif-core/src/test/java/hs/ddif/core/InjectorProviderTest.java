@@ -36,7 +36,7 @@ public class InjectorProviderTest {
 
   @Test
   public void getInstanceShouldReturnInjectedProviderClass() throws BeanResolutionException {
-    Provider<Connection> anonymousProvider = new Provider<Connection>() {
+    Provider<Connection> anonymousProvider = new Provider<>() {
       @Override
       public Connection get() {
         return null;
@@ -321,7 +321,7 @@ public class InjectorProviderTest {
 
     @Override
     public Provider<Provider<Database>> get() {
-      return new Provider<Provider<Database>>() {
+      return new Provider<>() {
         @Override
         public Provider<Database> get() {
           return new SimpleDatabaseProvider();

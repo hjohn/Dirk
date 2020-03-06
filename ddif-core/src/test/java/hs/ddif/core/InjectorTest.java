@@ -292,7 +292,7 @@ public class InjectorTest {
 
   @Test
   public void shouldBeAbleToRemoveProviderWhichIsOnlyOptionallyDependedOn() throws BeanResolutionException {
-    Provider<UnavailableBean> provider = new Provider<UnavailableBean>() {
+    Provider<UnavailableBean> provider = new Provider<>() {
       @Override
       public UnavailableBean get() {
         return new UnavailableBean();
@@ -585,7 +585,7 @@ public class InjectorTest {
 
   @Test
   public void shouldRemoveProvider() {
-    Provider<String> provider = new Provider<String>() {
+    Provider<String> provider = new Provider<>() {
       @Override
       public String get() {
         return "a string";
