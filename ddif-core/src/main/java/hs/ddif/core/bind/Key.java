@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class Key {
@@ -66,11 +67,7 @@ public class Key {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + qualifiers.hashCode();
-    result = prime * result + type.hashCode();
-    return result;
+    return Objects.hash(type, qualifiers);
   }
 
   @Override
@@ -84,20 +81,10 @@ public class Key {
 
     Key other = (Key)obj;
 
-    if(qualifiers == null) {
-      if(other.qualifiers != null) {
-        return false;
-      }
-    }
-    else if(!qualifiers.equals(other.qualifiers)) {
+    if(!qualifiers.equals(other.qualifiers)) {
       return false;
     }
-    if(type == null) {
-      if(other.type != null) {
-        return false;
-      }
-    }
-    else if(!type.equals(other.type)) {
+    if(!type.equals(other.type)) {
       return false;
     }
 

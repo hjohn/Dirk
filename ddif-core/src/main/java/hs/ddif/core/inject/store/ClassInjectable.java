@@ -6,7 +6,6 @@ import hs.ddif.core.bind.Parameter;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
-import hs.ddif.core.util.AnnotationUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -19,14 +18,12 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Qualifier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -88,10 +85,10 @@ public class ClassInjectable implements ResolvableInjectable {
     }
 
     this.injectableType = injectableType;
-    this.qualifiers = annotatedElement == null ? Collections.<AnnotationDescriptor>emptySet() : extractQualifiers(annotatedElement);
+    this.qualifiers = annotatedElement == null ? Collections.<AnnotationDescriptor>emptySet() : AnnotationExtractor.extractQualifiers(annotatedElement);
     this.bindings = ClassInjectableBindingProvider.resolve(injectableClass);
     this.externalBindings = (Map<AccessibleObject, Binding[]>)(Map<?, ?>)Collections.unmodifiableMap(bindings);
-    this.scopeAnnotation = annotatedElement == null ? null : findScopeAnnotation(annotatedElement);
+    this.scopeAnnotation = annotatedElement == null ? null : AnnotationExtractor.findScopeAnnotation(annotatedElement);
     this.postConstructor = new PostConstructor(injectableClass);
 
     /*
@@ -245,16 +242,6 @@ public class ClassInjectable implements ResolvableInjectable {
     }
   }
 
-  private static Annotation findScopeAnnotation(AnnotatedElement element) {
-    List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(element, javax.inject.Scope.class);
-
-    if(matchingAnnotations.size() > 1) {
-      throw new BindingException("Multiple scope annotations found, but only one allowed: " + element + ", found: " + matchingAnnotations);
-    }
-
-    return matchingAnnotations.isEmpty() ? null : matchingAnnotations.get(0);
-  }
-
   @Override
   public Map<AccessibleObject, Binding[]> getBindings() {
     return externalBindings;
@@ -303,21 +290,5 @@ public class ClassInjectable implements ResolvableInjectable {
   @Override
   public String toString() {
     return "Injectable-Class(" + injectableType + ")";
-  }
-
-  private static Set<AnnotationDescriptor> extractQualifiers(AnnotatedElement element) {
-    return extractQualifiers(element.getAnnotations());
-  }
-
-  private static Set<AnnotationDescriptor> extractQualifiers(Annotation[] annotations) {
-    Set<AnnotationDescriptor> qualifiers = new HashSet<>();
-
-    for(Annotation annotation : annotations) {
-      if(annotation.annotationType().getAnnotation(Qualifier.class) != null) {
-        qualifiers.add(new AnnotationDescriptor(annotation));
-      }
-    }
-
-    return qualifiers;
   }
 }
