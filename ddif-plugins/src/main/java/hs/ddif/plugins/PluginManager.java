@@ -146,7 +146,7 @@ public class PluginManager {
            * Self discovery of other injectables
            */
 
-          for(Binding[] bindings : classInjectable.getBindings().values()) {
+          for(List<Binding> bindings : classInjectable.getBindings().values()) {
             for(Binding binding : bindings) {
               if(!binding.isProvider()) {
                 Key key = binding.getRequiredKey();

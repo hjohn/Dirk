@@ -154,16 +154,16 @@ public class ProducerInjectorExtension implements Injector.Extension {
 
   private static Map<String, Type> createBindingNameMap(ResolvableInjectable injectable) {
     Class<?> injectableClass = (Class<?>)injectable.getType();
-    Map<AccessibleObject, Binding[]> bindings = injectable.getBindings();
+    Map<AccessibleObject, List<Binding>> bindings = injectable.getBindings();
     Map<String, Type> parameterBindings = new HashMap<>();
 
-    for(Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
+    for(Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
       Constructor<?> constructor = entry.getKey() instanceof Constructor ? (Constructor<?>)entry.getKey() : null;
       java.lang.reflect.Parameter[] parameters = constructor == null ? null : constructor.getParameters();
-      Binding[] value = entry.getValue();
+      List<Binding> value = entry.getValue();
 
-      for(int i = 0; i < value.length; i++) {
-        Binding binding = value[i];
+      for(int i = 0; i < value.size(); i++) {
+        Binding binding = value.get(i);
 
         if(binding.isParameter()) {
           String name = parameters == null ? ((Field)entry.getKey()).getName() : determineParameterName(parameters[i]);

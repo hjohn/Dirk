@@ -11,6 +11,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -21,8 +22,8 @@ import java.util.Set;
 public class MethodInjectable implements ResolvableInjectable {
   private final Method method;
   private final Type injectableType;
-  private final Map<AccessibleObject, Binding[]> externalBindings;
-  private final ResolvableBinding[] bindings;
+  private final Map<AccessibleObject, List<Binding>> externalBindings;
+  private final List<ResolvableBinding> bindings;
   private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
 
@@ -45,7 +46,11 @@ public class MethodInjectable implements ResolvableInjectable {
     this.qualifiers = AnnotationExtractor.extractQualifiers(method);
     this.bindings = ResolvableBindingProvider.ofExecutable(method);
     this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(method);
-    this.externalBindings = Map.of(method, bindings);
+
+    @SuppressWarnings("unchecked")
+    Map<AccessibleObject, List<Binding>> externalBindings = Map.of(method, (List<Binding>)(List<?>)bindings);
+
+    this.externalBindings = externalBindings;
   }
 
   @Override
@@ -60,10 +65,10 @@ public class MethodInjectable implements ResolvableInjectable {
   private Object constructInstance(Instantiator instantiator) {
     try {
       Object obj = instantiator.getInstance(method.getDeclaringClass());
-      Object[] values = new Object[bindings.length];  // Parameters for method
+      Object[] values = new Object[bindings.size()];  // Parameters for method
 
       for(int i = 0; i < values.length; i++) {
-        values[i] = bindings[i].getValue(instantiator);
+        values[i] = bindings.get(i).getValue(instantiator);
       }
 
       method.setAccessible(true);
@@ -76,7 +81,7 @@ public class MethodInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Map<AccessibleObject, Binding[]> getBindings() {
+  public Map<AccessibleObject, List<Binding>> getBindings() {
     return externalBindings;
   }
 

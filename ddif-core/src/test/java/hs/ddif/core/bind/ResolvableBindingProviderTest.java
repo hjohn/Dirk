@@ -6,6 +6,7 @@ import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.reflect.AccessibleObject;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,33 +33,33 @@ public class ResolvableBindingProviderTest {
 
   @Test
   public void resolveForClassShouldBindToGenericFieldInSubclass() throws NoSuchFieldException, SecurityException {
-    Map<AccessibleObject, ResolvableBinding[]> map = ResolvableBindingProvider.ofClass(Subclass.class);
+    Map<AccessibleObject, List<ResolvableBinding>> map = ResolvableBindingProvider.ofClass(Subclass.class);
 
     assertEquals(2, map.size());
 
     {
-      Binding[] bindings = map.get(ClassWithGenericFields.class.getDeclaredField("fieldA"));
+      List<ResolvableBinding> bindings = map.get(ClassWithGenericFields.class.getDeclaredField("fieldA"));
 
-      assertEquals(1, bindings.length);
-      assertEquals(String.class, bindings[0].getRequiredKey().getType());
+      assertEquals(1, bindings.size());
+      assertEquals(String.class, bindings.get(0).getRequiredKey().getType());
     }
 
     {
-      Binding[] bindings = map.get(ClassWithGenericFields.class.getDeclaredField("fieldB"));
+      List<ResolvableBinding> bindings = map.get(ClassWithGenericFields.class.getDeclaredField("fieldB"));
 
-      assertEquals(1, bindings.length);
-      assertEquals(Integer.class, bindings[0].getRequiredKey().getType());
+      assertEquals(1, bindings.size());
+      assertEquals(Integer.class, bindings.get(0).getRequiredKey().getType());
     }
   }
 
   @Test
   public void resolveForMethodShouldCreateCorrectBindings() throws NoSuchMethodException, SecurityException {
-    ResolvableBinding[] bindings = ResolvableBindingProvider.ofExecutable(Subclass.class.getDeclaredMethod("create", Integer.class, Double.class));
+    List<ResolvableBinding> bindings = ResolvableBindingProvider.ofExecutable(Subclass.class.getDeclaredMethod("create", Integer.class, Double.class));
 
-    assertEquals(2, bindings.length);
-    assertEquals(Integer.class, bindings[0].getRequiredKey().getType());
-    assertEquals(Double.class, bindings[1].getRequiredKey().getType());
-    assertEquals(Set.of(AnnotationDescriptor.describe(Big.class)), bindings[0].getRequiredKey().getQualifiers());
-    assertEquals(Set.of(), bindings[1].getRequiredKey().getQualifiers());
+    assertEquals(2, bindings.size());
+    assertEquals(Integer.class, bindings.get(0).getRequiredKey().getType());
+    assertEquals(Double.class, bindings.get(1).getRequiredKey().getType());
+    assertEquals(Set.of(AnnotationDescriptor.describe(Big.class)), bindings.get(0).getRequiredKey().getQualifiers());
+    assertEquals(Set.of(), bindings.get(1).getRequiredKey().getQualifiers());
   }
 }

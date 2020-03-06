@@ -1,13 +1,11 @@
 package hs.ddif.core;
 
-import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.store.AbstractResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Objects;
@@ -29,7 +27,7 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
   }
 
   private ProvidedInjectable(Class<?> classImplementingProvider, Provider<?> provider, AnnotationDescriptor... descriptors) {
-    super(Collections.<AccessibleObject, Binding[]>emptyMap(), null, determineProvidedClass(classImplementingProvider), true, descriptors);
+    super(Collections.emptyMap(), null, determineProvidedClass(classImplementingProvider), true, descriptors);
 
     this.classImplementingProvider = classImplementingProvider;
     this.provider = provider;

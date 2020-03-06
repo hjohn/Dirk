@@ -53,9 +53,9 @@ public class InjectableStoreTest {
 
     store.put(injectable);
 
-    for(Map.Entry<AccessibleObject, Binding[]> entry : injectable.getBindings().entrySet()) {
+    for(Map.Entry<AccessibleObject, List<Binding>> entry : injectable.getBindings().entrySet()) {
       if(!(entry.getKey() instanceof Constructor)) {
-        Key requiredKey = entry.getValue()[0].getRequiredKey();
+        Key requiredKey = entry.getValue().get(0).getRequiredKey();
 
         assertThat(store.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray()), empty());
       }
@@ -65,9 +65,9 @@ public class InjectableStoreTest {
 
     store.put(injectable);
 
-    for(Map.Entry<AccessibleObject, Binding[]> entry : injectable.getBindings().entrySet()) {
+    for(Map.Entry<AccessibleObject, List<Binding>> entry : injectable.getBindings().entrySet()) {
       if(!(entry.getKey() instanceof Constructor)) {
-        assertThat(store.resolve(entry.getValue()[0].getRequiredKey().getType()), hasSize(1));
+        assertThat(store.resolve(entry.getValue().get(0).getRequiredKey().getType()), hasSize(1));
       }
     }
   }

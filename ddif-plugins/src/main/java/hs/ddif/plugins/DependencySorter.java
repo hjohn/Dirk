@@ -40,7 +40,7 @@ public class DependencySorter {
     }
 
     for(ClassInjectable classInjectable : classInjectables) {
-      for(Binding[] bindings : classInjectable.getBindings().values()) {
+      for(List<Binding> bindings : classInjectable.getBindings().values()) {
         for(Binding binding : bindings) {
           Key requiredKey = binding.getRequiredKey();
 

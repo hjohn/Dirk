@@ -9,17 +9,18 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public abstract class AbstractResolvableInjectable implements ResolvableInjectable {
-  private final Map<AccessibleObject, Binding[]> bindings;
+  private final Map<AccessibleObject, List<Binding>> bindings;
   private final Annotation scope;
   private final Type injectableType;
   private final Set<AnnotationDescriptor> descriptors;
   private final boolean isTemplate;
 
-  protected AbstractResolvableInjectable(Map<AccessibleObject, Binding[]> bindings, Annotation scope, Type injectableType, boolean isTemplate, Set<AnnotationDescriptor> descriptors) {
+  protected AbstractResolvableInjectable(Map<AccessibleObject, List<Binding>> bindings, Annotation scope, Type injectableType, boolean isTemplate, Set<AnnotationDescriptor> descriptors) {
     if(bindings == null) {
       throw new IllegalArgumentException("bindings cannot be null");
     }
@@ -34,12 +35,12 @@ public abstract class AbstractResolvableInjectable implements ResolvableInjectab
     this.descriptors = descriptors;
   }
 
-  protected AbstractResolvableInjectable(Map<AccessibleObject, Binding[]> bindings, Annotation scope, Class<?> injectableClass, boolean isTemplate, AnnotationDescriptor... descriptors) {
+  protected AbstractResolvableInjectable(Map<AccessibleObject, List<Binding>> bindings, Annotation scope, Class<?> injectableClass, boolean isTemplate, AnnotationDescriptor... descriptors) {
     this(bindings, scope, injectableClass, isTemplate, new HashSet<>(Arrays.asList(descriptors)));
   }
 
   @Override
-  public final Map<AccessibleObject, Binding[]> getBindings() {
+  public final Map<AccessibleObject, List<Binding>> getBindings() {
     return bindings;
   }
 

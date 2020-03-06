@@ -15,7 +15,6 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,8 +29,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  */
 public class ClassInjectable implements ResolvableInjectable {
   private final Type injectableType;
-  private final Map<AccessibleObject, Binding[]> externalBindings;
-  private final Map<AccessibleObject, ResolvableBinding[]> bindings;
+  private final Map<AccessibleObject, List<ResolvableBinding>> bindings;
   private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
   private final PostConstructor postConstructor;
@@ -65,7 +63,6 @@ public class ClassInjectable implements ResolvableInjectable {
     this.injectableType = type;
     this.qualifiers = AnnotationExtractor.extractQualifiers(injectableClass);
     this.bindings = ResolvableBindingProvider.ofClass(injectableClass);
-    this.externalBindings = (Map<AccessibleObject, Binding[]>)(Map<?, ?>)Collections.unmodifiableMap(bindings);
     this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(injectableClass);
     this.postConstructor = new PostConstructor(injectableClass);
 
@@ -75,7 +72,7 @@ public class ClassInjectable implements ResolvableInjectable {
 
     int constructorCount = 0;
 
-    for(Map.Entry<AccessibleObject, ResolvableBinding[]> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, List<ResolvableBinding>> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         constructorCount++;
       }
@@ -106,8 +103,8 @@ public class ClassInjectable implements ResolvableInjectable {
     return parameterAnnotation != null && !parameterAnnotation.value().isEmpty() ? parameterAnnotation.value() : parameter.getName();
   }
 
-  private static Map.Entry<AccessibleObject, ResolvableBinding[]> findConstructorEntry(Map<AccessibleObject, ResolvableBinding[]> bindings) {
-    for(Map.Entry<AccessibleObject, ResolvableBinding[]> entry : bindings.entrySet()) {
+  private static Map.Entry<AccessibleObject, List<ResolvableBinding>> findConstructorEntry(Map<AccessibleObject, List<ResolvableBinding>> bindings) {
+    for(Map.Entry<AccessibleObject, List<ResolvableBinding>> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         return entry;
       }
@@ -145,13 +142,13 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   private void injectInstance(Instantiator instantiator, Object bean, List<NamedParameter> namedParameters) {
-    for(Map.Entry<AccessibleObject, ResolvableBinding[]> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, List<ResolvableBinding>> entry : bindings.entrySet()) {
       try {
         AccessibleObject accessibleObject = entry.getKey();
 
         if(accessibleObject instanceof Field) {
           Field field = (Field)accessibleObject;
-          ResolvableBinding binding = entry.getValue()[0];
+          ResolvableBinding binding = entry.getValue().get(0);
 
           Object valueToSet;
 
@@ -188,13 +185,13 @@ public class ClassInjectable implements ResolvableInjectable {
 
   private Object constructInstance(Instantiator instantiator, List<NamedParameter> namedParameters) {
     try {
-      Map.Entry<AccessibleObject, ResolvableBinding[]> constructorEntry = findConstructorEntry(bindings);
+      Map.Entry<AccessibleObject, List<ResolvableBinding>> constructorEntry = findConstructorEntry(bindings);
       Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
       java.lang.reflect.Parameter[] parameters = constructor.getParameters();
-      Object[] values = new Object[constructorEntry.getValue().length];  // Parameters for constructor
+      Object[] values = new Object[constructorEntry.getValue().size()];  // Parameters for constructor
 
       for(int i = 0; i < values.length; i++) {
-        ResolvableBinding binding = constructorEntry.getValue()[i];
+        ResolvableBinding binding = constructorEntry.getValue().get(i);
 
         if(binding.isParameter()) {
           String name = determineParameterName(parameters[i]);
@@ -220,9 +217,10 @@ public class ClassInjectable implements ResolvableInjectable {
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public Map<AccessibleObject, Binding[]> getBindings() {
-    return externalBindings;
+  public Map<AccessibleObject, List<Binding>> getBindings() {
+    return (Map<AccessibleObject, List<Binding>>)(Map<?, ?>)bindings;
   }
 
   @Override

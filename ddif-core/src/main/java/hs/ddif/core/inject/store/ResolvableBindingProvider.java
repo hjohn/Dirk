@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,9 +31,15 @@ import io.leangen.geantyref.TypeFactory;
 
 public class ResolvableBindingProvider {
 
-  // Binding array is returned because a constructor has 0 or more bindings, although fields always only have a single binding
-  public static Map<AccessibleObject, ResolvableBinding[]> ofClass(Class<?> injectableClass) {
-    Map<AccessibleObject, ResolvableBinding[]> bindings = new HashMap<>();
+  /**
+   * Returns all bindings for the given class.  Bindings are grouped by {@link AccessibleObject}
+   * (fields, methods, constructors).  Fields only ever have a single binding.
+   *
+   * @param injectableClass a {@link Class} to examine for bindings, cannot be null
+   * @return an immutable map of bindings, never null and never contains nulls, but can be empty
+   */
+  public static Map<AccessibleObject, List<ResolvableBinding>> ofClass(Class<?> injectableClass) {
+    Map<AccessibleObject, List<ResolvableBinding>> bindings = new HashMap<>();
     Class<?> currentInjectableClass = injectableClass;
 
     while(currentInjectableClass != null) {
@@ -42,7 +49,7 @@ public class ResolvableBindingProvider {
         if(inject != null) {
           Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
 
-          bindings.put(field, new ResolvableBinding[] {createBinding(type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))});
+          bindings.put(field, List.of(createBinding(type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))));
         }
       }
 
@@ -75,10 +82,16 @@ public class ResolvableBindingProvider {
       accessibleObject.setAccessible(true);
     }
 
-    return bindings;
+    return Collections.unmodifiableMap(bindings);
   }
 
-  public static ResolvableBinding[] ofExecutable(Executable executable) {
+  /**
+   * Returns all bindings for the given {@link Executable} (method or constructor).
+   *
+   * @param executable a {@link Executable} to examine for bindings, cannot be null
+   * @return an immutable list of bindings, never null and never contains nulls, but can be empty
+   */
+  public static List<ResolvableBinding> ofExecutable(Executable executable) {
     Annotation[][] parameterAnnotations = executable.getParameterAnnotations();
     java.lang.reflect.Parameter[] parameters = executable.getParameters();
     Type[] genericParameterTypes = executable.getGenericParameterTypes();
@@ -92,7 +105,7 @@ public class ResolvableBindingProvider {
       bindings.add(binding);
     }
 
-    return bindings.toArray(new ResolvableBinding[bindings.size()]);
+    return Collections.unmodifiableList(bindings);
   }
 
   private static ResolvableBinding createBinding(Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {

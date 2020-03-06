@@ -161,13 +161,13 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
   private void checkAddition(Resolver<T> resolver, T injectable, Map<Key, Integer> referenceCounterAdjustments) {
     ensureSingularDependenciesHold(injectable.getType(), injectable.getQualifiers(), referenceCounterAdjustments);
 
-    Map<AccessibleObject, Binding[]> bindings = injectable.getBindings();
+    Map<AccessibleObject, List<Binding>> bindings = injectable.getBindings();
 
     /*
      * Check the created bindings for unresolved or ambigious dependencies and scope problems:
      */
 
-    for(Map.Entry<AccessibleObject, Binding[]> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
       for(Binding binding : entry.getValue()) {
         Key requiredKey = binding.getRequiredKey();
 
@@ -201,7 +201,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
   }
 
   private static void increaseReferenceCounters(ScopedInjectable injectable, Map<Key, Integer> referenceCounters) {
-    for(Binding[] bindings : injectable.getBindings().values()) {
+    for(List<Binding> bindings : injectable.getBindings().values()) {
       for(Binding binding : bindings) {
         Key requiredKey = binding.getRequiredKey();
 
@@ -213,7 +213,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
   }
 
   private static void decreaseReferenceCounters(ScopedInjectable injectable, Map<Key, Integer> referenceCounters, boolean allowNegativeReferenceCount) {
-    for(Binding[] bindings : injectable.getBindings().values()) {
+    for(List<Binding> bindings : injectable.getBindings().values()) {
       for(Binding binding : bindings) {
         Key requiredKey = binding.getRequiredKey();
 

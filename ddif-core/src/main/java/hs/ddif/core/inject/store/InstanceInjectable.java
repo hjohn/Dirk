@@ -1,11 +1,9 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.util.AnnotationDescriptor;
 
-import java.lang.reflect.AccessibleObject;
 import java.util.Collections;
 import java.util.Objects;
 
@@ -13,7 +11,7 @@ public class InstanceInjectable extends AbstractResolvableInjectable {
   private final Object instance;
 
   public InstanceInjectable(Object instance, AnnotationDescriptor... descriptors) {
-    super(Collections.<AccessibleObject, Binding[]>emptyMap(), null, instance.getClass(), false, descriptors);
+    super(Collections.emptyMap(), null, instance.getClass(), false, descriptors);
 
     this.instance = instance;
   }
