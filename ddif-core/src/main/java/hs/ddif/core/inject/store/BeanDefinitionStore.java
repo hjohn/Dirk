@@ -20,14 +20,12 @@ public class BeanDefinitionStore {
   public interface Extension {
 
     /**
-     * Gets another {@link ResolvableInjectable} derived from the given injectable, or
-     * <code>null</code> if no other injectable could be derived.
+     * Gets zero or more {@link ResolvableInjectable}s derived from the given injectable.
      *
      * @param injectable a {@link ResolvableInjectable}, never null
-     * @return another {@link ResolvableInjectable} derived from the given injectable, or
-     *   <code>null</code> if no other injectable could be derived
+     * @return a list of {@link ResolvableInjectable} derived from the given injectable, never null, but can be empty
      */
-    ResolvableInjectable getDerived(ResolvableInjectable injectable);
+    List<ResolvableInjectable> getDerived(ResolvableInjectable injectable);
   }
 
   private final InjectableStore<ResolvableInjectable> store;
@@ -136,62 +134,31 @@ public class BeanDefinitionStore {
   }
 
   private void register(ResolvableInjectable injectable) {
-    registerSingle(injectable);
-
-    List<ResolvableInjectable> registered = new ArrayList<>();
-
-    registered.add(injectable);
-
-    for(Extension extension : extensions) {
-      try {
-        ResolvableInjectable derived = extension.getDerived(injectable);
-
-        if(derived != null) {
-          register(derived);
-          registered.add(derived);
-        }
-      }
-      catch(Exception e) {
-        for(int i = registered.size() - 1; i >= 0; i--) {
-          removeSingle(registered.get(i));
-        }
-
-        throw e;
-      }
-    }
+    store.putAll(gatherInjectables(injectable));
   }
 
   private void remove(ResolvableInjectable injectable) {
-    removeSingle(injectable);
+    store.removeAll(gatherInjectables(injectable));
+  }
 
-    List<ResolvableInjectable> removed = new ArrayList<>();
+  private List<ResolvableInjectable> gatherInjectables(ResolvableInjectable injectable) {
+    List<ResolvableInjectable> injectables = new ArrayList<>();
 
-    removed.add(injectable);
+    injectables.add(injectable);
+    int start = 0;
+    int end = injectables.size();
 
-    for(Extension extension : extensions) {
-      try {
-        ResolvableInjectable derived = extension.getDerived(injectable);
-
-        if(derived != null) {
-          remove(derived);
-          removed.add(derived);
+    while(start < end) {
+      for(int i = start; i < end; i++) {
+        for(Extension extension : extensions) {
+          injectables.addAll(extension.getDerived(injectables.get(i)));
         }
       }
-      catch(Exception e) {
-        for(int i = removed.size() - 1; i >= 0; i--) {
-          registerSingle(removed.get(i));
-        }
 
-        throw e;
-      }
+      start = end;
+      end = injectables.size();
     }
-  }
 
-  private void registerSingle(ResolvableInjectable injectable) {
-    store.put(injectable);
-  }
-
-  private void removeSingle(ResolvableInjectable injectable) {
-    store.remove(injectable);
+    return injectables;
   }
 }

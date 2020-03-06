@@ -15,12 +15,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.WeakHashMap;
 
 import javax.inject.Singleton;
+
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.annotation.AnnotationDescription;
@@ -33,11 +37,11 @@ public class ProducerInjectorExtension implements Injector.Extension {
   private static final Map<Class<?>, ClassInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
 
   @Override
-  public ResolvableInjectable getDerived(final Instantiator instantiator, final ResolvableInjectable injectable) {
-    final Producer producer = ((Class<?>)injectable.getType()).getAnnotation(Producer.class);
+  public List<ResolvableInjectable> getDerived(final Instantiator instantiator, final ResolvableInjectable injectable) {
+    final Producer producer = (TypeUtils.getRawType(injectable.getType(), null)).getAnnotation(Producer.class);
 
     if(producer == null) {
-      return null;
+      return Collections.emptyList();
     }
 
     ClassInjectable producerInjectable = PRODUCER_INJECTABLES.get(injectable.getType());
@@ -63,7 +67,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
       PRODUCER_INJECTABLES.put((Class<?>)injectable.getType(), producerInjectable);
     }
 
-    return producerInjectable;
+    return List.of(producerInjectable);
   }
 
   public static class Interceptor {

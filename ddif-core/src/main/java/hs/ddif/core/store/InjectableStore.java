@@ -25,7 +25,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  *
  * @param <T> the type of {@link Injectable} this store holds
  */
-public class InjectableStore<T extends Injectable> {
+public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   /**
    * Map containing annotation descriptor mappings to sets of injectables which match one specific
@@ -49,22 +49,7 @@ public class InjectableStore<T extends Injectable> {
     this(null, null);
   }
 
-  /**
-   * Looks up Injectables by type and by the given criteria.  The empty set is returned if
-   * there were no matches.  Supported criteria are:
-   * <ul>
-   * <li>{@link Class} to match by implemented interface or by presence of an annotation, for
-   *     example the interface <code>List.class</code> or the annotation
-   *     <code>Singleton.class</code></li>
-   * <li>{@link Annotation} or {@link AnnotationDescriptor} to match by an annotation,
-   *     including matching all its values</li>
-   * <li>{@link Matcher} to match by custom criteria provided by a {@link Matcher}
-   *     implementation</li>
-   * </ul>
-   * @param type the type of the Injectables to look up
-   * @param criteria the criteria the Injectables must match
-   * @return a set of Injectables matching the given type and critera
-   */
+  @Override
   public Set<T> resolve(Type type, Object... criteria) {
     Class<?> cls = TypeUtils.getRawType(type, null);
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
@@ -174,72 +159,159 @@ public class InjectableStore<T extends Injectable> {
     return !matches.isEmpty();
   }
 
+  /**
+   * Adds an {@link Injectable} to the store.
+   *
+   * @param injectable an {@link Injectable}, cannot be null
+   * @throws NullPointerException when given a null {@link Injectable}
+   */
   public void put(T injectable) {
+    putAll(List.of(injectable));
+  }
+
+  /**
+   * Adds an {@link Injectable} to the store.
+   *
+   * @param injectable an {@link Injectable}, cannot be null
+   * @throws NullPointerException when given a null {@link Injectable}
+   */
+  public void remove(T injectable) {
+    removeAll(List.of(injectable));
+  }
+
+  public void putAll(List<T> injectables) {
+    for(T injectable : injectables) {
+      ensureInjectableIsValid(injectable);
+      ensureNotDuplicate(injectable);
+    }
+
+    InjectableStore<T> tempStore = new InjectableStore<>();
+    InternalResolver resolver = new InternalResolver(tempStore, this);
+
+    tempStore.putAllInternal(injectables);
+
+    policy.addAll(resolver, injectables);  // if this fails, policy will clean up after itself, no need to do clean-up
+
+    putAllInternal(injectables);
+  }
+
+  private void putAllInternal(List<T> injectables) {
+    for(T injectable : injectables) {
+      ensureInjectableIsValid(injectable);  // These checks are duplicated for the tempStore.putAllInternal call
+      ensureNotDuplicate(injectable);
+
+      putInternal(injectable);
+    }
+  }
+
+  public void removeAll(List<T> injectables) {
+    // First check injectables for fatal issues, exception does not need to be caught:
+    for(T injectable : injectables) {
+      ensureInjectableIsValid(injectable);
+
+      Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(Object.class);
+
+      if(injectablesByDescriptor == null || !injectablesByDescriptor.get(null).contains(injectable)) {
+        throw new NoSuchInjectableException(injectable);
+      }
+    }
+
+    policy.removeAll(this, injectables);  // if this fails, policy will clean up after itself, no need to do clean-up
+
+    // Change the store, no exceptions should occur here:
+    for(T injectable : injectables) {
+      removeInternal(injectable);
+    }
+  }
+
+  private void putInternal(T injectable) {
+    try {
+      for(Class<?> superType : getSuperClassesAndInterfaces(TypeUtils.getRawType(injectable.getType(), null))) {
+        register(superType, null, injectable);
+
+        for(AnnotationDescriptor qualifier : injectable.getQualifiers()) {
+          register(superType, qualifier, injectable);
+        }
+      }
+    }
+    catch(Exception e) {
+      throw new IllegalStateException("Fatal exception (store might be inconsistent) while adding: " + injectable, e);
+    }
+  }
+
+  private void removeInternal(T injectable) {
+    try {
+      for(Class<?> type : getSuperClassesAndInterfaces(TypeUtils.getRawType(injectable.getType(), null))) {
+        unregister(type, null, injectable);
+
+        for(AnnotationDescriptor qualifier : injectable.getQualifiers()) {
+          unregister(type, qualifier, injectable);
+        }
+      }
+    }
+    catch(Exception e) {
+      throw new IllegalStateException("Fatal exception (store might be inconsistent) while removing: " + injectable, e);
+    }
+  }
+
+  private void ensureInjectableIsValid(T injectable) {
     if(injectable == null) {
       throw new IllegalArgumentException("injectable cannot be null");
     }
 
     Type type = injectable.getType();
-    Class<?> concreteClass = TypeUtils.getRawType(type, null);
 
     if(TypeUtils.containsTypeVariables(type)) {
-      throw new IllegalArgumentException(type + " has type variables " + Arrays.toString(concreteClass.getTypeParameters()) + ": Injection candidates with type variables are not supported.");
+      throw new IllegalArgumentException(type + " has type variables " + Arrays.toString(TypeUtils.getRawType(type, null).getTypeParameters()) + ": Injection candidates with type variables are not supported.");
     }
-
-    Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();
-
-    policy.checkAddition(this, injectable, qualifiers);
-
-    Set<Class<?>> superClassesAndInterfaces = getSuperClassesAndInterfaces(concreteClass);
-
-    for(Class<?> superType : superClassesAndInterfaces) {
-      ensureRegistrationIsPossible(superType, injectable);
-    }
-
-    /*
-     * Beyond this point, modifications are made to the store, nothing should go wrong or the store's state could become inconsistent.
-     */
-
-    for(Class<?> superType : superClassesAndInterfaces) {
-      register(superType, null, injectable);
-
-      for(AnnotationDescriptor qualifier : qualifiers) {
-        register(superType, qualifier, injectable);
-      }
-    }
-
-    policy.add(injectable);
   }
 
-  public void remove(T injectable) {
-    if(injectable == null) {
-      throw new IllegalArgumentException("injectable cannot be null");
-    }
-
+  private void ensureNotDuplicate(T injectable) {
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(Object.class);
 
-    if(injectablesByDescriptor == null || !injectablesByDescriptor.get(null).contains(injectable)) {
-      throw new NoSuchInjectableException(injectable);
+    if(injectablesByDescriptor != null && injectablesByDescriptor.get(null).contains(injectable)) {
+      throw new DuplicateBeanException(TypeUtils.getRawType(injectable.getType(), null), injectable);
+    }
+  }
+
+  private void register(Class<?> type, AnnotationDescriptor qualifier, T injectable) {
+    if(!injectablesByDescriptorByType.computeIfAbsent(type, k -> new HashMap<>()).computeIfAbsent(qualifier, k -> new HashSet<>()).add(injectable)) {
+      throw new AssertionError("Store should not contain duplicates: " + injectable);
+    }
+  }
+
+  private void unregister(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {
+    Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
+
+    if(injectablesByDescriptor == null) {
+      throw new AssertionError("Store must contain: " + injectable + " for key: " + type);
     }
 
-    Class<?> concreteClass = TypeUtils.getRawType(injectable.getType(), null);
-    Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();  // TODO extractQualifiers might simply add ConcreteClass to the set?
+    Set<T> injectables = injectablesByDescriptor.get(qualifier);
 
-    policy.checkRemoval(this, injectable, qualifiers);
+    if(injectables == null || !injectables.remove(injectable)) {
+      throw new AssertionError("Store must contain: " + injectable + " for key: " + type + " -> " + qualifier + " injectables: " + injectables);
+    }
 
-    /*
-     * Beyond this point, modifications are made to the store, nothing should go wrong or the store's state could become inconsistent.
-     */
+    if(injectables.isEmpty()) {
+      injectablesByDescriptor.remove(qualifier);
 
-    for(Class<?> type : getSuperClassesAndInterfaces(concreteClass)) {
-      removeInternal(type, null, injectable);
-
-      for(AnnotationDescriptor qualifier : qualifiers) {
-        removeInternal(type, qualifier, injectable);
+      if(injectablesByDescriptor.isEmpty()) {
+        injectablesByDescriptorByType.remove(type);
       }
     }
+  }
 
-    policy.remove(injectable);
+  private static void filterByGenericType(Type type, Set<? extends Injectable> matches) {
+    if(type instanceof ParameterizedType) {
+      for(Iterator<? extends Injectable> iterator = matches.iterator(); iterator.hasNext();) {
+        Injectable injectable = iterator.next();
+
+        if(!TypeUtils.isAssignable(injectable.getType(), type)) {
+          iterator.remove();
+        }
+      }
+    }
   }
 
   private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
@@ -267,94 +339,14 @@ public class InjectableStore<T extends Injectable> {
     return superClassesAndInterfaces;
   }
 
-  private void ensureRegistrationIsPossible(Class<?> type, Injectable injectable) {
-    Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
-
-    if(injectablesByDescriptor == null) {
-      return;
-    }
-
-    Set<T> injectables = injectablesByDescriptor.get(null);
-
-    if(injectables == null || !injectables.contains(injectable)) {
-      return;
-    }
-
-    throw new DuplicateBeanException(type, injectable);
-  }
-
-  private void register(Class<?> type, AnnotationDescriptor qualifier, T injectable) {
-    Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
-
-    if(injectablesByDescriptor == null) {
-      injectablesByDescriptor = new HashMap<>();
-      injectablesByDescriptorByType.put(type, injectablesByDescriptor);
-    }
-
-    Set<T> injectables = injectablesByDescriptor.get(qualifier);
-
-    if(injectables == null) {
-      injectables = new HashSet<>();
-      injectablesByDescriptor.put(qualifier, injectables);
-    }
-
-    if(!injectables.add(injectable)) {
-      throw new AssertionError("Map 'beanDefinitions' already contained: " + injectable + " for key: " + type + "->" + qualifier);
-    }
-  }
-
-  private void removeInternal(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {
-    Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
-
-    if(injectablesByDescriptor == null) {
-      throw new AssertionError("Map 'beanDefinitions' must contain: " + injectable + " for key: " + type);
-    }
-
-    Set<T> injectables = injectablesByDescriptor.get(qualifier);
-
-    if(injectables == null || !injectables.remove(injectable)) {
-      throw new AssertionError("Map 'beanDefinitions' must contain: " + injectable + " for key: " + type + "->" + qualifier + " injectables = " + injectables);
-    }
-
-    if(injectables.isEmpty()) {
-      injectablesByDescriptor.remove(qualifier);
-
-      if(injectablesByDescriptor.isEmpty()) {
-        injectablesByDescriptorByType.remove(type);
-      }
-    }
-  }
-
-  private void filterByGenericType(Type type, Set<T> matches) {
-    if(type instanceof ParameterizedType) {
-      for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
-        Injectable injectable = iterator.next();
-
-        if(!TypeUtils.isAssignable(injectable.getType(), type)) {
-          iterator.remove();
-        }
-      }
-    }
-  }
-
   class NoStoreConsistencyPolicy implements StoreConsistencyPolicy<T> {
     @Override
-    public void checkAddition(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers) {
-      // All additions are valid
-    }
-
-    @Override
-    public void checkRemoval(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers) {
-      // All removals are valid
-    }
-
-    @Override
-    public void add(T injectable) {
+    public void addAll(Resolver<T> resolver, List<T> injectables) {
       // No-op
     }
 
     @Override
-    public void remove(T injectable) {
+    public void removeAll(Resolver<T> resolver, List<T> injectables) {
       // No-op
     }
   }
@@ -363,6 +355,25 @@ public class InjectableStore<T extends Injectable> {
     @Override
     public void discoverType(InjectableStore<T> injectableStore, Type type) {
       // Discover nothing
+    }
+  }
+
+  class InternalResolver implements Resolver<T> {
+    private final Resolver<T> a;
+    private final Resolver<T> b;
+
+    InternalResolver(Resolver<T> a, Resolver<T> b) {
+      this.a = a;
+      this.b = b;
+    }
+
+    @Override
+    public Set<T> resolve(Type type, Object... criteria) {
+      Set<T> set = new HashSet<>(a.resolve(type, criteria));
+
+      set.addAll(b.resolve(type, criteria));
+
+      return set;
     }
   }
 }

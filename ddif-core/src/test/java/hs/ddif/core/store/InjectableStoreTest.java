@@ -17,6 +17,7 @@ import hs.ddif.core.util.Value;
 import java.io.Serializable;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.RandomAccess;
@@ -188,14 +189,31 @@ public class InjectableStoreTest {
     store.resolve(Object.class, "Unsupported");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void putShouldThrowExceptionWhenInjectableIsNull() {
     store.put(null);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void removeShouldThrowExceptionWhenInjectableIsNull() {
     store.remove(null);
+  }
+
+  @Test(expected = DuplicateBeanException.class)
+  public void putShouldRejectDuplicateBeans() {
+    store.put(ClassInjectable.of(A.class));
+    store.put(ClassInjectable.of(A.class));
+  }
+
+  @Test(expected = DuplicateBeanException.class)
+  public void putAllShouldRejectDuplicateBeans() {
+    store.putAll(List.of(ClassInjectable.of(A.class), ClassInjectable.of(A.class)));
+  }
+
+  @Test(expected = DuplicateBeanException.class)
+  public void putAllShouldRejectDuplicateBeansWhenOnePresentAlready() {
+    store.put(ClassInjectable.of(A.class));
+    store.putAll(List.of(ClassInjectable.of(B.class), ClassInjectable.of(A.class)));
   }
 
   @Big @Red

@@ -15,6 +15,7 @@ import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Provider;
@@ -28,15 +29,13 @@ public class Injector {
   public interface Extension {
 
     /**
-     * Gets another {@link ResolvableInjectable} derived from the given injectable, or
-     * <code>null</code> if no other injectable could be derived.<p>
+     * Gets zero or more {@link ResolvableInjectable}s derived from the given injectable.
      *
      * @param instantiator an {@link Instantiator}, never null
      * @param injectable a {@link ResolvableInjectable}, never null
-     * @return another {@link ResolvableInjectable} derived from the given injectable, or
-     *   <code>null</code> if no other injectable could be derived
+     * @return a list of {@link ResolvableInjectable} derived from the given injectable, never null, but can be empty
      */
-    ResolvableInjectable getDerived(Instantiator instantiator, ResolvableInjectable injectable);
+    List<ResolvableInjectable> getDerived(Instantiator instantiator, ResolvableInjectable injectable);
   }
 
   private final Instantiator instantiator;
@@ -70,7 +69,7 @@ public class Injector {
     }
 
     @Override
-    public ResolvableInjectable getDerived(ResolvableInjectable injectable) {
+    public List<ResolvableInjectable> getDerived(ResolvableInjectable injectable) {
       return extension.getDerived(instantiator, injectable);
     }
   }

@@ -269,7 +269,7 @@ public class InjectorTest {
 
   @Test(expected = NoSuchInjectableException.class)
   public void shouldThrowExceptionWhenRemovingUnregisteredBean() {
-    injector.remove(ArrayList.class);
+    injector.remove(Exception.class);
   }
 
   @Test(expected = ViolatesSingularDependencyException.class)

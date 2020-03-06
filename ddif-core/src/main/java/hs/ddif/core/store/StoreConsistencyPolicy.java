@@ -1,8 +1,6 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.util.AnnotationDescriptor;
-
-import java.util.Set;
+import java.util.List;
 
 /**
  * Interface for applying consistency checks on an {@link InjectableStore}.
@@ -12,38 +10,20 @@ import java.util.Set;
 public interface StoreConsistencyPolicy<T extends Injectable> {
 
   /**
-   * Called when an attempt is made to add a new {@link Injectable} to the store.  Implementors
-   * can prevent the addition by throwing an exception.
+   * Adds the given {@link Injectable}s to this policy.  If the policy would be violated, then an
+   * exception should be thrown and the changes rolled back.
    *
-   * @param injectableStore the {@link InjectableStore}
-   * @param injectable the injectable being considered for addition to the store
-   * @param qualifiers the qualifiers of the injectable
+   * @param resolver a {@link Resolver}, cannot be null
+   * @param injectables a list of injectables to add, cannot be null
    */
-  void checkAddition(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers);
+  void addAll(Resolver<T> resolver, List<T> injectables);
 
   /**
-   * Called when an attempt is made to remove an {@link Injectable} from the store.  Implementors
-   * can prevent the removal by throwing an exception.
+   * Removes the given {@link Injectable}s from this policy.  If the policy would be violated, then an
+   * exception should be thrown and the changes rolled back.
    *
-   * @param injectableStore the {@link InjectableStore}
-   * @param injectable the injectable being considered for removal from the store
-   * @param qualifiers the qualifiers of the injectable
+   * @param resolver a {@link Resolver}, cannot be null
+   * @param injectables a list of injectables to remove, cannot be null
    */
-  void checkRemoval(InjectableStore<T> injectableStore, T injectable, Set<AnnotationDescriptor> qualifiers);
-
-  /**
-   * Called to indicate the given {@link Injectable} was added to the store.  Always call
-   * {@link #checkAddition(InjectableStore, Injectable, Set)} first before adding.
-   *
-   * @param injectable the injectable that was added to the store
-   */
-  void add(T injectable);
-
-  /**
-   * Called to indicate the given {@link Injectable} was removed from the store.  Always
-   * call {@link #checkRemoval(InjectableStore, Injectable, Set)} first before removing.
-   *
-   * @param injectable the injectable that was remove from the store
-   */
-  void remove(T injectable);
+  void removeAll(Resolver<T> resolver, List<T> injectables);
 }
