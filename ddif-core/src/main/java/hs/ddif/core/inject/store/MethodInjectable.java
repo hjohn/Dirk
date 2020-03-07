@@ -34,7 +34,6 @@ public class MethodInjectable implements ResolvableInjectable {
    * return type of the method.
    *
    * @param method a {@link Method}, cannot be null
-   * @throws BindingException if the given type is not annotated and has no public empty constructor or is incorrectly annotated
    */
   public MethodInjectable(Method method) {
     if(method == null) {
@@ -56,7 +55,7 @@ public class MethodInjectable implements ResolvableInjectable {
   @Override
   public Object getInstance(Instantiator instantiator, NamedParameter... parameters) {
     if(parameters.length > 0) {
-      throw new ConstructionException("Superflous parameters supplied, none expected for Produces method but got: " + Arrays.toString(parameters));
+      throw new ConstructionException("Superflous parameters supplied, none expected for producer method but got: " + Arrays.toString(parameters));
     }
 
     return constructInstance(instantiator);
