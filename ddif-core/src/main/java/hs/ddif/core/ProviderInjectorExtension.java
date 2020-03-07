@@ -15,7 +15,7 @@ public class ProviderInjectorExtension implements BeanDefinitionStore.Extension 
   @Override
   public List<ResolvableInjectable> getDerived(ResolvableInjectable injectable) {
     return Provider.class.isAssignableFrom(TypeUtils.getRawType(injectable.getType(), null))
-      ? Collections.<ResolvableInjectable>singletonList(new ProvidedInjectable((Class<?>)injectable.getType()))
+      ? Collections.<ResolvableInjectable>singletonList(new ProvidedInjectable(injectable.getType()))
       : Collections.<ResolvableInjectable>emptyList();
   }
 }

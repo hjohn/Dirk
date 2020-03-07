@@ -35,8 +35,8 @@ public abstract class AbstractResolvableInjectable implements ResolvableInjectab
     this.descriptors = descriptors;
   }
 
-  protected AbstractResolvableInjectable(Map<AccessibleObject, List<Binding>> bindings, Annotation scope, Class<?> injectableClass, boolean isTemplate, AnnotationDescriptor... descriptors) {
-    this(bindings, scope, injectableClass, isTemplate, new HashSet<>(Arrays.asList(descriptors)));
+  protected AbstractResolvableInjectable(Map<AccessibleObject, List<Binding>> bindings, Annotation scope, Type injectableType, boolean isTemplate, AnnotationDescriptor... descriptors) {
+    this(bindings, scope, injectableType, isTemplate, new HashSet<>(Arrays.asList(descriptors)));
   }
 
   @Override

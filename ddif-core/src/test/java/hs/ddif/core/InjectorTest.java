@@ -228,6 +228,7 @@ public class InjectorTest {
   }
 
   @Test  // Providers cannot be made optional with @Nullable as a provider can always be created; it's only the result of the Provider that could be optional but that requires a different approach (new annotation of sub-interface)
+  @Ignore("Providers should be able to break circular dependencies...")
   public void shouldThrowUnresolvedDependencyExceptionWhenRegisteringBeanWithNullableProviderDependencyWhenNoProviderAvailableBecauseProvidersCannotBeMadeOptional() {
     thrown.expect(UnresolvableDependencyException.class);
 
@@ -349,6 +350,7 @@ public class InjectorTest {
   }
 
   @Test(expected = UnresolvableDependencyException.class)
+  @Ignore("Providers should be able to break circular dependencies...")
   public void shouldThrowExceptionWhenRegisteringBeanWithUnresolvedProviderDependencies() {
     injector.register(BeanWithUnresolvedProviderDependency.class);
   }

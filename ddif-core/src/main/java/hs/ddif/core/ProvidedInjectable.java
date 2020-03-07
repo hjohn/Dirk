@@ -16,37 +16,35 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 
 public class ProvidedInjectable extends AbstractResolvableInjectable {
   private final Provider<?> provider;
-  private final Class<?> classImplementingProvider;
+  private final Type typeImplementingProvider;
 
   public ProvidedInjectable(Provider<?> provider, AnnotationDescriptor... descriptors) {
     this(provider.getClass(), provider, descriptors);
   }
 
-  public ProvidedInjectable(Class<?> classImplementingProvider, AnnotationDescriptor... descriptors) {
-    this(classImplementingProvider, null, descriptors);
+  public ProvidedInjectable(Type typeImplementingProvider, AnnotationDescriptor... descriptors) {
+    this(typeImplementingProvider, null, descriptors);
   }
 
-  private ProvidedInjectable(Class<?> classImplementingProvider, Provider<?> provider, AnnotationDescriptor... descriptors) {
-    super(Collections.emptyMap(), null, determineProvidedClass(classImplementingProvider), true, descriptors);
+  private ProvidedInjectable(Type typeImplementingProvider, Provider<?> provider, AnnotationDescriptor... descriptors) {
+    super(Collections.emptyMap(), null, determineProvidedType(typeImplementingProvider), true, descriptors);
 
-    this.classImplementingProvider = classImplementingProvider;
+    this.typeImplementingProvider = typeImplementingProvider;
     this.provider = provider;
   }
 
-  private static Class<?> determineProvidedClass(Class<?> classImplementingProvider) {
-    if(classImplementingProvider == null) {
-      throw new IllegalArgumentException("classImplementingProvider cannot be null");
+  private static Type determineProvidedType(Type typeImplementingProvider) {
+    if(typeImplementingProvider == null) {
+      throw new IllegalArgumentException("typeImplementingProvider cannot be null");
     }
 
-    Type type = TypeUtils.getTypeArguments(classImplementingProvider, Provider.class).get(Provider.class.getTypeParameters()[0]);
-
-    return TypeUtils.getRawType(type, null);
+    return TypeUtils.getTypeArguments(typeImplementingProvider, Provider.class).get(Provider.class.getTypeParameters()[0]);
   }
 
   @Override
   public Object getInstance(Instantiator instantiator, NamedParameter... namedParameters) throws BeanResolutionException {
     try {
-      return provider == null ? ((Provider<?>)instantiator.getParameterizedInstance(classImplementingProvider, namedParameters, getQualifiers().toArray())).get() : provider.get();
+      return provider == null ? ((Provider<?>)instantiator.getParameterizedInstance(typeImplementingProvider, namedParameters, getQualifiers().toArray())).get() : provider.get();
     }
     catch(Exception e) {
       throw new BeanResolutionException(getType(), e);
@@ -54,17 +52,17 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
   }
 
   /**
-   * Returns the class which implements the Provider interface.
+   * Returns the type which implements the Provider interface.
    *
-   * @return the class which implements the Provider interface, never null
+   * @return the type which implements the Provider interface, never null
    */
-  public Class<?> getClassImplementingProvider() {
-    return classImplementingProvider;
+  public Type getTypeImplementingProvider() {
+    return typeImplementingProvider;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(provider, getQualifiers(), classImplementingProvider);
+    return Objects.hash(provider, getQualifiers(), typeImplementingProvider);
   }
 
   @Override
@@ -80,7 +78,7 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
 
     return getQualifiers().equals(other.getQualifiers())
         && Objects.equals(provider, other.provider)
-        && Objects.equals(classImplementingProvider, other.classImplementingProvider);
+        && Objects.equals(typeImplementingProvider, other.typeImplementingProvider);
   }
 
   @Override

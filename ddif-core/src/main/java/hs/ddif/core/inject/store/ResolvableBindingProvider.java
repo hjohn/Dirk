@@ -4,6 +4,7 @@ import hs.ddif.core.bind.Key;
 import hs.ddif.core.bind.Parameter;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.RuntimeBeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.TypeUtils;
 
@@ -282,7 +283,7 @@ public class ResolvableBindingProvider {
             return binding.getValue(instantiator);
           }
           catch(BeanResolutionException e) {
-            throw new IllegalStateException("Exception while retrieving bean through provider", e);
+            throw new RuntimeBeanResolutionException(binding.getType(), e, (Object[])binding.getRequiredKey().getQualifiersAsArray());
           }
         }
       };
@@ -300,7 +301,7 @@ public class ResolvableBindingProvider {
 
     @Override
     public Key getRequiredKey() {
-      return binding.getRequiredKey();
+      return null;  // nothing required, as providers are used to break cyclical dependencies
     }
 
     @Override

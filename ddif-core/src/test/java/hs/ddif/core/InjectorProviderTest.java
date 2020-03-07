@@ -2,7 +2,10 @@ package hs.ddif.core;
 
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.RuntimeBeanResolutionException;
 import hs.ddif.core.store.DuplicateBeanException;
+import hs.ddif.core.test.injectables.BeanWithProvider;
+import hs.ddif.core.test.injectables.SimpleBean;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.TypeReference;
 
@@ -21,6 +24,7 @@ import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class InjectorProviderTest {
@@ -32,6 +36,28 @@ public class InjectorProviderTest {
   @Before
   public void before() {
     injector = new Injector();
+  }
+
+  @Test
+  public void providerShouldBreakCircularDependencyAndFailWhenUsedAndWorkWhenDependencyBecomesAvailable() throws BeanResolutionException {
+    // allowed:
+    injector.register(BeanWithProvider.class);
+
+    BeanWithProvider instance = injector.getInstance(BeanWithProvider.class);
+
+    try {
+      // fails, there is no SimpleBean:
+      instance.getSimpleBean();
+      fail();
+    }
+    catch(RuntimeBeanResolutionException e) {
+      assertTrue(e.getMessage(), e.getMessage().matches("No such bean:.*SimpleBean"));
+    }
+
+    // works when SimpleBean registered:
+    injector.register(SimpleBean.class);
+
+    assertEquals(SimpleBean.class, instance.getSimpleBean().getClass());
   }
 
   @Test
@@ -173,7 +199,6 @@ public class InjectorProviderTest {
   }
 
   @Test
-  @Ignore("Nested Providers require support for Injectables with type parameters")
   public void getInstanceShouldReturnInjectableFromNestedProviderInstance() throws BeanResolutionException {
     injector.registerInstance(new NestedDatabaseProvider());
 
@@ -181,7 +206,6 @@ public class InjectorProviderTest {
   }
 
   @Test
-  @Ignore("Nested Providers require support for Injectables with type parameters")
   public void getInstanceShouldReturnInjectableFromNestedProvider() throws BeanResolutionException {
     injector.register(NestedDatabaseProvider.class);
 
@@ -245,7 +269,6 @@ public class InjectorProviderTest {
   }
 
   @Test
-  @Ignore("Nested Providers require support for Injectables with type parameters")
   public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndNestedProvided() {
     injector.registerInstance(new Database("jdbc:localhost"));
     injector.register(BeanWithDatabase.class);
@@ -266,7 +289,6 @@ public class InjectorProviderTest {
   }
 
   @Test(expected = ViolatesSingularDependencyException.class)
-  @Ignore("Nested Providers require support for Injectables with type parameters")
   public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndNestedProvided2() {
     injector.registerInstance(new NestedDatabaseProvider());
     injector.register(BeanWithDatabase.class);
@@ -275,7 +297,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  @Ignore("Nested Providers require support for Injectables with type parameters")
+  @Ignore("Providers can be used to break cyclical dependencies, and thus can always be registered...")
   public void registerShouldThrowExceptionWhenDatabaseIsProvidedAndNestedProvided() {
     injector.registerInstance(new SimpleDatabaseProvider());
     injector.register(BeanWithProvidedDatabase.class);
@@ -296,7 +318,7 @@ public class InjectorProviderTest {
   }
 
   @Test(expected = ViolatesSingularDependencyException.class)
-  @Ignore("Nested Providers require support for Injectables with type parameters")
+  @Ignore("Providers can be used to break cyclical dependencies, and thus can always be registered...")
   public void registerShouldThrowExceptionWhenDatabaseIsProvidedAndNestedProvided2() {
     injector.registerInstance(new NestedDatabaseProvider());
     injector.register(BeanWithProvidedDatabase.class);
