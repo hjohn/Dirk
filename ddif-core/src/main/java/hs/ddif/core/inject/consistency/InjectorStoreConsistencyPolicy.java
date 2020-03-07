@@ -2,6 +2,7 @@ package hs.ddif.core.inject.consistency;
 
 import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.Key;
+import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.Resolver;
 import hs.ddif.core.store.StoreConsistencyPolicy;
 import hs.ddif.core.util.AnnotationDescriptor;
@@ -9,6 +10,7 @@ import hs.ddif.core.util.AnnotationDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,71 +34,46 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
   private final Map<Key, Integer> referenceCounters = new HashMap<>();
 
   @Override
-  public void addAll(Resolver<T> resolver, List<T> injectables) {
+  public void addAll(Resolver<T> baseResolver, List<T> injectables) {
+    InjectableStore<T> tempStore = new InjectableStore<>();
+    IncludingResolver resolver = new IncludingResolver(baseResolver, tempStore);
+
+    tempStore.putAll(injectables);
 
     /*
      * In order to register a group of injectables at once, changes in reference counters
      * are tracked and used to adjust singular dependency checks.
      *
-     * Errors are kept track of while modifying the counters and checked again at the end
-     * of the process.  The check is to simply remove and re-add the Injectable and see
-     * if the error persists.  If it persists, the counters are restored to their
-     * original values and the last error is thrown as an exception.
+     * Since all injectables are part of the internal resolver (and thus all dependencies
+     * should be correct assuming a valid set of injectables was provided), any error
+     * while updating the reference counters can immediately be aborted.
      */
 
     Map<Key, Integer> referenceCounterAdjustments = new HashMap<>();
-    Set<T> injectablesWithErrors = new HashSet<>();
+    List<T> injectablesAdded = new ArrayList<>();
 
     // Attempt adding all injectables, while keeping track of injectables with errors:
-    for(T injectable : injectables) {
-      try {
+    try {
+      for(T injectable : injectables) {
         checkAddition(resolver, injectable, referenceCounterAdjustments);
-      }
-      catch(Exception e) {
-        injectablesWithErrors.add(injectable);
+        add(injectable);
+        increaseReferenceCounters(injectable, referenceCounterAdjustments);
+        injectablesAdded.add(injectable);
       }
 
-      // Add always, even if there was an error:
-      add(injectable);
-
-      // Track reference counter changes:
-      increaseReferenceCounters(injectable, referenceCounterAdjustments);
+      ensureNoCyclicDependencies(resolver, injectables);
     }
-
-    /*
-     * All injectables are added now, but there may be errors.  Since all relevant injectables
-     * are part of the store at this point (and thus all dependencies should be correct
-     * assuming a valid set of injectables was provided), rechecking of errors simply involves
-     * removing and re-adding the injectable that was in error before and see if it is now
-     * valid.
-     */
-
-    for(T injectable : injectables) {
-      if(injectablesWithErrors.contains(injectable)) {
-        remove(injectable);
-        decreaseReferenceCounters(injectable, referenceCounterAdjustments, true);
-
-        try {
-          checkAddition(resolver, injectable, referenceCounterAdjustments);
-          add(injectable);
-          increaseReferenceCounters(injectable, referenceCounterAdjustments);
-        }
-        catch(Exception e) {
-          // Given group of injectables was not valid to add, remove all except the one that could not be re-added and rethrow last exception:
-          for(T injectableToRemove : injectables) {
-            if(!injectableToRemove.equals(injectable)) {
-              remove(injectableToRemove);
-            }
-          }
-
-          throw e;
-        }
+    catch(Exception e) {
+      for(T addedInjectable : injectablesAdded) {
+        remove(addedInjectable);
       }
+
+      throw e;
     }
   }
 
   @Override
-  public void removeAll(Resolver<T> resolver, List<T> injectables) {
+  public void removeAll(Resolver<T> baseResolver, List<T> injectables) {
 
     /*
      * In order to remove a group of injectables at once, changes in reference counters
@@ -145,7 +122,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
           decreaseReferenceCounters(injectable, referenceCounterAdjustments, true);
         }
         catch(Exception e) {
-          // Given group of injectables was not valid to remve, add all except the one that could not be removed again and rethrow last exception:
+          // Given group of injectables was not valid to remove, add all except the one that could not be removed again and rethrow last exception:
           for(T injectableToRemove : injectables) {
             if(!injectableToRemove.equals(injectable)) {
               add(injectableToRemove);
@@ -160,32 +137,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
 
   private void checkAddition(Resolver<T> resolver, T injectable, Map<Key, Integer> referenceCounterAdjustments) {
     ensureSingularDependenciesHold(injectable.getType(), injectable.getQualifiers(), referenceCounterAdjustments);
-
-    Map<AccessibleObject, List<Binding>> bindings = injectable.getBindings();
-
-    /*
-     * Check the created bindings for unresolved or ambigious dependencies and scope problems:
-     */
-
-    for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
-      for(Binding binding : entry.getValue()) {
-        Key requiredKey = binding.getRequiredKey();
-
-        if(requiredKey != null) {
-          Set<T> injectables = resolver.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray());
-
-          ensureBindingIsSingular(injectable, entry.getKey(), requiredKey, injectables);
-
-          if(!binding.isProvider()) {  // When wrapped in a Provider, there are never any scope conflicts
-            T dependency = injectables.iterator().next();  // Previous ensureBindingIsSingular check ensures there is only a single element in the set
-
-            if(dependency.isTemplate()) {  // When there is only a single instance (with no way to create more), there are never any scope conflicts
-              ensureBindingScopeIsValid(injectable, dependency);
-            }
-          }
-        }
-      }
-    }
+    ensureRequiredBindingsAreAvailable(resolver, injectable);
   }
 
   private void checkRemoval(T injectable, Map<Key, Integer> referenceCounterAdjustments) {
@@ -262,7 +214,34 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
         }
 
         if(count > 0) {
+          // since only a count is tracked, it is not possible to show which dependencies would be unresolvable
           throw new ViolatesSingularDependencyException(type, key, true);
+        }
+      }
+    }
+  }
+
+  private void ensureRequiredBindingsAreAvailable(Resolver<T> resolver, T injectable) {
+    Map<AccessibleObject, List<Binding>> bindings = injectable.getBindings();
+
+    /*
+     * Check the created bindings for unresolved or ambigious dependencies and scope problems:
+     */
+
+    for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
+      for(Binding binding : entry.getValue()) {
+        Key requiredKey = binding.getRequiredKey();
+
+        if(requiredKey != null) {
+          Set<T> injectables = resolver.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray());
+
+          ensureBindingIsSingular(injectable, entry.getKey(), requiredKey, injectables);
+
+          T dependency = injectables.iterator().next();  // Previous ensureBindingIsSingular check ensures there is only a single element in the set
+
+          if(dependency.isTemplate()) {  // When there is only a single instance (with no way to create more), there are never any scope conflicts
+            ensureBindingScopeIsValid(injectable, dependency);
+          }
         }
       }
     }
@@ -294,6 +273,56 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
     }
   }
 
+  private void ensureNoCyclicDependencies(Resolver<T> resolver, List<T> injectables) {
+    class CycleDetector {
+      Set<T> input = new HashSet<>(injectables);
+      Set<T> visited = new HashSet<>();
+      List<T> visiting = new ArrayList<>();
+
+      List<T> hasCycle() {
+        for(T injectable : injectables) {
+          if(!visited.contains(injectable) && hasCycle(injectable)) {
+            return visiting;
+          }
+        }
+
+        return visiting;
+      }
+
+      boolean hasCycle(T injectable) {
+        visiting.add(injectable);
+
+        for(List<Binding> bindings : injectable.getBindings().values()) {
+          for(Binding binding : bindings) {
+            Key key = binding.getRequiredKey();
+
+            if(key != null) {
+              for(T boundInjectable : resolver.resolve(key.getType(), (Object[])key.getQualifiersAsArray())) {
+                if(visiting.contains(boundInjectable)) {
+                  return true;
+                }
+                else if(!visited.contains(boundInjectable) && input.contains(boundInjectable) && hasCycle(boundInjectable)) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+
+        visiting.remove(injectable);
+        visited.add(injectable);
+
+        return false;
+      }
+    }
+
+    List<T> cycle = new CycleDetector().hasCycle();
+
+    if(!cycle.isEmpty()) {
+      throw new CyclicDependencyException(cycle);
+    }
+  }
+
   private static boolean isNarrowerScope(Annotation scope, Annotation dependencyScope) {
     if(scope == null) {
       return false;
@@ -304,5 +333,24 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
     }
 
     return !dependencyScope.annotationType().equals(Singleton.class) && !scope.annotationType().equals(dependencyScope.annotationType());
+  }
+
+  private class IncludingResolver implements Resolver<T> {
+    final Resolver<T> base;
+    final Resolver<T> include;
+
+    IncludingResolver(Resolver<T> base, Resolver<T> include) {
+      this.base = base;
+      this.include = include;
+    }
+
+    @Override
+    public Set<T> resolve(Type type, Object... criteria) {
+      Set<T> set = new HashSet<>(base.resolve(type, criteria));
+
+      set.addAll(include.resolve(type, criteria));
+
+      return set;
+    }
   }
 }

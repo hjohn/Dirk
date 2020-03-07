@@ -12,8 +12,8 @@ import java.util.Set;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Thrown when not all dependencies of a class can be resolved.  This occurs when
- * a class requires a specific dependency but no such dependency is available or
+ * Thrown when not all dependencies of an injectable can be resolved.  This occurs when
+ * an injectable requires a specific dependency but no such dependency is available or
  * more than one matching dependency is available.
  */
 public class UnresolvableDependencyException extends InjectorStoreConsistencyException {

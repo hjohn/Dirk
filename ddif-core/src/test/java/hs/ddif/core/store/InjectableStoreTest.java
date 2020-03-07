@@ -35,6 +35,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class InjectableStoreTest {
   @Rule @SuppressWarnings("deprecation")
@@ -199,21 +202,45 @@ public class InjectableStoreTest {
     store.remove(null);
   }
 
-  @Test(expected = DuplicateBeanException.class)
+  @Test
   public void putShouldRejectDuplicateBeans() {
-    store.put(new ClassInjectable(A.class));
-    store.put(new ClassInjectable(A.class));
+    try {
+      store.put(new ClassInjectable(A.class));
+      store.put(new ClassInjectable(A.class));
+      fail();
+    }
+    catch(DuplicateBeanException e) {
+      // expected, check if store is intact:
+      assertTrue(store.contains(A.class));
+      assertEquals(1, store.resolve(A.class).size());
+    }
   }
 
-  @Test(expected = DuplicateBeanException.class)
+  @Test
   public void putAllShouldRejectDuplicateBeans() {
-    store.putAll(List.of(new ClassInjectable(A.class), new ClassInjectable(A.class)));
+    try {
+      store.putAll(List.of(new ClassInjectable(A.class), new ClassInjectable(A.class)));
+      fail();
+    }
+    catch(DuplicateBeanException e) {
+      // expected, check if store is intact:
+      assertFalse(store.contains(A.class));
+    }
   }
 
-  @Test(expected = DuplicateBeanException.class)
+  @Test
   public void putAllShouldRejectDuplicateBeansWhenOnePresentAlready() {
-    store.put(new ClassInjectable(A.class));
-    store.putAll(List.of(new ClassInjectable(B.class), new ClassInjectable(A.class)));
+    try {
+      store.put(new ClassInjectable(A.class));
+      store.putAll(List.of(new ClassInjectable(B.class), new ClassInjectable(A.class)));
+      fail();
+    }
+    catch(DuplicateBeanException e) {
+      // expected, check if store is intact:
+      assertTrue(store.contains(A.class));
+      assertFalse(store.contains(B.class));
+      assertEquals(1, store.resolve(A.class).size());
+    }
   }
 
   @Big @Red

@@ -182,25 +182,28 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
   public void putAll(List<T> injectables) {
     for(T injectable : injectables) {
       ensureInjectableIsValid(injectable);
-      ensureNotDuplicate(injectable);
     }
 
-    InjectableStore<T> tempStore = new InjectableStore<>();
-    InternalResolver resolver = new InternalResolver(tempStore, this);
+    policy.addAll(this, injectables);  // if this fails, policy will clean up after itself, no need to do clean-up
 
-    tempStore.putAllInternal(injectables);
+    // Duplication check must be done afterwards, as it can be duplicate with existing injectables or within the group of added injectables:
+    List<T> addedInjectables = new ArrayList<>();
 
-    policy.addAll(resolver, injectables);  // if this fails, policy will clean up after itself, no need to do clean-up
+    try {
+      for(T injectable : injectables) {
+        ensureNotDuplicate(injectable);
+        putInternal(injectable);
+        addedInjectables.add(injectable);
+      }
+    }
+    catch(Exception e) {
+      policy.removeAll(this, injectables);
 
-    putAllInternal(injectables);
-  }
+      for(T injectable : addedInjectables) {
+        removeInternal(injectable);
+      }
 
-  private void putAllInternal(List<T> injectables) {
-    for(T injectable : injectables) {
-      ensureInjectableIsValid(injectable);  // These checks are duplicated for the tempStore.putAllInternal call
-      ensureNotDuplicate(injectable);
-
-      putInternal(injectable);
+      throw e;
     }
   }
 
@@ -355,25 +358,6 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     @Override
     public void discoverType(InjectableStore<T> injectableStore, Type type) {
       // Discover nothing
-    }
-  }
-
-  class InternalResolver implements Resolver<T> {
-    private final Resolver<T> a;
-    private final Resolver<T> b;
-
-    InternalResolver(Resolver<T> a, Resolver<T> b) {
-      this.a = a;
-      this.b = b;
-    }
-
-    @Override
-    public Set<T> resolve(Type type, Object... criteria) {
-      Set<T> set = new HashSet<>(a.resolve(type, criteria));
-
-      set.addAll(b.resolve(type, criteria));
-
-      return set;
     }
   }
 }

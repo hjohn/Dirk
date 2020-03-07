@@ -3,7 +3,6 @@ package hs.ddif.core;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.RuntimeBeanResolutionException;
-import hs.ddif.core.store.DuplicateBeanException;
 import hs.ddif.core.test.injectables.BeanWithProvider;
 import hs.ddif.core.test.injectables.SimpleBean;
 import hs.ddif.core.util.AnnotationDescriptor;
@@ -122,7 +121,7 @@ public class InjectorProviderTest {
         injector.register(SimpleDatabaseProvider.class);
         fail();
       }
-      catch(DuplicateBeanException e) {
+      catch(ViolatesSingularDependencyException e) {
       }
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
