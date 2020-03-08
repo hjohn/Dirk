@@ -51,7 +51,7 @@ public class DependencySorter {
               if(injectable instanceof ProvidedInjectable) {
                 ProvidedInjectable providedInjectable = (ProvidedInjectable)injectable;
 
-                requiredType = providedInjectable.getTypeImplementingProvider();
+                requiredType = providedInjectable.getOwnerType();
               }
 
               dg.addEdge(requiredType, classInjectable.getType());

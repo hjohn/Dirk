@@ -16,35 +16,35 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 
 public class ProvidedInjectable extends AbstractResolvableInjectable {
   private final Provider<?> provider;
-  private final Type typeImplementingProvider;
+  private final Type ownerType;
 
   public ProvidedInjectable(Provider<?> provider, AnnotationDescriptor... descriptors) {
     this(provider.getClass(), provider, descriptors);
   }
 
-  public ProvidedInjectable(Type typeImplementingProvider, AnnotationDescriptor... descriptors) {
-    this(typeImplementingProvider, null, descriptors);
+  public ProvidedInjectable(Type ownerType, AnnotationDescriptor... descriptors) {
+    this(ownerType, null, descriptors);
   }
 
-  private ProvidedInjectable(Type typeImplementingProvider, Provider<?> provider, AnnotationDescriptor... descriptors) {
-    super(Collections.emptyMap(), null, determineProvidedType(typeImplementingProvider), true, descriptors);
+  private ProvidedInjectable(Type ownerType, Provider<?> provider, AnnotationDescriptor... descriptors) {
+    super(Collections.emptyMap(), null, determineProvidedType(ownerType), true, descriptors);
 
-    this.typeImplementingProvider = typeImplementingProvider;
+    this.ownerType = ownerType;
     this.provider = provider;
   }
 
-  private static Type determineProvidedType(Type typeImplementingProvider) {
-    if(typeImplementingProvider == null) {
-      throw new IllegalArgumentException("typeImplementingProvider cannot be null");
+  private static Type determineProvidedType(Type ownerType) {
+    if(ownerType == null) {
+      throw new IllegalArgumentException("ownerType cannot be null");
     }
 
-    return TypeUtils.getTypeArguments(typeImplementingProvider, Provider.class).get(Provider.class.getTypeParameters()[0]);
+    return TypeUtils.getTypeArguments(ownerType, Provider.class).get(Provider.class.getTypeParameters()[0]);
   }
 
   @Override
   public Object getInstance(Instantiator instantiator, NamedParameter... namedParameters) throws BeanResolutionException {
     try {
-      return provider == null ? ((Provider<?>)instantiator.getParameterizedInstance(typeImplementingProvider, namedParameters, getQualifiers().toArray())).get() : provider.get();
+      return provider == null ? ((Provider<?>)instantiator.getParameterizedInstance(ownerType, namedParameters, getQualifiers().toArray())).get() : provider.get();
     }
     catch(Exception e) {
       throw new BeanResolutionException(getType(), e);
@@ -56,13 +56,13 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
    *
    * @return the type which implements the Provider interface, never null
    */
-  public Type getTypeImplementingProvider() {
-    return typeImplementingProvider;
+  public Type getOwnerType() {
+    return ownerType;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(provider, getQualifiers(), typeImplementingProvider);
+    return Objects.hash(provider, getQualifiers(), ownerType);
   }
 
   @Override
@@ -78,7 +78,7 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
 
     return getQualifiers().equals(other.getQualifiers())
         && Objects.equals(provider, other.provider)
-        && Objects.equals(typeImplementingProvider, other.typeImplementingProvider);
+        && Objects.equals(ownerType, other.ownerType);
   }
 
   @Override

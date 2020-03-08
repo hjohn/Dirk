@@ -10,17 +10,23 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.reflect.TypeUtils;
+
 /**
  * A {@link ResolvableInjectable} for creating instances based on a {@link Method}.
  */
 public class MethodInjectable implements ResolvableInjectable {
   private final Method method;
+  private final Type ownerType;
   private final Type injectableType;
   private final Map<AccessibleObject, List<Binding>> externalBindings;
   private final List<ResolvableBinding> bindings;
@@ -34,14 +40,40 @@ public class MethodInjectable implements ResolvableInjectable {
    * return type of the method.
    *
    * @param method a {@link Method}, cannot be null
+   * @param ownerType the type of the owner of the method, cannot be null and must match with {@link Method#getDeclaringClass()}
    */
-  public MethodInjectable(Method method) {
+  public MethodInjectable(Method method, Type ownerType) {
     if(method == null) {
       throw new IllegalArgumentException("method cannot be null");
     }
+    if(ownerType == null) {
+      throw new IllegalArgumentException("ownerType cannot be null");
+    }
+
+    Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(ownerType, method.getDeclaringClass());
+
+    if(typeArguments == null) {
+      throw new IllegalArgumentException("ownerType must be assignable to method's declaring class: " + ownerType + "; declaring class: " + method.getDeclaringClass());
+    }
+
+    Type returnType = TypeUtils.unrollVariables(typeArguments, method.getGenericReturnType());
+
+    if(returnType == null) {
+      throw new BindingException("Method has unresolved return type: " + method);
+    }
+    if(TypeUtils.containsTypeVariables(returnType)) {
+      throw new BindingException("Method has unresolved type variables: " + method);
+    }
+    if(returnType == void.class) {
+      throw new BindingException("Method has no return type: " + method);
+    }
+    if(method.isAnnotationPresent(Inject.class)) {
+      throw new BindingException("Method cannot be annotated with Inject: " + method);
+    }
 
     this.method = method;
-    this.injectableType = method.getGenericReturnType();
+    this.ownerType = ownerType;
+    this.injectableType = returnType;
     this.qualifiers = AnnotationExtractor.extractQualifiers(method);
     this.bindings = ResolvableBindingProvider.ofExecutable(method);
     this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(method);
@@ -63,7 +95,7 @@ public class MethodInjectable implements ResolvableInjectable {
 
   private Object constructInstance(Instantiator instantiator) {
     try {
-      Object obj = instantiator.getInstance(method.getDeclaringClass());
+      Object obj = instantiator.getInstance(ownerType);
       Object[] values = new Object[bindings.size()];  // Parameters for method
 
       for(int i = 0; i < values.length; i++) {
@@ -106,7 +138,7 @@ public class MethodInjectable implements ResolvableInjectable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(injectableType, qualifiers);
+    return Objects.hash(injectableType, qualifiers, ownerType);
   }
 
   @Override
@@ -121,7 +153,8 @@ public class MethodInjectable implements ResolvableInjectable {
     MethodInjectable other = (MethodInjectable)obj;
 
     return injectableType.equals(other.injectableType)
-        && qualifiers.equals(other.qualifiers);
+        && qualifiers.equals(other.qualifiers)
+        && ownerType.equals(other.ownerType);
   }
 
   @Override
