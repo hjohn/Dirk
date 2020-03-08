@@ -10,6 +10,7 @@ public class StyledTextProvider implements TextProvider {
   @Inject
   private TextStyler textStyler;
 
+  @Override
   public String provideText() {
     return textStyler.styleText("Styled Text");
   }

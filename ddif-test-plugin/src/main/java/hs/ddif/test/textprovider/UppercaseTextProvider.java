@@ -12,6 +12,7 @@ public class UppercaseTextProvider implements TextProvider {
   @Inject
   private TextUppercaser uppercaser;
 
+  @Override
   public String provideText() {
     return uppercaser.uppercase("Normal Text");
   }

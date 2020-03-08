@@ -7,6 +7,7 @@ import javax.inject.Named;
 @Named
 public class TextDatabase implements Database {
 
+  @Override
   public String getType() {
     return "textdb";
   }

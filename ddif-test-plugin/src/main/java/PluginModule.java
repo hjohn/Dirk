@@ -12,7 +12,7 @@ public class PluginModule implements Module {
 
   @Override
   public List<Type> getTypes() {
-    return new ArrayList<Type>() {{
+    return new ArrayList<>() {{
       add(TextUppercaser.class);
       add(FancyTextProvider.class);
       add(UppercaseTextProvider.class);
