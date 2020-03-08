@@ -4,10 +4,11 @@ import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.store.DiscoveryPolicy;
 import hs.ddif.core.store.InjectableStore;
-import hs.ddif.core.util.TypeUtils;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * This discovery policy will automatically attempt to add classes to the injectable
@@ -28,7 +29,7 @@ public class JustInTimeDiscoveryPolicy implements DiscoveryPolicy<ResolvableInje
 
   @Override
   public void discoverType(InjectableStore<ResolvableInjectable> injectableStore, Type type) {
-    Class<?> typeClass = TypeUtils.determineClassFromType(type);
+    Class<?> typeClass = TypeUtils.getRawType(type, null);
 
     if(!Modifier.isAbstract(typeClass.getModifiers())) {
       injectableStore.put(new ClassInjectable(type));

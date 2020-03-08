@@ -9,7 +9,6 @@ import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.InjectableStore;
-import hs.ddif.core.util.TypeUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -28,6 +27,7 @@ import java.util.logging.Logger;
 
 import javax.inject.Provider;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
 import org.reflections.scanners.MethodAnnotationsScanner;
@@ -152,7 +152,7 @@ public class PluginManager {
 
               if(key != null) {
                 Type type = key.getType();
-                Class<?> typeClass = TypeUtils.determineClassFromType(type);
+                Class<?> typeClass = TypeUtils.getRawType(type, null);
 
                 if(!Modifier.isAbstract(typeClass.getModifiers()) && !baseStore.contains(key.getType(), (Object[])key.getQualifiersAsArray())) {
                   putInStore(store, typeClass);

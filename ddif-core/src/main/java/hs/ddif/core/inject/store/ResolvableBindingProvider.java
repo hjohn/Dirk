@@ -6,7 +6,6 @@ import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.RuntimeBeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
-import hs.ddif.core.util.TypeUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -26,6 +25,8 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
+
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 import io.leangen.geantyref.GenericTypeReflector;
 import io.leangen.geantyref.TypeFactory;
@@ -114,17 +115,23 @@ public class ResolvableBindingProvider {
   }
 
   private static ResolvableBinding createBinding(AccessibleObject accessibleObject, int argNo, boolean isProviderAlready, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
-    final Class<?> cls = TypeUtils.determineClassFromType(type);
+    final Class<?> cls = TypeUtils.getRawType(type, null);
 
     if(!isParameter) {
       if(Set.class.isAssignableFrom(cls)) {
-        return new HashSetBinding(accessibleObject, argNo, TypeUtils.getGenericType(type), qualifiers, optional);
+        Type elementType = TypeUtils.getTypeArguments(type, Set.class).get(Set.class.getTypeParameters()[0]);
+
+        return new HashSetBinding(accessibleObject, argNo, elementType, qualifiers, optional);
       }
       if(List.class.isAssignableFrom(cls)) {
-        return new ArrayListBinding(accessibleObject, argNo, TypeUtils.getGenericType(type), qualifiers, optional);
+        Type elementType = TypeUtils.getTypeArguments(type, List.class).get(List.class.getTypeParameters()[0]);
+
+        return new ArrayListBinding(accessibleObject, argNo, elementType, qualifiers, optional);
       }
       if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
-        return new ProviderBinding(accessibleObject, argNo, createBinding(accessibleObject, argNo, true, TypeUtils.getGenericType(type), false, false, qualifiers));
+        Type providedType = TypeUtils.getTypeArguments(type, Provider.class).get(Provider.class.getTypeParameters()[0]);
+
+        return new ProviderBinding(accessibleObject, argNo, createBinding(accessibleObject, argNo, true, providedType, false, false, qualifiers));
       }
     }
 
