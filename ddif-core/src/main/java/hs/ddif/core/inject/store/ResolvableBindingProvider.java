@@ -1,5 +1,6 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.core.Opt;
 import hs.ddif.core.bind.Key;
 import hs.ddif.core.bind.Parameter;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
@@ -157,7 +158,9 @@ public class ResolvableBindingProvider {
 
   private static boolean isOptional(Annotation[] annotations) {
     for(Annotation annotation : annotations) {
-      if(annotation.annotationType().getSimpleName().equals("Nullable")) {
+      String simpleName = annotation.annotationType().getSimpleName();
+
+      if(simpleName.equals("Nullable") || annotation.annotationType().equals(Opt.class)) {
         return true;
       }
     }
