@@ -3,7 +3,6 @@ package hs.ddif.core.bind;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
@@ -17,18 +16,12 @@ public class Key {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
-
-    this.type = type;
-    this.qualifiers = Collections.unmodifiableSet(new HashSet<>(qualifiers));
-  }
-
-  public Key(Type type, AnnotationDescriptor... qualifiers) {
-    if(type == null) {
-      throw new IllegalArgumentException("type cannot be null");
+    if(qualifiers == null) {
+      throw new IllegalArgumentException("qualifiers cannot be null");
     }
 
     this.type = type;
-    this.qualifiers = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(qualifiers)));
+    this.qualifiers = Collections.unmodifiableSet(new HashSet<>(qualifiers));
   }
 
   public Set<AnnotationDescriptor> getQualifiers() {
