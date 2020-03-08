@@ -4,14 +4,14 @@ import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.util.AnnotationDescriptor;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class InstanceInjectable extends AbstractResolvableInjectable {
   private final Object instance;
 
   public InstanceInjectable(Object instance, AnnotationDescriptor... descriptors) {
-    super(Collections.emptyMap(), null, instance.getClass(), false, descriptors);
+    super(List.of(), null, instance.getClass(), false, descriptors);
 
     this.instance = instance;
   }

@@ -50,7 +50,7 @@ public class ResolvableBindingProvider {
         if(inject != null) {
           Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
 
-          bindings.put(field, List.of(createBinding(type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))));
+          bindings.put(field, List.of(createBinding(field, -1, type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))));
         }
       }
 
@@ -101,7 +101,7 @@ public class ResolvableBindingProvider {
     for(int i = 0; i < genericParameterTypes.length; i++) {
       Type type = genericParameterTypes[i];
       AnnotationDescriptor[] qualifiers = extractQualifiers(parameterAnnotations[i]);
-      ResolvableBinding binding = createBinding(type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, qualifiers);
+      ResolvableBinding binding = createBinding(executable, i, type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, qualifiers);
 
       bindings.add(binding);
     }
@@ -109,28 +109,28 @@ public class ResolvableBindingProvider {
     return Collections.unmodifiableList(bindings);
   }
 
-  private static ResolvableBinding createBinding(Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
-    return createBinding(false, type, optional, isParameter, qualifiers);
+  private static ResolvableBinding createBinding(AccessibleObject accessibleObject, int argNo, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
+    return createBinding(accessibleObject, argNo, false, type, optional, isParameter, qualifiers);
   }
 
-  private static ResolvableBinding createBinding(boolean isProviderAlready, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
+  private static ResolvableBinding createBinding(AccessibleObject accessibleObject, int argNo, boolean isProviderAlready, Type type, boolean optional, boolean isParameter, AnnotationDescriptor... qualifiers) {
     final Class<?> cls = TypeUtils.determineClassFromType(type);
 
     if(!isParameter) {
       if(Set.class.isAssignableFrom(cls)) {
-        return new HashSetBinding(TypeUtils.getGenericType(type), qualifiers, optional);
+        return new HashSetBinding(accessibleObject, argNo, TypeUtils.getGenericType(type), qualifiers, optional);
       }
       if(List.class.isAssignableFrom(cls)) {
-        return new ArrayListBinding(TypeUtils.getGenericType(type), qualifiers, optional);
+        return new ArrayListBinding(accessibleObject, argNo, TypeUtils.getGenericType(type), qualifiers, optional);
       }
       if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
-        return new ProviderBinding(createBinding(true, TypeUtils.getGenericType(type), false, false, qualifiers));
+        return new ProviderBinding(accessibleObject, argNo, createBinding(accessibleObject, argNo, true, TypeUtils.getGenericType(type), false, false, qualifiers));
       }
     }
 
     Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
 
-    return new DirectBinding(new Key(finalType, qualifiers), optional, isParameter);
+    return new DirectBinding(accessibleObject, argNo, new Key(finalType, qualifiers), optional, isParameter);
   }
 
   private static AnnotationDescriptor[] extractQualifiers(Field field) {
@@ -172,12 +172,45 @@ public class ResolvableBindingProvider {
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(double.class, Double.class);
   }
 
-  private static final class HashSetBinding implements ResolvableBinding {
+  private static abstract class AbstractBinding implements ResolvableBinding {
+    private final AccessibleObject accessibleObject;
+    private final int argNo;
+    private final Type type;
+
+    AbstractBinding(AccessibleObject accessibleObject, int argNo, Type type) {
+      this.accessibleObject = accessibleObject;
+      this.argNo = argNo;
+      this.type = type;
+    }
+
+    @Override
+    public AccessibleObject getAccessibleObject() {
+      return accessibleObject;
+    }
+
+    @Override
+    public final Type getType() {
+      return type;
+    }
+
+    @Override
+    public String toString() {
+      if(accessibleObject instanceof Executable) {
+        return "Parameter " + argNo + " of [" + accessibleObject.toString() + "]";
+      }
+
+      return "Field [" + accessibleObject.toString() + "]";
+    }
+  }
+
+  private static final class HashSetBinding extends AbstractBinding {
     private final AnnotationDescriptor[] qualifiers;
     private final Type elementType;
     private final boolean optional;
 
-    private HashSetBinding(Type elementType, AnnotationDescriptor[] qualifiers, boolean optional) {
+    private HashSetBinding(AccessibleObject accessibleObject, int argNo, Type elementType, AnnotationDescriptor[] qualifiers, boolean optional) {
+      super(accessibleObject, argNo, Set.class);
+
       this.qualifiers = qualifiers;
       this.elementType = elementType;
       this.optional = optional;
@@ -196,11 +229,6 @@ public class ResolvableBindingProvider {
     }
 
     @Override
-    public Type getType() {
-      return Set.class;
-    }
-
-    @Override
     public Key getRequiredKey() {
       return null;
     }
@@ -211,12 +239,14 @@ public class ResolvableBindingProvider {
     }
   }
 
-  private static final class ArrayListBinding implements ResolvableBinding {
+  private static final class ArrayListBinding extends AbstractBinding {
     private final Type elementType;
     private final AnnotationDescriptor[] qualifiers;
     private final boolean optional;
 
-    private ArrayListBinding(Type elementType, AnnotationDescriptor[] qualifiers, boolean optional) {
+    private ArrayListBinding(AccessibleObject accessibleObject, int argNo, Type elementType, AnnotationDescriptor[] qualifiers, boolean optional) {
+      super(accessibleObject, argNo, List.class);
+
       this.elementType = elementType;
       this.qualifiers = qualifiers;
       this.optional = optional;
@@ -235,11 +265,6 @@ public class ResolvableBindingProvider {
     }
 
     @Override
-    public Type getType() {
-      return ArrayList.class;
-    }
-
-    @Override
     public Key getRequiredKey() {
       return null;
     }
@@ -250,10 +275,12 @@ public class ResolvableBindingProvider {
     }
   }
 
-  private static final class ProviderBinding implements ResolvableBinding {
+  private static final class ProviderBinding extends AbstractBinding {
     private final ResolvableBinding binding;
 
-    private ProviderBinding(ResolvableBinding binding) {
+    private ProviderBinding(AccessibleObject accessibleObject, int argNo, ResolvableBinding binding) {
+      super(accessibleObject, argNo, binding.getType());
+
       this.binding = binding;
     }
 
@@ -295,11 +322,6 @@ public class ResolvableBindingProvider {
     }
 
     @Override
-    public Type getType() {
-      return binding.getType();
-    }
-
-    @Override
     public Key getRequiredKey() {
       return null;  // nothing required, as providers are used to break cyclical dependencies
     }
@@ -308,19 +330,16 @@ public class ResolvableBindingProvider {
     public boolean isParameter() {
       return false;
     }
-
-    @Override
-    public String toString() {
-      return "ProviderBinding[binding=" + binding + "]";
-    }
   }
 
-  private static final class DirectBinding implements ResolvableBinding {
+  private static final class DirectBinding extends AbstractBinding {
     private final Key key;
     private final boolean optional;
     private final boolean isParameter;
 
-    private DirectBinding(Key requiredKey, boolean optional, boolean isParameter) {
+    private DirectBinding(AccessibleObject accessibleObject, int argNo, Key requiredKey, boolean optional, boolean isParameter) {
+      super(accessibleObject, argNo, requiredKey.getType());
+
       this.key = requiredKey;
       this.optional = optional;
       this.isParameter = isParameter;
@@ -342,11 +361,6 @@ public class ResolvableBindingProvider {
     }
 
     @Override
-    public Type getType() {
-      return key.getType();
-    }
-
-    @Override
     public Key getRequiredKey() {
       return optional || isParameter ? null : key;
     }
@@ -359,11 +373,6 @@ public class ResolvableBindingProvider {
     @Override
     public boolean isParameter() {
       return isParameter;
-    }
-
-    @Override
-    public String toString() {
-      return "DirectBinding[cls=" + key.getType() + "; key=" + getRequiredKey() + "]";
     }
   }
 }

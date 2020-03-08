@@ -7,12 +7,10 @@ import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -94,8 +92,8 @@ public class FieldInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Map<AccessibleObject, List<Binding>> getBindings() {
-    return Collections.emptyMap();
+  public List<Binding> getBindings() {
+    return List.of();
   }
 
   @Override

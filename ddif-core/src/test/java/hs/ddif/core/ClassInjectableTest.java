@@ -17,6 +17,7 @@ import javax.inject.Singleton;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -39,7 +40,7 @@ public class ClassInjectableTest {
     assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
     assertEquals(SimpleClass.class.getAnnotation(Singleton.class), injectable.getScope());
-    assertEquals(1, injectable.getBindings().size());
+    assertThat(injectable.getBindings()).hasSize(0);
     assertTrue(injectable.getInstance(instantiator) instanceof SimpleClass);
 
     injectable = new ClassInjectable(ClassWithDependencies.class);
@@ -47,7 +48,7 @@ public class ClassInjectableTest {
     assertEquals(ClassWithDependencies.class, injectable.getType());
     assertEquals(Collections.singleton(new AnnotationDescriptor(ClassWithDependencies.class.getAnnotation(Red.class))), injectable.getQualifiers());
     assertNull(injectable.getScope());
-    assertEquals(2, injectable.getBindings().size());
+    assertThat(injectable.getBindings()).hasSize(4);
 
     ClassWithDependencies instance = (ClassWithDependencies)injectable.getInstance(instantiator);
 

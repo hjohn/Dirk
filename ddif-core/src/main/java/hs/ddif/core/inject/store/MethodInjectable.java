@@ -7,7 +7,6 @@ import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -28,7 +27,6 @@ public class MethodInjectable implements ResolvableInjectable {
   private final Method method;
   private final Type ownerType;
   private final Type injectableType;
-  private final Map<AccessibleObject, List<Binding>> externalBindings;
   private final List<ResolvableBinding> bindings;
   private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
@@ -77,11 +75,6 @@ public class MethodInjectable implements ResolvableInjectable {
     this.qualifiers = AnnotationExtractor.extractQualifiers(method);
     this.bindings = ResolvableBindingProvider.ofExecutable(method);
     this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(method);
-
-    @SuppressWarnings("unchecked")
-    Map<AccessibleObject, List<Binding>> externalBindings = Map.of(method, (List<Binding>)(List<?>)bindings);
-
-    this.externalBindings = externalBindings;
   }
 
   @Override
@@ -111,9 +104,10 @@ public class MethodInjectable implements ResolvableInjectable {
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public Map<AccessibleObject, List<Binding>> getBindings() {
-    return externalBindings;
+  public List<Binding> getBindings() {
+    return (List<Binding>)(List<?>)bindings;  // safe cast, list is immutable
   }
 
   @Override

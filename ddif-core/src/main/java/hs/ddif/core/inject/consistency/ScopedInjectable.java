@@ -4,9 +4,7 @@ import hs.ddif.core.bind.Binding;
 import hs.ddif.core.store.Injectable;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
 import java.util.List;
-import java.util.Map;
 
 /**
  * An {@link Injectable} with associated scope and binding information needed by
@@ -15,11 +13,11 @@ import java.util.Map;
 public interface ScopedInjectable extends Injectable {
 
   /**
-   * Returns the {@link Binding}s required.
+   * Returns the {@link Binding}s detected.
    *
-   * @return a {@link Map} of {@link Binding} lists, never null, can be empty if no bindings are needed.
+   * @return a list {@link Binding}s, never null, can be empty if no bindings are detected.
    */
-  Map<AccessibleObject, List<Binding>> getBindings();
+  List<Binding> getBindings();
 
   /**
    * Returns the scope of this {@link Injectable}.

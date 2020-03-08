@@ -1,5 +1,6 @@
 package hs.ddif.core.bind;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 
 /**
@@ -19,6 +20,13 @@ public interface Binding {
    * @return the Key this binding requires to resolve properly, or <code>null</code> if none are required
    */
   Key getRequiredKey();
+
+  /**
+   * Returns the {@link AccessibleObject} target for the binding.
+   *
+   * @return the {@link AccessibleObject} target for the binding, never null
+   */
+  AccessibleObject getAccessibleObject();
 
   /**
    * Returns the {@link Type} of the binding.

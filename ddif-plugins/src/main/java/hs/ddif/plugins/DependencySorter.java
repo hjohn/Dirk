@@ -40,34 +40,32 @@ public class DependencySorter {
     }
 
     for(ClassInjectable classInjectable : classInjectables) {
-      for(List<Binding> bindings : classInjectable.getBindings().values()) {
-        for(Binding binding : bindings) {
-          Key requiredKey = binding.getRequiredKey();
+      for(Binding binding : classInjectable.getBindings()) {
+        Key requiredKey = binding.getRequiredKey();
 
-          if(requiredKey != null) {
-            for(Injectable injectable : store.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray())) {
-              Type requiredType = injectable.getType();
+        if(requiredKey != null) {
+          for(Injectable injectable : store.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray())) {
+            Type requiredType = injectable.getType();
 
-              if(injectable instanceof ProvidedInjectable) {
-                ProvidedInjectable providedInjectable = (ProvidedInjectable)injectable;
+            if(injectable instanceof ProvidedInjectable) {
+              ProvidedInjectable providedInjectable = (ProvidedInjectable)injectable;
 
-                requiredType = providedInjectable.getOwnerType();
-              }
-
-              dg.addEdge(requiredType, classInjectable.getType());
+              requiredType = providedInjectable.getOwnerType();
             }
 
-            /*
-             * Also create link between the class with Producer annotation and the class depending on the
-             * Producer.  The store.resolve call won't find this relationship as the Producer itself was
-             * not added to the store, only its annotated result class.
-             */
+            dg.addEdge(requiredType, classInjectable.getType());
+          }
 
-            Type producerAnnotatedType = annotatedClassByProducerClass.get(requiredKey.getType());
+          /*
+           * Also create link between the class with Producer annotation and the class depending on the
+           * Producer.  The store.resolve call won't find this relationship as the Producer itself was
+           * not added to the store, only its annotated result class.
+           */
 
-            if(producerAnnotatedType != null) {
-              dg.addEdge(producerAnnotatedType, classInjectable.getType());
-            }
+          Type producerAnnotatedType = annotatedClassByProducerClass.get(requiredKey.getType());
+
+          if(producerAnnotatedType != null) {
+            dg.addEdge(producerAnnotatedType, classInjectable.getType());
           }
         }
       }

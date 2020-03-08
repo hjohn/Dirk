@@ -7,7 +7,7 @@ import hs.ddif.core.inject.store.AbstractResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.reflect.Type;
-import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Provider;
@@ -27,7 +27,7 @@ public class ProvidedInjectable extends AbstractResolvableInjectable {
   }
 
   private ProvidedInjectable(Type ownerType, Provider<?> provider, AnnotationDescriptor... descriptors) {
-    super(Collections.emptyMap(), null, determineProvidedType(ownerType), true, descriptors);
+    super(List.of(), null, determineProvidedType(ownerType), true, descriptors);
 
     this.ownerType = ownerType;
     this.provider = provider;

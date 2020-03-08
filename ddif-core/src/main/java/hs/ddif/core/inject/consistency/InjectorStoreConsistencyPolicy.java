@@ -8,7 +8,6 @@ import hs.ddif.core.store.StoreConsistencyPolicy;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -153,25 +152,21 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
   }
 
   private static void increaseReferenceCounters(ScopedInjectable injectable, Map<Key, Integer> referenceCounters) {
-    for(List<Binding> bindings : injectable.getBindings().values()) {
-      for(Binding binding : bindings) {
-        Key requiredKey = binding.getRequiredKey();
+    for(Binding binding : injectable.getBindings()) {
+      Key requiredKey = binding.getRequiredKey();
 
-        if(requiredKey != null) {
-          addReference(requiredKey, referenceCounters);
-        }
+      if(requiredKey != null) {
+        addReference(requiredKey, referenceCounters);
       }
     }
   }
 
   private static void decreaseReferenceCounters(ScopedInjectable injectable, Map<Key, Integer> referenceCounters, boolean allowNegativeReferenceCount) {
-    for(List<Binding> bindings : injectable.getBindings().values()) {
-      for(Binding binding : bindings) {
-        Key requiredKey = binding.getRequiredKey();
+    for(Binding binding : injectable.getBindings()) {
+      Key requiredKey = binding.getRequiredKey();
 
-        if(requiredKey != null) {
-          removeReference(requiredKey, referenceCounters, allowNegativeReferenceCount);
-        }
+      if(requiredKey != null) {
+        removeReference(requiredKey, referenceCounters, allowNegativeReferenceCount);
       }
     }
   }
@@ -222,34 +217,31 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
   }
 
   private void ensureRequiredBindingsAreAvailable(Resolver<T> resolver, T injectable) {
-    Map<AccessibleObject, List<Binding>> bindings = injectable.getBindings();
 
     /*
      * Check the created bindings for unresolved or ambigious dependencies and scope problems:
      */
 
-    for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
-      for(Binding binding : entry.getValue()) {
-        Key requiredKey = binding.getRequiredKey();
+    for(Binding binding : injectable.getBindings()) {
+      Key requiredKey = binding.getRequiredKey();
 
-        if(requiredKey != null) {
-          Set<T> injectables = resolver.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray());
+      if(requiredKey != null) {
+        Set<T> injectables = resolver.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray());
 
-          ensureBindingIsSingular(injectable, entry.getKey(), requiredKey, injectables);
+        ensureBindingIsSingular(binding, injectables);
 
-          T dependency = injectables.iterator().next();  // Previous ensureBindingIsSingular check ensures there is only a single element in the set
+        T dependency = injectables.iterator().next();  // Previous ensureBindingIsSingular check ensures there is only a single element in the set
 
-          if(dependency.isTemplate()) {  // When there is only a single instance (with no way to create more), there are never any scope conflicts
-            ensureBindingScopeIsValid(injectable, dependency);
-          }
+        if(dependency.isTemplate()) {  // When there is only a single instance (with no way to create more), there are never any scope conflicts
+          ensureBindingScopeIsValid(injectable, dependency);
         }
       }
     }
   }
 
-  private void ensureBindingIsSingular(T injectable, AccessibleObject accessibleObject, Key requiredKey, Set<T> injectables) {
+  private void ensureBindingIsSingular(Binding binding, Set<T> injectables) {
     if(injectables.size() != 1) {
-      throw new UnresolvableDependencyException(injectable, accessibleObject, requiredKey, injectables);
+      throw new UnresolvableDependencyException(binding, injectables);
     }
   }
 
@@ -292,18 +284,16 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
       boolean hasCycle(T injectable) {
         visiting.add(injectable);
 
-        for(List<Binding> bindings : injectable.getBindings().values()) {
-          for(Binding binding : bindings) {
-            Key key = binding.getRequiredKey();
+        for(Binding binding : injectable.getBindings()) {
+          Key key = binding.getRequiredKey();
 
-            if(key != null) {
-              for(T boundInjectable : resolver.resolve(key.getType(), (Object[])key.getQualifiersAsArray())) {
-                if(visiting.contains(boundInjectable)) {
-                  return true;
-                }
-                else if(!visited.contains(boundInjectable) && input.contains(boundInjectable) && hasCycle(boundInjectable)) {
-                  return true;
-                }
+          if(key != null) {
+            for(T boundInjectable : resolver.resolve(key.getType(), (Object[])key.getQualifiersAsArray())) {
+              if(visiting.contains(boundInjectable)) {
+                return true;
+              }
+              else if(!visited.contains(boundInjectable) && input.contains(boundInjectable) && hasCycle(boundInjectable)) {
+                return true;
               }
             }
           }

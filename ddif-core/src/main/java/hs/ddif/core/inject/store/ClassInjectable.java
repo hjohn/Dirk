@@ -15,10 +15,12 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -30,6 +32,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 public class ClassInjectable implements ResolvableInjectable {
   private final Type injectableType;
   private final Map<AccessibleObject, List<ResolvableBinding>> bindings;
+  private final List<Binding> externalBindings;
   private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
   private final PostConstructor postConstructor;
@@ -65,6 +68,7 @@ public class ClassInjectable implements ResolvableInjectable {
     this.bindings = ResolvableBindingProvider.ofClass(injectableClass);
     this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(injectableClass);
     this.postConstructor = new PostConstructor(injectableClass);
+    this.externalBindings = bindings.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
 
     /*
      * Check bindings to see if this injectable can be instantiated and injected.
@@ -217,10 +221,9 @@ public class ClassInjectable implements ResolvableInjectable {
     }
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Map<AccessibleObject, List<Binding>> getBindings() {
-    return (Map<AccessibleObject, List<Binding>>)(Map<?, ?>)bindings;
+  public List<Binding> getBindings() {
+    return externalBindings;
   }
 
   @Override

@@ -1,8 +1,6 @@
 package hs.ddif.core.store;
 
 import hs.ddif.core.ProvidedInjectable;
-import hs.ddif.core.bind.Binding;
-import hs.ddif.core.bind.Key;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.inject.store.InstanceInjectable;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
@@ -15,10 +13,7 @@ import hs.ddif.core.util.TypeReference;
 import hs.ddif.core.util.Value;
 
 import java.io.Serializable;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Constructor;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.RandomAccess;
 
@@ -31,8 +26,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,27 +47,13 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldStore() {
-    ClassInjectable injectable = new ClassInjectable(BeanWithBigRedInjection.class);
+    store.put(new ClassInjectable(BeanWithBigRedInjection.class));
 
-    store.put(injectable);
+    assertThat(store.resolve(Object.class, Big.class, Red.class)).isEmpty();
 
-    for(Map.Entry<AccessibleObject, List<Binding>> entry : injectable.getBindings().entrySet()) {
-      if(!(entry.getKey() instanceof Constructor)) {
-        Key requiredKey = entry.getValue().get(0).getRequiredKey();
+    store.put(new ClassInjectable(BigRedBean.class));
 
-        assertThat(store.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray()), empty());
-      }
-    }
-
-    injectable = new ClassInjectable(BigRedBean.class);
-
-    store.put(injectable);
-
-    for(Map.Entry<AccessibleObject, List<Binding>> entry : injectable.getBindings().entrySet()) {
-      if(!(entry.getKey() instanceof Constructor)) {
-        assertThat(store.resolve(entry.getValue().get(0).getRequiredKey().getType()), hasSize(1));
-      }
-    }
+    assertThat(store.resolve(Object.class, Big.class, Red.class)).hasSize(1);
   }
 
   @Test

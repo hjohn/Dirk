@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -154,7 +155,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
 
   private static Map<String, Type> createBindingNameMap(ResolvableInjectable injectable) {
     Class<?> injectableClass = (Class<?>)injectable.getType();
-    Map<AccessibleObject, List<Binding>> bindings = injectable.getBindings();
+    Map<AccessibleObject, List<Binding>> bindings = injectable.getBindings().stream().collect(Collectors.groupingBy(Binding::getAccessibleObject));
     Map<String, Type> parameterBindings = new HashMap<>();
 
     for(Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
