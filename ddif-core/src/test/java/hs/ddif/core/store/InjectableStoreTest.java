@@ -7,6 +7,7 @@ import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.core.test.qualifiers.Small;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.AnnotationUtils;
 import hs.ddif.core.util.TypeReference;
@@ -33,6 +34,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import io.leangen.geantyref.TypeFactory;
 
 public class InjectableStoreTest {
   @Rule @SuppressWarnings("deprecation")
@@ -224,6 +227,23 @@ public class InjectableStoreTest {
     }
   }
 
+  @Test
+  public void containsShouldWork() {
+    store.put(new ClassInjectable(A.class));
+
+    assertTrue(store.contains(A.class, Big.class));
+    assertTrue(store.contains(A.class, Red.class));
+    assertTrue(store.contains(A.class, Big.class, Red.class));
+    assertFalse(store.contains(B.class, Big.class, Red.class));
+    assertFalse(store.contains(A.class, Small.class, Red.class));
+
+    store.put(new ClassInjectable(StringProvider.class));
+
+    assertTrue(store.contains(TypeFactory.parameterizedClass(Provider.class, String.class)));
+    assertTrue(store.contains(new TypeReference<Provider<String>>() {}.getType()));
+    assertFalse(store.contains(new TypeReference<Provider<Long>>() {}.getType()));
+  }
+
   @Big @Red
   public static class A {
   }
@@ -281,7 +301,7 @@ public class InjectableStoreTest {
   interface StringProviderInterface extends Provider<String> {
   }
 
-  private static class StringProvider implements Provider<String> {
+  public static class StringProvider implements Provider<String> {
     @Override
     public String get() {
       return "string";

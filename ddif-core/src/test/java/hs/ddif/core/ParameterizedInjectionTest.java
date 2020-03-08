@@ -7,17 +7,17 @@ import hs.ddif.core.inject.store.ConstructionException;
 
 import javax.inject.Inject;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ParameterizedInjectionTest {
   private Injector injector = new Injector();
 
   @Test
-  public void registerShouldAcceptParameterizedClass() throws BeanResolutionException {
+  void registerShouldAcceptParameterizedClass() throws BeanResolutionException {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestParameterizedFieldSample.class);
@@ -29,22 +29,12 @@ public class ParameterizedInjectionTest {
       assertEquals((Integer)30, instance.interval);
 
       // Incorrect parameter case:
-      try {
-        injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)});
-        fail("Expected ConstructionException");
-      }
-      catch(ConstructionException e) {
-        assertTrue(e.getMessage(), e.getMessage().contains("Parameter 'interval' was not supplied"));
-      }
+      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)})))
+        .hasMessageStartingWith("Parameter 'interval' was not supplied");
 
       // Too many parameters case:
-      try {
-        injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("interval", 30)});
-        fail("Expected ConstructionException");
-      }
-      catch(ConstructionException e) {
-        assertTrue(e.getMessage(), e.getMessage().contains("Superflous parameters supplied"));
-      }
+      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("interval", 30)})))
+        .hasMessageStartingWith("Superflous parameters supplied");
 
       injector.remove(TestParameterizedFieldSample.class);
       injector.remove(TestService.class);
@@ -57,7 +47,7 @@ public class ParameterizedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptParameterizedConstructorClass() throws BeanResolutionException {
+  void registerShouldAcceptParameterizedConstructorClass() throws BeanResolutionException {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestParameterizedConstructorSample.class);
@@ -70,22 +60,12 @@ public class ParameterizedInjectionTest {
       assertEquals("abc", instance.prefix);
 
       // Incorrect parameter case:
-      try {
-        injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)});
-        fail("Expected ConstructionException");
-      }
-      catch(ConstructionException e) {
-        assertTrue(e.getMessage(), e.getMessage().contains("Parameter 'interval' was not supplied"));
-      }
+      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)})))
+        .hasMessageStartingWith("Parameter 'interval' was not supplied");
 
       // Too many parameters case:
-      try {
-        injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")});
-        fail("Expected ConstructionException");
-      }
-      catch(ConstructionException e) {
-        assertTrue(e.getMessage(), e.getMessage().contains("Superflous parameters supplied"));
-      }
+      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")})))
+        .hasMessageStartingWith("Superflous parameters supplied");
 
       injector.remove(TestParameterizedConstructorSample.class);
       injector.remove(TestService.class);
@@ -106,7 +86,7 @@ public class ParameterizedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptParameterizedMixedClass() throws BeanResolutionException {
+  void registerShouldAcceptParameterizedMixedClass() throws BeanResolutionException {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestParameterizedMixedSample.class);
@@ -119,22 +99,12 @@ public class ParameterizedInjectionTest {
       assertEquals("abc", instance.prefix);
 
       // Incorrect parameter case:
-      try {
-        injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)});
-        fail("Expected ConstructionException");
-      }
-      catch(ConstructionException e) {
-        assertTrue(e.getMessage(), e.getMessage().contains("Parameter 'interval' was not supplied"));
-      }
+      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)})))
+        .hasMessageStartingWith("Parameter 'interval' was not supplied");
 
       // Too many parameters case:
-      try {
-        injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")});
-        fail("Expected ConstructionException");
-      }
-      catch(ConstructionException e) {
-        assertTrue(e.getMessage(), e.getMessage().contains("Superflous parameters supplied"));
-      }
+      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")})))
+        .hasMessageStartingWith("Superflous parameters supplied");
 
       injector.remove(TestParameterizedMixedSample.class);
       injector.remove(TestService.class);
@@ -154,7 +124,7 @@ public class ParameterizedInjectionTest {
   }
 
   @Test
-  public void registerShouldNotCheckParameterTypesForSingularDependencyViolations() throws BeanResolutionException {
+  void registerShouldNotCheckParameterTypesForSingularDependencyViolations() throws BeanResolutionException {
     injector.register(TestService.class);
     injector.register(TestParameterizedFieldSample.class);
 
