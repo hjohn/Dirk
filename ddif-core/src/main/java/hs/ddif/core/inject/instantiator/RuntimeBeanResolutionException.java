@@ -1,10 +1,7 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.store.Injectable;
-
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.Set;
 
 import javax.inject.Provider;
 
@@ -20,14 +17,6 @@ public class RuntimeBeanResolutionException extends RuntimeException {
 
   public RuntimeBeanResolutionException(Type type, Throwable cause, Object... criteria) {
     super("No such bean: " + type + toCriteriaString(criteria), cause);
-  }
-
-  public RuntimeBeanResolutionException(Type type, Object... criteria) {
-    super("No such bean: " + type + toCriteriaString(criteria));
-  }
-
-  public RuntimeBeanResolutionException(Set<? extends Injectable> injectables, Type type, Object... criteria) {
-    super("Multiple matching beans: " + type + toCriteriaString(criteria) + ": " + injectables);
   }
 
   private static String toCriteriaString(Object... criteria) {
