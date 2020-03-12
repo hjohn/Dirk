@@ -676,7 +676,7 @@ public class InjectorTest {
   public void shouldFindInstanceByAbstractSuperClass() throws BeanResolutionException {
     injector.register(SubclassOfAbstractBean.class);
 
-    Set<AbstractBean> beans = injector.getInstances(AbstractBean.class);
+    List<AbstractBean> beans = injector.getInstances(AbstractBean.class);
 
     assertEquals(1, beans.size());
   }

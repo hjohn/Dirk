@@ -15,8 +15,8 @@ import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Provider;
 
@@ -152,7 +152,7 @@ public class Injector {
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> Set<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
+  public <T> List<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
     return instantiator.getInstances(type, criteria);
   }
 
@@ -167,7 +167,7 @@ public class Injector {
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> Set<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
+  public <T> List<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
     return instantiator.getInstances(cls, criteria);
   }
 

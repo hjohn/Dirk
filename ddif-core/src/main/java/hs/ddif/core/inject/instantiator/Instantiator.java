@@ -7,8 +7,9 @@ import hs.ddif.core.store.InjectableStore;
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -144,8 +145,8 @@ public class Instantiator {
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> Set<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
-    Set<T> instances = new HashSet<>();
+  public <T> List<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
+    List<T> instances = new ArrayList<>();
 
     for(ResolvableInjectable injectable : store.resolve(type, criteria)) {
       T instance = getInstance(injectable, NO_PARAMETERS);
@@ -169,7 +170,7 @@ public class Instantiator {
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> Set<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
+  public <T> List<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
     return getInstances((Type)cls, criteria);
   }
 

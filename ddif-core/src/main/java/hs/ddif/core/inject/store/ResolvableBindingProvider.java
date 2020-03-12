@@ -227,9 +227,9 @@ public class ResolvableBindingProvider {
 
     @Override
     public Object getValue(Instantiator instantiator) throws BeanResolutionException {
-      Set<Object> instances = instantiator.getInstances(elementType, qualifiers.toArray());
+      List<Object> instances = instantiator.getInstances(elementType, qualifiers.toArray());
 
-      return instances.isEmpty() && optional ? null : instances;
+      return instances.isEmpty() && optional ? null : new HashSet<>(instances);
     }
 
     @Override
@@ -263,9 +263,9 @@ public class ResolvableBindingProvider {
 
     @Override
     public Object getValue(Instantiator instantiator) throws BeanResolutionException {
-      Set<Object> instances = instantiator.getInstances(elementType, qualifiers.toArray());
+      List<Object> instances = instantiator.getInstances(elementType, qualifiers.toArray());
 
-      return instances.isEmpty() && optional ? null : new ArrayList<>(instances);
+      return instances.isEmpty() && optional ? null : instances;
     }
 
     @Override
