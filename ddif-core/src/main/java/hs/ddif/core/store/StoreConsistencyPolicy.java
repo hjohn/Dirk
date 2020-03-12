@@ -1,6 +1,6 @@
 package hs.ddif.core.store;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Interface for applying consistency checks on an {@link InjectableStore}.
@@ -14,16 +14,16 @@ public interface StoreConsistencyPolicy<T extends Injectable> {
    * exception should be thrown and the changes rolled back.
    *
    * @param resolver a {@link Resolver}, cannot be null
-   * @param injectables a list of injectables to add, cannot be null
+   * @param injectables a collection of injectables to add, cannot be null
    */
-  void addAll(Resolver<T> resolver, List<T> injectables);
+  void addAll(Resolver<T> resolver, Collection<T> injectables);
 
   /**
    * Removes the given {@link Injectable}s from this policy.  If the policy would be violated, then an
    * exception should be thrown and the changes rolled back.
    *
    * @param resolver a {@link Resolver}, cannot be null
-   * @param injectables a list of injectables to remove, cannot be null
+   * @param injectables a collection of injectables to remove, cannot be null
    */
-  void removeAll(Resolver<T> resolver, List<T> injectables);
+  void removeAll(Resolver<T> resolver, Collection<T> injectables);
 }

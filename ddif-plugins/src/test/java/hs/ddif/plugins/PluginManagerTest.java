@@ -1,7 +1,6 @@
 package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
@@ -44,7 +43,7 @@ public class PluginManagerTest {
 
   @Before
   public void before() {
-    injector = new Injector(new JustInTimeDiscoveryPolicy());
+    injector = new Injector(true);
     pluginManager = new PluginManager(injector.getStore());
 
     injector.register(BeanWithTextProviders.class);

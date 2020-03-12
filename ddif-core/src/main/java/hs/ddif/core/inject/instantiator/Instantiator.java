@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.inject.store.BindingExplorer;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.InjectableStore;
 
@@ -16,6 +17,8 @@ import java.util.WeakHashMap;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
+
 /**
  * Supplies fully injected classes from the supplied store (usually managed by an
  * Injector).  The instances are returned from cache or created as needed.
@@ -24,14 +27,16 @@ public class Instantiator {
   private static final NamedParameter[] NO_PARAMETERS = new NamedParameter[] {};
 
   private final InjectableStore<ResolvableInjectable> store;
+  private final boolean autoDiscovery;
 
   /**
    * Map containing {@link ScopeResolver}s this injector can use.
    */
   private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
 
-  public Instantiator(InjectableStore<ResolvableInjectable> store, ScopeResolver... scopeResolvers) {
+  public Instantiator(InjectableStore<ResolvableInjectable> store, boolean autoDiscovery, ScopeResolver... scopeResolvers) {
     this.store = store;
+    this.autoDiscovery = autoDiscovery;
 
     for(ScopeResolver scopeResolver : scopeResolvers) {
       scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
@@ -79,7 +84,7 @@ public class Instantiator {
    *   or when the given class has multiple matching candidates
    */
   public <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws BeanResolutionException {
-    Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
+    Set<ResolvableInjectable> injectables = resolve(type, criteria);
 
     if(injectables.isEmpty()) {
       throw new BeanResolutionException(type, criteria);
@@ -148,7 +153,7 @@ public class Instantiator {
   public <T> List<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
     List<T> instances = new ArrayList<>();
 
-    for(ResolvableInjectable injectable : store.resolve(type, criteria)) {
+    for(ResolvableInjectable injectable : resolve(type, criteria)) {
       T instance = getInstance(injectable, NO_PARAMETERS);
 
       if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
@@ -172,6 +177,23 @@ public class Instantiator {
    */
   public <T> List<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
     return getInstances((Type)cls, criteria);
+  }
+
+  private Set<ResolvableInjectable> resolve(Type type, Object... criteria) {
+    Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
+
+    if(injectables.isEmpty() && autoDiscovery && criteria.length == 0) {
+      Class<?> typeClass = TypeUtils.getRawType(type, null);
+      List<ResolvableInjectable> discovered = BindingExplorer.discover(store, typeClass);
+
+      if(!discovered.isEmpty()) {
+        store.putAll(discovered);
+
+        return store.resolve(type, criteria);
+      }
+    }
+
+    return injectables;
   }
 
   private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters) throws BeanResolutionException {

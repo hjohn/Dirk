@@ -7,6 +7,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,42 +35,19 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
   private final Map<Class<?>, Map<AnnotationDescriptor, Set<T>>> injectablesByDescriptorByType = new HashMap<>();
 
   private final StoreConsistencyPolicy<T> policy;
-  private final DiscoveryPolicy<T> discoveryPolicy;
-
-  public InjectableStore(StoreConsistencyPolicy<T> policy, DiscoveryPolicy<T> discoveryPolicy) {
-    this.policy = policy == null ? new NoStoreConsistencyPolicy() : policy;
-    this.discoveryPolicy = discoveryPolicy == null ? new NoDiscoveryPolicy() : discoveryPolicy;
-  }
 
   public InjectableStore(StoreConsistencyPolicy<T> policy) {
-    this(policy, null);
+    this.policy = policy == null ? new NoStoreConsistencyPolicy() : policy;
   }
 
   public InjectableStore() {
-    this(null, null);
+    this(null);
   }
 
   @Override
   public Set<T> resolve(Type type, Object... criteria) {
     Class<?> cls = TypeUtils.getRawType(type, null);
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
-
-    if(injectablesByDescriptor == null && criteria.length == 0) {  // injectables with criteria cannot be auto discovered
-
-      /*
-       * Attempt auto discovery, only for beans without criteria.
-       *
-       * As discovering means attempting to instantiate a class of the required type, there can only
-       * ever be one instance of such a class.  Distinguishing such a class with criteria therefore
-       * is near useless, as such criteria can only be annotated directly on the class.  It would only
-       * serve to restrict whether the class could be auto discovered or not -- all other combinations
-       * of criteria would always fail as a class can only be annotated in one way (unlike Providers).
-       */
-
-      discoveryPolicy.discoverType(this, type);
-
-      injectablesByDescriptor = injectablesByDescriptorByType.get(cls);  // Check again for matches after discovery
-    }
 
     if(injectablesByDescriptor == null) {
       return Collections.emptySet();
@@ -179,7 +157,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     removeAll(List.of(injectable));
   }
 
-  public void putAll(List<T> injectables) {
+  public void putAll(Collection<T> injectables) {
     for(T injectable : injectables) {
       ensureInjectableIsValid(injectable);
     }
@@ -207,7 +185,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
   }
 
-  public void removeAll(List<T> injectables) {
+  public void removeAll(Collection<T> injectables) {
     // First check injectables for fatal issues, exception does not need to be caught:
     for(T injectable : injectables) {
       ensureInjectableIsValid(injectable);
@@ -344,20 +322,13 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   class NoStoreConsistencyPolicy implements StoreConsistencyPolicy<T> {
     @Override
-    public void addAll(Resolver<T> resolver, List<T> injectables) {
+    public void addAll(Resolver<T> resolver, Collection<T> injectables) {
       // No-op
     }
 
     @Override
-    public void removeAll(Resolver<T> resolver, List<T> injectables) {
+    public void removeAll(Resolver<T> resolver, Collection<T> injectables) {
       // No-op
-    }
-  }
-
-  class NoDiscoveryPolicy implements DiscoveryPolicy<T> {
-    @Override
-    public void discoverType(InjectableStore<T> injectableStore, Type type) {
-      // Discover nothing
     }
   }
 }

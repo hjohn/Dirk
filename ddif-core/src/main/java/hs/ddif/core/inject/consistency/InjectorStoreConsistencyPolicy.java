@@ -10,6 +10,7 @@ import hs.ddif.core.util.AnnotationDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +34,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
   private final Map<Key, Integer> referenceCounters = new HashMap<>();
 
   @Override
-  public void addAll(Resolver<T> baseResolver, List<T> injectables) {
+  public void addAll(Resolver<T> baseResolver, Collection<T> injectables) {
     InjectableStore<T> tempStore = new InjectableStore<>();
     IncludingResolver resolver = new IncludingResolver(baseResolver, tempStore);
 
@@ -72,7 +73,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
   }
 
   @Override
-  public void removeAll(Resolver<T> baseResolver, List<T> injectables) {
+  public void removeAll(Resolver<T> baseResolver, Collection<T> injectables) {
 
     /*
      * In order to remove a group of injectables at once, changes in reference counters
@@ -265,7 +266,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
     }
   }
 
-  private void ensureNoCyclicDependencies(Resolver<T> resolver, List<T> injectables) {
+  private void ensureNoCyclicDependencies(Resolver<T> resolver, Collection<T> injectables) {
     class CycleDetector {
       Set<T> input = new HashSet<>(injectables);
       Set<T> visited = new HashSet<>();

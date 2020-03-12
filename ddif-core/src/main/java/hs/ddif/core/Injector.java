@@ -9,7 +9,6 @@ import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.DiscoveryPolicy;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.AnnotationDescriptor;
 
@@ -41,10 +40,10 @@ public class Injector {
   private final Instantiator instantiator;
   private final BeanDefinitionStore store;
 
-  public Injector(DiscoveryPolicy<ResolvableInjectable> discoveryPolicy, ScopeResolver... scopeResolvers) {
-    InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<ResolvableInjectable>(), discoveryPolicy);
+  public Injector(boolean autoDiscovery, ScopeResolver... scopeResolvers) {
+    InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<ResolvableInjectable>());
 
-    this.instantiator = new Instantiator(store, scopeResolvers);
+    this.instantiator = new Instantiator(store, autoDiscovery, scopeResolvers);
     this.store = new BeanDefinitionStore(store, Arrays.asList(new BeanDefinitionStore.Extension[] {
       new ProviderInjectorExtension(),
       new ProducesInjectorExtension(),
@@ -53,11 +52,11 @@ public class Injector {
   }
 
   public Injector(ScopeResolver... scopeResolvers) {
-    this(null, scopeResolvers);
+    this(false, scopeResolvers);
   }
 
   public Injector() {
-    this((DiscoveryPolicy<ResolvableInjectable>)null);
+    this(false);
   }
 
   private static class StoreExtensionAdapter implements BeanDefinitionStore.Extension {
