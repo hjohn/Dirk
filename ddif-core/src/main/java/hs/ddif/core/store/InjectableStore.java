@@ -162,8 +162,6 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
       ensureInjectableIsValid(injectable);
     }
 
-    policy.addAll(this, injectables);  // if this fails, policy will clean up after itself, no need to do clean-up
-
     // Duplication check must be done afterwards, as it can be duplicate with existing injectables or within the group of added injectables:
     List<T> addedInjectables = new ArrayList<>();
 
@@ -173,12 +171,21 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
         putInternal(injectable);
         addedInjectables.add(injectable);
       }
+
+      policy.addAll(this, injectables);  // if this fails, policy will clean up after itself, no need to policy clean-up
     }
     catch(Exception e) {
-      policy.removeAll(this, injectables);
+      try {
+        for(T injectable : addedInjectables) {
+          removeInternal(injectable);
+        }
+      }
+      catch(Exception e2) {
+        IllegalStateException illegalStateException = new IllegalStateException("Fatal exception (store might be inconsistent) while adding: " + injectables, e2);
 
-      for(T injectable : addedInjectables) {
-        removeInternal(injectable);
+        illegalStateException.addSuppressed(e);
+
+        throw illegalStateException;
       }
 
       throw e;

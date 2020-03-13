@@ -29,11 +29,15 @@ class InjectorStoreConsistencyPolicyTest {
   ClassInjectable f = new ClassInjectable(F.class);
   ClassInjectable g = new ClassInjectable(G.class);
   ClassInjectable h = new ClassInjectable(H.class);
+  ClassInjectable i = new ClassInjectable(I.class);
+  ClassInjectable j = new ClassInjectable(J.class);
 
   InjectableStore<ScopedInjectable> emptyStore = new InjectableStore<>();
 
   @Test
   void addAllShouldRejectInjectablesWithCyclicDependency() {
+    emptyStore.putAll(List.of(e, b, c, d));
+
     CyclicDependencyException ex = assertThrows(CyclicDependencyException.class, () -> policy.addAll(emptyStore, List.of(e, b, c, d)));
 
     assertEquals(4, ex.getCycle().size());
@@ -41,7 +45,43 @@ class InjectorStoreConsistencyPolicyTest {
 
   @Test
   void addBShouldFailAsItHasUnresolvableDependency() {
+    emptyStore.put(b);
+
     assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(emptyStore, List.of(b)));
+  }
+
+  @Test
+  void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB() {
+    emptyStore.putAll(List.of(a, b, h));
+
+    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(emptyStore, List.of(a, b, h)));
+  }
+
+  @Test
+  void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB2() {
+    emptyStore.putAll(List.of(b, a, h));
+
+    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(emptyStore, List.of(b, a, h)));
+  }
+  @Test
+  void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB3() {
+    emptyStore.putAll(List.of(a, h, b));
+
+    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(emptyStore, List.of(a, h, b)));
+  }
+
+  @Test
+  void addIShouldFail() {
+    emptyStore.put(i);
+
+    assertThrows(CyclicDependencyException.class, () -> policy.addAll(emptyStore, List.of(i)));
+  }
+
+  @Test
+  void addJShouldFail() {
+    emptyStore.put(j);
+
+    assertThrows(CyclicDependencyException.class, () -> policy.addAll(emptyStore, List.of(j)));
   }
 
   @Nested
@@ -91,31 +131,37 @@ class InjectorStoreConsistencyPolicyTest {
 
     @Test
     void addEShouldFailAsEWouldCreateCyclicDependency() {
+      store.put(e);
       assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(e)));
     }
 
     @Test
     void addGAndFAndEShouldFailAsEWouldCreateCyclicDependency() {
+      store.putAll(List.of(g, f, e));
       assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(g, f, e)));
     }
 
     @Test
     void addFShouldWork() {
+      store.put(f);
       policy.addAll(store, List.of(f));
     }
 
     @Test
     void addGAndFShouldWork() {
+      store.putAll(List.of(g, f));
       policy.addAll(store, List.of(g, f));
     }
 
     @Test
     void addHShouldFailAsZWouldBeProvidedTwice() {
+      store.put(h);
       assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(h)));
     }
 
     @Test
     void addGAndFAndHShouldFailAsZWouldBeProvidedTwice() {
+      store.putAll(List.of(g, h, f));
       assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(g, h, f)));
     }
   }
@@ -153,5 +199,13 @@ class InjectorStoreConsistencyPolicyTest {
   }
 
   public static class H implements Z {
+  }
+
+  public static class I {
+    @Inject I i;
+  }
+
+  public static class J implements Z {
+    @Inject Z z;
   }
 }

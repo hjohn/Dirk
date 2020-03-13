@@ -9,6 +9,7 @@ import hs.ddif.core.util.AnnotationDescriptor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Provider;
 
@@ -60,7 +61,7 @@ public class BeanDefinitionStore {
   }
 
   /**
-   * Registers a type with this Injector if all its dependencies can be
+   * Registers a type if all its dependencies can be
    * resolved and it would not cause existing registered classes to have
    * ambigious dependencies as a result of registering the given type.<p>
    *
@@ -77,11 +78,21 @@ public class BeanDefinitionStore {
    * @throws UnresolvableDependencyException when one or more dependencies of the given class cannot be resolved
    */
   public void register(Type concreteType) {
-    register(new ClassInjectable(concreteType));
+    registerInternal(List.of(new ClassInjectable(concreteType)));
   }
 
   /**
-   * Registers an instance with this Injector as a Singleton if it would not
+   * Registers the given types.
+   *
+   * @param concreteTypes a list of types to register, cannot be null or contain nulls
+   * @see #register(Type)
+   */
+  public void register(List<Type> concreteTypes) {
+    registerInternal(concreteTypes.stream().map(ClassInjectable::new).collect(Collectors.toList()));
+  }
+
+  /**
+   * Registers an instance as a Singleton if it would not
    * cause existing registered classes to have ambigious dependencies as a
    * result.<p>
    *
@@ -96,11 +107,11 @@ public class BeanDefinitionStore {
    * @throws ViolatesSingularDependencyException when the registration would cause an ambigious dependency in one or more previously registered classes
    */
   public void registerInstance(Object instance, AnnotationDescriptor... qualifiers) {
-    register(new InstanceInjectable(instance, qualifiers));
+    registerInternal(List.of(new InstanceInjectable(instance, qualifiers)));
   }
 
   /**
-   * Removes a type from this Injector if doing so would not result in
+   * Removes a type if doing so would not result in
    * broken dependencies in the remaining registered types.<p>
    *
    * If there would be broken dependencies then the removal will fail
@@ -113,11 +124,21 @@ public class BeanDefinitionStore {
    * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
    */
   public void remove(Type concreteType) {
-    remove(new ClassInjectable(concreteType));
+    removeInternal(List.of(new ClassInjectable(concreteType)));
   }
 
   /**
-   * Removes an instance from this Injector if doing so would not result in
+   * Removes the given types.
+   *
+   * @param concreteTypes a list of types to remove, cannot be null or contain nulls
+   * @see #remove(Type)
+   */
+  public void remove(List<Type> concreteTypes) {
+    removeInternal(concreteTypes.stream().map(ClassInjectable::new).collect(Collectors.toList()));
+  }
+
+  /**
+   * Removes an instance if doing so would not result in
    * broken dependencies in the remaining registered classes.<p>
    *
    * If there would be broken dependencies then the removal will fail
@@ -130,21 +151,19 @@ public class BeanDefinitionStore {
    * @throws ViolatesSingularDependencyException when the removal would cause a missing dependency in one or more of the remaining registered classes
    */
   public void removeInstance(Object instance) {
-    remove(new InstanceInjectable(instance));
+    removeInternal(List.of(new InstanceInjectable(instance)));
   }
 
-  private void register(ResolvableInjectable injectable) {
-    store.putAll(gatherInjectables(injectable));
+  private void registerInternal(List<ResolvableInjectable> injectables) {
+    store.putAll(gatherInjectables(injectables));
   }
 
-  private void remove(ResolvableInjectable injectable) {
-    store.removeAll(gatherInjectables(injectable));
+  private void removeInternal(List<ResolvableInjectable> injectables) {
+    store.removeAll(gatherInjectables(injectables));
   }
 
-  private List<ResolvableInjectable> gatherInjectables(ResolvableInjectable injectable) {
-    List<ResolvableInjectable> injectables = new ArrayList<>();
-
-    injectables.add(injectable);
+  private List<ResolvableInjectable> gatherInjectables(List<ResolvableInjectable> inputInjectables) {
+    List<ResolvableInjectable> injectables = new ArrayList<>(inputInjectables);
     int start = 0;
     int end = injectables.size();
 
