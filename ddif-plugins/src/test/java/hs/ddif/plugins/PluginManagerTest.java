@@ -6,6 +6,7 @@ import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
+import hs.ddif.test.plugin.TextStyler;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -62,6 +63,8 @@ public class PluginManagerTest {
   public void shouldLoadThenUnloadPlugin() throws BeanResolutionException {
     BeanWithTextProviders beanBefore = injector.getInstance(BeanWithTextProviders.class);
 
+    injector.register(TextStyler.class);  // not part of plugin, so needs to be registered seperate -- don't want it part of plugin either as then plugin would be unable to unload itself
+
     Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);
 
     BeanWithTextProviders bean = injector.getInstance(BeanWithTextProviders.class);
@@ -87,11 +90,14 @@ public class PluginManagerTest {
     waitForPluginUnload(plugin);
 
     assertTrue(plugin.isUnloaded());
+    assertTrue(injector.contains(TextStyler.class));  // assert that this didn't get unregistered
   }
 
   @Test
   public void shouldLoadPluginAgainAfterUnload() throws BeanResolutionException {
     assertBeanDoesNotExist(Database.class);
+
+    injector.register(TextStyler.class);  // not part of plugin, so needs to be registered seperate -- don't want it part of plugin either as then plugin would be unable to unload itself
 
     Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);
 
@@ -114,6 +120,7 @@ public class PluginManagerTest {
     assertFalse(db1.getClass().equals(db2.getClass()));
     assertFalse(db1.getClass().getClassLoader().equals(db2.getClass().getClassLoader()));
     assertTrue(db1.getClass().getName().equals(db2.getClass().getName()));
+    assertTrue(injector.contains(TextStyler.class));  // assert that this didn't get unregistered
   }
 
   @Test(expected = ViolatesSingularDependencyException.class)

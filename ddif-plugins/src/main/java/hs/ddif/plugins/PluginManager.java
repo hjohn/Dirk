@@ -1,14 +1,6 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.ProvidedInjectable;
-import hs.ddif.core.bind.Binding;
-import hs.ddif.core.bind.Key;
-import hs.ddif.core.inject.consistency.InjectorStoreConsistencyException;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
-import hs.ddif.core.inject.store.BindingException;
-import hs.ddif.core.inject.store.ClassInjectable;
-import hs.ddif.core.store.Injectable;
-import hs.ddif.core.store.InjectableStore;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -18,16 +10,12 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
-import javax.inject.Provider;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
 import org.reflections.scanners.MethodAnnotationsScanner;
@@ -84,7 +72,6 @@ public class PluginManager {
   }
 
   private class PluginLoader {
-    private final Set<ClassInjectable> classInjectables = new HashSet<>();
     private final Reflections reflections;
     private final ClassLoader classLoader;
 
@@ -108,16 +95,16 @@ public class PluginManager {
         classNames.add(name.substring(0, name.lastIndexOf('.')));
       }
 
-      InjectableStore<Injectable> injectableStore = new InjectableStore<>();
+      LOGGER.fine("Registering classes: " + classNames);
 
-      LOGGER.fine("Found classes: " + classNames);
+      List<Type> types = new ArrayList<>();
 
       for(String className : classNames) {
         try {
           Class<?> cls = classLoader.loadClass(className);
 
           if(!Modifier.isAbstract(cls.getModifiers())) {
-            putInStore(injectableStore, cls);
+            types.add(cls);
           }
         }
         catch(ClassNotFoundException e) {
@@ -125,54 +112,9 @@ public class PluginManager {
         }
       }
 
-      List<Type> matchingClasses = DependencySorter.getInTopologicalOrder(injectableStore, classInjectables);
+      baseStore.register(types);
 
-      LOGGER.fine("Registering classes with Injector (in order): " + matchingClasses);
-
-      List<Type> registeredClasses = registerTypes(matchingClasses);
-
-      return new Plugin(baseStore, pluginName, registeredClasses, classLoader);
-    }
-
-    private void putInStore(InjectableStore<Injectable> store, Class<?> cls) {
-      if(!store.contains(cls)) {
-        try {
-          ClassInjectable classInjectable = new ClassInjectable(cls);
-
-          store.put(classInjectable);
-          classInjectables.add(classInjectable);
-
-          /*
-           * Self discovery of other injectables
-           */
-
-          for(Binding binding : classInjectable.getBindings()) {
-            if(!binding.isProvider()) {
-              Key key = binding.getRequiredKey();
-
-              if(key != null) {
-                Type type = key.getType();
-                Class<?> typeClass = TypeUtils.getRawType(type, null);
-
-                if(!Modifier.isAbstract(typeClass.getModifiers()) && !baseStore.contains(key.getType(), (Object[])key.getQualifiersAsArray())) {
-                  putInStore(store, typeClass);
-                }
-              }
-            }
-          }
-
-          /*
-           * Self discovery of providers:
-           */
-
-          if(Provider.class.isAssignableFrom(cls)) {
-            store.put(new ProvidedInjectable(cls));
-          }
-        }
-        catch(Exception e) {
-          throw new IllegalStateException("Exception while loading plugin class: " + cls, e);
-        }
-      }
+      return new Plugin(baseStore, pluginName, types, classLoader);
     }
   }
 
@@ -195,9 +137,10 @@ public class PluginManager {
       Class<Module> moduleClass = (Class<Module>)classLoader.loadClass("PluginModule");
       Constructor<Module> constructor = moduleClass.getConstructor();
       Module module = constructor.newInstance();
-      List<Type> registeredTypes = registerTypes(module.getTypes());
 
-      return new Plugin(baseStore, Arrays.toString(urls), registeredTypes, classLoader);
+      baseStore.register(module.getTypes());
+
+      return new Plugin(baseStore, Arrays.toString(urls), module.getTypes(), classLoader);
     }
     catch(ReflectiveOperationException e) {
       try {
@@ -215,36 +158,6 @@ public class PluginManager {
       }
       catch(IOException e2) {
         e.addSuppressed(e2);
-      }
-
-      throw e;
-    }
-  }
-
-  // Registers types with the injector and returns the types actually registered (could be a subset of classes if classes were already registered).
-  private List<Type> registerTypes(List<Type> types) {
-    List<Type> registeredTypes = new ArrayList<>();
-
-    try {
-      for(Type type : types) {
-        if(!baseStore.contains(type)) {
-          baseStore.register(type);
-          registeredTypes.add(type);
-        }
-      }
-
-      return registeredTypes;
-    }
-    catch(BindingException | InjectorStoreConsistencyException e) {
-
-      /*
-       * Registration failed, rolling back:
-       */
-
-      Collections.reverse(registeredTypes);
-
-      for(Type type : registeredTypes) {
-        baseStore.remove(type);
       }
 
       throw e;
