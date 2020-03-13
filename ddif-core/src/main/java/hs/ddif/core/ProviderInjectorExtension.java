@@ -10,6 +10,10 @@ import javax.inject.Provider;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
+/**
+ * This extension detects if a class implements {@link Provider} and registers
+ * and additional injectable for the type the provider provides.
+ */
 public class ProviderInjectorExtension implements BeanDefinitionStore.Extension {
 
   @Override

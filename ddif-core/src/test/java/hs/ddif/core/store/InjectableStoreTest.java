@@ -64,8 +64,8 @@ public class InjectableStoreTest {
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.put(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new ProvidedInjectable(new StringProvider(), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new ProvidedInjectable(new StringProvider(), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
+    store.put(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
 
     assertThat(store.resolve(String.class), hasSize(5));
     assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))), hasSize(1));
@@ -87,20 +87,17 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldRemoveWithQualifier() {
-    StringProvider provider1 = new StringProvider();
-    StringProvider provider2 = new StringProvider();
-
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.put(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new ProvidedInjectable(provider1, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new ProvidedInjectable(provider2, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
+    store.put(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
 
     store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.remove(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.remove(new ProvidedInjectable(provider1, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.remove(new ProvidedInjectable(provider2, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
+    store.remove(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.remove(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
   }
 
   private void setupStore() {
