@@ -233,11 +233,6 @@ public class ResolvableBindingProvider {
     }
 
     @Override
-    public boolean isProvider() {
-      return false;
-    }
-
-    @Override
     public Key getRequiredKey() {
       return null;
     }
@@ -266,11 +261,6 @@ public class ResolvableBindingProvider {
       List<Object> instances = instantiator.getInstances(elementType, qualifiers.toArray());
 
       return instances.isEmpty() && optional ? null : instances;
-    }
-
-    @Override
-    public boolean isProvider() {
-      return false;
     }
 
     @Override
@@ -326,11 +316,6 @@ public class ResolvableBindingProvider {
     }
 
     @Override
-    public boolean isProvider() {
-      return true;
-    }
-
-    @Override
     public Key getRequiredKey() {
       return null;  // nothing required, as providers are used to break cyclical dependencies
     }
@@ -372,11 +357,6 @@ public class ResolvableBindingProvider {
     @Override
     public Key getRequiredKey() {
       return optional || isParameter ? null : key;
-    }
-
-    @Override
-    public boolean isProvider() {
-      return false;
     }
 
     @Override
