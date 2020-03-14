@@ -309,7 +309,7 @@ public class ResolvableBindingProvider {
             return binding.getValue(instantiator);
           }
           catch(BeanResolutionException e) {
-            throw new RuntimeBeanResolutionException(binding.getType(), e, (Object[])binding.getRequiredKey().getQualifiersAsArray());
+            throw new RuntimeBeanResolutionException(binding.getType(), e);
           }
         }
       };
