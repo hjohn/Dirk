@@ -2,6 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
+import hs.ddif.core.inject.store.MethodInjectable;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,8 +19,15 @@ public class ProviderInjectorExtension implements BeanDefinitionStore.Extension 
 
   @Override
   public List<ResolvableInjectable> getDerived(ResolvableInjectable injectable) {
-    return Provider.class.isAssignableFrom(TypeUtils.getRawType(injectable.getType(), null))
-      ? Collections.<ResolvableInjectable>singletonList(new ProvidedInjectable(injectable.getType()))
-      : Collections.<ResolvableInjectable>emptyList();
+    Class<?> cls = TypeUtils.getRawType(injectable.getType(), null);
+
+    try {
+      return Provider.class.isAssignableFrom(cls)
+        ? Collections.singletonList(new MethodInjectable(cls.getMethod("get"), injectable.getType()))
+        : Collections.emptyList();
+    }
+    catch(NoSuchMethodException | SecurityException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }

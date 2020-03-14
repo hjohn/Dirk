@@ -6,6 +6,10 @@ import hs.ddif.core.inject.instantiator.RuntimeBeanResolutionException;
 import hs.ddif.core.store.DuplicateBeanException;
 import hs.ddif.core.test.injectables.BeanWithProvider;
 import hs.ddif.core.test.injectables.SimpleBean;
+import hs.ddif.core.test.qualifiers.Big;
+import hs.ddif.core.test.qualifiers.Green;
+import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.core.test.qualifiers.Small;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.TypeReference;
 
@@ -15,6 +19,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -22,6 +27,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -370,5 +377,102 @@ public class InjectorProviderTest {
     public Database get() {
       return new Database("jdbc:localhost");
     }
+  }
+
+  @Test
+  public void providersShouldRespectQualifiers() throws BeanResolutionException {
+    injector.register(A.class);
+    injector.register(B.class);
+    injector.register(C.class);
+
+    assertThat(injector.getInstances(Z.class)).hasSize(3);
+    assertThat(injector.getInstance(Z.class, Red.class)).isInstanceOf(Z.class);
+    assertThat(injector.getInstance(Z.class, Green.class)).isInstanceOf(Z.class);
+    assertThat(injector.getInstance(Z.class, Big.class)).isInstanceOf(Z.class);
+    assertThatThrownBy(() -> injector.getInstance(Z.class, Small.class)).isInstanceOf(BeanResolutionException.class);
+  }
+
+  @Test
+  public void providerShouldRespectScope() throws BeanResolutionException {
+    injector.register(B.class);  // provides non-singleton Green Z
+    injector.register(C.class);  // provides singleton Big Z
+    injector.register(D.class);  // provider non-singleton Y
+    injector.register(P.class);
+    injector.register(Q.class);
+    injector.register(R.class);
+
+    P p1 = injector.getInstance(P.class);
+    Q q1 = injector.getInstance(Q.class);
+    R r1 = injector.getInstance(R.class);
+    P p2 = injector.getInstance(P.class);
+    Q q2 = injector.getInstance(Q.class);
+    R r2 = injector.getInstance(R.class);
+
+    assertThat(p1.y).isNotEqualTo(q1.y);
+    assertThat(p1.y).isNotEqualTo(r1.y);
+    assertThat(q1.y).isNotEqualTo(r1.y);
+    assertThat(p1.y).isNotEqualTo(p2.y);
+    assertThat(q1.y).isNotEqualTo(q2.y);
+    assertThat(r1.y).isNotEqualTo(r2.y);
+
+    assertThat(p1.z).isEqualTo(q1.z);
+    assertThat(p1.z).isNotEqualTo(r1.z);
+    assertThat(q1.z).isNotEqualTo(r1.z);
+    assertThat(p1.z).isEqualTo(p2.z);
+    assertThat(q1.z).isEqualTo(q2.z);
+    assertThat(r1.z).isNotEqualTo(r2.z);
+  }
+
+  public static class A implements Provider<Z> {
+    @Override
+    @Red
+    public Z get() {
+      return new Z();
+    }
+  }
+
+  public static class B implements Provider<Z> {
+    @Override
+    @Green
+    public Z get() {
+      return new Z();
+    }
+  }
+
+  public static class C implements Provider<Z> {
+    @Override
+    @Big
+    @Singleton
+    public Z get() {
+      return new Z();
+    }
+  }
+
+  public static class D implements Provider<Y> {
+    @Override
+    public Y get() {
+      return new Y();
+    }
+  }
+
+  public static class P {
+    @Inject Y y;
+    @Inject @Big Z z;
+  }
+
+  public static class Q {
+    @Inject Y y;
+    @Inject @Big Z z;
+  }
+
+  public static class R {
+    @Inject Y y;
+    @Inject @Green Z z;
+  }
+
+  public static class Y {
+  }
+
+  public static class Z {
   }
 }

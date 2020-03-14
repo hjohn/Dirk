@@ -1,6 +1,5 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.ProvidedInjectable;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.inject.store.InstanceInjectable;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
@@ -64,8 +63,8 @@ public class InjectableStoreTest {
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.put(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
+    store.put(new InstanceInjectable("d", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(new InstanceInjectable("f", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
 
     assertThat(store.resolve(String.class), hasSize(5));
     assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))), hasSize(1));
@@ -90,14 +89,10 @@ public class InjectableStoreTest {
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.put(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
 
     store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
     store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
     store.remove(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.remove(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.remove(new ProvidedInjectable(StringProvider.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
   }
 
   private void setupStore() {
