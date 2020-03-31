@@ -14,7 +14,6 @@ import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Provider;
