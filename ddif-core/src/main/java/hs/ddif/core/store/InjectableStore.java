@@ -45,7 +45,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
   }
 
   @Override
-  public Set<T> resolve(Type type, Object... criteria) {
+  public synchronized Set<T> resolve(Type type, Object... criteria) {
     Class<?> cls = TypeUtils.getRawType(type, null);
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
 
@@ -117,11 +117,11 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
   }
 
-  public boolean contains(Class<?> concreteClass) {
+  public synchronized boolean contains(Class<?> concreteClass) {
     return injectablesByDescriptorByType.containsKey(concreteClass);
   }
 
-  public boolean contains(Type type, Object... criteria) {
+  public synchronized boolean contains(Type type, Object... criteria) {
     Class<?> cls = TypeUtils.getRawType(type, null);
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
 
@@ -143,7 +143,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
    * @param injectable an {@link Injectable}, cannot be null
    * @throws NullPointerException when given a null {@link Injectable}
    */
-  public void put(T injectable) {
+  public synchronized void put(T injectable) {
     putAll(List.of(injectable));
   }
 
@@ -153,11 +153,11 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
    * @param injectable an {@link Injectable}, cannot be null
    * @throws NullPointerException when given a null {@link Injectable}
    */
-  public void remove(T injectable) {
+  public synchronized void remove(T injectable) {
     removeAll(List.of(injectable));
   }
 
-  public void putAll(Collection<T> injectables) {
+  public synchronized void putAll(Collection<T> injectables) {
     for(T injectable : injectables) {
       ensureInjectableIsValid(injectable);
     }
@@ -192,7 +192,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
   }
 
-  public void removeAll(Collection<T> injectables) {
+  public synchronized void removeAll(Collection<T> injectables) {
     // First check injectables for fatal issues, exception does not need to be caught:
     for(T injectable : injectables) {
       ensureInjectableIsValid(injectable);

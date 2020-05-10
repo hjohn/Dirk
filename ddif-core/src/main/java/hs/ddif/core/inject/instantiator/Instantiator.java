@@ -83,7 +83,7 @@ public class Instantiator {
    * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
    *   or when the given class has multiple matching candidates
    */
-  public <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws BeanResolutionException {
+  public synchronized <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws BeanResolutionException {
     Set<ResolvableInjectable> injectables = resolve(type, criteria);
 
     if(injectables.isEmpty()) {
@@ -120,7 +120,7 @@ public class Instantiator {
    * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
    *   or when the given class has multiple matching candidates
    */
-  public <T> T getInstance(Type type, Object... criteria) throws BeanResolutionException {
+  public synchronized <T> T getInstance(Type type, Object... criteria) throws BeanResolutionException {
     return getParameterizedInstance(type, NO_PARAMETERS, criteria);
   }
 
@@ -135,7 +135,7 @@ public class Instantiator {
    * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
    *   or when the given class has multiple matching candidates
    */
-  public <T> T getInstance(Class<T> cls, Object... criteria) throws BeanResolutionException {  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
+  public synchronized <T> T getInstance(Class<T> cls, Object... criteria) throws BeanResolutionException {  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
     return getInstance((Type)cls, criteria);
   }
 
@@ -150,7 +150,7 @@ public class Instantiator {
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> List<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
+  public synchronized <T> List<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
     List<T> instances = new ArrayList<>();
 
     for(ResolvableInjectable injectable : resolve(type, criteria)) {
@@ -175,7 +175,7 @@ public class Instantiator {
    * @return all instances of the given class matching the given criteria (if any)
    * @throws BeanResolutionException when a required bean could not be found
    */
-  public <T> List<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
+  public synchronized <T> List<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
     return getInstances((Type)cls, criteria);
   }
 

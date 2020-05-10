@@ -44,7 +44,7 @@ public class ClassInjectable implements ResolvableInjectable {
    * constructed yet (and thus not yet available as dependency, triggering
    * another creation).
    */
-  private boolean underConstruction;
+  private final ThreadLocal<Boolean> underConstruction = ThreadLocal.withInitial(() -> false);
 
   /**
    * Creates a new {@link ClassInjectable} from the given {@link Type}.
@@ -119,12 +119,12 @@ public class ClassInjectable implements ResolvableInjectable {
 
   @Override
   public Object getInstance(Instantiator instantiator, NamedParameter... parameters) {
-    if(underConstruction) {
+    if(underConstruction.get()) {
       throw new ConstructionException("Object already under construction (dependency creation loop in @PostConstruct method!): " + injectableType);
     }
 
     try {
-      underConstruction = true;
+      underConstruction.set(true);
 
       List<NamedParameter> namedParameters = new ArrayList<>(Arrays.asList(parameters));
 
@@ -141,7 +141,7 @@ public class ClassInjectable implements ResolvableInjectable {
       return bean;
     }
     finally {
-      underConstruction = false;
+      underConstruction.set(false);
     }
   }
 

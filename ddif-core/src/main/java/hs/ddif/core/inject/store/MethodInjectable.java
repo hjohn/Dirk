@@ -100,7 +100,7 @@ public class MethodInjectable implements ResolvableInjectable {
       return method.invoke(obj, values);
     }
     catch(Exception e) {
-      throw new ConstructionException("Unable to construct: " + injectableType, e);
+      throw new ConstructionException("Unable to construct [" + injectableType + "] using Method [" + method + "]", e);
     }
   }
 
