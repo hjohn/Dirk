@@ -1,6 +1,7 @@
 package hs.ddif.core;
 
-import hs.ddif.core.bind.Parameter;
+import hs.ddif.annotations.Parameter;
+import hs.ddif.annotations.Producer;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ConstructionException;

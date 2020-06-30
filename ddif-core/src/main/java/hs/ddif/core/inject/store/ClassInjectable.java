@@ -1,8 +1,8 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.annotations.Parameter;
 import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.NamedParameter;
-import hs.ddif.core.bind.Parameter;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;

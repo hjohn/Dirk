@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import hs.ddif.annotations.Produces;
 import hs.ddif.core.inject.consistency.CyclicDependencyException;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;

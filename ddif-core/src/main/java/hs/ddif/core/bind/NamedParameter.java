@@ -1,5 +1,7 @@
 package hs.ddif.core.bind;
 
+import hs.ddif.annotations.Parameter;
+
 import javax.inject.Inject;
 
 /**

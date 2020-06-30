@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import hs.ddif.annotations.Produces;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.core.inject.store.FieldInjectable;

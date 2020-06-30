@@ -1,6 +1,6 @@
 package hs.ddif.plugins.test.project;
 
-import hs.ddif.core.Opt;
+import hs.ddif.annotations.Opt;
 import hs.ddif.plugins.test.project.TestParentalControlsProvider.TestParentalControls;
 
 import javax.inject.Inject;
