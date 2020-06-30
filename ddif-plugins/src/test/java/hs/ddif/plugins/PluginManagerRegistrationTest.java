@@ -12,8 +12,9 @@ public class PluginManagerRegistrationTest {
   public void shouldLoadWithoutException() {
     injector.registerInstance("{jsonconfig}", AnnotationDescriptor.named("configuration"));
 
-    PluginManager pm = new PluginManager(injector.getStore());
-
-    pm.loadPluginAndScan("hs.ddif.plugins.test.project");
+    ComponentScanner.scan(
+      injector.getStore(),
+      "hs.ddif.plugins.test.project"
+    );
   }
 }

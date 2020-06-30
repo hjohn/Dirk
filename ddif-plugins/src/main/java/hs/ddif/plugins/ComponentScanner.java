@@ -40,6 +40,7 @@ public class ComponentScanner {
 
     classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Named"));
     classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Singleton"));
+    classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("hs.ddif.annotations.WeakSingleton"));
     classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("hs.ddif.annotations.Producer"));
 
     for(String name : reflections.getStore().get("FieldAnnotationsScanner").get("javax.inject.Inject")) {

@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -77,6 +78,12 @@ public class PluginManager {
     }
 
     public Plugin loadPlugin(String pluginName) {
+      Collection<String> classNames = reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Singleton");
+
+      if(!classNames.isEmpty()) {
+        throw new IllegalStateException("Plugins should not use @javax.inject.Singleton annotation as this makes it impossible to unload them.  Use @WeakSingleton instead; detected in: " + classNames);
+      }
+
       List<Type> types = ComponentScanner.findComponentTypes(reflections, classLoader);
 
       LOGGER.fine("Registering types: " + types);
