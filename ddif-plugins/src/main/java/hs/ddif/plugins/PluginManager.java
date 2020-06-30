@@ -4,15 +4,11 @@ import hs.ddif.core.inject.store.BeanDefinitionStore;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
@@ -81,36 +77,9 @@ public class PluginManager {
     }
 
     public Plugin loadPlugin(String pluginName) {
-      Set<String> classNames = new HashSet<>();
+      List<Type> types = ComponentScanner.findComponentTypes(reflections, classLoader);
 
-      classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Named"));
-      classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Singleton"));
-      classNames.addAll(reflections.getStore().get("TypeAnnotationsScanner").get("hs.ddif.annotations.Producer"));
-
-      for(String name : reflections.getStore().get("FieldAnnotationsScanner").get("javax.inject.Inject")) {
-        classNames.add(name.substring(0, name.lastIndexOf('.')));
-      }
-      for(String name : reflections.getStore().get("MethodAnnotationsScanner").get("javax.inject.Inject")) {
-        name = name.substring(0, name.lastIndexOf('('));
-        classNames.add(name.substring(0, name.lastIndexOf('.')));
-      }
-
-      LOGGER.fine("Registering classes: " + classNames);
-
-      List<Type> types = new ArrayList<>();
-
-      for(String className : classNames) {
-        try {
-          Class<?> cls = classLoader.loadClass(className);
-
-          if(!Modifier.isAbstract(cls.getModifiers())) {
-            types.add(cls);
-          }
-        }
-        catch(ClassNotFoundException e) {
-          throw new IllegalStateException(e);
-        }
-      }
+      LOGGER.fine("Registering types: " + types);
 
       baseStore.register(types);
 
