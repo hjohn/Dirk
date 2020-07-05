@@ -24,6 +24,10 @@ public class BeanResolutionException extends Exception {
     super("Multiple matching beans: " + type + toCriteriaString(criteria) + ": " + injectables);
   }
 
+  protected BeanResolutionException(Type type, String message) {
+    super("No such bean: " + type + ": " + message);
+  }
+
   private static String toCriteriaString(Object... criteria) {
     return criteria.length > 0 ? " with criteria " + Arrays.toString(criteria) : "";
   }

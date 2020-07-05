@@ -16,13 +16,14 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class InjectorScopeTest {
 
   public static class Classes {
 
-    @Test(expected = OutOfScopeException.class)
-    public void shouldThrowOutOfScopeExceptionWhenNoScopeActive() throws BeanResolutionException {
+    @Test
+    public void shouldThrowOutOfScopeExceptionWhenNoScopeActive() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
 
       scopeResolver.currentScope = null;
@@ -31,7 +32,9 @@ public class InjectorScopeTest {
 
       injector.register(TestScopedBean.class);
 
-      injector.getInstance(TestScopedBean.class);
+      BeanResolutionException e = assertThrows(BeanResolutionException.class, () -> injector.getInstance(TestScopedBean.class));
+
+      assertEquals(OutOfScopeException.class, e.getCause().getClass());
     }
 
     @Test
