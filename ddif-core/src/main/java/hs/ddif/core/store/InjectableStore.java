@@ -197,10 +197,25 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     for(T injectable : injectables) {
       ensureInjectableIsValid(injectable);
 
-      Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(Object.class);
+      /*
+       * Two checks are done here to see if the given injectable exists.  For classes,
+       * we simply check if the class is known under the Object type.  For interfaces,
+       * which donot extend Object, the specific type is checked for presence.
+       */
 
-      if(injectablesByDescriptor == null || !injectablesByDescriptor.get(null).contains(injectable)) {
-        throw new NoSuchInjectableException(injectable);
+      if(injectable.getType() instanceof Class && ((Class<?>)injectable.getType()).isInterface()) {
+        Map<AnnotationDescriptor, Set<T>> specificInjectables = injectablesByDescriptorByType.get(injectable.getType());
+
+        if(specificInjectables == null || !specificInjectables.get(null).contains(injectable)) {
+          throw new NoSuchInjectableException(injectable);
+        }
+      }
+      else {
+        Map<AnnotationDescriptor, Set<T>> objInjectables = injectablesByDescriptorByType.get(Object.class);
+
+        if(objInjectables == null || !objInjectables.get(null).contains(injectable)) {
+          throw new NoSuchInjectableException(injectable);
+        }
       }
     }
 

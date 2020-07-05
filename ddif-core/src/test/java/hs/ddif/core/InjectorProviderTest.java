@@ -13,6 +13,7 @@ import hs.ddif.core.test.qualifiers.Small;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.TypeReference;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.List;
 
@@ -30,9 +31,11 @@ import org.junit.rules.ExpectedException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class InjectorProviderTest {
   private Injector injector;
@@ -305,6 +308,25 @@ public class InjectorProviderTest {
   }
 
   @Test
+  public void registrationAndUnregistrationOfInterfaceProviderShouldWork() throws BeanResolutionException {
+    // Tests specifically if registering and unregistering a Provider, that provides an interface instead of
+    // of a concrete class, works.
+    for(int i = 0; i < 2; i++) {
+      injector.register(AppendableProvider.class);
+
+      assertTrue(injector.contains(AppendableProvider.class));
+      assertNotNull(injector.getInstance(AppendableProvider.class));
+      assertNotNull(injector.getInstance(Appendable.class));
+
+      injector.remove(AppendableProvider.class);
+
+      assertFalse(injector.contains(AppendableProvider.class));
+      assertThrows(BeanResolutionException.class, () -> injector.getInstance(AppendableProvider.class));
+      assertThrows(BeanResolutionException.class, () -> injector.getInstance(Appendable.class));
+    }
+  }
+
+  @Test
   @Ignore("Providers can be used to break cyclical dependencies, and thus can always be registered...")
   public void registerShouldThrowExceptionWhenDatabaseIsProvidedAndNestedProvided() {
     injector.registerInstance(new SimpleDatabaseProvider());
@@ -376,6 +398,29 @@ public class InjectorProviderTest {
     @Override
     public Database get() {
       return new Database("jdbc:localhost");
+    }
+  }
+
+  public static class AppendableProvider implements Provider<Appendable> {
+
+    @Override
+    public Appendable get() {
+      return new Appendable() {
+        @Override
+        public Appendable append(CharSequence csq) throws IOException {
+          return null;
+        }
+
+        @Override
+        public Appendable append(CharSequence csq, int start, int end) throws IOException {
+          return null;
+        }
+
+        @Override
+        public Appendable append(char c) throws IOException {
+          return null;
+        }
+      };
     }
   }
 
