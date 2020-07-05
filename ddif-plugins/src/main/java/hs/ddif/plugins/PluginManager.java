@@ -23,13 +23,11 @@ public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
 
   private final BeanDefinitionStore baseStore;  // the store to add the plugin classes to, but also may contain required dependencies
+  private final PluginScopeResolver pluginScopeResolver;
 
-  public PluginManager(BeanDefinitionStore store) {
+  public PluginManager(BeanDefinitionStore store, PluginScopeResolver pluginScopeResolver) {
     this.baseStore = store;
-  }
-
-  public Plugin loadPluginAndScan(String packageNamePrefix) {
-    return loadPluginAndScan(new String[] {packageNamePrefix});
+    this.pluginScopeResolver = pluginScopeResolver;
   }
 
   public Plugin loadPluginAndScan(String... packageNamePrefixes) {
@@ -45,10 +43,6 @@ public class PluginManager {
     );
 
     return new PluginLoader(reflections, classLoader).loadPlugin(Arrays.toString(packageNamePrefixes));
-  }
-
-  public Plugin loadPluginAndScan(URL url) {
-    return loadPluginAndScan(new URL[] {url});
   }
 
   @SuppressWarnings("resource")
@@ -88,14 +82,18 @@ public class PluginManager {
 
       LOGGER.fine("Registering types: " + types);
 
-      baseStore.register(types);
-
-      return new Plugin(baseStore, pluginName, types, classLoader);
+      return createPlugin(pluginName, types, classLoader);
     }
   }
 
   public Plugin loadPlugin(URL url) {
     return loadPlugin(new URL[] {url});
+  }
+
+  public void unload(Plugin plugin) {
+    pluginScopeResolver.unregister(plugin);
+    baseStore.remove(plugin.getTypes());
+    plugin.destroy();
   }
 
   /**
@@ -114,9 +112,7 @@ public class PluginManager {
       Constructor<Module> constructor = moduleClass.getConstructor();
       Module module = constructor.newInstance();
 
-      baseStore.register(module.getTypes());
-
-      return new Plugin(baseStore, Arrays.toString(urls), module.getTypes(), classLoader);
+      return createPlugin(Arrays.toString(urls), module.getTypes(), classLoader);
     }
     catch(ReflectiveOperationException e) {
       try {
@@ -140,11 +136,24 @@ public class PluginManager {
     }
   }
 
+  private Plugin createPlugin(String name, List<Type> types, ClassLoader classLoader) {
+    Plugin plugin = new Plugin(name, types, classLoader);
+
+    baseStore.register(plugin.getTypes());
+    pluginScopeResolver.register(plugin);
+
+    return plugin;
+  }
+
   static class UnloadTrackingClassLoader extends URLClassLoader {
     private final AtomicBoolean unloaded = new AtomicBoolean();
 
     public UnloadTrackingClassLoader(URL[] urls) {
       super(urls);
+    }
+
+    public UnloadTrackingClassLoader(URL[] urls, ClassLoader parent) {
+      super(urls, parent);
     }
 
     @Override

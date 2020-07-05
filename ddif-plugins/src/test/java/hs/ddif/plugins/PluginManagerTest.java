@@ -44,8 +44,10 @@ public class PluginManagerTest {
 
   @Before
   public void before() {
+    PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
+
     injector = new Injector(true);
-    pluginManager = new PluginManager(injector.getStore());
+    pluginManager = new PluginManager(injector.getStore(), pluginScopeResolver);
 
     injector.register(BeanWithTextProviders.class);
   }
@@ -73,7 +75,7 @@ public class PluginManagerTest {
 
     assertThat(texts, containsInAnyOrder("Fancy Text", "NORMAL TEXT", ">>Styled Text<<"));
 
-    plugin.unload();
+    pluginManager.unload(plugin);
 
     BeanWithTextProviders beanAfter = injector.getInstance(BeanWithTextProviders.class);
 
@@ -103,7 +105,7 @@ public class PluginManagerTest {
 
     Database db1 = injector.getInstance(Database.class);
 
-    plugin.unload();
+    pluginManager.unload(plugin);
 
     assertBeanDoesNotExist(Database.class);
 
@@ -111,7 +113,7 @@ public class PluginManagerTest {
 
     Database db2 = injector.getInstance(Database.class);
 
-    plugin.unload();
+    pluginManager.unload(plugin);
 
     assertBeanDoesNotExist(Database.class);
 
