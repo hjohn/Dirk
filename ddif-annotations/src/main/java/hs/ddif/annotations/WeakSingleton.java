@@ -17,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * As weak singletons can be garbage collected if not referenced (even if not referenced for
  * just a short period during application or plugin initialization), extra care should be
- * taken with initialization code that should only run once (constructors, {@link javax.annotation.PostConstruct}
+ * taken with initialization code that should only run once (constructors, {@code javax.annotation.PostConstruct}
  * annotated methods).<p>
  *
  * Code which is used to just trigger initialization without assigning the result should be
