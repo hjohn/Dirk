@@ -32,6 +32,8 @@ public class ComponentScanner {
 
     List<Type> types = findComponentTypes(reflections, ComponentScanner.class.getClassLoader());
 
+    LOGGER.fine("Registering types: " + types);
+
     store.register(types);
   }
 
