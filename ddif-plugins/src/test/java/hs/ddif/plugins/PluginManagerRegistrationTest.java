@@ -3,7 +3,7 @@ package hs.ddif.plugins;
 import hs.ddif.core.Injector;
 import hs.ddif.core.util.AnnotationDescriptor;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class PluginManagerRegistrationTest {
   private Injector injector = new Injector(true);

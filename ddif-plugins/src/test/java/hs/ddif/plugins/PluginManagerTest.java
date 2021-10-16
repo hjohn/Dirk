@@ -4,6 +4,7 @@ import hs.ddif.core.Injector;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.store.ConstructionException;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
 import hs.ddif.test.plugin.TextStyler;
@@ -14,18 +15,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class PluginManagerTest {
   private static final URL PLUGIN_URL;
@@ -42,8 +42,8 @@ public class PluginManagerTest {
   private Injector injector;
   private PluginManager pluginManager;
 
-  @Before
-  public void before() {
+  @BeforeEach
+  public void beforeEach() {
     PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
 
     injector = new Injector(true);
@@ -52,8 +52,8 @@ public class PluginManagerTest {
     injector.register(BeanWithTextProviders.class);
   }
 
-  @AfterClass
-  public static void afterClass() {
+  @AfterAll
+  public static void afterAll() {
     try {
       Thread.sleep(250);
     }
@@ -63,7 +63,7 @@ public class PluginManagerTest {
 
   @Test
   public void shouldLoadThenUnloadPlugin() throws BeanResolutionException {
-    BeanWithTextProviders beanBefore = injector.getInstance(BeanWithTextProviders.class);
+    assertThrows(ConstructionException.class, () -> injector.getInstance(BeanWithTextProviders.class));
 
     injector.register(TextStyler.class);  // not part of plugin, so needs to be registered seperate -- don't want it part of plugin either as then plugin would be unable to unload itself
 
@@ -73,15 +73,13 @@ public class PluginManagerTest {
 
     List<String> texts = extractTextsFromBeanWithTextProviders(bean);
 
-    assertThat(texts, containsInAnyOrder("Fancy Text", "NORMAL TEXT", ">>Styled Text<<"));
+    assertThat(texts).containsExactlyInAnyOrder("Fancy Text", "NORMAL TEXT", ">>Styled Text<<");
 
     pluginManager.unload(plugin);
 
-    BeanWithTextProviders beanAfter = injector.getInstance(BeanWithTextProviders.class);
+    assertThrows(ConstructionException.class, () -> injector.getInstance(BeanWithTextProviders.class));
 
-    assertEquals(0, beanBefore.getTextProviders().size());
     assertEquals(3, bean.getTextProviders().size());
-    assertEquals(0, beanAfter.getTextProviders().size());
 
     gc();
 
@@ -97,7 +95,7 @@ public class PluginManagerTest {
 
   @Test
   public void shouldLoadPluginAgainAfterUnload() throws BeanResolutionException {
-    assertBeanDoesNotExist(Database.class);
+    assertThrows(BeanResolutionException.class, () -> injector.getInstance(Database.class));
 
     injector.register(TextStyler.class);  // not part of plugin, so needs to be registered seperate -- don't want it part of plugin either as then plugin would be unable to unload itself
 
@@ -107,7 +105,7 @@ public class PluginManagerTest {
 
     pluginManager.unload(plugin);
 
-    assertBeanDoesNotExist(Database.class);
+    assertThrows(BeanResolutionException.class, () -> injector.getInstance(Database.class));
 
     plugin = pluginManager.loadPlugin(PLUGIN_URL);
 
@@ -115,7 +113,7 @@ public class PluginManagerTest {
 
     pluginManager.unload(plugin);
 
-    assertBeanDoesNotExist(Database.class);
+    assertThrows(BeanResolutionException.class, () -> injector.getInstance(Database.class));
 
     assertNotNull(db1);
     assertNotNull(db2);
@@ -125,12 +123,12 @@ public class PluginManagerTest {
     assertTrue(injector.contains(TextStyler.class));  // assert that this didn't get unregistered
   }
 
-  @Test(expected = ViolatesSingularDependencyException.class)
+  @Test
   public void shouldNotLoadPluginWhenLoadingWouldViolateSingularDependencies() {
     injector.register(DatabaseBean.class);  // Provides Database
     injector.register(BeanWithDatabase.class);  // Requires an unambigious Database dependency
 
-    pluginManager.loadPlugin(PLUGIN_URL);  // Provides Database as well, but fails as BeanWithDatabase's dependency would become ambigious
+    assertThrows(ViolatesSingularDependencyException.class, () -> pluginManager.loadPlugin(PLUGIN_URL));  // Provides Database as well, but fails as BeanWithDatabase's dependency would become ambigious
   }
 
   @Test
@@ -159,17 +157,7 @@ public class PluginManagerTest {
     injector.remove(DatabaseBean.class);  // Removes one of the Database beans
     injector.register(BeanWithDatabase.class);  // Succeeds, requires an unambigious Database dependency
 
-    Assert.assertNotNull(injector.getInstance(BeanWithDatabase.class));
-  }
-
-
-  private void assertBeanDoesNotExist(Class<?> beanClass) {
-    try {
-      injector.getInstance(beanClass);
-      fail();
-    }
-    catch(BeanResolutionException e) {
-    }
+    assertNotNull(injector.getInstance(BeanWithDatabase.class));
   }
 
   private static List<String> extractTextsFromBeanWithTextProviders(BeanWithTextProviders bean) {

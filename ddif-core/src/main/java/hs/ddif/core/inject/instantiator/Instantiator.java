@@ -2,7 +2,6 @@ package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.bind.NamedParameter;
-import hs.ddif.core.inject.store.BindingExplorer;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.InjectableStore;
@@ -53,16 +52,16 @@ public class Instantiator {
   }
 
   private final InjectableStore<ResolvableInjectable> store;
-  private final boolean autoDiscovery;
+  private final InjectableDiscoverer discoverer;
 
   /**
    * Map containing {@link ScopeResolver}s this injector can use.
    */
   private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
 
-  public Instantiator(InjectableStore<ResolvableInjectable> store, boolean autoDiscovery, ScopeResolver... scopeResolvers) {
+  public Instantiator(InjectableStore<ResolvableInjectable> store, InjectableDiscoverer discoverer, ScopeResolver... scopeResolvers) {
     this.store = store;
-    this.autoDiscovery = autoDiscovery;
+    this.discoverer = discoverer;
 
     for(ScopeResolver scopeResolver : scopeResolvers) {
       scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
@@ -247,17 +246,22 @@ public class Instantiator {
     return getInstances((Type)cls, criteria);
   }
 
-  private Set<ResolvableInjectable> resolve(Type type, Object... criteria) {
+  private Set<ResolvableInjectable> resolve(Type type, Object... criteria) throws BeanResolutionException {
     Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
 
-    if(injectables.isEmpty() && autoDiscovery && criteria.length == 0) {
-      Class<?> typeClass = TypeUtils.getRawType(type, null);
-      List<ResolvableInjectable> discovered = BindingExplorer.discover(store, typeClass);
+    if(injectables.isEmpty() && discoverer != null && criteria.length == 0) {
+      try {
+        Class<?> typeClass = TypeUtils.getRawType(type, null);
+        List<ResolvableInjectable> discovered = discoverer.discover(store, typeClass);
 
-      if(!discovered.isEmpty()) {
-        store.putAll(discovered);
+        if(!discovered.isEmpty()) {
+          store.putAll(discovered);
 
-        return store.resolve(type, criteria);
+          return store.resolve(type, criteria);
+        }
+      }
+      catch(DiscoveryException e) {
+        throw new BeanResolutionException(type, e, criteria);
       }
     }
 

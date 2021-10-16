@@ -5,6 +5,7 @@ import hs.ddif.core.inject.consistency.InjectorStoreConsistencyPolicy;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.InjectableDiscoverer;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
@@ -20,6 +21,7 @@ import javax.inject.Provider;
 
 // TODO JSR-330: Named without value is treated differently ... some use field name, others default to empty?
 public class Injector {
+  private static final InjectableDiscoverer RECURSIVE_INJECTABLE_DISCOVERER = new RecursiveInjectableDiscoverer();
 
   /**
    * Allows simple extensions to a {@link Injector}.
@@ -42,7 +44,7 @@ public class Injector {
   public Injector(boolean autoDiscovery, ScopeResolver... scopeResolvers) {
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<ResolvableInjectable>());
 
-    this.instantiator = new Instantiator(store, autoDiscovery, scopeResolvers);
+    this.instantiator = new Instantiator(store, autoDiscovery ? RECURSIVE_INJECTABLE_DISCOVERER : null, scopeResolvers);
     this.store = new BeanDefinitionStore(store, Arrays.asList(new BeanDefinitionStore.Extension[] {
       new ProviderInjectorExtension(),
       new ProducesInjectorExtension(),

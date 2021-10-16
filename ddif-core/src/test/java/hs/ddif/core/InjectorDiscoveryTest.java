@@ -81,8 +81,8 @@ public class InjectorDiscoveryTest {
      * C dependencies are checked.  A is present.  E is not, and cannot be auto discovered as it is an interface.  Fatal.
      */
 
-    assertThat(assertThrows(UnresolvableDependencyException.class, () -> injector.getInstance(D.class)))
-      .hasMessageMatching("Missing dependency of type .*\\$E\\] required for Field \\[.*\\$C\\.e\\]");
+    assertThat(assertThrows(BeanResolutionException.class, () -> injector.getInstance(D.class)))
+      .hasMessageMatching("No such bean: class hs.ddif.core.InjectorDiscoveryTest\\$D");
 
     assertFalse(injector.contains(A.class));
     assertFalse(injector.contains(B.class));
