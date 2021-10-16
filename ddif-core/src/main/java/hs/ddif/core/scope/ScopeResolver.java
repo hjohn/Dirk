@@ -32,9 +32,9 @@ public interface ScopeResolver {
    * Stores the given instance for a given type in the current active scope.
    *
    * @param <T> the type of the instance
-   * @param injectableClass a {@link Class}
+   * @param injectableType a {@link Type}
    * @param instance an instance to associate with the current scope and given class
    * @throws OutOfScopeException when there is no scope active
    */
-  <T> void put(Type injectableClass, T instance) throws OutOfScopeException;
+  <T> void put(Type injectableType, T instance) throws OutOfScopeException;
 }
