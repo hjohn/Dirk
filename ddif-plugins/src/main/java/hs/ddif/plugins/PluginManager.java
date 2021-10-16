@@ -156,6 +156,7 @@ public class PluginManager {
       super(urls, parent);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void finalize() throws Throwable {
       super.finalize();
