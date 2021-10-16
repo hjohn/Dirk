@@ -59,7 +59,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
           .subclass(producer.value())
           .annotateType(AnnotationDescription.Builder.ofType(Singleton.class).build())  // It is a singleton, avoids scope problems
           .method(ElementMatchers.returns((Class<?>)injectable.getType()).and(ElementMatchers.isAbstract()))
-          .intercept(MethodDelegation.to(new Interceptor(instantiator, injectable, names)))
+          .intercept(MethodDelegation.to(new Interceptor(instantiator, injectable.getType(), names)))
           .make()
           .load(getClass().getClassLoader())
           .getLoaded()
@@ -74,12 +74,12 @@ public class ProducerInjectorExtension implements Injector.Extension {
 
   public static class Interceptor {
     private final Instantiator instantiator;
-    private final ResolvableInjectable injectable;
+    private final Type type;
     private final String[] names;
 
-    Interceptor(Instantiator instantiator, ResolvableInjectable injectable, String[] names) {
+    Interceptor(Instantiator instantiator, Type type, String[] names) {
       this.instantiator = instantiator;
-      this.injectable = injectable;
+      this.type = type;
       this.names = names;
     }
 
@@ -91,7 +91,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
         namedParameters[i] = new NamedParameter(names[i], args[i]);
       }
 
-      return instantiator.getParameterizedInstance(injectable.getType(), namedParameters);
+      return instantiator.getParameterizedInstance(type, namedParameters);
     }
   }
 
