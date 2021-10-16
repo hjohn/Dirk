@@ -24,7 +24,7 @@ public class PluginScopeResolver implements ScopeResolver {
     Plugin currentScope = getCurrentScope(injectableType);
 
     if(currentScope == null) {
-      throw new OutOfScopeException(injectableType, "No scope active for: " + getScopeAnnotationClass());
+      throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
     }
 
     @SuppressWarnings("unchecked")
@@ -38,7 +38,7 @@ public class PluginScopeResolver implements ScopeResolver {
     Plugin currentScope = getCurrentScope(injectableType);
 
     if(currentScope == null) {
-      throw new OutOfScopeException(injectableType, "No scope active for: " + getScopeAnnotationClass());
+      throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
     }
 
     beansByScope.computeIfAbsent(currentScope, k -> new HashMap<>()).put(injectableType, instance);

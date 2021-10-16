@@ -26,7 +26,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
-      throw new OutOfScopeException(injectableType, "No scope active for: " + getScopeAnnotationClass());
+      throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
     }
 
     Map<Type, Object> beans = beansByScope.get(currentScope);
@@ -46,7 +46,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
-      throw new OutOfScopeException(injectableType, "No scope active for: " + getScopeAnnotationClass());
+      throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
     }
 
     Map<Type, Object> beans = beansByScope.get(currentScope);

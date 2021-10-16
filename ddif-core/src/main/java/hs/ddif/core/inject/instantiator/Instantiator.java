@@ -3,6 +3,7 @@ package hs.ddif.core.inject.instantiator;
 import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.store.BindingExplorer;
+import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.InjectableStore;
 
@@ -160,7 +161,7 @@ public class Instantiator {
     try {
       instance = getInstance(injectables.iterator().next(), parameters);
     }
-    catch(BeanResolutionException e) {
+    catch(BeanResolutionException | OutOfScopeException e) {
       throw new BeanResolutionException(type, e, criteria);
     }
 
@@ -216,10 +217,15 @@ public class Instantiator {
     List<T> instances = new ArrayList<>();
 
     for(ResolvableInjectable injectable : resolve(type, criteria)) {
-      T instance = getInstance(injectable, NO_PARAMETERS);
+      try {
+        T instance = getInstance(injectable, NO_PARAMETERS);
 
-      if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
-        instances.add(instance);
+        if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
+          instances.add(instance);
+        }
+      }
+      catch(OutOfScopeException e) {
+        throw new BeanResolutionException(type, e, criteria);
       }
     }
 
@@ -258,7 +264,7 @@ public class Instantiator {
     return injectables;
   }
 
-  private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters) throws BeanResolutionException {
+  private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters) throws BeanResolutionException, OutOfScopeException {
     ScopeResolver scopeResolver = scopesResolversByAnnotation.get(injectable.getScope() == null ? null : injectable.getScope().annotationType());
 
     if(scopeResolver != null) {

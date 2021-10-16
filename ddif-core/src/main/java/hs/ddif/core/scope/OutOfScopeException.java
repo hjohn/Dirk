@@ -1,15 +1,14 @@
 package hs.ddif.core.scope;
 
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
-
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /**
  * Thrown when a scoped bean is required without the appropriate scope being active.
  */
-public class OutOfScopeException extends BeanResolutionException {
+public class OutOfScopeException extends Exception {
 
-  public OutOfScopeException(Type type, String message) {
-    super(type, message);
+  public OutOfScopeException(Type type, Class<? extends Annotation> scopeAnnotationClass) {
+    super("Scope not active: " + scopeAnnotationClass + " for type: " + type);
   }
 }
