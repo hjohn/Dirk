@@ -24,6 +24,8 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 /**
  * Policy that makes sure the InjectableStore at all times contains
  * injectables that can be fully resolved.
+ *
+ * @param <T> the type of {@link ScopedInjectable} the policy uses
  */
 public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implements StoreConsistencyPolicy<T> {
 
