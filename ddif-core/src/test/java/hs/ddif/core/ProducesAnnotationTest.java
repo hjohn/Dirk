@@ -30,6 +30,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.function.Executable;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -93,9 +94,16 @@ public class ProducesAnnotationTest {
 
   @Test
   void registerShouldRejectProducesMethodWithUnresolvedTypeVariables() {
+    BindingException e = assertThrows(BindingException.class, () -> injector.register(GenericProduces.class));  // GenericProduces has a Produces method with a type variable T which is not provided
+
+    assertThat(e).hasMessage("Method has unresolved type variables: public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericProduces.create()");
+  }
+
+  @Test
+  void registerShouldRejectClassWithUnresolvedTypeVariables() {
     BindingException e = assertThrows(BindingException.class, () -> injector.register(GenericFactory1.class));  // GenericFactory1 has a type variable T which is not provided
 
-    assertThat(e).hasMessageStartingWith("Method has unresolved type variables:");
+    assertThat(e).hasMessage("Unresolved type variables in class hs.ddif.core.ProducesAnnotationTest$GenericFactory1 are not allowed: [T]");
   }
 
   @Test
@@ -398,6 +406,13 @@ public class ProducesAnnotationTest {
     @Produces
     @Singleton
     public ArrayList<T> create() {
+      return new ArrayList<>();
+    }
+  }
+
+  public static class GenericProduces {
+    @Produces
+    public <T> ArrayList<T> create() {
       return new ArrayList<>();
     }
   }

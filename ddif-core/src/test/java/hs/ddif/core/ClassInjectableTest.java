@@ -14,10 +14,11 @@ import java.util.Collections;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -26,8 +27,8 @@ public class ClassInjectableTest {
   private Injector injector = new Injector();
   private Instantiator instantiator = injector.getInstantiator();
 
-  @Before
-  public void before() {
+  @BeforeEach
+  public void beforeEach() {
     injector.registerInstance("a string");
     injector.registerInstance(2);
     injector.registerInstance(4L);
@@ -64,46 +65,60 @@ public class ClassInjectableTest {
     assertEquals(new BigDecimal(5), instance.bd);
   }
 
-  @SuppressWarnings("unused")
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void constructorShouldRejectNullInjectableClass() {
-    new ClassInjectable((Type)null);
+    assertThatThrownBy(() -> new ClassInjectable((Type)null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessage("injectableType cannot be null");
   }
 
-  @SuppressWarnings("unused")
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void constructorShouldRejectInterfaceAsInjectableClass() {
-    new ClassInjectable(SimpleInterface.class);
+    assertThatThrownBy(() -> new ClassInjectable(SimpleInterface.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("Type cannot be abstract: interface hs.ddif.core.ClassInjectableTest$SimpleInterface");
   }
 
-  @SuppressWarnings("unused")
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void constructorShouldRejectAbstractClassAsInjectableClass() {
-    new ClassInjectable(SimpleAbstractClass.class);
+    assertThatThrownBy(() -> new ClassInjectable(SimpleAbstractClass.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("Type cannot be abstract: class hs.ddif.core.ClassInjectableTest$SimpleAbstractClass");
   }
 
-  @SuppressWarnings("unused")
-  @Test(expected = BindingException.class)
+  @Test
   public void constructorShouldRejectInjectableClassWithoutConstructors() {
-    new ClassInjectable(ClassWithoutPublicConstructors.class);
+    assertThatThrownBy(() -> new ClassInjectable(ClassWithoutPublicConstructors.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.ClassInjectableTest$ClassWithoutPublicConstructors");
   }
 
-  @SuppressWarnings("unused")
-  @Test(expected = BindingException.class)
+  @Test
   public void constructorShouldRejectInjectableClassWithMultipleAnnotatedConstructors() {
-    new ClassInjectable(ClassWithTooManyAnnotatedConstructors.class);
+    assertThatThrownBy(() -> new ClassInjectable(ClassWithTooManyAnnotatedConstructors.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("Multiple @Inject annotated constructors found, but only one allowed: class hs.ddif.core.ClassInjectableTest$ClassWithTooManyAnnotatedConstructors");
   }
 
-  @SuppressWarnings("unused")
-  @Test(expected = BindingException.class)
+  @Test
   public void constructorShouldRejectInjectableClassWithAnnotatedFinalFields() {
-    new ClassInjectable(ClassWithAnnotatedFinalField.class);
+    assertThatThrownBy(() -> new ClassInjectable(ClassWithAnnotatedFinalField.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("Cannot inject final field: private final java.lang.String hs.ddif.core.ClassInjectableTest$ClassWithAnnotatedFinalField.a in: class hs.ddif.core.ClassInjectableTest$ClassWithAnnotatedFinalField");
   }
 
-  @SuppressWarnings("unused")
-  @Test(expected = BindingException.class)
+  @Test
   public void constructorShouldRejectInjectableClassWithMultipleScopes() {
-    new ClassInjectable(ClassWithMultipleScopes.class);
+    assertThatThrownBy(() -> new ClassInjectable(ClassWithMultipleScopes.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("Multiple scope annotations found, but only one allowed: class hs.ddif.core.ClassInjectableTest$ClassWithMultipleScopes, found: [@hs.ddif.core.TestScope(), @javax.inject.Singleton()]");
+  }
+
+  @Test
+  public void constructorShouldRejectInjectableClassWithTypeParameters() {
+    assertThatThrownBy(() -> new ClassInjectable(GenericClass.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("Unresolved type variables in class hs.ddif.core.ClassInjectableTest$GenericClass are not allowed: [T]");
   }
 
   @Singleton
@@ -154,5 +169,8 @@ public class ClassInjectableTest {
   @TestScope
   @Singleton
   public static class ClassWithMultipleScopes {
+  }
+
+  public static class GenericClass<T> {
   }
 }

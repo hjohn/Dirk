@@ -60,7 +60,11 @@ public class ClassInjectable implements ResolvableInjectable {
     Class<?> injectableClass = TypeUtils.getRawType(type, null);
 
     if(Modifier.isAbstract(injectableClass.getModifiers())) {
-      throw new IllegalArgumentException("injectableType must be a concrete type: " + type);
+      throw new BindingException("Type cannot be abstract: " + type);
+    }
+
+    if(TypeUtils.containsTypeVariables(type)) {
+      throw new BindingException("Unresolved type variables in " + type + " are not allowed: " + Arrays.toString(TypeUtils.getRawType(type, null).getTypeParameters()));
     }
 
     this.injectableType = type;

@@ -63,17 +63,6 @@ public class InjectableStoreGenericsTest {
     assertTrue(store.resolve(new TypeReference<Comparable<? extends Comparable<? super Comparable<String>>>>() {}.getType()).isEmpty());
   }
 
-  /**
-   * Tests that a store will not allow adding a class that has unresolved generic parameters.
-   */
-  @Test
-  public void shouldRejectGenericTypesWithTypeVariables() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("class java.util.ArrayList has type variables [E]: Injection candidates with type variables are not supported.");
-
-    store.put(new ClassInjectable(ArrayList.class));
-  }
-
   @Test
   public void shouldAcceptGenericTypesWithoutTypeVariables() {
     store.put(new ClassInjectable(TypeUtils.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted

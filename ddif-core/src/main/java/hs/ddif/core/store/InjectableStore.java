@@ -246,12 +246,6 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     if(injectable == null) {
       throw new IllegalArgumentException("injectable cannot be null");
     }
-
-    Type type = injectable.getType();
-
-    if(TypeUtils.containsTypeVariables(type)) {
-      throw new IllegalArgumentException(type + " has type variables " + Arrays.toString(TypeUtils.getRawType(type, null).getTypeParameters()) + ": Injection candidates with type variables are not supported.");
-    }
   }
 
   private void ensureNotDuplicate(T injectable) {

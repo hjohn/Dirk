@@ -263,7 +263,7 @@ public class InjectorTest {
     }
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = BindingException.class)
   public void shouldThrowExceptionWhenRemovingInterface() {
     injector.remove(SimpleInterface.class);
   }
@@ -339,7 +339,7 @@ public class InjectorTest {
     injector.register(String.class);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = BindingException.class)
   public void shouldThrowExceptionWhenRegisteringInterface() {
     injector.register(List.class);
   }
