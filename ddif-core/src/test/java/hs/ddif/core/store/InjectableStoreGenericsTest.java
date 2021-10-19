@@ -2,10 +2,12 @@ package hs.ddif.core.store;
 
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.inject.store.InstanceInjectable;
+import hs.ddif.core.inject.store.MethodInjectable;
 import hs.ddif.core.util.TypeReference;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.Before;
@@ -93,6 +95,23 @@ public class InjectableStoreGenericsTest {
     assertTrue(store.resolve(new TypeReference<Converter<?, ? extends Juice<Orange>>>() {}.getType()).size() == 1);
     assertTrue(store.resolve(new TypeReference<Converter<? extends Fruit, ?>>() {}.getType()).size() == 2);
     assertTrue(store.resolve(new TypeReference<Converter<Apple, ?>>() {}.getType()).size() == 1);
+  }
+
+  @Test
+  public void shouldBeAbleToAddAndRemoveResolvedGenericInterface() throws NoSuchMethodException, SecurityException {
+    MethodInjectable injectable = new MethodInjectable(
+      SuppliesGenericResolvedInterface.class.getDeclaredMethod("supply"),
+      SuppliesGenericResolvedInterface.class
+    );
+
+    store.put(injectable);
+    store.remove(injectable);
+  }
+
+  public static class SuppliesGenericResolvedInterface {
+    public List<String> supply() {
+      return null;
+    }
   }
 
   public static class OrangeToOrangeJuiceConverter implements Converter<Orange, OrangeJuice> {
