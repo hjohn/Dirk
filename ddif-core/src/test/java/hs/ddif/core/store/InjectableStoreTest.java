@@ -33,6 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.leangen.geantyref.TypeFactory;
 
@@ -56,6 +57,16 @@ public class InjectableStoreTest {
     store.put(new ClassInjectable(BigRedBean.class));
 
     assertThat(store.resolve(Object.class, Big.class, Red.class)).hasSize(1);
+  }
+
+  @Test
+  public void shouldNotAllowRemovingInjectablesThatWereNeverAdded() {
+    store.put(new ClassInjectable(Y.class));
+
+    assertThat(store.resolve(Y.class)).isNotNull();
+    assertThat(store.resolve(X.class)).isNotNull();
+
+    assertThrows(NoSuchInjectableException.class, () -> store.remove(new ClassInjectable(X.class)));
   }
 
   @Test
@@ -298,5 +309,14 @@ public class InjectableStoreTest {
     public String get() {
       return "string";
     }
+  }
+
+  public static class X {
+  }
+
+  public static class Y extends X implements Z {
+  }
+
+  public interface Z {
   }
 }
