@@ -6,7 +6,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -212,6 +212,22 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
   }
 
+  /**
+   * Returns a set with all injectables that are part of this store.
+   *
+   * @return a set with all injectables that are part of this store, never null
+   *   but can be empty
+   */
+  public synchronized Set<T> toSet() {
+    return injectablesByDescriptorByType.entrySet().stream()
+      .filter(e -> e.getKey().isInterface() || e.getKey() == Object.class)  // although everything could be scanned, duplicates can be elimated early here
+      .map(Map.Entry::getValue)
+      .map(Map::values)
+      .flatMap(Collection::stream)
+      .flatMap(Collection::stream)
+      .collect(Collectors.toSet());
+  }
+
   private void putInternal(T injectable) {
     try {
       for(Class<?> superType : getSuperClassesAndInterfaces(TypeUtils.getRawType(injectable.getType(), null))) {
@@ -331,5 +347,10 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     public void removeAll(Resolver<T> resolver, Collection<T> injectables) {
       // No-op
     }
+  }
+
+  @Override
+  public String toString() {
+    return super.toString() + "[" + injectablesByDescriptorByType + "]";
   }
 }
