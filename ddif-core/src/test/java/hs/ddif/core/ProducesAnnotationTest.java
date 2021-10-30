@@ -402,6 +402,7 @@ public class ProducesAnnotationTest {
     }
   }
 
+  @Singleton
   public static class GenericFactory1<T> {
     @Produces
     @Singleton
@@ -417,6 +418,7 @@ public class ProducesAnnotationTest {
     }
   }
 
+  @Singleton
   public static class StringMethodFactory extends GenericFactory1<String> {
   }
 

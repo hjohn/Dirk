@@ -61,6 +61,26 @@ class MethodInjectableTest {
     assertEquals(String.class, injectable.getType());
   }
 
+  @Test
+  void shouldReturnCorrectInjectableForNonStaticMethod() throws NoSuchMethodException, SecurityException {
+    MethodInjectable injectable = new MethodInjectable(C.class.getMethod("b"), C.class);
+
+    assertEquals(String.class, injectable.getType());
+    assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
+      "Declaring Class of [public java.lang.Object hs.ddif.core.inject.store.MethodInjectableTest$B.b()]"
+    );
+  }
+
+  @Test
+  void shouldReturnCorrectInjectableForStaticMethod() throws NoSuchMethodException, SecurityException {
+    MethodInjectable injectable = new MethodInjectable(C.class.getMethod("e", D.class), C.class);
+
+    assertEquals(String.class, injectable.getType());
+    assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
+      "Parameter 0 of [public static java.lang.String hs.ddif.core.inject.store.MethodInjectableTest$C.e(hs.ddif.core.inject.store.MethodInjectableTest$D)]"
+    );
+  }
+
   static class A {
     void a() {
     }
@@ -82,5 +102,11 @@ class MethodInjectableTest {
   }
 
   static class C extends B<String> {
+    public static String e(D d) {
+      return "" + d;
+    }
+  }
+
+  static class D {
   }
 }

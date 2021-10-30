@@ -13,6 +13,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public class ResolvableBindingProvider {
         if(inject != null) {
           Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
 
-          bindings.put(field, List.of(createBinding(field, -1, type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))));
+          bindings.put(field, List.of(createBinding(field, AbstractBinding.FIELD, type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))));
         }
       }
 
@@ -73,12 +74,12 @@ public class ResolvableBindingProvider {
 
       if(inject != null) {
         foundInjectableConstructor = true;
-        bindings.put(constructor, ofExecutable(constructor));
+        bindings.put(constructor, ofExecutable(constructor, injectableClass));
       }
     }
 
     if(!foundInjectableConstructor && emptyConstructor != null) {
-      bindings.put(emptyConstructor, ofExecutable(emptyConstructor));
+      bindings.put(emptyConstructor, ofExecutable(emptyConstructor, injectableClass));
     }
 
     for(AccessibleObject accessibleObject : bindings.keySet()) {
@@ -92,9 +93,10 @@ public class ResolvableBindingProvider {
    * Returns all bindings for the given {@link Executable} (method or constructor).
    *
    * @param executable a {@link Executable} to examine for bindings, cannot be null
+   * @param ownerType a {@link Type} in which this executable is declared, cannot be null
    * @return an immutable list of bindings, never null and never contains nulls, but can be empty
    */
-  public static List<ResolvableBinding> ofExecutable(Executable executable) {
+  public static List<ResolvableBinding> ofExecutable(Executable executable, Type ownerType) {
     Annotation[][] parameterAnnotations = executable.getParameterAnnotations();
     java.lang.reflect.Parameter[] parameters = executable.getParameters();
     Type[] genericParameterTypes = executable.getGenericParameterTypes();
@@ -107,7 +109,23 @@ public class ResolvableBindingProvider {
       bindings.add(binding);
     }
 
+    if(!Modifier.isStatic(executable.getModifiers()) && executable instanceof Method) {
+      // For a non-static method, the class itself is also a required binding:
+      bindings.add(createBinding(executable, AbstractBinding.DECLARING_CLASS, ownerType, false, false, Set.of()));
+    }
+
     return Collections.unmodifiableList(bindings);
+  }
+
+  /**
+   * Returns all bindings for the given {@link Field}.
+   *
+   * @param field a {@link Field} to examine for bindings, cannot be null
+   * @param ownerType a {@link Type} in which this executable is declared, cannot be null
+   * @return an immutable list of bindings, never null and never contains nulls, but can be empty
+   */
+  public static List<ResolvableBinding> ofField(Field field, Type ownerType) {
+    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(createBinding(field, AbstractBinding.DECLARING_CLASS, ownerType, false, false, Set.of()));
   }
 
   private static ResolvableBinding createBinding(AccessibleObject accessibleObject, int argNo, Type type, boolean optional, boolean isParameter, Set<AnnotationDescriptor> qualifiers) {
@@ -182,6 +200,9 @@ public class ResolvableBindingProvider {
   }
 
   private static abstract class AbstractBinding implements ResolvableBinding {
+    public static final int DECLARING_CLASS = -1;
+    public static final int FIELD = -2;
+
     private final AccessibleObject accessibleObject;
     private final int argNo;
     private final Type type;
@@ -204,6 +225,9 @@ public class ResolvableBindingProvider {
 
     @Override
     public String toString() {
+      if(argNo == DECLARING_CLASS) {
+        return "Declaring Class of [" + accessibleObject.toString() + "]";
+      }
       if(accessibleObject instanceof Executable) {
         return "Parameter " + argNo + " of [" + accessibleObject.toString() + "]";
       }

@@ -40,7 +40,7 @@ public class UnresolvableDependencyExceptionTest {
       .hasMessageEndingWith(": [Injectable(String.class), Injectable(String.class)]");
 
     e = new UnresolvableDependencyException(
-      ResolvableBindingProvider.ofExecutable(A.class.getDeclaredMethod("d", Long.class)).get(0),
+      ResolvableBindingProvider.ofExecutable(A.class.getDeclaredMethod("d", Long.class), A.class).get(0),
       Collections.emptySet()
     );
 

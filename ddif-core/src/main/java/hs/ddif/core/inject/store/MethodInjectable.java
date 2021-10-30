@@ -8,6 +8,7 @@ import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
@@ -73,7 +74,7 @@ public class MethodInjectable implements ResolvableInjectable {
     this.ownerType = ownerType;
     this.injectableType = returnType;
     this.qualifiers = AnnotationExtractor.extractQualifiers(method);
-    this.bindings = ResolvableBindingProvider.ofExecutable(method);
+    this.bindings = ResolvableBindingProvider.ofExecutable(method, ownerType);
     this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(method);
   }
 
@@ -88,8 +89,9 @@ public class MethodInjectable implements ResolvableInjectable {
 
   private Object constructInstance(Instantiator instantiator) {
     try {
-      Object obj = instantiator.getInstance(ownerType);
-      Object[] values = new Object[bindings.size()];  // Parameters for method
+      boolean isStatic = Modifier.isStatic(method.getModifiers());
+      Object obj = isStatic ? null : instantiator.getInstance(ownerType);
+      Object[] values = new Object[bindings.size() - (isStatic ? 0 : 1)];  // Parameters for method
 
       for(int i = 0; i < values.length; i++) {
         values[i] = bindings.get(i).getValue(instantiator);

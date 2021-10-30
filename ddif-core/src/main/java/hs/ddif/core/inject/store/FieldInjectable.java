@@ -27,6 +27,7 @@ public class FieldInjectable implements ResolvableInjectable {
   private final Field field;
   private final Type ownerType;
   private final Type injectableType;
+  private final List<ResolvableBinding> bindings;
   private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
 
@@ -66,6 +67,7 @@ public class FieldInjectable implements ResolvableInjectable {
     this.ownerType = ownerType;
     this.injectableType = type;
     this.qualifiers = AnnotationExtractor.extractQualifiers(field);
+    this.bindings = ResolvableBindingProvider.ofField(field, ownerType);
     this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(field);
   }
 
@@ -91,9 +93,10 @@ public class FieldInjectable implements ResolvableInjectable {
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<Binding> getBindings() {
-    return List.of();
+    return (List<Binding>)(List<?>)bindings;  // safe cast, list is immutable
   }
 
   @Override
