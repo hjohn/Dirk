@@ -17,10 +17,10 @@ import javax.inject.Inject;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class InjectorDiscoveryTest {
   private Injector injector = new Injector(true);
@@ -39,32 +39,30 @@ public class InjectorDiscoveryTest {
   }
 
   @Test
-  public void shouldNotDiscoverNewTypeWithoutAnyConstructorMatch() throws BeanResolutionException {
-    try {
-      assertTrue(injector.getInstances(SampleWithDependencyOnSampleWithoutConstructorMatch.class).isEmpty());
-      fail("expected BindingException");
-    }
-    catch(BindingException e) {
-      assertFalse(injector.contains(SampleWithDependencyOnSampleWithoutConstructorMatch.class));
-      assertFalse(injector.contains(SampleWithoutConstructorMatch.class));
-    }
+  public void shouldNotDiscoverNewTypeWithoutAnyConstructorMatch() {
+    assertThatThrownBy(() -> injector.getInstances(SampleWithDependencyOnSampleWithoutConstructorMatch.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch");
+
+    assertFalse(injector.contains(SampleWithDependencyOnSampleWithoutConstructorMatch.class));
+    assertFalse(injector.contains(SampleWithoutConstructorMatch.class));
   }
 
   @Test
-  public void shouldNotDiscoverNewTypeWithMultipleConstructorMatch() throws BeanResolutionException {
-    try {
-      assertTrue(injector.getInstances(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class).isEmpty());
-      fail("expected BindingException");
-    }
-    catch(BindingException e) {
-      assertFalse(injector.contains(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class));
-      assertFalse(injector.contains(SampleWithMultipleAnnotatedConstructors.class));
-    }
+  public void shouldNotDiscoverNewTypeWithMultipleConstructorMatch() {
+    assertThatThrownBy(() -> injector.getInstances(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("Multiple @Inject annotated constructors found, but only one allowed: class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors");
+
+    assertFalse(injector.contains(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class));
+    assertFalse(injector.contains(SampleWithMultipleAnnotatedConstructors.class));
   }
 
-  @Test(expected = BindingException.class)
-  public void shouldThrowBindingExceptionWhenAddingClassWithoutConstructorMatch() throws BeanResolutionException {
-    injector.getInstances(SampleWithoutConstructorMatch.class);
+  @Test
+  public void shouldThrowBindingExceptionWhenAddingClassWithoutConstructorMatch() {
+    assertThatThrownBy(() -> injector.getInstances(SampleWithoutConstructorMatch.class))
+      .isInstanceOf(BindingException.class)
+      .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch");
   }
 
   @Test
