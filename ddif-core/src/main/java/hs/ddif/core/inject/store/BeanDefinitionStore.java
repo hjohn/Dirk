@@ -7,34 +7,16 @@ import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Provider;
 
 public class BeanDefinitionStore {
-
-  /**
-   * Allows simple extensions to a {@link BeanDefinitionStore}.
-   */
-  public interface Extension {
-
-    /**
-     * Gets zero or more {@link ResolvableInjectable}s derived from the given injectable.
-     *
-     * @param injectable a {@link ResolvableInjectable}, never null
-     * @return a list of {@link ResolvableInjectable} derived from the given injectable, never null, but can be empty
-     */
-    List<ResolvableInjectable> getDerived(ResolvableInjectable injectable);
-  }
-
   private final InjectableStore<ResolvableInjectable> store;
-  private final List<Extension> extensions;
 
-  public BeanDefinitionStore(InjectableStore<ResolvableInjectable> store, List<Extension> extensions) {
+  public BeanDefinitionStore(InjectableStore<ResolvableInjectable> store) {
     this.store = store;
-    this.extensions = extensions;
   }
 
   /**
@@ -155,29 +137,10 @@ public class BeanDefinitionStore {
   }
 
   private void registerInternal(List<ResolvableInjectable> injectables) {
-    store.putAll(gatherInjectables(injectables));
+    store.putAll(injectables);
   }
 
   private void removeInternal(List<ResolvableInjectable> injectables) {
-    store.removeAll(gatherInjectables(injectables));
-  }
-
-  private List<ResolvableInjectable> gatherInjectables(List<ResolvableInjectable> inputInjectables) {
-    List<ResolvableInjectable> injectables = new ArrayList<>(inputInjectables);
-    int start = 0;
-    int end = injectables.size();
-
-    while(start < end) {
-      for(int i = start; i < end; i++) {
-        for(Extension extension : extensions) {
-          injectables.addAll(extension.getDerived(injectables.get(i)));
-        }
-      }
-
-      start = end;
-      end = injectables.size();
-    }
-
-    return injectables;
+    store.removeAll(injectables);
   }
 }

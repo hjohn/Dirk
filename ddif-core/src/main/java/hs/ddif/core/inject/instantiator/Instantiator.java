@@ -2,6 +2,7 @@ package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.InjectableStore;
@@ -20,8 +21,6 @@ import java.util.WeakHashMap;
 import java.util.logging.Logger;
 
 import javax.inject.Singleton;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Supplies fully injected classes from the supplied store (usually managed by an
@@ -52,16 +51,14 @@ public class Instantiator {
   }
 
   private final InjectableStore<ResolvableInjectable> store;
-  private final InjectableDiscoverer discoverer;
 
   /**
    * Map containing {@link ScopeResolver}s this injector can use.
    */
   private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
 
-  public Instantiator(InjectableStore<ResolvableInjectable> store, InjectableDiscoverer discoverer, ScopeResolver... scopeResolvers) {
+  public Instantiator(InjectableStore<ResolvableInjectable> store, ScopeResolver... scopeResolvers) {
     this.store = store;
-    this.discoverer = discoverer;
 
     for(ScopeResolver scopeResolver : scopeResolvers) {
       scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
@@ -247,25 +244,12 @@ public class Instantiator {
   }
 
   private Set<ResolvableInjectable> resolve(Type type, Object... criteria) throws BeanResolutionException {
-    Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
-
-    if(injectables.isEmpty() && discoverer != null && criteria.length == 0) {
-      try {
-        Class<?> typeClass = TypeUtils.getRawType(type, null);
-        List<ResolvableInjectable> discovered = discoverer.discover(store, typeClass);
-
-        if(!discovered.isEmpty()) {
-          store.putAll(discovered);
-
-          return store.resolve(type, criteria);
-        }
-      }
-      catch(DiscoveryException e) {
-        throw new BeanResolutionException(type, e, criteria);
-      }
+    try {
+      return store.resolve(type, criteria);
     }
-
-    return injectables;
+    catch(BindingException e) {  // Normally, resolve throws no exceptions, but this can occur when auto discovery is used
+      throw new BeanResolutionException(type, e, criteria);
+    }
   }
 
   private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters) throws BeanResolutionException, OutOfScopeException {

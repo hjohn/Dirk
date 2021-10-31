@@ -25,8 +25,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.function.Executable;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,21 +32,23 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.leangen.geantyref.TypeFactory;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
-@TestInstance(Lifecycle.PER_CLASS)
 public class ProducesAnnotationTest {
   private Injector injector = new Injector();
+  private Injector autoDiscoveryInjector = new Injector(true);
 
   @Test
   void registerShouldRejectFactoryWithUnresolvableProducerDependencies() {
     UnresolvableDependencyException e = assertThrows(UnresolvableDependencyException.class, () -> injector.register(SimpleFactory1.class));
 
     assertThat(e).hasMessageStartingWith("Missing dependency of type [class java.lang.Integer] required for Parameter 0 of [");
+    assertFalse(injector.contains(Object.class));
   }
 
   @Test
@@ -56,6 +56,7 @@ public class ProducesAnnotationTest {
     UnresolvableDependencyException e = assertThrows(UnresolvableDependencyException.class, () -> injector.register(SimpleFactory2.class));
 
     assertThat(e).hasMessageStartingWith("Missing dependency of type [class java.lang.Integer] required for Field [");
+    assertFalse(injector.contains(Object.class));
   }
 
   @Test
@@ -69,6 +70,7 @@ public class ProducesAnnotationTest {
     e = assertThrows(CyclicDependencyException.class, () -> injector.register(CyclicalFactory2.class));
 
     assertEquals(3, e.getCycle().size());
+    assertFalse(injector.contains(Object.class));
   }
 
   @Test
@@ -76,6 +78,7 @@ public class ProducesAnnotationTest {
     BindingException e = assertThrows(BindingException.class, () -> injector.register(BadFactory1.class));
 
     assertThat(e).hasMessageStartingWith("Field cannot be annotated with Inject:");
+    assertFalse(injector.contains(Object.class));
   }
 
   @Test
@@ -83,6 +86,7 @@ public class ProducesAnnotationTest {
     BindingException e = assertThrows(BindingException.class, () -> injector.register(BadFactory2.class));
 
     assertThat(e).hasMessageStartingWith("Method cannot be annotated with Inject:");
+    assertFalse(injector.contains(Object.class));
   }
 
   @Test
@@ -90,6 +94,7 @@ public class ProducesAnnotationTest {
     BindingException e = assertThrows(BindingException.class, () -> injector.register(BadFactory3.class));
 
     assertThat(e).hasMessageStartingWith("Method has no return type:");
+    assertFalse(injector.contains(Object.class));
   }
 
   @Test
@@ -97,6 +102,7 @@ public class ProducesAnnotationTest {
     BindingException e = assertThrows(BindingException.class, () -> injector.register(GenericProduces.class));  // GenericProduces has a Produces method with a type variable T which is not provided
 
     assertThat(e).hasMessage("Method has unresolved type variables: public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericProduces.create()");
+    assertFalse(injector.contains(Object.class));
   }
 
   @Test
@@ -104,6 +110,7 @@ public class ProducesAnnotationTest {
     BindingException e = assertThrows(BindingException.class, () -> injector.register(GenericFactory1.class));  // GenericFactory1 has a type variable T which is not provided
 
     assertThat(e).hasMessage("Unresolved type variables in class hs.ddif.core.ProducesAnnotationTest$GenericFactory1 are not allowed: [T]");
+    assertFalse(injector.contains(Object.class));
   }
 
   @Test
@@ -122,9 +129,12 @@ public class ProducesAnnotationTest {
     assertTrue(y1 == y2);
     assertFalse((Object)x1 == y1);
     assertFalse((Object)x1 == y2);
+    assertTrue(injector.contains(Object.class));
 
     injector.remove(StringMethodFactory.class);
     injector.remove(TypeFactory.parameterizedClass(GenericFactory1.class, Long.class));
+
+    assertFalse(injector.contains(Object.class));
   }
 
   @Test
@@ -144,9 +154,121 @@ public class ProducesAnnotationTest {
     GenericFactory2<String> x2 = injector.getInstance(StringFactory.class);
 
     assertTrue(x1 == x2);
+    assertTrue(injector.contains(Object.class));
 
     injector.removeInstance(stringFactory);
     injector.removeInstance(integerFactory);
+
+    assertFalse(injector.contains(Object.class));
+  }
+
+  @Test
+  public void shouldRegisterSelfDependentFactory() throws BeanResolutionException {
+    injector.register(SelfDependentFactory.class);
+
+    assertNotNull(injector.getInstance(Phone.class));
+
+    injector.remove(SelfDependentFactory.class);
+
+    assertFalse(injector.contains(Object.class));
+  }
+
+  @Test
+  public void shouldNotRegisterAutoDiscoveryDependentFactoryWithoutUsingAutoDiscovery() {
+    assertThrows(UnresolvableDependencyException.class, () -> injector.register(AutoDiscoveryDependentFactory.class));
+    assertFalse(injector.contains(Object.class));
+  }
+
+  @Test
+  public void shouldRegisterAutoDiscoveryDependentFactory() throws BeanResolutionException {
+    autoDiscoveryInjector.register(AutoDiscoveryDependentFactory.class);
+
+    assertNotNull(autoDiscoveryInjector.getInstance(Phone.class));
+
+    autoDiscoveryInjector.remove(AutoDiscoveryDependentFactory.class);
+
+    // TODO should an auto discovered class (Bus.class) be auto-removed as well?
+    // Currently it isn't, hence why the assert below will fail:
+    // assertFalse(autoDiscoveryInjector.contains(Object.class));
+
+    assertFalse(autoDiscoveryInjector.contains(AutoDiscoveryDependentFactory.class));
+  }
+
+  @Test
+  public void shouldRegisterFactoryWithProducesWhichRequiresProvidedClassInSameFactory() throws BeanResolutionException {
+    injector.register(CrossDependentFactory.class);
+
+    assertNotNull(injector.getInstance(Phone.class));
+
+    injector.remove(CrossDependentFactory.class);
+
+    assertFalse(injector.contains(Object.class));
+  }
+
+  @Test
+  public void shouldAutoDiscoverProducesAnnotations() throws BeanResolutionException {
+    assertNotNull(autoDiscoveryInjector.getInstance(AnotherFactory.class));
+    assertNotNull(autoDiscoveryInjector.getInstance(Truck.class));
+  }
+
+  @Test
+  public void shouldAutoDiscoverNestedProducesAnnotations() throws BeanResolutionException {
+    Thing instance = autoDiscoveryInjector.getInstance(Thing.class);
+
+    assertNotNull(instance.anotherFactory);
+    assertNotNull(instance.truck);
+    assertEquals(2000, instance.truck.size);
+  }
+
+  @Test
+  public void shouldAutoDiscoverComplicatedNestedProducesAnnotations() throws BeanResolutionException {
+    ComplicatedThing instance = autoDiscoveryInjector.getInstance(ComplicatedThing.class);
+
+    assertNotNull(instance.part2.part3);
+    assertNotNull(instance.part1.truck);
+    assertEquals(3001, instance.part1.truck.size);
+  }
+
+  @Test
+  public void shouldNotRegisterClassWhichDependsOnUnregisteredClass() {
+    assertThatThrownBy(() -> injector.register(StaticFieldBasedPhoneProducer.class))
+      .isInstanceOf(UnresolvableDependencyException.class)
+      .hasMessage("Missing dependency of type [class hs.ddif.core.ProducesAnnotationTest$Thing3] required for Field [hs.ddif.core.ProducesAnnotationTest$Thing3 hs.ddif.core.ProducesAnnotationTest$StaticFieldBasedPhoneProducer.thing]");
+    assertFalse(injector.contains(Object.class));
+  }
+
+  @Test
+  public void shouldRegisterClassWhichProducesInstances() throws BeanResolutionException {
+    injector.register(Thing4.class);
+
+    Phone phone = injector.getInstance(Phone.class);
+
+    assertNotNull(phone);
+    assertEquals("Hi", phone.type);
+
+    injector.remove(Thing4.class);
+
+    assertFalse(injector.contains(Object.class));
+  }
+
+  @Test
+  public void requiredDependencySuppliedIndirectlyByStaticFieldShouldNotCauseCycle() throws BeanResolutionException {
+    autoDiscoveryInjector.getInstance(StaticFieldBasedPhoneProducer.class);
+  }
+
+  @Test
+  public void requiredDependencySuppliedIndirectlyByStaticMethodShouldNotCauseCycle() throws BeanResolutionException {
+    autoDiscoveryInjector.getInstance(StaticMethodBasedPhoneProducer.class);
+  }
+
+  @Test
+  public void shouldDiscoverClassWhichProducesInstances() throws BeanResolutionException {
+    assertNotNull(autoDiscoveryInjector.getInstance(Thing4.class));
+
+    Phone phone = autoDiscoveryInjector.getInstance(Phone.class);
+
+    assertNotNull(phone);
+    assertEquals("Hi", phone.type);
   }
 
   @Nested
@@ -168,6 +290,8 @@ public class ProducesAnnotationTest {
       injector.remove(SingletonFactory.class);
       injector.removeInstance(prefix);
       injector.removeInstance(intValue);
+
+      assertFalse(injector.contains(Object.class));
     }
 
     @Test
@@ -282,6 +406,37 @@ public class ProducesAnnotationTest {
     @Produces
     public Truck createTruck() {
       return new Truck(2000);
+    }
+  }
+
+  public static class SelfDependentFactory {
+    @Produces
+    public Phone createPhone(Truck truck) {  // requires a Truck, which is produced in the same class
+      return new Phone("truck-phone: " + truck);
+    }
+
+    @Produces
+    public Truck createTruck() {
+      return new Truck(2500);
+    }
+  }
+
+  public static class CrossDependentFactory implements Provider<Truck> {
+    @Produces
+    public Phone createPhone(Truck truck) {  // requires a Truck, which is produced in the same class
+      return new Phone("truck-phone: " + truck);
+    }
+
+    @Override
+    public Truck get() {
+      return new Truck(2525);
+    }
+  }
+
+  public static class AutoDiscoveryDependentFactory {
+    @Produces
+    public Phone createPhone(Bus bus) {  // requires a Bus, a class that can be auto discovered
+      return new Phone("truck-phone: " + bus);
     }
   }
 
@@ -485,6 +640,70 @@ public class ProducesAnnotationTest {
     @Override
     public Bus get() {
       return new Bus();
+    }
+  }
+
+  public static class Thing {
+    @Inject private AnotherFactory anotherFactory;  // produces Truck
+    @Inject private Truck truck;  // as AnotherFactory produces Truck, this should be okay
+  }
+
+  public static class ComplicatedThing {
+    public static class Part1 {
+      @Inject Truck truck;
+      @Produces Part5 part5 = new Part5(5);
+    }
+
+    public static class Part2 {
+      @Inject private Part3 part3;  // produces Truck
+    }
+
+    public static class Part3 {
+      @Produces
+      Truck createTruck(@SuppressWarnings("unused") Part4 part4) {
+        return new Truck(3001);
+      }
+    }
+
+    public static class Part4 {
+    }
+
+    public static class Part5 {
+      int part;
+
+      Part5(int part) {
+        this.part = part;
+      }
+    }
+
+    @Inject Part1 part1;  // needs truck at some level
+    @Inject Part2 part2;  // produces truck at some level
+    @Inject Part5 part5;  // produced by part1
+  }
+
+  public static class Thing3 {
+    @Inject Phone text;
+  }
+
+  public static class StaticFieldBasedPhoneProducer {
+    @Produces static Phone phone = new Phone("Hi");
+
+    @Inject Thing3 thing;
+  }
+
+  public static class StaticMethodBasedPhoneProducer {
+    @Produces
+    static Phone createPhone() {
+      return new Phone("Hi");
+    }
+
+    @Inject Thing3 thing;
+  }
+
+  public static class Thing4 {
+    @Produces String text = "Hi";
+    @Produces Phone createPhone(String text) {
+      return new Phone(text);
     }
   }
 }
