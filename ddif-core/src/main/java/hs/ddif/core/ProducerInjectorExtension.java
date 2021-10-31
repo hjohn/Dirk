@@ -55,6 +55,12 @@ public class ProducerInjectorExtension implements Injector.Extension {
         producerInjectable = new ClassInjectable(producer.value());
       }
       else {
+        // Creates a subclass of type producer.value() which will serve as a Factory
+        // (with assisted injection) for the type annotated with @Producer. The
+        // factory class should have an abstract method which returns this type. A
+        // new method is created that overrides it and when intercepted will construct
+        // the type.
+
         producerInjectable = new ClassInjectable(new ByteBuddy()
           .subclass(producer.value())
           .annotateType(AnnotationDescription.Builder.ofType(Singleton.class).build())  // It is a singleton, avoids scope problems

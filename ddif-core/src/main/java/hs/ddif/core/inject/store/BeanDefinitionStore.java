@@ -12,6 +12,10 @@ import java.util.stream.Collectors;
 
 import javax.inject.Provider;
 
+/**
+ * Wrapper around an {@link InjectableStore} which limits its API to only management of
+ * injectables.
+ */
 public class BeanDefinitionStore {
   private final InjectableStore<ResolvableInjectable> store;
 

@@ -22,6 +22,38 @@ import java.util.stream.Collectors;
 import javax.inject.Provider;
 
 // TODO JSR-330: Named without value is treated differently ... some use field name, others default to empty?
+/**
+ * An injector provides instances of classes or interfaces which have been registered with
+ * it or which can be auto discovered (if enabled). Each instance returned is injected with
+ * further dependencies if any of its fields or constructors are annotated with {@link javax.inject.Inject}.<p>
+ *
+ * The potential candidates for injection can be registered with the injector in various ways,
+ * for example by providing classes or existing instances. These candidates are called "injectables".
+ * In order to succesfully register an injectable, all its dependencies must be met as well, and all
+ * dependencies it provides must not conflict with any injectables already registered. If a conflict
+ * or cycle is detected registering will throw an exception.<p>
+ *
+ * For example, consider an injector for which a class A and B are registered and where class A has a
+ * field that requires an instance of class B. Any of the following actions will throw an exception:
+ *
+ * <ul>
+ * <li>Removing class B; this would make construction of A impossible as B is a requirement.</li>
+ * <li>Registering a subclass of B; this would make construction of A ambigious as there are two
+ *     possible injectables for the required B.</li>
+ * <li>Registering a class which either provides or produces instances of B (or a subclass); again
+ *     this would make construction of A ambigious.</li>
+ * </ul>
+ *
+ * <h2>Scoping</h2>
+ *
+ * An injector may return existing instances or new instances depending on the scope of the injectable.
+ * The two most common scopes are {@link javax.inject.Singleton}, which returns the same instance each time and
+ * unscoped, which returns a new instance each time. Custom scopes can be supported by this injector
+ * by providing a {@link ScopeResolver} during construction. Note that instances registered directly
+ * are always treated as singletons as the injector has no way of creating these itself. If an
+ * instance is complicated to construct, consider registering a {@link Provider} or a class containing
+ * {@link hs.ddif.annotations.Produces} annotated methods or fields.<p>
+ */
 public class Injector {
 
   /**
