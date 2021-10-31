@@ -8,6 +8,7 @@ import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
@@ -82,7 +83,8 @@ public class FieldInjectable implements ResolvableInjectable {
 
   private Object constructInstance(Instantiator instantiator) {
     try {
-      Object obj = instantiator.getInstance(ownerType);
+      boolean isStatic = Modifier.isStatic(field.getModifiers());
+      Object obj = isStatic ? null : instantiator.getInstance(ownerType);
 
       field.setAccessible(true);
 

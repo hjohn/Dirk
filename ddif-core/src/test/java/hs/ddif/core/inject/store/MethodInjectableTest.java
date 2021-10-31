@@ -1,16 +1,27 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Instantiator;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
-class MethodInjectableTest {
+@ExtendWith(MockitoExtension.class)
+public class MethodInjectableTest {
+  @Mock private Instantiator instantiator;
 
   @Test
   void constructorShouldRejectNullMethod() {
@@ -62,23 +73,31 @@ class MethodInjectableTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForNonStaticMethod() throws NoSuchMethodException, SecurityException {
+  void shouldReturnCorrectInjectableForNonStaticMethod() throws NoSuchMethodException, SecurityException, BeanResolutionException {
     MethodInjectable injectable = new MethodInjectable(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
       "Declaring Class of [public java.lang.Object hs.ddif.core.inject.store.MethodInjectableTest$B.b()]"
     );
+
+    when(instantiator.getInstance((Type)C.class)).thenReturn(new C());
+
+    assertEquals("Bye", injectable.getInstance(instantiator));
   }
 
   @Test
-  void shouldReturnCorrectInjectableForStaticMethod() throws NoSuchMethodException, SecurityException {
+  void shouldReturnCorrectInjectableForStaticMethod() throws NoSuchMethodException, SecurityException, BeanResolutionException {
     MethodInjectable injectable = new MethodInjectable(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
       "Parameter 0 of [public static java.lang.String hs.ddif.core.inject.store.MethodInjectableTest$C.e(hs.ddif.core.inject.store.MethodInjectableTest$D)]"
     );
+
+    when(instantiator.getInstance((Type)D.class)).thenReturn(new D());
+
+    assertEquals("Hello D", injectable.getInstance(instantiator));
   }
 
   static class A {
@@ -92,18 +111,19 @@ class MethodInjectableTest {
   }
 
   static class B<T> {
+    @SuppressWarnings("unchecked")
     public T b() {
-      return null;
+      return (T)"Bye";
     }
 
     public List<T> d() {
-      return null;
+      return new ArrayList<>();
     }
   }
 
   static class C extends B<String> {
     public static String e(D d) {
-      return "" + d;
+      return "Hello " + d.getClass().getSimpleName();
     }
   }
 

@@ -1,16 +1,26 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Instantiator;
+
+import java.lang.reflect.Type;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
-class FieldInjectableTest {
+@ExtendWith(MockitoExtension.class)
+public class FieldInjectableTest {
+  @Mock private Instantiator instantiator;
 
   @Test
   void constructorShouldRejectNullField() {
@@ -56,13 +66,17 @@ class FieldInjectableTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForNonStaticField() throws NoSuchFieldException, SecurityException {
+  void shouldReturnCorrectInjectableForNonStaticField() throws NoSuchFieldException, SecurityException, BeanResolutionException {
     FieldInjectable injectable = new FieldInjectable(C.class.getField("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
       "Declaring Class of [public java.lang.Object hs.ddif.core.inject.store.FieldInjectableTest$B.b]"
     );
+
+    when(instantiator.getInstance((Type)C.class)).thenReturn(new C());
+
+    assertEquals("Bye", injectable.getInstance(instantiator));
   }
 
   @Test
@@ -71,6 +85,8 @@ class FieldInjectableTest {
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).isEmpty();
+
+    assertEquals("Hello", injectable.getInstance(instantiator));
   }
 
   static class A {
@@ -79,7 +95,8 @@ class FieldInjectableTest {
   }
 
   static class B<T> {
-    public T b;
+    @SuppressWarnings("unchecked")
+    public T b = (T)"Bye";
     public List<T> d;
   }
 
