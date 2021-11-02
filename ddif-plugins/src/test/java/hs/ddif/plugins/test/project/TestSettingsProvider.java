@@ -12,4 +12,6 @@ public class TestSettingsProvider {
   @SuppressWarnings("unused")
   @Inject private Provider<TestParentalControls> parentalControlsProvider;
   @Inject @Opt private Integer unprovided;
+  @SuppressWarnings("unused")
+  @Inject private TestAutoDiscoverableDependency dependency;
 }

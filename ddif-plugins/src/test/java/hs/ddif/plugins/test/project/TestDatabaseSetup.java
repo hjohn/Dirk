@@ -1,14 +1,14 @@
 package hs.ddif.plugins.test.project;
 
-import java.sql.Connection;
-
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Singleton
-public class TestDatabaseSetup implements Provider<Connection> {
+public class TestDatabaseSetup implements Provider<TestConnection> {
+  private static int index;
+
   @Override
-  public Connection get() {
-    return null;
+  public TestConnection get() {
+    return new TestConnection("Connection " + index++);
   }
 }

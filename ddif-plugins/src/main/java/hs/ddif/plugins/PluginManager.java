@@ -13,11 +13,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
+import javax.inject.Singleton;
+
 import org.reflections.Reflections;
-import org.reflections.scanners.FieldAnnotationsScanner;
-import org.reflections.scanners.MethodAnnotationsScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
-import org.reflections.scanners.TypeElementsScanner;
+import org.reflections.scanners.Scanners;
 
 public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
@@ -35,14 +34,8 @@ public class PluginManager {
 
     LOGGER.fine("Scanning packages: " + Arrays.toString(packageNamePrefixes));
 
-    Reflections reflections = new Reflections(
-      packageNamePrefixes,
-      new TypeAnnotationsScanner(),
-      new FieldAnnotationsScanner(),
-      new MethodAnnotationsScanner()
-    );
-
-    return new PluginLoader(reflections, classLoader).loadPlugin(Arrays.toString(packageNamePrefixes));
+    return new PluginLoader(ComponentScanner.createReflections(packageNamePrefixes), classLoader)
+      .loadPlugin(Arrays.toString(packageNamePrefixes));
   }
 
   @SuppressWarnings("resource")
@@ -51,15 +44,7 @@ public class PluginManager {
 
     LOGGER.fine("Scanning Plugin at: " + Arrays.toString(urls));
 
-    Reflections reflections = new Reflections(
-      urls,
-      new TypeAnnotationsScanner(),
-      new FieldAnnotationsScanner(),
-      new MethodAnnotationsScanner(),
-      new TypeElementsScanner()
-    );
-
-    return new PluginLoader(reflections, classLoader).loadPlugin(Arrays.toString(urls));
+    return new PluginLoader(ComponentScanner.createReflections(urls), classLoader).loadPlugin(Arrays.toString(urls));
   }
 
   private class PluginLoader {
@@ -72,10 +57,10 @@ public class PluginManager {
     }
 
     public Plugin loadPlugin(String pluginName) {
-      Collection<String> classNames = reflections.getStore().get("TypeAnnotationsScanner").get("javax.inject.Singleton");
+      Collection<String> classes = reflections.get(Scanners.TypesAnnotated.with(Singleton.class));
 
-      if(!classNames.isEmpty()) {
-        throw new IllegalStateException("Plugins should not use @javax.inject.Singleton annotation as this makes it impossible to unload them.  Use @WeakSingleton instead; detected in: " + classNames);
+      if(!classes.isEmpty()) {
+        throw new IllegalStateException("Plugins should not use @javax.inject.Singleton annotation as this makes it impossible to unload them.  Use @WeakSingleton instead; detected in: " + classes);
       }
 
       List<Type> types = ComponentScanner.findComponentTypes(reflections, classLoader);
