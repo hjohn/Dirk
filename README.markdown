@@ -382,7 +382,7 @@ This is a special case of the `@Singleton` annotation. The injector will create 
 singletons to allow garbage collection if only the injector refers to the instance. If garbage
 collection occurred, and a new instance of the singleton is needed, it will be created again.
 
-The weak singletons are primarily useful to be unable to unload classes without having to destroy the injector.
+The weak singletons are primarily useful to be able to unload classes without having to destroy the injector.
 When dynamically loading jars containing classes that are registered with an injector, it will be impossible
 to unload these classes later if they are annotated with `@Singleton`.  Instead, `@WeakSingleton` should be
 used here so that when these classes are no longer needed they can be completely unloaded.
