@@ -29,16 +29,44 @@ public class AnnotationUtils {
 
   /**
    * Creates an annotation of the given class.
-   * 
+   *
    * @param cls a {@link Class}
    * @return an {@link Annotation}, never null
    */
   public static Annotation of(final Class<? extends Annotation> cls) {
-    return new Annotation() {
-      @Override
-      public Class<? extends Annotation> annotationType() {
-        return cls;
+    return new AnnotationImplementation(cls);
+  }
+
+  private static final class AnnotationImplementation implements Annotation {
+    private final Class<? extends Annotation> cls;
+
+    private AnnotationImplementation(Class<? extends Annotation> cls) {
+      this.cls = cls;
+    }
+
+    @Override
+    public Class<? extends Annotation> annotationType() {
+      return cls;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if(this == obj) {
+        return true;
       }
-    };
+      if(obj == null) {
+        return false;
+      }
+      if(!cls.isInstance(obj)) {
+        return false;
+      }
+
+      return true;
+    }
   }
 }
