@@ -193,7 +193,7 @@ The interface can now be injected anywhere you wish to create a `Car` instance:
     }
 
 ## Producers
-Producers as fields or methods that can supply a dependency that can be used for injection. They are useful
+Producers are fields or methods that can supply a dependency that can be used for injection. They are useful
 for objects that are too complex for the injector to construct itself or for example make use of object pooling.
 
 For example:
@@ -328,14 +328,16 @@ For example, given a `ScopeResolver`:
     @Retention(RUNTIME)
     public @interface TestScoped {  }
 
+... and a `@TestScoped` annotated class registered with the injector:
+
+    @TestScoped
+    public class Car { }
+
 ... and an injector constructed with the above `ScopeResolver`:
 
     Injector injector = new Injector(new TestScopeResolver());
 
-... and a `@TestScoped` annotated class:
-
-    @TestScoped
-    public class Car { }
+    injector.register(Car.class);
 
 When asking the injector for a `Car` instance, it will first determine the current scope. This is achieved
 by finding the `ScopeResolver` responsible for resolving `TestScoped` annotations. The resolver is queried
@@ -380,7 +382,7 @@ This is a special case of the `@Singleton` annotation. The injector will create 
 singletons to allow garbage collection if only the injector refers to the instance. If garbage
 collection occurred, and a new instance of the singleton is needed, it will be created again.
 
-The weak singletons are primarily useful to be unable to unload classes with having to destroy the injector.
+The weak singletons are primarily useful to be unable to unload classes without having to destroy the injector.
 When dynamically loading jars containing classes that are registered with an injector, it will be impossible
 to unload these classes later if they are annotated with `@Singleton`.  Instead, `@WeakSingleton` should be
 used here so that when these classes are no longer needed they can be completely unloaded.
