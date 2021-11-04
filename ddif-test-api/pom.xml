@@ -8,4 +8,16 @@
   </parent>
 
   <artifactId>ddif-test-api</artifactId>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <additionalJOption>-Xdoclint:none</additionalJOption>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
