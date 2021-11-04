@@ -35,6 +35,10 @@ import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.matcher.ElementMatchers;
 
+/**
+ * An injector extension which provider support for assisted injection through
+ * the {@link Producer} and {@link Parameter} annotations.
+ */
 public class ProducerInjectorExtension implements Injector.Extension {
   private static final Map<Class<?>, ClassInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
 
@@ -78,6 +82,10 @@ public class ProducerInjectorExtension implements Injector.Extension {
     return List.of(producerInjectable);
   }
 
+  /**
+   * Interceptor for the implemented factory method. Internal use only, public to avoid an
+   * {@code IllegalAccessException}.
+   */
   public static class Interceptor {
     private final Instantiator instantiator;
     private final Type type;

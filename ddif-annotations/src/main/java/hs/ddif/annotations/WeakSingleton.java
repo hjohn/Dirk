@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * used with great care as the instance might be immediately garbage collected and the
  * initialization may be repeated if the class is injected elsewhere.<p>
  *
- * Donot do this:<pre>
+ * Donot do this to trigger some initalization while discarding the resulting instance:<pre>
  *   injector.getInstance(SomeClass.class);</pre>
  *
  * Instead, assign the result to a variable until all initialization is finished or do

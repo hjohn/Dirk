@@ -6,6 +6,11 @@ package hs.ddif.core.inject.consistency;
  */
 public class ScopeConflictException extends InjectorStoreConsistencyException {
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param message a message
+   */
   public ScopeConflictException(String message) {
     super(message);
   }

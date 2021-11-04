@@ -52,7 +52,7 @@ import javax.inject.Provider;
  * by providing a {@link ScopeResolver} during construction. Note that instances registered directly
  * are always treated as singletons as the injector has no way of creating these itself. If an
  * instance is complicated to construct, consider registering a {@link Provider} or a class containing
- * {@link hs.ddif.annotations.Produces} annotated methods or fields.<p>
+ * {@link hs.ddif.annotations.Produces} annotated methods or fields.
  */
 public class Injector {
 

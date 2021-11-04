@@ -11,6 +11,11 @@ package hs.ddif.core.inject.consistency;
  */
 public abstract class InjectorStoreConsistencyException extends RuntimeException {
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param message a message
+   */
   public InjectorStoreConsistencyException(String message) {
     super(message);
   }

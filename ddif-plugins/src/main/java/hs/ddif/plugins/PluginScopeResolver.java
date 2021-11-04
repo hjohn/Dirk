@@ -10,6 +10,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A {@link ScopeResolver} to support the {@link PluginScoped} scope.
+ */
 public class PluginScopeResolver implements ScopeResolver {
   private final Map<Plugin, Map<Type, Object>> beansByScope = new HashMap<>();
   private final Map<Type, Plugin> typeToPlugin = new HashMap<>();
@@ -44,7 +47,7 @@ public class PluginScopeResolver implements ScopeResolver {
     beansByScope.computeIfAbsent(currentScope, k -> new HashMap<>()).put(injectableType, instance);
   }
 
-  public synchronized void register(Plugin plugin) {
+  synchronized void register(Plugin plugin) {
     for(Type type : plugin.getTypes()) {
       Plugin p = typeToPlugin.get(type);
 
@@ -58,7 +61,7 @@ public class PluginScopeResolver implements ScopeResolver {
     }
   }
 
-  public synchronized void unregister(Plugin plugin) {
+  synchronized void unregister(Plugin plugin) {
     for(Type type : plugin.getTypes()) {
       Plugin p = typeToPlugin.get(type);
 

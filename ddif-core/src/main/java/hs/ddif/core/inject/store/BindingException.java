@@ -9,6 +9,11 @@ import javax.inject.Inject;
  */
 public class BindingException extends RuntimeException {
 
+  /**
+   * Constructs a new instance
+   *
+   * @param message a message
+   */
   public BindingException(String message) {
     super(message);
   }

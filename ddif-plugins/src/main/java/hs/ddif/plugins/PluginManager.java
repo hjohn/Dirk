@@ -18,17 +18,44 @@ import javax.inject.Singleton;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 
+/**
+ * Manages {@link Plugin}s, registering them with a {@link BeanDefinitionStore} when
+ * loaded and removing them when unloaded.
+ */
 public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
 
   private final BeanDefinitionStore baseStore;  // the store to add the plugin classes to, but also may contain required dependencies
   private final PluginScopeResolver pluginScopeResolver;
 
+  /**
+   * Constructs a new instance. A {@link BeanDefinitionStore} must be provided where
+   * types part of a {@link Plugin} can be registered and unregistered. A {@link PluginScopeResolver}
+   * must be provided to support {@link hs.ddif.annotations.PluginScoped}, a scope which is specific
+   * to a plugin (unlike singleton which if defined in a plugin could interfere with other plugins).
+   *
+   * @param store a {@link BeanDefinitionStore}, cannot be null
+   * @param pluginScopeResolver a {@link PluginScopeResolver}, cannot be null
+   */
   public PluginManager(BeanDefinitionStore store, PluginScopeResolver pluginScopeResolver) {
+    if(store == null) {
+      throw new IllegalArgumentException("store cannot be null");
+    }
+    if(pluginScopeResolver == null) {
+      throw new IllegalArgumentException("pluginScopeResolver cannot be null");
+    }
+
     this.baseStore = store;
     this.pluginScopeResolver = pluginScopeResolver;
   }
 
+  /**
+   * Scans the given package prefixes and creates a {@link Plugin} for any annotated types located
+   * during the scan.
+   *
+   * @param packageNamePrefixes a list of packages to scan
+   * @return a {@link Plugin}, never null
+   */
   public Plugin loadPluginAndScan(String... packageNamePrefixes) {
     ClassLoader classLoader = this.getClass().getClassLoader();
 
@@ -38,6 +65,12 @@ public class PluginManager {
       .loadPlugin(Arrays.toString(packageNamePrefixes));
   }
 
+  /**
+   * Loads jars at the given {@link URL}s, scans for annotated types and creates a {@link Plugin}.
+   *
+   * @param urls a list of {@link URL}s to load and scan
+   * @return a {@link Plugin}, never null
+   */
   @SuppressWarnings("resource")
   public Plugin loadPluginAndScan(URL... urls) {
     URLClassLoader classLoader = new UnloadTrackingClassLoader(urls);
@@ -47,38 +80,16 @@ public class PluginManager {
     return new PluginLoader(ComponentScanner.createReflections(urls), classLoader).loadPlugin(Arrays.toString(urls));
   }
 
-  private class PluginLoader {
-    private final Reflections reflections;
-    private final ClassLoader classLoader;
-
-    public PluginLoader(Reflections reflections, ClassLoader classLoader) {
-      this.reflections = reflections;
-      this.classLoader = classLoader;
-    }
-
-    public Plugin loadPlugin(String pluginName) {
-      Collection<String> classes = reflections.get(Scanners.TypesAnnotated.with(Singleton.class));
-
-      if(!classes.isEmpty()) {
-        throw new IllegalStateException("Plugins should not use @javax.inject.Singleton annotation as this makes it impossible to unload them.  Use @WeakSingleton instead; detected in: " + classes);
-      }
-
-      List<Type> types = ComponentScanner.findComponentTypes(reflections, classLoader);
-
-      LOGGER.fine("Registering types: " + types);
-
-      return createPlugin(pluginName, types, classLoader);
-    }
-  }
-
-  public Plugin loadPlugin(URL url) {
-    return loadPlugin(new URL[] {url});
-  }
-
+  /**
+   * Attempts to unload the given plugin. This may fail if not all types can be removed for the
+   * underlying {@link BeanDefinitionStore}.
+   *
+   * @param plugin a {@link Plugin} to unload, cannot be null
+   */
   public void unload(Plugin plugin) {
-    pluginScopeResolver.unregister(plugin);
-    baseStore.remove(plugin.getTypes());
-    plugin.destroy();
+    baseStore.remove(plugin.getTypes());  // may fail
+    pluginScopeResolver.unregister(plugin);  // can't fail, so should be done after beanStore#remove
+    plugin.destroy();  // can't fail
   }
 
   /**
@@ -151,6 +162,30 @@ public class PluginManager {
 
     public AtomicBoolean getUnloadedAtomicBoolean() {
       return unloaded;
+    }
+  }
+
+  private class PluginLoader {
+    private final Reflections reflections;
+    private final ClassLoader classLoader;
+
+    PluginLoader(Reflections reflections, ClassLoader classLoader) {
+      this.reflections = reflections;
+      this.classLoader = classLoader;
+    }
+
+    Plugin loadPlugin(String pluginName) {
+      Collection<String> classes = reflections.get(Scanners.TypesAnnotated.with(Singleton.class));
+
+      if(!classes.isEmpty()) {
+        throw new IllegalStateException("Plugins should not use @javax.inject.Singleton annotation as this makes it impossible to unload them.  Use @WeakSingleton instead; detected in: " + classes);
+      }
+
+      List<Type> types = ComponentScanner.findComponentTypes(reflections, classLoader);
+
+      LOGGER.fine("Registering types: " + types);
+
+      return createPlugin(pluginName, types, classLoader);
     }
   }
 }

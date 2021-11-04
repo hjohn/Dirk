@@ -11,6 +11,10 @@ import java.util.Map;
 
 import javax.inject.Named;
 
+/**
+ * Class to describe an {@link Annotation} that can be more easily created than
+ * an instance of {@link Annotation}.
+ */
 public class AnnotationDescriptor {
   private final String description;
   private final Class<? extends Annotation> annotationType;
@@ -48,10 +52,20 @@ public class AnnotationDescriptor {
     this.description = description;
   }
 
+  /**
+   * Constructs a new instance directly from an {@link Annotation}.
+   *
+   * @param annotation an {@link Annotation}, cannot be null
+   */
   public AnnotationDescriptor(Annotation annotation) {
     this(annotation.annotationType(), mapToString(annotationToMap(annotation)));
   }
 
+  /**
+   * Returns the type of the {@link Annotation}.
+   *
+   * @return tyhe type of the {@link Annotation}, never null
+   */
   public Class<? extends Annotation> annotationType() {
     return annotationType;
   }
@@ -78,7 +92,7 @@ public class AnnotationDescriptor {
     return description;
   }
 
-  public static Map<String, Object> describeAsMap(Class<? extends Annotation> annotation, Value... annotationValues) {
+  static Map<String, Object> describeAsMap(Class<? extends Annotation> annotation, Value... annotationValues) {
     Map<String, Object> map = new HashMap<>();
 
     map.put("", annotation.getName());
@@ -122,7 +136,7 @@ public class AnnotationDescriptor {
   }
 
   @SuppressWarnings("unchecked")
-  public static String mapToString(Map<String, Object> map) {
+  static String mapToString(Map<String, Object> map) {
     StringBuilder builder = new StringBuilder();
     List<String> keys = new ArrayList<>(map.keySet());
 
@@ -173,7 +187,7 @@ public class AnnotationDescriptor {
     return "@" + map.get("") + builder.toString();
   }
 
-  public static Map<String, Object> annotationToMap(Annotation annotation) {
+  static Map<String, Object> annotationToMap(Annotation annotation) {
     Map<String, Object> map = new HashMap<>();
 
     map.put("", annotation.annotationType().getName());

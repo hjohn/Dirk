@@ -38,7 +38,7 @@ public interface ResolvableBinding extends Binding {
    * </ul>
    *
    * @param instantiator an {@link Instantiator} for resolving dependencies
-   * @return the current value of this binding
+   * @return the current value of this binding, can be null
    * @throws BeanResolutionException when a bean could not be found
    */
   Object getValue(Instantiator instantiator) throws BeanResolutionException;

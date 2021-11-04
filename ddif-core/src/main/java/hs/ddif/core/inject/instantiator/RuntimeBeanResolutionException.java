@@ -15,6 +15,13 @@ import javax.inject.Provider;
  */
 public class RuntimeBeanResolutionException extends RuntimeException {
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param type a {@link Type}, cannot be null
+   * @param cause a {@link Throwable} cause, can be null
+   * @param criteria a list of criteria
+   */
   public RuntimeBeanResolutionException(Type type, Throwable cause, Object... criteria) {
     super("No such bean: " + type + toCriteriaString(criteria), cause);
   }

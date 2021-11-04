@@ -5,6 +5,9 @@ import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility methods for annotations.
+ */
 public class AnnotationUtils {
 
   /**

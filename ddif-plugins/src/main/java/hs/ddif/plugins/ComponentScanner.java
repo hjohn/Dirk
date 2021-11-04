@@ -28,6 +28,9 @@ import org.reflections.scanners.Scanner;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ConfigurationBuilder;
 
+/**
+ * Provides methods to scan packages for injectables.
+ */
 public class ComponentScanner {
   private static final Logger LOGGER = Logger.getLogger(ComponentScanner.class.getName());
   private static final Scanner[] SCANNERS = {
@@ -37,6 +40,13 @@ public class ComponentScanner {
     Scanners.ConstructorsAnnotated
   };
 
+  /**
+   * Scans the given packages for annotated types and adds them to the given
+   * {@link BeanDefinitionStore}.
+   *
+   * @param store a {@link BeanDefinitionStore} to add found types, cannot be null
+   * @param packageNamePrefixes zero or more package name prefixes to scan
+   */
   public static void scan(BeanDefinitionStore store, String... packageNamePrefixes) {
     LOGGER.fine("Scanning packages: " + Arrays.toString(packageNamePrefixes));
 
@@ -49,7 +59,7 @@ public class ComponentScanner {
     store.register(types);
   }
 
-  public static List<Type> findComponentTypes(Reflections reflections, ClassLoader classLoader) {
+  static List<Type> findComponentTypes(Reflections reflections, ClassLoader classLoader) {
     Set<String> classNames = new HashSet<>();
 
     classNames.addAll(reflections.get(Scanners.TypesAnnotated.with(Named.class)));
@@ -99,7 +109,7 @@ public class ComponentScanner {
     return types;
   }
 
-  public static Reflections createReflections(String... packageNamePrefixes) {
+  static Reflections createReflections(String... packageNamePrefixes) {
     Pattern filterPattern = Pattern.compile(
       Arrays.stream(packageNamePrefixes)
         .map(pnp -> pnp.replace(".", "/"))
@@ -114,7 +124,7 @@ public class ComponentScanner {
     return new Reflections(configuration);
   }
 
-  public static Reflections createReflections(URL... urls) {
+  static Reflections createReflections(URL... urls) {
     Configuration configuration = new ConfigurationBuilder()
       .addUrls(urls)
       .setScanners(SCANNERS);

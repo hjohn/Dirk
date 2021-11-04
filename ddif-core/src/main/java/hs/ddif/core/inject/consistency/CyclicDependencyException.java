@@ -11,12 +11,22 @@ import java.util.List;
 public class CyclicDependencyException extends InjectorStoreConsistencyException {
   private final List<? extends ScopedInjectable> cycle;
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param cycle a list of {@link ScopedInjectable} which make up the cycle, cannot be null or empty
+   */
   public CyclicDependencyException(List<? extends ScopedInjectable> cycle) {
     super("Cyclic dependency detected in chain:\n" + format(cycle));
 
     this.cycle = Collections.unmodifiableList(cycle);
   }
 
+  /**
+   * Returns a list of {@link ScopedInjectable} which make up the cycle.
+   *
+   * @return a list of {@link ScopedInjectable} which make up the cycle, never null or empty
+   */
   public List<? extends ScopedInjectable> getCycle() {
     return cycle;
   }

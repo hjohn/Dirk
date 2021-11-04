@@ -9,11 +9,11 @@ import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
 
-public class PostConstructor {
+class PostConstructor {
   private final List<Method> postConstructMethods;
   private final Class<?> cls;
 
-  public PostConstructor(Class<?> cls) {
+  PostConstructor(Class<?> cls) {
     this.cls = cls;
     List<Method> methods = MethodUtils.getMethodsListWithAnnotation(cls, PostConstruct.class, true, true);
 
@@ -34,7 +34,7 @@ public class PostConstructor {
     this.postConstructMethods = methods;
   }
 
-  public void call(Object bean) {
+  void call(Object bean) {
     try {
       for(Method method : postConstructMethods) {
         method.setAccessible(true);

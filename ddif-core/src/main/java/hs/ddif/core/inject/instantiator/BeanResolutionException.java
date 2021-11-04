@@ -12,20 +12,36 @@ import java.util.Set;
  */
 public class BeanResolutionException extends Exception {
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param type a {@link Type}, cannot be null
+   * @param cause a {@link Throwable} cause, can be null
+   * @param criteria a list of criteria
+   */
   public BeanResolutionException(Type type, Throwable cause, Object... criteria) {
     super("No such bean: " + type + toCriteriaString(criteria), cause);
   }
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param type a {@link Type}, cannot be null
+   * @param criteria a list of criteria
+   */
   public BeanResolutionException(Type type, Object... criteria) {
     super("No such bean: " + type + toCriteriaString(criteria));
   }
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param injectables a set of {@link Injectable}s, cannot be null
+   * @param type a {@link Type}, cannot be null
+   * @param criteria a list of criteria
+   */
   public BeanResolutionException(Set<? extends Injectable> injectables, Type type, Object... criteria) {
     super("Multiple matching beans: " + type + toCriteriaString(criteria) + ": " + injectables);
-  }
-
-  protected BeanResolutionException(Type type, String message) {
-    super("No such bean: " + type + ": " + message);
   }
 
   private static String toCriteriaString(Object... criteria) {

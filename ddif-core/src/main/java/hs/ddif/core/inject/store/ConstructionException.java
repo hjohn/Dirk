@@ -10,10 +10,21 @@ import javax.annotation.PostConstruct;
  */
 public class ConstructionException extends RuntimeException {
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param message a message
+   * @param cause a {@link Throwable} to use as cause
+   */
   public ConstructionException(String message, Throwable cause) {
     super(message, cause);
   }
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param message a message
+   */
   public ConstructionException(String message) {
     super(message);
   }
