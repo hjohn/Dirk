@@ -5,8 +5,8 @@ Dynamic Dependency Injection Framework
 [![Build Status](https://travis-ci.org/hjohn/hs.ddif.svg?branch=master)](https://travis-ci.org/hjohn/hs.ddif)
 [![Coverage Status](https://coveralls.io/repos/github/hjohn/hs.ddif/badge.svg?branch=master)](https://coveralls.io/github/hjohn/hs.ddif?branch=master)
 
-This is a light-weight framework that allows you to use standard JSR-330 javax.inject 
-Annotations to create instances of objects, even when they're dynamically loaded at 
+This is a light-weight framework that allows you to use standard JSR-330 javax.inject
+Annotations to create instances of objects, even when they're dynamically loaded at
 runtime.  This framework will allow you to package your classes in seperate JAR's,
 load them at runtime, and have them injected with dependencies or serve as dependencies
 for other classes.
@@ -29,9 +29,9 @@ added and removed at runtime.  The used Injector will make sure that dependencie
 be satisfied and will refuse to add or remove classes when it would result in broken
 dependencies.
 
-For example, if a class registered with an Injector instance needs a `PaymentProvider`, 
-then attempting to remove the only matching `PaymentProvider` from the Injector will 
-fail.  Likewise, registering a class that needs a `PaymentProvider` would fail when no 
+For example, if a class registered with an Injector instance needs a `PaymentProvider`,
+then attempting to remove the only matching `PaymentProvider` from the Injector will
+fail.  Likewise, registering a class that needs a `PaymentProvider` would fail when no
 class is registered that could provide one.
 
 Other than those restrictions, the Injector is free to be modified at runtime in any
@@ -48,9 +48,9 @@ An example of a Collection dependency:
         @Inject
         private Set<Book> booksOnShelf;
     }
-    
+
 Now, if there are no books registered with the Injector, it will simply inject an
-empty collection.  However if at creation time of the BookShop instance there are 
+empty collection.  However if at creation time of the BookShop instance there are
 books registered those will all get injected.
 
 To make this dependency even more dynamic, it can be wrapped in a `Provider` (see
@@ -60,7 +60,7 @@ JSR-330 docs), like this:
         @Inject
         private Provider<Set<Book>> booksOnShelfProvider;
     }
-    
+
 In this instance, each time the `get` method of the Provider is called, the Injector
 will look for all registered books, even ones that were added or removed after the
 `BookShop` instance was created, and return them.
@@ -88,28 +88,28 @@ A basic example will be used to illustrate how this framework works.  We start w
 a class that needs some dependencies injected:
 
     public class BookShop {
-    
+
         @Inject
         private Set<Book> booksOnShelf;
-        
+
         @Inject
         public BookShop(CreditCardPaymentProcessor paymentProcessor) {
             ...
         }
     }
-    
+
 To have this class injected, we'll need to create an Injector and configure it
 properly:
 
     Injector injector = new Injector();
-    
+
     injector.register(CreditCardPaymentProcessor.class);
     injector.register(BookShop.class);
-    
-Now we can ask the Injector to create us an instance of ``BookShop``:    
-    
+
+Now we can ask the Injector to create us an instance of ``BookShop``:
+
     BookShop bookShop = injector.getInstance(BookShop.class);
-    
+
 This will create a ``BookShop`` instance by calling the constructor annotated with ``@Inject`` and providing it with
 an instance of ``CreditCardPaymentProcessor``.  The ``booksOnShelf`` field will be injected (after the Constructor
 has completed) with an empty Set as no ``Book`` injection candidates are currently known to the Injector.
@@ -128,14 +128,14 @@ with a ``Provider``.  The ``BookShop`` instances can then query for the latest b
 the ``Provider`` any time they want:
 
     public class BookShop {
-    
+
         @Inject
         private Provider<Set<Book>> booksOnShelf;
-    
+
         public Set<Book> getLatestBooks() {
             return booksOnShelf.get();
         }
-        
+
         ...
     }
 
@@ -153,7 +153,7 @@ In order to discover dependencies automatically, we have to create the Injector 
 Now we can get an instance of ``BookShop`` without any further dependencies needing to be registered:
 
     BookShop bookShop = injector.getInstance(BookShop.class);
-    
+
 Under the hood, the Injector will notice there is no ``BookShop`` injection candidate registered.  However,
 by analyzing the ``BookShop`` class it sees that it can be instantiated with a Constructor that requires a
 ``CreditCardPaymentProcessor`` -- unfortunately, there is also no ``CreditCardPaymentProcessor`` registered.  The
@@ -182,8 +182,8 @@ All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.  
-Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.  
+Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
@@ -197,6 +197,6 @@ https://code.google.com/p/reflections/
 
 ### DirectedGraph and TopologicalSort
 
-by Keith Schwarz  
-License: Public Domain  
+by Keith Schwarz
+License: Public Domain
 http://www.keithschwarz.com/interesting/
