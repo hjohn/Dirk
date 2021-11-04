@@ -137,25 +137,23 @@ public class ResolvableBindingProvider {
 
     if(!isParameter) {
       if(Set.class.isAssignableFrom(cls)) {
-        Type elementType = TypeUtils.getTypeArguments(type, Set.class).get(Set.class.getTypeParameters()[0]);
-
-        return new HashSetBinding(accessibleObject, argNo, elementType, qualifiers, optional);
+        return new HashSetBinding(accessibleObject, argNo, getFirstTypeParameter(type, Set.class), qualifiers, optional);
       }
       if(List.class.isAssignableFrom(cls)) {
-        Type elementType = TypeUtils.getTypeArguments(type, List.class).get(List.class.getTypeParameters()[0]);
-
-        return new ArrayListBinding(accessibleObject, argNo, elementType, qualifiers, optional);
+        return new ArrayListBinding(accessibleObject, argNo, getFirstTypeParameter(type, List.class), qualifiers, optional);
       }
       if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
-        Type providedType = TypeUtils.getTypeArguments(type, Provider.class).get(Provider.class.getTypeParameters()[0]);
-
-        return new ProviderBinding(accessibleObject, argNo, createBinding(accessibleObject, argNo, true, providedType, false, false, qualifiers));
+        return new ProviderBinding(accessibleObject, argNo, createBinding(accessibleObject, argNo, true, getFirstTypeParameter(type, Provider.class), false, false, qualifiers));
       }
     }
 
     Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
 
     return new DirectBinding(accessibleObject, argNo, new Key(finalType, qualifiers), optional, isParameter);
+  }
+
+  private static Type getFirstTypeParameter(Type type, Class<?> cls) {
+    return TypeUtils.getTypeArguments(type, cls).get(cls.getTypeParameters()[0]);
   }
 
   private static Set<AnnotationDescriptor> extractQualifiers(Field field) {
