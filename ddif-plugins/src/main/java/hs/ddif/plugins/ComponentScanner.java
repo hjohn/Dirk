@@ -9,11 +9,9 @@ import hs.ddif.core.inject.store.BeanDefinitionStore;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -27,6 +25,7 @@ import org.reflections.Reflections;
 import org.reflections.scanners.Scanner;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.ReflectionUtilsPredicates;
 
 /**
  * Provides methods to scan packages for injectables.
@@ -60,53 +59,21 @@ public class ComponentScanner {
   }
 
   static List<Type> findComponentTypes(Reflections reflections, ClassLoader classLoader) {
-    Set<String> classNames = new HashSet<>();
-
-    classNames.addAll(reflections.get(Scanners.TypesAnnotated.with(Named.class)));
-    classNames.addAll(reflections.get(Scanners.TypesAnnotated.with(Singleton.class)));
-    classNames.addAll(reflections.get(Scanners.TypesAnnotated.with(WeakSingleton.class)));
-    classNames.addAll(reflections.get(Scanners.TypesAnnotated.with(Producer.class)));
-    classNames.addAll(reflections.get(Scanners.TypesAnnotated.with(PluginScoped.class)));
-
-    for(String name : reflections.get(Scanners.FieldsAnnotated.with(Inject.class))) {
-      classNames.add(name.substring(0, name.lastIndexOf('.')));
-    }
-
-    for(String name : reflections.get(Scanners.FieldsAnnotated.with(Produces.class))) {
-      classNames.add(name.substring(0, name.lastIndexOf('.')));
-    }
-
-    for(String name : reflections.get(Scanners.ConstructorsAnnotated.with(Inject.class))) {
-      name = name.substring(0, name.lastIndexOf('('));
-      classNames.add(name.substring(0, name.lastIndexOf('.')));
-    }
-
-    for(String name : reflections.get(Scanners.MethodsAnnotated.with(Inject.class))) {
-      name = name.substring(0, name.lastIndexOf('('));
-      classNames.add(name.substring(0, name.lastIndexOf('.')));
-    }
-
-    for(String name : reflections.get(Scanners.MethodsAnnotated.with(Produces.class))) {
-      name = name.substring(0, name.lastIndexOf('('));
-      classNames.add(name.substring(0, name.lastIndexOf('.')));
-    }
-
-    List<Type> types = new ArrayList<>();
-
-    for(String className : classNames) {
-      try {
-        Class<?> cls = classLoader.loadClass(className);
-
-        if(!Modifier.isAbstract(cls.getModifiers())) {
-          types.add(cls);
-        }
-      }
-      catch(ClassNotFoundException e) {
-        throw new IllegalStateException(e);
-      }
-    }
-
-    return types;
+    return
+      reflections.get(
+        Scanners.TypesAnnotated.with(Named.class, Singleton.class, WeakSingleton.class, Producer.class, PluginScoped.class)
+          .add(
+            Scanners.FieldsAnnotated.with(Inject.class, Produces.class)
+              .add(Scanners.MethodsAnnotated.with(Inject.class, Produces.class))
+              .add(Scanners.ConstructorsAnnotated.with(Inject.class))
+              .map(ComponentScanner::reduceToClassName)
+          )
+          .asClass(classLoader)
+          .filter(ReflectionUtilsPredicates.withClassModifier(Modifier.ABSTRACT).negate())
+      )
+      .stream()
+      .sorted(Comparator.comparing(Type::getTypeName))
+      .collect(Collectors.toList());
   }
 
   static Reflections createReflections(String... packageNamePrefixes) {
@@ -130,5 +97,12 @@ public class ComponentScanner {
       .setScanners(SCANNERS);
 
     return new Reflections(configuration);
+  }
+
+  private static String reduceToClassName(String name) {
+    int methodParametersStart = name.lastIndexOf('(');
+    int memberNameStart = name.lastIndexOf('.', methodParametersStart == -1 ? name.length() : methodParametersStart);
+
+    return name.substring(0, memberNameStart);
   }
 }
