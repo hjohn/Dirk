@@ -20,26 +20,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class InjectorDiscoveryTest {
   private Injector injector = new Injector(true);
 
   @Test
   public void shouldDiscoverNewTypes() throws BeanResolutionException {
-    assertThat(injector.getInstances(BigRedBean.class)).isNotEmpty();
+    assertNotNull(injector.getInstance(BigRedBean.class));
     assertTrue(injector.contains(BigRedBean.class));
   }
 
   @Test
   public void shouldDiscoverNewTypesAndDependentTypes() throws BeanResolutionException {
-    assertThat(injector.getInstances(BeanWithInjection.class)).isNotEmpty();
+    assertNotNull(injector.getInstance(BeanWithInjection.class));
     assertTrue(injector.contains(BeanWithInjection.class));
     assertTrue(injector.contains(SimpleBean.class));
   }
 
   @Test
   public void shouldNotDiscoverNewTypeWithoutAnyConstructorMatch() {
-    assertThatThrownBy(() -> injector.getInstances(SampleWithDependencyOnSampleWithoutConstructorMatch.class))
+    assertThatThrownBy(() -> injector.getInstance(SampleWithDependencyOnSampleWithoutConstructorMatch.class))
       .isInstanceOf(BeanResolutionException.class)
       .hasMessage("No such bean: class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch")
       .hasCause(new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch"));
@@ -50,7 +51,7 @@ public class InjectorDiscoveryTest {
 
   @Test
   public void shouldNotDiscoverNewTypeWithMultipleConstructorMatch() {
-    assertThatThrownBy(() -> injector.getInstances(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class))
+    assertThatThrownBy(() -> injector.getInstance(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class))
       .isInstanceOf(BeanResolutionException.class)
       .hasMessage("No such bean: class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors")
       .hasCause(new BindingException("Multiple @Inject annotated constructors found, but only one allowed: class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors"));
@@ -61,7 +62,7 @@ public class InjectorDiscoveryTest {
 
   @Test
   public void shouldThrowBindingExceptionWhenAddingClassWithoutConstructorMatch() {
-    assertThatThrownBy(() -> injector.getInstances(SampleWithoutConstructorMatch.class))
+    assertThatThrownBy(() -> injector.getInstance(SampleWithoutConstructorMatch.class))
       .isInstanceOf(BeanResolutionException.class)
       .hasMessage("No such bean: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
       .hasCause(new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch"));
@@ -69,7 +70,7 @@ public class InjectorDiscoveryTest {
 
   @Test
   public void shouldDiscoverNewTypeWithEmptyUnannotatedConstructorAndAnnotatedConstructor() throws Exception {
-    assertFalse(injector.getInstances(SampleWithDependencyOnSampleWithEmptyAndAnnotatedConstructor.class).isEmpty());
+    assertNotNull(injector.getInstance(SampleWithDependencyOnSampleWithEmptyAndAnnotatedConstructor.class));
   }
 
   @Test
@@ -94,7 +95,7 @@ public class InjectorDiscoveryTest {
 
   @Test
   public void shouldThrowBindingExceptionWhenDiscoveredClassRequiresQualifiers() {
-    assertThatThrownBy(() -> injector.getInstances(G.class))
+    assertThatThrownBy(() -> injector.getInstance(G.class))
       .isInstanceOf(BeanResolutionException.class)
       .hasMessage("No such bean: class hs.ddif.core.InjectorDiscoveryTest$G")
       .hasCause(new BindingException("Auto discovered class cannot be required to have qualifiers: [@javax.inject.Named[value=some-qualifier] class hs.ddif.core.InjectorDiscoveryTest$A]"));

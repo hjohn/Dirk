@@ -212,7 +212,7 @@ public class Instantiator {
   public synchronized <T> List<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
     List<T> instances = new ArrayList<>();
 
-    for(ResolvableInjectable injectable : resolve(type, criteria)) {
+    for(ResolvableInjectable injectable : store.resolve(type, criteria)) {
       try {
         T instance = getInstance(injectable, NO_PARAMETERS);
 
