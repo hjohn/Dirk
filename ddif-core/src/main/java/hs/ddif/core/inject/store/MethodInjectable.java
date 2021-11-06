@@ -155,6 +155,6 @@ public class MethodInjectable implements ResolvableInjectable {
 
   @Override
   public String toString() {
-    return "Injectable-Method(" + injectableType + ")";
+    return "Injectable-Method(" + method + ")";
   }
 }
