@@ -4,7 +4,6 @@ import hs.ddif.core.Injector;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.inject.store.ConstructionException;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
 import hs.ddif.test.plugin.TextStyler;
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -63,29 +61,36 @@ public class PluginManagerTest {
 
   @Test
   public void shouldLoadThenUnloadPlugin() throws BeanResolutionException {
-    assertThrows(ConstructionException.class, () -> injector.getInstance(BeanWithTextProviders.class));
+    BeanWithTextProviders bean1 = injector.getInstance(BeanWithTextProviders.class);  // it's perfectly fine to get a bean with no text providers
+
+    assertNotNull(bean1);
+    assertThat(bean1.getTextProviders()).isEmpty();
 
     injector.register(TextStyler.class);  // not part of plugin, so needs to be registered seperate -- don't want it part of plugin either as then plugin would be unable to unload itself
 
     Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);
 
-    BeanWithTextProviders bean = injector.getInstance(BeanWithTextProviders.class);
+    BeanWithTextProviders bean2 = injector.getInstance(BeanWithTextProviders.class);
 
-    List<String> texts = extractTextsFromBeanWithTextProviders(bean);
+    assertNotNull(bean2);
+    assertThat(bean2.getTextProviders()).hasSize(3);
+
+    List<String> texts = extractTextsFromBeanWithTextProviders(bean2);
 
     assertThat(texts).containsExactlyInAnyOrder("Fancy Text", "NORMAL TEXT", ">>Styled Text<<");
 
     pluginManager.unload(plugin);
 
-    assertThrows(ConstructionException.class, () -> injector.getInstance(BeanWithTextProviders.class));
+    BeanWithTextProviders bean3 = injector.getInstance(BeanWithTextProviders.class);
 
-    assertEquals(3, bean.getTextProviders().size());
+    assertNotNull(bean3);
+    assertThat(bean3.getTextProviders()).isEmpty();
 
     gc();
 
-    assertFalse(plugin.isUnloaded());
+    assertFalse(plugin.isUnloaded());  // can't unload as long as we hold a reference to bean2 which has all the text providers
 
-    bean = null;
+    bean2 = null;
 
     waitForPluginUnload(plugin);
 

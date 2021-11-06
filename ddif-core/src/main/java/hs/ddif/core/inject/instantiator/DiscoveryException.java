@@ -1,9 +1,19 @@
 package hs.ddif.core.inject.instantiator;
 
 /**
- * Thrown when a {@link InjectableDiscoverer} was unable to do a complete discovery.
+ * Thrown when auto discovery fails.
  */
 public class DiscoveryException extends Exception {
+
+  /**
+   * Creates a new instance.
+   *
+   * @param message a message describing the problem
+   * @param cause an optional cause, can be null
+   */
+  public DiscoveryException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
   /**
    * Creates a new instance.
@@ -13,5 +23,4 @@ public class DiscoveryException extends Exception {
   public DiscoveryException(String message) {
     super(message);
   }
-
 }

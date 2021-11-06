@@ -2,7 +2,6 @@ package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.bind.NamedParameter;
-import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.InjectableStore;
@@ -51,14 +50,18 @@ public class Instantiator {
   }
 
   private final InjectableStore<ResolvableInjectable> store;
+  private final Gatherer gatherer;
+  private final boolean autoDiscovery;
 
   /**
    * Map containing {@link ScopeResolver}s this injector can use.
    */
   private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
 
-  public Instantiator(InjectableStore<ResolvableInjectable> store, ScopeResolver... scopeResolvers) {
+  public Instantiator(InjectableStore<ResolvableInjectable> store, Gatherer defaultGatherer, boolean autoDiscovery, ScopeResolver... scopeResolvers) {
     this.store = store;
+    this.gatherer = defaultGatherer;
+    this.autoDiscovery = autoDiscovery;
 
     for(ScopeResolver scopeResolver : scopeResolvers) {
       scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
@@ -143,7 +146,7 @@ public class Instantiator {
    *   or when the given class has multiple matching candidates
    */
   public synchronized <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws BeanResolutionException {
-    Set<ResolvableInjectable> injectables = resolve(type, criteria);
+    Set<ResolvableInjectable> injectables = discover(type, criteria);
 
     if(injectables.isEmpty()) {
       throw new BeanResolutionException(type, criteria);
@@ -243,11 +246,19 @@ public class Instantiator {
     return getInstances((Type)cls, criteria);
   }
 
-  private Set<ResolvableInjectable> resolve(Type type, Object... criteria) throws BeanResolutionException {
+  private Set<ResolvableInjectable> discover(Type type, Object... criteria) throws BeanResolutionException {
     try {
-      return store.resolve(type, criteria);
+      Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
+
+      if(injectables.isEmpty() && autoDiscovery && criteria.length == 0) {
+        store.putAll(gatherer.gather(type));
+
+        injectables = store.resolve(type, criteria);
+      }
+
+      return injectables;
     }
-    catch(BindingException e) {  // Normally, resolve throws no exceptions, but this can occur when auto discovery is used
+    catch(Exception e) {
       throw new BeanResolutionException(type, e, criteria);
     }
   }

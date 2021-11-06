@@ -5,19 +5,17 @@ import hs.ddif.core.inject.consistency.InjectorStoreConsistencyPolicy;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Gatherer;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
-import hs.ddif.core.inject.store.ResolvableInjectableStore;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.InjectableStore;
-import hs.ddif.core.store.Resolver;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import javax.inject.Provider;
 
@@ -75,18 +73,15 @@ public class Injector {
   private final BeanDefinitionStore store;
 
   public Injector(boolean autoDiscovery, ScopeResolver... scopeResolvers) {
-    StoreExtensionAdapter adapter = new StoreExtensionAdapter(new ProducerInjectorExtension());
+    GathererExtensionAdapter adapter = new GathererExtensionAdapter(new ProducerInjectorExtension());
+    InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>());
 
-    InjectableStore<ResolvableInjectable> store = new ResolvableInjectableStore(
-      new InjectorStoreConsistencyPolicy<>(),
-      List.of(adapter, new ProviderStoreExtension(), new ProducesStoreExtension()),
-      autoDiscovery
-    );
+    Gatherer gatherer = new AutoDiscoveringGatherer(store, autoDiscovery, List.of(adapter, new ProviderGathererExtension(), new ProducesGathererExtension()));
 
-    this.store = new BeanDefinitionStore(store);
-    this.instantiator = new Instantiator(store, scopeResolvers);
+    this.store = new BeanDefinitionStore(store, gatherer);
+    this.instantiator = new Instantiator(store, gatherer, autoDiscovery, scopeResolvers);
 
-    adapter.setInstantiator(instantiator);  // TODO a bit cyclical... the extension needs store, store needs extensions...
+    adapter.setInstantiator(instantiator);  // TODO a bit cyclical... the extension needs instantiator, instantiator needs extensions...
   }
 
   public Injector(ScopeResolver... scopeResolvers) {
@@ -97,12 +92,12 @@ public class Injector {
     this(false);
   }
 
-  private static class StoreExtensionAdapter implements ResolvableInjectableStore.Extension {
+  private static class GathererExtensionAdapter implements AutoDiscoveringGatherer.Extension {
     private final Extension extension;
 
     private Instantiator instantiator;
 
-    StoreExtensionAdapter(Extension extension) {
+    GathererExtensionAdapter(Extension extension) {
       this.extension = extension;
     }
 
@@ -111,8 +106,8 @@ public class Injector {
     }
 
     @Override
-    public List<Supplier<ResolvableInjectable>> getDerived(Resolver<ResolvableInjectable> resolver, ResolvableInjectable injectable) {
-      return extension.getDerived(instantiator, injectable).stream().map(ri -> (Supplier<ResolvableInjectable>)(() -> ri)).collect(Collectors.toList());
+    public List<ResolvableInjectable> getDerived(ResolvableInjectable injectable) {
+      return extension.getDerived(instantiator, injectable);
     }
   }
 

@@ -2,6 +2,7 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
+import hs.ddif.core.inject.instantiator.Gatherer;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.AnnotationDescriptor;
@@ -18,9 +19,11 @@ import javax.inject.Provider;
  */
 public class BeanDefinitionStore {
   private final InjectableStore<ResolvableInjectable> store;
+  private final Gatherer gatherer;
 
-  public BeanDefinitionStore(InjectableStore<ResolvableInjectable> store) {
+  public BeanDefinitionStore(InjectableStore<ResolvableInjectable> store, Gatherer gatherer) {
     this.store = store;
+    this.gatherer = gatherer;
   }
 
   /**
@@ -141,10 +144,10 @@ public class BeanDefinitionStore {
   }
 
   private void registerInternal(List<ResolvableInjectable> injectables) {
-    store.putAll(injectables);
+    store.putAll(gatherer.gather(injectables));
   }
 
   private void removeInternal(List<ResolvableInjectable> injectables) {
-    store.removeAll(injectables);
+    store.removeAll(gatherer.gather(injectables));
   }
 }

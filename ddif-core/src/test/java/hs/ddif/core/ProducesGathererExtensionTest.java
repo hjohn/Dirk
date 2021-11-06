@@ -5,26 +5,19 @@ import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.inject.store.FieldInjectable;
 import hs.ddif.core.inject.store.MethodInjectable;
-import hs.ddif.core.store.InjectableStore;
 
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ProducesStoreExtensionTest {
-  private ProducesStoreExtension extension = new ProducesStoreExtension();
+public class ProducesGathererExtensionTest {
+  private ProducesGathererExtension extension = new ProducesGathererExtension();
 
   @Test
   void shouldFindProducesAnnotatedMethods() throws NoSuchMethodException, SecurityException, NoSuchFieldException {
-    InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
-
-    List<ResolvableInjectable> injectables = extension.getDerived(store, new ClassInjectable(A.class)).stream()
-      .map(Supplier::get)
-      .collect(Collectors.toList());
+    List<ResolvableInjectable> injectables = extension.getDerived(new ClassInjectable(A.class));
 
     assertThat(injectables).containsExactlyInAnyOrder(
       new MethodInjectable(A.class.getDeclaredMethod("createB"), A.class),
