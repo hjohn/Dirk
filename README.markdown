@@ -2,8 +2,9 @@ Dynamic Dependency Injection Framework
 ======================================
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.hjohn.ddif/ddif-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.hjohn.ddif/ddif-core)
-[![Build Status](https://travis-ci.org/hjohn/hs.ddif.svg?branch=master)](https://travis-ci.org/hjohn/hs.ddif)
-[![Coverage Status](https://coveralls.io/repos/github/hjohn/hs.ddif/badge.svg?branch=master)](https://coveralls.io/github/hjohn/hs.ddif?branch=master)
+[![Build Status](https://github.com/hjohn/hs.ddif/workflows/master/badge.svg)](https://github.com/hjohn/hs.ddif/actions)
+[![Coverage](https://codecov.io/gh/hjohn/hs.ddif/branch/master/graph/badge.svg?token=QCNNRFYF98)](https://codecov.io/gh/hjohn/hs.ddif)
+[![License](https://img.shields.io/badge/License-BSD_2--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
 
 A light-weight framework that allows you to use standard JSR-330 javax.inject
 Annotations to create instances of objects, even when they're dynamically loaded at
