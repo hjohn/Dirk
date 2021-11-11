@@ -176,7 +176,7 @@ public class Instantiator {
     try {
       ResolvableInjectable injectable = injectables.iterator().next();
 
-      T instance = getInstance(injectable, parameters);
+      T instance = getInstance(injectable, parameters, findScopeResolver(injectable));
 
       if(instance == null) {
         throw new BeanResolutionException(type, criteria);
@@ -220,9 +220,8 @@ public class Instantiator {
   }
 
   /**
-   * Returns all instances of the given type matching the given criteria (if any) in
-   * which all dependencies are injected.  When there are no matches, an empty set is
-   * returned.
+   * Returns all instances of the given type matching the given criteria (if any) and, if scoped,
+   * which are active in the current scope.  When there are no matches, an empty set is returned.
    *
    * @param <T> the type of the instance
    * @param type the type of the instances required
@@ -235,15 +234,24 @@ public class Instantiator {
       List<T> instances = new ArrayList<>();
 
       for(ResolvableInjectable injectable : store.resolve(type, criteria)) {
-        try {
-          T instance = getInstance(injectable, NO_PARAMETERS);
+        ScopeResolver scopeResolver = findScopeResolver(injectable);
 
-          if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
-            instances.add(instance);
+        if(scopeResolver == null || scopeResolver.isScopeActive(injectable.getType())) {
+          try {
+            T instance = getInstance(injectable, NO_PARAMETERS, scopeResolver);
+
+            if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
+              instances.add(instance);
+            }
           }
-        }
-        catch(OutOfScopeException e) {
-          throw new BeanResolutionException(type, e, criteria);
+          catch(OutOfScopeException e) {
+
+            /*
+             * Scope was checked to be active (to avoid exception cost), but it still occured...
+             */
+
+            throw new IllegalStateException("scope should have been active, concurrent modification on another thread?", e);
+          }
         }
       }
 
@@ -255,9 +263,8 @@ public class Instantiator {
   }
 
   /**
-   * Returns all instances of the given class matching the given criteria (if any) in
-   * which all dependencies are injected.  When there are no matches, an empty set is
-   * returned.
+   * Returns all instances of the given class matching the given criteria (if any) and, if scoped,
+   * which are active in the current scope.  When there are no matches, an empty set is returned.
    *
    * @param <T> the type of the instances
    * @param cls the class of the instances required
@@ -286,9 +293,7 @@ public class Instantiator {
     }
   }
 
-  private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters) throws InstantiationException, OutOfScopeException {
-    ScopeResolver scopeResolver = scopesResolversByAnnotation.get(injectable.getScope() == null ? null : injectable.getScope().annotationType());
-
+  private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters, ScopeResolver scopeResolver) throws InstantiationException, OutOfScopeException {
     if(scopeResolver != null) {
       T bean = scopeResolver.get(injectable.getType());
 
@@ -310,5 +315,9 @@ public class Instantiator {
     }
 
     return bean;
+  }
+
+  private ScopeResolver findScopeResolver(ResolvableInjectable injectable) {
+    return scopesResolversByAnnotation.get(injectable.getScope() == null ? null : injectable.getScope().annotationType());
   }
 }
