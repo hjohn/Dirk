@@ -54,14 +54,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
       throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
     }
 
-    Map<Type, Object> beans = beansByScope.get(currentScope);
-
-    if(beans == null) {
-      beans = new WeakHashMap<>();
-      beansByScope.put(currentScope, beans);
-    }
-
-    beans.put(injectableType, instance);
+    beansByScope.computeIfAbsent(currentScope, k -> new WeakHashMap<>()).put(injectableType, instance);
   }
 
   protected void clear() {

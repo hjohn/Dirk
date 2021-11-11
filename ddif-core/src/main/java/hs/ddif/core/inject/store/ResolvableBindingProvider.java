@@ -371,9 +371,8 @@ public class ResolvableBindingProvider {
           return null;
         }
       }
-      else {
-        return instantiator.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
-      }
+
+      return instantiator.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
     }
 
     @Override
