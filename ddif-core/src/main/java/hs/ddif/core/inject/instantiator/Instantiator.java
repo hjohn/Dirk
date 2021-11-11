@@ -173,20 +173,20 @@ public class Instantiator {
       throw new BeanResolutionException(injectables, type, criteria);
     }
 
-    T instance;
-
     try {
-      instance = getInstance(injectables.iterator().next(), parameters);
+      ResolvableInjectable injectable = injectables.iterator().next();
+
+      T instance = getInstance(injectable, parameters);
+
+      if(instance == null) {
+        throw new BeanResolutionException(type, criteria);
+      }
+
+      return instance;
     }
-    catch(BeanResolutionException | OutOfScopeException e) {
+    catch(InstantiationException | OutOfScopeException e) {
       throw new BeanResolutionException(type, e, criteria);
     }
-
-    if(instance == null) {
-      throw new BeanResolutionException(type, criteria);
-    }
-
-    return instance;
   }
 
   /**
@@ -231,22 +231,27 @@ public class Instantiator {
    * @throws BeanResolutionException when a required bean could not be found
    */
   public synchronized <T> List<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
-    List<T> instances = new ArrayList<>();
+    try {
+      List<T> instances = new ArrayList<>();
 
-    for(ResolvableInjectable injectable : store.resolve(type, criteria)) {
-      try {
-        T instance = getInstance(injectable, NO_PARAMETERS);
+      for(ResolvableInjectable injectable : store.resolve(type, criteria)) {
+        try {
+          T instance = getInstance(injectable, NO_PARAMETERS);
 
-        if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
-          instances.add(instance);
+          if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
+            instances.add(instance);
+          }
+        }
+        catch(OutOfScopeException e) {
+          throw new BeanResolutionException(type, e, criteria);
         }
       }
-      catch(OutOfScopeException e) {
-        throw new BeanResolutionException(type, e, criteria);
-      }
-    }
 
-    return instances;
+      return instances;
+    }
+    catch(InstantiationException e) {
+      throw new BeanResolutionException(type, e, criteria);
+    }
   }
 
   /**
@@ -281,7 +286,7 @@ public class Instantiator {
     }
   }
 
-  private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters) throws BeanResolutionException, OutOfScopeException {
+  private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters) throws InstantiationException, OutOfScopeException {
     ScopeResolver scopeResolver = scopesResolversByAnnotation.get(injectable.getScope() == null ? null : injectable.getScope().annotationType());
 
     if(scopeResolver != null) {

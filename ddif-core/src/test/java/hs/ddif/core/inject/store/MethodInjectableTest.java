@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.instantiator.Instantiator;
 
 import java.lang.reflect.Type;
@@ -73,7 +74,7 @@ public class MethodInjectableTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForNonStaticMethod() throws NoSuchMethodException, SecurityException, BeanResolutionException {
+  void shouldReturnCorrectInjectableForNonStaticMethod() throws NoSuchMethodException, SecurityException, BeanResolutionException, InstantiationException {
     MethodInjectable injectable = new MethodInjectable(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
@@ -87,7 +88,7 @@ public class MethodInjectableTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForStaticMethod() throws NoSuchMethodException, SecurityException, BeanResolutionException {
+  void shouldReturnCorrectInjectableForStaticMethod() throws NoSuchMethodException, SecurityException, BeanResolutionException, InstantiationException {
     MethodInjectable injectable = new MethodInjectable(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());
