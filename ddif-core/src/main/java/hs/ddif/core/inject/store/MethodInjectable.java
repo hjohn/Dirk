@@ -2,6 +2,7 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
@@ -79,15 +80,15 @@ public class MethodInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) {
+  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstantiationException {
     if(parameters.length > 0) {
-      throw new ConstructionException("Superflous parameters supplied, none expected for producer method but got: " + Arrays.toString(parameters));
+      throw new InstantiationException(method, "Superflous parameters supplied, none expected for producer method but got: " + Arrays.toString(parameters));
     }
 
     return constructInstance(instantiator);
   }
 
-  private Object constructInstance(Instantiator instantiator) {
+  private Object constructInstance(Instantiator instantiator) throws InstantiationException {
     try {
       boolean isStatic = Modifier.isStatic(method.getModifiers());
       Object obj = isStatic ? null : instantiator.getInstance(ownerType);
@@ -102,7 +103,7 @@ public class MethodInjectable implements ResolvableInjectable {
       return method.invoke(obj, values);
     }
     catch(Exception e) {
-      throw new ConstructionException("Unable to construct [" + injectableType + "] using Method [" + method + "]", e);
+      throw new InstantiationException(method, "Exception while constructing instance via Producer", e);
     }
   }
 

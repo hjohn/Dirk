@@ -3,6 +3,7 @@ package hs.ddif.core.inject.store;
 import hs.ddif.annotations.Parameter;
 import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -122,9 +124,9 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) {
+  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstantiationException {
     if(underConstruction.get()) {
-      throw new ConstructionException("Object already under construction (dependency creation loop in @PostConstruct method!): " + injectableType);
+      throw new InstantiationException(injectableType, "Already under construction (dependency creation loop in @PostConstruct method!)");
     }
 
     try {
@@ -137,7 +139,7 @@ public class ClassInjectable implements ResolvableInjectable {
       injectInstance(instantiator, bean, namedParameters);
 
       if(!namedParameters.isEmpty()) {
-        throw new ConstructionException("Superflous parameters supplied, expected " + (parameters.length - namedParameters.size()) + " but got: " + parameters.length);
+        throw new InstantiationException(injectableType, "Superflous parameters supplied, expected " + (parameters.length - namedParameters.size()) + " but got: " + parameters.length);
       }
 
       postConstructor.call(bean);
@@ -149,7 +151,7 @@ public class ClassInjectable implements ResolvableInjectable {
     }
   }
 
-  private void injectInstance(Instantiator instantiator, Object bean, List<NamedParameter> namedParameters) {
+  private void injectInstance(Instantiator instantiator, Object bean, List<NamedParameter> namedParameters) throws InstantiationException {
     for(Map.Entry<AccessibleObject, List<ResolvableBinding>> entry : bindings.entrySet()) {
       try {
         AccessibleObject accessibleObject = entry.getKey();
@@ -172,11 +174,8 @@ public class ClassInjectable implements ResolvableInjectable {
           }
         }
       }
-      catch(ConstructionException e) {
-        throw e;
-      }
       catch(Exception e) {
-        throw new ConstructionException("Unable to set field [" + entry.getKey() + "] of: " + injectableType, e);
+        throw new InstantiationException(entry.getKey(), "Exception while injecting", e);
       }
     }
   }
@@ -188,13 +187,14 @@ public class ClassInjectable implements ResolvableInjectable {
       }
     }
 
-    throw new ConstructionException("Parameter '" + name + "' was not supplied");
+    throw new NoSuchElementException("Parameter '" + name + "' was not supplied");
   }
 
-  private Object constructInstance(Instantiator instantiator, List<NamedParameter> namedParameters) {
+  private Object constructInstance(Instantiator instantiator, List<NamedParameter> namedParameters) throws InstantiationException {
+    Map.Entry<AccessibleObject, List<ResolvableBinding>> constructorEntry = findConstructorEntry(bindings);
+    Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
+
     try {
-      Map.Entry<AccessibleObject, List<ResolvableBinding>> constructorEntry = findConstructorEntry(bindings);
-      Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
       java.lang.reflect.Parameter[] parameters = constructor.getParameters();
       Object[] values = new Object[constructorEntry.getValue().size()];  // Parameters for constructor
 
@@ -205,7 +205,7 @@ public class ClassInjectable implements ResolvableInjectable {
           String name = determineParameterName(parameters[i]);
 
           if(name == null) {
-            throw new ConstructionException("Missing parameter name.  Unable to construct {" + injectableType + "}, name cannot be determined for: " + parameters[i] + "; specify one with @Parameter or compile classes with parameter name information");
+            throw new IllegalArgumentException("Missing parameter name for: " + parameters[i] + "; specify one with @Parameter or compile classes with parameter name information");
           }
 
           values[i] = findAndRemoveNamedParameterValue(name, namedParameters);
@@ -217,11 +217,8 @@ public class ClassInjectable implements ResolvableInjectable {
 
       return constructor.newInstance(values);
     }
-    catch(ConstructionException e) {
-      throw e;
-    }
     catch(Exception e) {
-      throw new ConstructionException("Unable to construct: " + injectableType, e);
+      throw new InstantiationException(constructor, "Exception while constructing instance", e);
     }
   }
 

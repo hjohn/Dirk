@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectable;
@@ -35,7 +36,7 @@ public class ClassInjectableTest {
   }
 
   @Test
-  public void constructorShouldAcceptValidParameters() {
+  public void constructorShouldAcceptValidParameters() throws InstantiationException {
     ClassInjectable injectable = new ClassInjectable(SimpleClass.class);
 
     assertEquals(SimpleClass.class, injectable.getType());

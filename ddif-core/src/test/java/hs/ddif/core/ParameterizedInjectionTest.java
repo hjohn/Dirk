@@ -3,15 +3,17 @@ package hs.ddif.core;
 import hs.ddif.annotations.Parameter;
 import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.inject.store.ConstructionException;
+import hs.ddif.core.inject.instantiator.InstantiationException;
+
+import java.util.NoSuchElementException;
 
 import javax.inject.Inject;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ParameterizedInjectionTest {
   private Injector injector = new Injector();
@@ -29,12 +31,23 @@ public class ParameterizedInjectionTest {
       assertEquals((Integer)30, instance.interval);
 
       // Incorrect parameter case:
-      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)})))
-        .hasMessageStartingWith("Parameter 'interval' was not supplied");
+      assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)}))
+        .isInstanceOf(BeanResolutionException.class)
+        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedFieldSample")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(InstantiationException.class)
+        .hasMessage("Exception while injecting: java.lang.Integer hs.ddif.core.ParameterizedInjectionTest$TestParameterizedFieldSample.interval")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(NoSuchElementException.class)
+        .hasMessage("Parameter 'interval' was not supplied");
 
       // Too many parameters case:
-      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("interval", 30)})))
-        .hasMessageStartingWith("Superflous parameters supplied");
+      assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("interval", 30)}))
+        .isInstanceOf(BeanResolutionException.class)
+        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedFieldSample")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(InstantiationException.class)
+        .hasMessage("Superflous parameters supplied, expected 1 but got: 2: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedFieldSample");
 
       injector.remove(TestParameterizedFieldSample.class);
       injector.remove(TestService.class);
@@ -60,12 +73,23 @@ public class ParameterizedInjectionTest {
       assertEquals("abc", instance.prefix);
 
       // Incorrect parameter case:
-      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)})))
-        .hasMessageStartingWith("Parameter 'interval' was not supplied");
+      assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)}))
+        .isInstanceOf(BeanResolutionException.class)
+        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedConstructorSample")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(InstantiationException.class)
+        .hasMessage("Exception while constructing instance: public hs.ddif.core.ParameterizedInjectionTest$TestParameterizedConstructorSample(hs.ddif.core.ParameterizedInjectionTest$TestService,java.lang.Integer,java.lang.String)")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(NoSuchElementException.class)
+        .hasMessage("Parameter 'interval' was not supplied");
 
       // Too many parameters case:
-      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")})))
-        .hasMessageStartingWith("Superflous parameters supplied");
+      assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")}))
+        .isInstanceOf(BeanResolutionException.class)
+        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedConstructorSample")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(InstantiationException.class)
+        .hasMessage("Superflous parameters supplied, expected 2 but got: 3: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedConstructorSample");
 
       injector.remove(TestParameterizedConstructorSample.class);
       injector.remove(TestService.class);
@@ -99,12 +123,23 @@ public class ParameterizedInjectionTest {
       assertEquals("abc", instance.prefix);
 
       // Incorrect parameter case:
-      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)})))
-        .hasMessageStartingWith("Parameter 'interval' was not supplied");
+      assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)}))
+        .isInstanceOf(BeanResolutionException.class)
+        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedMixedSample")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(InstantiationException.class)
+        .hasMessage("Exception while constructing instance: public hs.ddif.core.ParameterizedInjectionTest$TestParameterizedMixedSample(hs.ddif.core.ParameterizedInjectionTest$TestService,java.lang.Integer)")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(NoSuchElementException.class)
+        .hasMessage("Parameter 'interval' was not supplied");
 
       // Too many parameters case:
-      assertThat(assertThrows(ConstructionException.class, () -> injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")})))
-        .hasMessageStartingWith("Superflous parameters supplied");
+      assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")}))
+        .isInstanceOf(BeanResolutionException.class)
+        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedMixedSample")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(InstantiationException.class)
+        .hasMessage("Superflous parameters supplied, expected 2 but got: 3: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedMixedSample");
 
       injector.remove(TestParameterizedMixedSample.class);
       injector.remove(TestService.class);

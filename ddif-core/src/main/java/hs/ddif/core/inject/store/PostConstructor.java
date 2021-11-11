@@ -1,5 +1,7 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.core.inject.instantiator.InstantiationException;
+
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Comparator;
@@ -11,10 +13,8 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 
 class PostConstructor {
   private final List<Method> postConstructMethods;
-  private final Class<?> cls;
 
   PostConstructor(Class<?> cls) {
-    this.cls = cls;
     List<Method> methods = MethodUtils.getMethodsListWithAnnotation(cls, PostConstruct.class, true, true);
 
     Collections.sort(methods, new Comparator<Method>() {
@@ -34,15 +34,15 @@ class PostConstructor {
     this.postConstructMethods = methods;
   }
 
-  void call(Object bean) {
-    try {
-      for(Method method : postConstructMethods) {
+  void call(Object bean) throws InstantiationException {
+    for(Method method : postConstructMethods) {
+      try {
         method.setAccessible(true);
         method.invoke(bean);
       }
-    }
-    catch(Exception e) {
-      throw new ConstructionException("PostConstruct call failed: " + cls, e);
+      catch(Exception e) {
+        throw new InstantiationException(method, "Exception in PostConstruct call", e);
+      }
     }
   }
 }

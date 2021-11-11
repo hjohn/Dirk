@@ -15,7 +15,7 @@ public interface ResolvableInjectable extends ScopedInjectable {
    * @param instantiator the {@link Instantiator} to use to resolve dependencies
    * @param parameters zero or more {@link NamedParameter} required for constructing the provided instance
    * @return an instance of the type provided by this {@link Injectable}, or <code>null</code> if the bean could not be provided
-   * @throws BeanResolutionException when a required bean could not be instantiated
+   * @throws InstantiationException when instantiation of this injectable fails
    */
-  Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws BeanResolutionException;
+  Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstantiationException;
 }

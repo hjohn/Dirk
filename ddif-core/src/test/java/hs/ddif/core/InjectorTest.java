@@ -3,8 +3,8 @@ package hs.ddif.core;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.store.BindingException;
-import hs.ddif.core.inject.store.ConstructionException;
 import hs.ddif.core.store.DuplicateBeanException;
 import hs.ddif.core.store.NoSuchInjectableException;
 import hs.ddif.core.test.injectables.AbstractBean;
@@ -49,6 +49,7 @@ import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Nullable;
 import hs.ddif.core.util.Value;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,12 +62,14 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isA;
 import static org.junit.Assert.assertEquals;
@@ -688,12 +691,21 @@ public class InjectorTest {
     assertEquals(simpleBean, injector.getInstance(BeanWithInjection.class).getInjectedValue());
   }
 
-  @Test(expected = ConstructionException.class)
-  public void shouldThrowConstructionExceptionWhenPostConstructHasACircularDependency() throws BeanResolutionException {
+  @Test
+  public void shouldThrowConstructionExceptionWhenPostConstructHasACircularDependency() {
     injector.register(BeanWithBadPostConstruct.class);
     injector.register(BeanDependentOnBeanWithBadPostConstruct.class);
 
-    injector.getInstance(BeanWithBadPostConstruct.class);
+    assertThatThrownBy(() -> injector.getInstance(BeanWithBadPostConstruct.class))
+      .isInstanceOf(BeanResolutionException.class)
+      .hasMessage("No such bean: class hs.ddif.core.InjectorTest$BeanWithBadPostConstruct")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isInstanceOf(InstantiationException.class)
+      .hasMessage("Exception in PostConstruct call: private void hs.ddif.core.InjectorTest$BeanWithBadPostConstruct.postConstruct()")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isInstanceOf(InvocationTargetException.class)
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isInstanceOf(NullPointerException.class);
   }
 
   @Test

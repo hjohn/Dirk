@@ -3,14 +3,16 @@ package hs.ddif.core;
 import hs.ddif.annotations.Parameter;
 import hs.ddif.annotations.Producer;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.store.BindingException;
-import hs.ddif.core.inject.store.ConstructionException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -24,12 +26,12 @@ public class ProducerAssistedInjectionTest {
       injector.register(TestService.class);
       injector.register(TestAssistedSample.class);
 
-      try {
-        injector.getInstance(TestAssistedSample.class);
-        fail();
-      }
-      catch(ConstructionException e) {
-      }
+      assertThatThrownBy(() -> injector.getInstance(TestAssistedSample.class))
+        .isInstanceOf(BeanResolutionException.class)
+        .hasMessage("No such bean: class hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedSample")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isInstanceOf(InstantiationException.class)
+        .hasMessage("Exception while injecting: public java.lang.Integer hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedSample.interval");
 
       TestAssistedSampleFactory factory = injector.getInstance(TestAssistedSampleFactory.class);
 
@@ -49,12 +51,12 @@ public class ProducerAssistedInjectionTest {
     injector.register(TestService.class);
     injector.register(TestAssistedAbstractSample.class);
 
-    try {
-      injector.getInstance(TestAssistedAbstractSample.class);
-      fail();
-    }
-    catch(ConstructionException e) {
-    }
+    assertThatThrownBy(() -> injector.getInstance(TestAssistedAbstractSample.class))
+      .isInstanceOf(BeanResolutionException.class)
+      .hasMessage("No such bean: class hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedAbstractSample")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isInstanceOf(InstantiationException.class)
+      .hasMessage("Exception while injecting: public java.lang.Double hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedAbstractSample.factor");
 
     TestAssistedAbstractSampleFactory factory = injector.getInstance(TestAssistedAbstractSampleFactory.class);
 
