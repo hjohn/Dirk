@@ -22,6 +22,11 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   public abstract S getCurrentScope();
 
   @Override
+  public boolean isScopeActive(Type injectableType) {
+    return getCurrentScope() != null;
+  }
+
+  @Override
   public <T> T get(Type injectableType) throws OutOfScopeException {
     S currentScope = getCurrentScope();
 

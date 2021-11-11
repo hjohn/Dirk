@@ -23,6 +23,11 @@ public class PluginScopeResolver implements ScopeResolver {
   }
 
   @Override
+  public boolean isScopeActive(Type injectableType) {
+    return getCurrentScope(injectableType) != null;
+  }
+
+  @Override
   public synchronized <T> T get(Type injectableType) throws OutOfScopeException {
     Plugin currentScope = getCurrentScope(injectableType);
 

@@ -58,9 +58,17 @@ public class Instantiator {
    */
   private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
 
-  public Instantiator(InjectableStore<ResolvableInjectable> store, Gatherer defaultGatherer, boolean autoDiscovery, ScopeResolver... scopeResolvers) {
+  /**
+   * Constructs a new instance.
+   *
+   * @param store a {@link InjectableStore}, cannot be null
+   * @param gatherer a {@link Gatherer}, cannot be null
+   * @param autoDiscovery {@code true} when injectables should be discovered if missing, otherwise set to {@code false}
+   * @param scopeResolvers an array of {@link ScopeResolver}s this instance should use
+   */
+  public Instantiator(InjectableStore<ResolvableInjectable> store, Gatherer gatherer, boolean autoDiscovery, ScopeResolver... scopeResolvers) {
     this.store = store;
-    this.gatherer = defaultGatherer;
+    this.gatherer = gatherer;
     this.autoDiscovery = autoDiscovery;
 
     for(ScopeResolver scopeResolver : scopeResolvers) {
@@ -69,6 +77,11 @@ public class Instantiator {
 
     scopesResolversByAnnotation.put(Singleton.class, new ScopeResolver() {
       private final Map<Type, Object> singletons = new WeakHashMap<>();
+
+      @Override
+      public boolean isScopeActive(Type injectableType) {
+        return true;
+      }
 
       @Override
       public <T> T get(Type injectableType) {
@@ -91,6 +104,11 @@ public class Instantiator {
 
     scopesResolversByAnnotation.put(WeakSingleton.class, new ScopeResolver() {
       private final Map<Type, InformationalWeakReference<Object>> singletons = new WeakHashMap<>();
+
+      @Override
+      public boolean isScopeActive(Type injectableType) {
+        return true;
+      }
 
       @Override
       public <T> T get(Type injectableType) {
