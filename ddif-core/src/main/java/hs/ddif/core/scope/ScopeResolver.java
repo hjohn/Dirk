@@ -18,11 +18,19 @@ public interface ScopeResolver {
   Class<? extends Annotation> getScopeAnnotationClass();
 
   /**
+   * Returns {@code true} when a scope is currently active, otherwise {@code false}.
+   *
+   * @param injectableType a {@link Type}, cannot be null
+   * @return {@code true} when a scope is currently active, otherwise {@code false}
+   */
+  boolean isScopeActive(Type injectableType);
+
+  /**
    * Returns an instance of the given type or <code>null</code> if no instance is
    * associated with the current scope.
    *
    * @param <T> the type of the instance
-   * @param injectableType a {@link Type}
+   * @param injectableType a {@link Type}, cannot be null
    * @return an instance of the given class or <code>null</code> if no instance is associated with the current scope
    * @throws OutOfScopeException when there is no scope active
    */
@@ -32,8 +40,8 @@ public interface ScopeResolver {
    * Stores the given instance for a given type in the current active scope.
    *
    * @param <T> the type of the instance
-   * @param injectableType a {@link Type}
-   * @param instance an instance to associate with the current scope and given class
+   * @param injectableType a {@link Type}, cannot be null
+   * @param instance an instance to associate with the current scope and given class, cannot be null
    * @throws OutOfScopeException when there is no scope active
    */
   <T> void put(Type injectableType, T instance) throws OutOfScopeException;

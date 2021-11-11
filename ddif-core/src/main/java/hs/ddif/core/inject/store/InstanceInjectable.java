@@ -7,9 +7,18 @@ import hs.ddif.core.util.AnnotationDescriptor;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * An injectable for a predefined instance.
+ */
 public class InstanceInjectable extends AbstractResolvableInjectable {
   private final Object instance;
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param instance an instance, cannot be null
+   * @param descriptors an array of descriptors
+   */
   public InstanceInjectable(Object instance, AnnotationDescriptor... descriptors) {
     super(List.of(), null, instance.getClass(), false, descriptors);
 
