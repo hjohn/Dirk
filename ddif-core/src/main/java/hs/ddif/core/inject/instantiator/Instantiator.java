@@ -1,53 +1,24 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.InjectableStore;
 
 import java.lang.annotation.Annotation;
-import java.lang.ref.Reference;
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
-import java.util.logging.Logger;
-
-import javax.inject.Singleton;
 
 /**
  * Supplies fully injected classes from the supplied store (usually managed by an
  * Injector).  The instances are returned from cache or created as needed.
  */
 public class Instantiator {
-  private static final Logger LOGGER = Logger.getLogger(Instantiator.class.getName());
-  private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<>();
   private static final NamedParameter[] NO_PARAMETERS = new NamedParameter[] {};
-  private static final Thread WEAK_SINGLETON_CLEAN_WARNER;
-
-  static {
-    WEAK_SINGLETON_CLEAN_WARNER = new Thread(() -> {
-      for(;;) {
-        try {
-          Reference<? extends Object> ref = REFERENCE_QUEUE.remove();
-
-          LOGGER.info("Weak Singleton was garbage collected as it was no longer referenced: " + ref);
-        }
-        catch(InterruptedException e) {
-          // ignore
-        }
-      }
-    });
-
-    WEAK_SINGLETON_CLEAN_WARNER.setDaemon(true);
-    WEAK_SINGLETON_CLEAN_WARNER.start();
-  }
 
   private final InjectableStore<ResolvableInjectable> store;
   private final Gatherer gatherer;
@@ -73,81 +44,6 @@ public class Instantiator {
 
     for(ScopeResolver scopeResolver : scopeResolvers) {
       scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
-    }
-
-    scopesResolversByAnnotation.put(Singleton.class, new ScopeResolver() {
-      private final Map<Type, Object> singletons = new WeakHashMap<>();
-
-      @Override
-      public boolean isScopeActive(Type injectableType) {
-        return true;
-      }
-
-      @Override
-      public <T> T get(Type injectableType) {
-        @SuppressWarnings("unchecked")
-        T singleton = (T)singletons.get(injectableType);
-
-        return singleton;
-      }
-
-      @Override
-      public <T> void put(Type injectableType, T instance) {
-        singletons.put(injectableType, instance);
-      }
-
-      @Override
-      public Class<? extends Annotation> getScopeAnnotationClass() {
-        return Singleton.class;
-      }
-    });
-
-    scopesResolversByAnnotation.put(WeakSingleton.class, new ScopeResolver() {
-      private final Map<Type, InformationalWeakReference<Object>> singletons = new WeakHashMap<>();
-
-      @Override
-      public boolean isScopeActive(Type injectableType) {
-        return true;
-      }
-
-      @Override
-      public <T> T get(Type injectableType) {
-        InformationalWeakReference<Object> reference = singletons.get(injectableType);
-
-        if(reference != null) {
-          @SuppressWarnings("unchecked")
-          T bean = (T)reference.get();
-
-          return bean;  // This may still return null
-        }
-
-        return null;
-      }
-
-      @Override
-      public <T> void put(Type injectableType, T instance) {
-        singletons.put(injectableType, new InformationalWeakReference<>(instance, REFERENCE_QUEUE));
-      }
-
-      @Override
-      public Class<? extends Annotation> getScopeAnnotationClass() {
-        return WeakSingleton.class;
-      }
-    });
-  }
-
-  private static class InformationalWeakReference<T> extends WeakReference<T> {
-    private final String info;
-
-    public InformationalWeakReference(T referent, ReferenceQueue<T> queue) {
-      super(referent, queue);
-
-      this.info = referent.toString();
-    }
-
-    @Override
-    public String toString() {
-      return info;
     }
   }
 
