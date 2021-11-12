@@ -47,7 +47,7 @@ public class InjectorDiscoveryTest {
       .hasMessage("No such bean: class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(DiscoveryException.class)
-      .hasMessage("Auto discovery failed for: class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch")
+      .hasMessage("Exception during auto discovery: class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(BindingException.class)
       .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch");
@@ -63,7 +63,7 @@ public class InjectorDiscoveryTest {
       .hasMessage("No such bean: class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(DiscoveryException.class)
-      .hasMessage("Auto discovery failed for: class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors")
+      .hasMessage("Exception during auto discovery: class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(BindingException.class)
       .hasMessage("Multiple @Inject annotated constructors found, but only one allowed: class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors");
@@ -79,7 +79,7 @@ public class InjectorDiscoveryTest {
       .hasMessage("No such bean: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(DiscoveryException.class)
-      .hasMessage("Auto discovery failed for: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
+      .hasMessage("Exception during auto discovery: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(BindingException.class)
       .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch");
@@ -104,7 +104,7 @@ public class InjectorDiscoveryTest {
       .hasMessage("No such bean: class hs.ddif.core.InjectorDiscoveryTest$D")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(DiscoveryException.class)
-      .hasMessage("Auto discovery failed for: class hs.ddif.core.InjectorDiscoveryTest$D")
+      .hasMessage("Exception during auto discovery: class hs.ddif.core.InjectorDiscoveryTest$D")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(BindingException.class)
       .hasMessage("Unable to resolve 2 binding(s) while processing extensions");
@@ -122,7 +122,7 @@ public class InjectorDiscoveryTest {
       .hasMessage("No such bean: class hs.ddif.core.InjectorDiscoveryTest$G")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(DiscoveryException.class)
-      .hasMessage("Auto discovery failed for: class hs.ddif.core.InjectorDiscoveryTest$G")
+      .hasMessage("Exception during auto discovery: class hs.ddif.core.InjectorDiscoveryTest$G")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isInstanceOf(BindingException.class)
       .hasMessage("Auto discovered class cannot be required to have qualifiers: [@javax.inject.Named[value=some-qualifier] class hs.ddif.core.InjectorDiscoveryTest$A]");

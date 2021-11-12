@@ -236,7 +236,7 @@ public class InstantiatorTest {
         .hasMessage("No such bean: class hs.ddif.core.inject.instantiator.InstantiatorTest$J")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isInstanceOf(DiscoveryException.class)
-        .hasMessage("Auto discovery failed for: class hs.ddif.core.inject.instantiator.InstantiatorTest$J")
+        .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.instantiator.InstantiatorTest$J")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isInstanceOf(BindingException.class)
         .hasMessage("Type cannot be abstract: class hs.ddif.core.inject.instantiator.InstantiatorTest$J");

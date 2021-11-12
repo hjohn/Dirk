@@ -65,7 +65,7 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeThatIsAbstract() {
         assertThatThrownBy(() -> gatherer.gather(I.class))
           .isInstanceOf(DiscoveryException.class)
-          .hasMessage("Auto discovery failed for: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
+          .hasMessage("Exception during auto discovery: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isInstanceOf(BindingException.class)
           .hasMessage("Type cannot be abstract: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I");
@@ -116,7 +116,7 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeThatIsAbstract() {
         assertThatThrownBy(() -> gatherer.gather(I.class))
           .isInstanceOf(DiscoveryException.class)
-          .hasMessage("Auto discovery failed for: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
+          .hasMessage("Exception during auto discovery: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isInstanceOf(BindingException.class)
           .hasMessage("Type cannot be abstract: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I");
@@ -126,7 +126,7 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeThatHasQualifiers() {
         assertThatThrownBy(() -> gatherer.gather(Bad_C.class))
           .isInstanceOf(DiscoveryException.class)
-          .hasMessage("Auto discovery failed for: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_C")
+          .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_C")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isInstanceOf(BindingException.class)
           .hasMessage("Auto discovered class cannot be required to have qualifiers: [@hs.ddif.core.test.qualifiers.Red class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$J]");
@@ -136,7 +136,7 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeWithUndiscoverableDependency() {
         assertThatThrownBy(() -> gatherer.gather(Bad_A.class))
           .isInstanceOf(DiscoveryException.class)
-          .hasMessage("Auto discovery failed for: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_A")
+          .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_A")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isInstanceOf(BindingException.class)
           .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C")
@@ -147,7 +147,7 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeWithMultipleUndiscoverableDependenciesAndUseSuppressedExceptionsForDetails() {
         assertThatThrownBy(() -> gatherer.gather(Bad_B.class))
           .isInstanceOf(DiscoveryException.class)
-          .hasMessage("Auto discovery failed for: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_B")
+          .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_B")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isInstanceOf(BindingException.class)
           .hasMessage("Unable to resolve 2 binding(s) while processing extensions")

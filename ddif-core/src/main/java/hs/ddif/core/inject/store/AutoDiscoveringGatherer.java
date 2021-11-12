@@ -71,7 +71,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
       return new Executor(List.of(new ClassInjectable(type))).executor();
     }
     catch(Exception e) {
-      throw new DiscoveryException("Auto discovery failed for: " + type, e);
+      throw new DiscoveryException(type, "Exception during auto discovery", e);
     }
   }
 
