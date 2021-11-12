@@ -91,6 +91,7 @@ public class InstantiatorTest {
         store.put(new InstanceInjectable("green", AnnotationDescriptor.named("green")));
         store.put(new MethodInjectable(B.class.getDeclaredMethod("createH"), B.class));
         store.put(new MethodInjectable(B.class.getDeclaredMethod("createI"), B.class));
+        store.put(new ClassInjectable(K.class));
       }
       catch(NoSuchMethodException | SecurityException e) {
         throw new IllegalStateException();
@@ -195,6 +196,13 @@ public class InstantiatorTest {
         .isInstanceOf(RuntimeException.class)
         .hasMessage("can't create H");
     }
+
+    @Test
+    void shouldRejectCreatingInstancesForUnknownScopes() {
+      assertThatThrownBy(() -> instantiator.getInstance(K.class))
+        .isInstanceOf(UnknownScopeException.class)
+        .hasMessage("Scoped injectable has scope not known to Instantiator: @hs.ddif.core.inject.instantiator.InstantiatorTest$UnknownScoped() of: Injectable-Class(class hs.ddif.core.inject.instantiator.InstantiatorTest$K)");
+    }
   }
 
   @Nested
@@ -240,6 +248,11 @@ public class InstantiatorTest {
   public @interface TestScoped {
   }
 
+  @Scope
+  @Retention(RUNTIME)
+  public @interface UnknownScoped {
+  }
+
   public static class A {
   }
 
@@ -281,5 +294,9 @@ public class InstantiatorTest {
   }
 
   public abstract static class J {
+  }
+
+  @UnknownScoped
+  public static class K {
   }
 }

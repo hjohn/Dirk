@@ -214,6 +214,18 @@ public class Instantiator {
   }
 
   private ScopeResolver findScopeResolver(ResolvableInjectable injectable) {
-    return scopesResolversByAnnotation.get(injectable.getScope() == null ? null : injectable.getScope().annotationType());
+    Annotation scope = injectable.getScope();
+
+    if(scope == null) {
+      return null;
+    }
+
+    ScopeResolver scopeResolver = scopesResolversByAnnotation.get(scope.annotationType());
+
+    if(scopeResolver == null) {
+      throw new UnknownScopeException("Scoped injectable has scope not known to Instantiator: " + scope + " of: " + injectable);
+    }
+
+    return scopeResolver;
   }
 }
