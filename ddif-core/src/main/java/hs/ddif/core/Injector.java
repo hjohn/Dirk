@@ -11,11 +11,14 @@ import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.core.scope.ScopeResolver;
+import hs.ddif.core.scope.SingletonScopeResolver;
+import hs.ddif.core.scope.WeakSingletonScopeResolver;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Provider;
 
@@ -77,9 +80,15 @@ public class Injector {
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>());
 
     Gatherer gatherer = new AutoDiscoveringGatherer(store, autoDiscovery, List.of(adapter, new ProviderGathererExtension(), new ProducesGathererExtension()));
+    ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
 
     this.store = new BeanDefinitionStore(store, gatherer);
-    this.instantiator = new Instantiator(store, gatherer, autoDiscovery, scopeResolvers);
+    this.instantiator = new Instantiator(
+      store,
+      gatherer,
+      autoDiscovery,
+      Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new)
+    );
 
     adapter.setInstantiator(instantiator);  // TODO a bit cyclical... the extension needs instantiator, instantiator needs extensions...
   }

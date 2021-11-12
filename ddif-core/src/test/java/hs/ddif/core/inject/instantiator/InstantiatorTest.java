@@ -10,6 +10,9 @@ import hs.ddif.core.inject.store.InstanceInjectable;
 import hs.ddif.core.inject.store.MethodInjectable;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
+import hs.ddif.core.scope.ScopeResolver;
+import hs.ddif.core.scope.SingletonScopeResolver;
+import hs.ddif.core.scope.WeakSingletonScopeResolver;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.AnnotationDescriptor;
@@ -47,12 +50,14 @@ public class InstantiatorTest {
     }
   };
 
+  private final ScopeResolver[] scopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver(), scopeResolver};
+
   private String currentScope;
 
   @Nested
   class WhenStoreIsEmpty {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of());
-    private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolver);
+    private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolvers);
 
     @Test
     void shouldThrowExceptionWhenGettingSingleInstance() {
@@ -72,7 +77,7 @@ public class InstantiatorTest {
   @Nested
   class WhenStoreNotEmpty {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of());
-    private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolver);
+    private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolvers);
 
     {
       try {
@@ -195,7 +200,7 @@ public class InstantiatorTest {
   @Nested
   class WhenStoreEmptyAndAutoDiscoveryIsActive {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, true, List.of());
-    private final Instantiator instantiator = new Instantiator(store, gatherer, true, scopeResolver);
+    private final Instantiator instantiator = new Instantiator(store, gatherer, true, scopeResolvers);
 
     @Test
     void getInstancesShouldNeverDiscoverTypes() throws BeanResolutionException {
