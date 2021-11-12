@@ -39,6 +39,17 @@ public class InstantiationException extends Exception {
    *
    * @param type type involved, cannot be null
    * @param message a message
+   * @param cause a {@link Throwable} to use as cause
+   */
+  public InstantiationException(Type type, String message, Throwable cause) {
+    super(message + ": " + type, cause);
+  }
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param type type involved, cannot be null
+   * @param message a message
    */
   public InstantiationException(Type type, String message) {
     super(message + ": " + type);
