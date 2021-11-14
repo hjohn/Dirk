@@ -6,6 +6,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Set;
 
+/**
+ * Implementers provide a way to look up injectables by type and criteria.
+ *
+ * @param <T> an injectable type
+ */
 public interface Resolver<T extends Injectable> {
 
   /**
