@@ -135,7 +135,7 @@ public class MethodInjectable implements ResolvableInjectable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(injectableType, qualifiers, ownerType);
+    return Objects.hash(method, injectableType);
   }
 
   @Override
@@ -149,13 +149,12 @@ public class MethodInjectable implements ResolvableInjectable {
 
     MethodInjectable other = (MethodInjectable)obj;
 
-    return injectableType.equals(other.injectableType)
-        && qualifiers.equals(other.qualifiers)
-        && ownerType.equals(other.ownerType);
+    return method.equals(other.method) &&
+        injectableType.equals(other.injectableType);
   }
 
   @Override
   public String toString() {
-    return "Injectable-Method(" + method + ")";
+    return "Injectable-Method(" + injectableType.getTypeName() + " <- " + method + ")";
   }
 }

@@ -1,7 +1,9 @@
 package hs.ddif.core.store;
 
 import hs.ddif.core.inject.store.ClassInjectable;
+import hs.ddif.core.inject.store.FieldInjectable;
 import hs.ddif.core.inject.store.InstanceInjectable;
+import hs.ddif.core.inject.store.MethodInjectable;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;
@@ -247,6 +249,17 @@ public class InjectableStoreTest {
     assertFalse(store.contains(new TypeReference<Provider<Long>>() {}.getType()));
   }
 
+  @Test
+  public void shouldAllowRegistrationOfMethodsAndFieldsThatProvideTheExactSameType() throws Exception {
+    store.put(new FieldInjectable(P.class.getDeclaredField("a"), P.class));
+    store.put(new FieldInjectable(P.class.getDeclaredField("b"), P.class));
+
+    store.put(new MethodInjectable(P.class.getDeclaredMethod("a"), P.class));
+    store.put(new MethodInjectable(P.class.getDeclaredMethod("b"), P.class));
+
+    assertThat(store.resolve(A.class)).hasSize(4);
+  }
+
   @Big @Red
   public static class A {
   }
@@ -308,6 +321,19 @@ public class InjectableStoreTest {
     @Override
     public String get() {
       return "string";
+    }
+  }
+
+  public static class P {
+    public A a = new A();
+    public A b = new A();
+
+    public A a() {
+      return new A();
+    }
+
+    public A b() {
+      return new A();
     }
   }
 
