@@ -124,7 +124,7 @@ public class FieldInjectable implements ResolvableInjectable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(injectableType, qualifiers, ownerType);
+    return Objects.hash(field, injectableType);
   }
 
   @Override
@@ -138,13 +138,12 @@ public class FieldInjectable implements ResolvableInjectable {
 
     FieldInjectable other = (FieldInjectable)obj;
 
-    return injectableType.equals(other.injectableType)
-        && qualifiers.equals(other.qualifiers)
-        && ownerType.equals(other.ownerType);
+    return field.equals(other.field) &&
+        injectableType.equals(other.injectableType);
   }
 
   @Override
   public String toString() {
-    return "Injectable-Field(" + injectableType + ")";
+    return "Injectable-Field(" + injectableType.getTypeName() + " <- " + field + ")";
   }
 }
