@@ -1,10 +1,10 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Parameter;
-import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.ResolvableBinding;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 
@@ -34,7 +34,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 public class ClassInjectable implements ResolvableInjectable {
   private final Type injectableType;
   private final Map<AccessibleObject, List<ResolvableBinding>> bindings;
-  private final List<Binding> externalBindings;
+  private final List<ResolvableBinding> externalBindings;
   private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
   private final PostConstructor postConstructor;
@@ -223,7 +223,7 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public List<Binding> getBindings() {
+  public List<ResolvableBinding> getBindings() {
     return externalBindings;
   }
 

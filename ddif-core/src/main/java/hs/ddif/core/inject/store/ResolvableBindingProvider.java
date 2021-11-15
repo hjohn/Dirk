@@ -5,6 +5,7 @@ import hs.ddif.annotations.Parameter;
 import hs.ddif.core.bind.Key;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.ResolvableBinding;
 import hs.ddif.core.inject.instantiator.RuntimeBeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
 
