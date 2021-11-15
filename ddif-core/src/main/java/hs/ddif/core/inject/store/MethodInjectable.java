@@ -1,9 +1,9 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.ResolvableBinding;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 
@@ -107,10 +107,9 @@ public class MethodInjectable implements ResolvableInjectable {
     }
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public List<Binding> getBindings() {
-    return (List<Binding>)(List<?>)bindings;  // safe cast, list is immutable
+  public List<ResolvableBinding> getBindings() {
+    return bindings;
   }
 
   @Override

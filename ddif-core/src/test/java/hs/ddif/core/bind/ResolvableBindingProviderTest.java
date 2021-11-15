@@ -1,6 +1,6 @@
 package hs.ddif.core.bind;
 
-import hs.ddif.core.inject.store.ResolvableBinding;
+import hs.ddif.core.inject.instantiator.ResolvableBinding;
 import hs.ddif.core.inject.store.ResolvableBindingProvider;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.util.AnnotationDescriptor;

@@ -17,7 +17,7 @@ public interface ScopedInjectable extends Injectable {
    *
    * @return a list {@link Binding}s, never null, can be empty if no bindings are detected.
    */
-  List<Binding> getBindings();
+  List<? extends Binding> getBindings();
 
   /**
    * Returns the scope of this {@link Injectable}.

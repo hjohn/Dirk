@@ -1,8 +1,6 @@
-package hs.ddif.core.inject.store;
+package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.bind.Binding;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.inject.instantiator.Instantiator;
 
 public interface ResolvableBinding extends Binding {
 

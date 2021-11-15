@@ -1,6 +1,6 @@
 package hs.ddif.core.inject.consistency;
 
-import hs.ddif.core.bind.Binding;
+import hs.ddif.core.inject.instantiator.ResolvableBinding;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.inject.store.ResolvableBindingProvider;
 import hs.ddif.core.store.Injectables;
@@ -20,7 +20,7 @@ public class UnresolvableDependencyExceptionTest {
 
   @Test
   void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
-    List<Binding> bindings = new ClassInjectable(A.class).getBindings();
+    List<ResolvableBinding> bindings = new ClassInjectable(A.class).getBindings();
     UnresolvableDependencyException e;
 
     e = new UnresolvableDependencyException(
