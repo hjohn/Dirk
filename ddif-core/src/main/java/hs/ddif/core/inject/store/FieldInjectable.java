@@ -118,11 +118,6 @@ public class FieldInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public boolean isTemplate() {
-    return true;
-  }
-
-  @Override
   public int hashCode() {
     return Objects.hash(field, injectableType);
   }
