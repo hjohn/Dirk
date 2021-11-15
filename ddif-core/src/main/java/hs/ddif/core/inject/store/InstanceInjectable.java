@@ -3,14 +3,20 @@ package hs.ddif.core.inject.store;
 import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.AnnotationUtils;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Objects;
+
+import javax.inject.Singleton;
 
 /**
  * An injectable for a predefined instance.
  */
 public class InstanceInjectable extends AbstractResolvableInjectable {
+  private static final Annotation SINGLETON = AnnotationUtils.of(Singleton.class);
+
   private final Object instance;
 
   /**
@@ -20,7 +26,7 @@ public class InstanceInjectable extends AbstractResolvableInjectable {
    * @param descriptors an array of descriptors
    */
   public InstanceInjectable(Object instance, AnnotationDescriptor... descriptors) {
-    super(List.of(), null, instance.getClass(), false, descriptors);
+    super(List.of(), SINGLETON, instance.getClass(), descriptors);
 
     this.instance = instance;
   }

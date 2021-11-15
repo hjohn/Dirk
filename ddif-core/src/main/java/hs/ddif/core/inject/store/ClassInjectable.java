@@ -243,11 +243,6 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public boolean isTemplate() {
-    return true;
-  }
-
-  @Override
   public int hashCode() {
     return Objects.hash(injectableType, qualifiers);
   }
