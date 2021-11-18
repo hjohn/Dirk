@@ -2,22 +2,27 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.core.bind.NamedParameter;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.ResolvableBinding;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.AnnotationUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.inject.Singleton;
 
 /**
  * An injectable for a predefined instance.
  */
-public class InstanceInjectable extends AbstractResolvableInjectable {
+public class InstanceInjectable implements ResolvableInjectable {
   private static final Annotation SINGLETON = AnnotationUtils.of(Singleton.class);
 
   private final Object instance;
+  private final Set<AnnotationDescriptor> descriptors;
 
   /**
    * Constructs a new instance.
@@ -26,14 +31,37 @@ public class InstanceInjectable extends AbstractResolvableInjectable {
    * @param descriptors an array of descriptors
    */
   public InstanceInjectable(Object instance, AnnotationDescriptor... descriptors) {
-    super(List.of(), SINGLETON, instance.getClass(), descriptors);
+    if(instance == null) {
+      throw new IllegalArgumentException("instance cannot be null");
+    }
 
     this.instance = instance;
+    this.descriptors = Set.of(descriptors);
   }
 
   @Override
   public Object getInstance(Instantiator instantiator, NamedParameter... namedParameters) {
     return instance;
+  }
+
+  @Override
+  public List<ResolvableBinding> getBindings() {
+    return List.of();
+  }
+
+  @Override
+  public Annotation getScope() {
+    return SINGLETON;
+  }
+
+  @Override
+  public Type getType() {
+    return instance.getClass();
+  }
+
+  @Override
+  public Set<AnnotationDescriptor> getQualifiers() {
+    return descriptors;
   }
 
   @Override
