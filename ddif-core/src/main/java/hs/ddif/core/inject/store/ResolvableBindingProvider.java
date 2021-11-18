@@ -126,6 +126,12 @@ public class ResolvableBindingProvider {
    * @return an immutable list of bindings, never null and never contains nulls, but can be empty
    */
   public static List<ResolvableBinding> ofField(Field field, Type ownerType) {
+
+    /*
+     * Fields don't have any bindings, unless it is a non-static field in which case the
+     * declaring class is required before the field can be accessed.
+     */
+
     return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(createBinding(field, AbstractBinding.DECLARING_CLASS, ownerType, false, false, Set.of()));
   }
 
