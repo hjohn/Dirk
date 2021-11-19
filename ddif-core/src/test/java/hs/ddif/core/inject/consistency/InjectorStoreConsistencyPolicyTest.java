@@ -1,10 +1,12 @@
 package hs.ddif.core.inject.consistency;
 
+import hs.ddif.core.TestScope;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -14,25 +16,32 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
-class InjectorStoreConsistencyPolicyTest {
-  InjectorStoreConsistencyPolicy<ScopedInjectable> policy = new InjectorStoreConsistencyPolicy<>();
+public class InjectorStoreConsistencyPolicyTest {
+  private InjectorStoreConsistencyPolicy<ScopedInjectable> policy = new InjectorStoreConsistencyPolicy<>();
 
-  ClassInjectable a = new ClassInjectable(A.class);
-  ClassInjectable b = new ClassInjectable(B.class);
-  ClassInjectable c = new ClassInjectable(C.class);
-  ClassInjectable d = new ClassInjectable(D.class);
-  ClassInjectable e = new ClassInjectable(E.class);
-  ClassInjectable f = new ClassInjectable(F.class);
-  ClassInjectable g = new ClassInjectable(G.class);
-  ClassInjectable h = new ClassInjectable(H.class);
-  ClassInjectable i = new ClassInjectable(I.class);
-  ClassInjectable j = new ClassInjectable(J.class);
+  private ClassInjectable a = new ClassInjectable(A.class);
+  private ClassInjectable b = new ClassInjectable(B.class);
+  private ClassInjectable c = new ClassInjectable(C.class);
+  private ClassInjectable d = new ClassInjectable(D.class);
+  private ClassInjectable e = new ClassInjectable(E.class);
+  private ClassInjectable f = new ClassInjectable(F.class);
+  private ClassInjectable g = new ClassInjectable(G.class);
+  private ClassInjectable h = new ClassInjectable(H.class);
+  private ClassInjectable i = new ClassInjectable(I.class);
+  private ClassInjectable j = new ClassInjectable(J.class);
 
-  InjectableStore<ScopedInjectable> emptyStore = new InjectableStore<>();
+  private InjectableStore<ScopedInjectable> emptyStore = new InjectableStore<>();
+
+  @Test
+  void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {
+    assertThatThrownBy(() -> policy.addAll(emptyStore, Set.of(new ClassInjectable(K.class))))
+      .isInstanceOf(UnknownScopeException.class);
+  }
 
   @Test
   void addAllShouldRejectInjectablesWithCyclicDependency() {
@@ -207,5 +216,9 @@ class InjectorStoreConsistencyPolicyTest {
 
   public static class J implements Z {
     @Inject Z z;
+  }
+
+  @TestScope
+  public static class K {
   }
 }

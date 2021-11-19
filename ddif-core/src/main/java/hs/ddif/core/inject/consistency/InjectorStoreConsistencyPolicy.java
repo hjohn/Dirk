@@ -2,6 +2,7 @@ package hs.ddif.core.inject.consistency;
 
 import hs.ddif.core.bind.Binding;
 import hs.ddif.core.bind.Key;
+import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.Resolver;
 import hs.ddif.core.store.StoreConsistencyPolicy;
@@ -35,6 +36,17 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
    */
   private final Map<Key, Integer> referenceCounters = new HashMap<>();
 
+  /**
+   * Set containing known scope annotations.
+   */
+  private final Set<Class<? extends Annotation>> knownScopeAnnotations = new HashSet<>();
+
+  public InjectorStoreConsistencyPolicy(ScopeResolver... scopeResolvers) {
+    for(ScopeResolver scopeResolver : scopeResolvers) {
+      knownScopeAnnotations.add(scopeResolver.getScopeAnnotationClass());
+    }
+  }
+
   @Override
   public void addAll(Resolver<T> resolver, Collection<T> injectables) {
 
@@ -42,6 +54,11 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
      * This is called when the given resolver is able to resolve all the new injectables.  If an exception is
      * thrown here, some clean up action may be needed at the caller.
      */
+
+    // Check if scopes are known:
+    for(T injectable : injectables) {
+      ensureScopeIsKnown(injectable);
+    }
 
     // First see if any new injectables would cause existing dependencies to become invalid:
     for(T injectable : injectables) {
@@ -202,6 +219,14 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
 
     if(isNarrowerScope(injectableScopeAnnotation, dependencyScopeAnnotation)) {
       throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getType());
+    }
+  }
+
+  private void ensureScopeIsKnown(T injectable) {
+    Annotation scope = injectable.getScope();
+
+    if(scope != null && !knownScopeAnnotations.contains(scope.annotationType())) {
+      throw new UnknownScopeException("Unknown scope " + scope + ": " + injectable);
     }
   }
 

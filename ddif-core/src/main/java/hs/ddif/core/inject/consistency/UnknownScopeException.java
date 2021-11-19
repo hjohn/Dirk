@@ -1,14 +1,14 @@
-package hs.ddif.core.inject.instantiator;
+package hs.ddif.core.inject.consistency;
 
 import hs.ddif.core.scope.ScopeResolver;
 
 import javax.inject.Scope;
 
 /**
- * Thrown when an attempt is made to instantiate an injectable which was annotated
+ * Thrown when an attempt is made to register an injectable which was annotated
  * with a {@link Scope} for which no corresponding {@link ScopeResolver} was provided.
  */
-public class UnknownScopeException extends RuntimeException {
+public class UnknownScopeException extends InjectorStoreConsistencyException {
 
   /**
    * Constructs a new instance.

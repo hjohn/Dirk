@@ -220,12 +220,6 @@ public class Instantiator {
       return null;
     }
 
-    ScopeResolver scopeResolver = scopesResolversByAnnotation.get(scope.annotationType());
-
-    if(scopeResolver == null) {
-      throw new UnknownScopeException("Scoped injectable has scope not known to Instantiator: " + scope + " of: " + injectable);
-    }
-
-    return scopeResolver;
+    return scopesResolversByAnnotation.get(scope.annotationType());  // this may return null if scope is not known, a consistency policy should police this, not the instantiator
   }
 }

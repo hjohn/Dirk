@@ -198,10 +198,8 @@ public class InstantiatorTest {
     }
 
     @Test
-    void shouldRejectCreatingInstancesForUnknownScopes() {
-      assertThatThrownBy(() -> instantiator.getInstance(K.class))
-        .isInstanceOf(UnknownScopeException.class)
-        .hasMessage("Scoped injectable has scope not known to Instantiator: @hs.ddif.core.inject.instantiator.InstantiatorTest$UnknownScoped() of: Injectable-Class(class hs.ddif.core.inject.instantiator.InstantiatorTest$K)");
+    void shouldAllowCreatingInstancesForUnknownScopes() throws BeanResolutionException {
+      assertNotNull(instantiator.getInstance(K.class));  // consistency policy can enforce valid scopes, but not instantiator
     }
   }
 

@@ -76,18 +76,19 @@ public class Injector {
   private final BeanDefinitionStore store;
 
   public Injector(boolean autoDiscovery, ScopeResolver... scopeResolvers) {
+    ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
+    ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
     GathererExtensionAdapter adapter = new GathererExtensionAdapter(new ProducerInjectorExtension());
-    InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>());
+    InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
 
     Gatherer gatherer = new AutoDiscoveringGatherer(store, autoDiscovery, List.of(adapter, new ProviderGathererExtension(), new ProducesGathererExtension()));
-    ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
 
     this.store = new BeanDefinitionStore(store, gatherer);
     this.instantiator = new Instantiator(
       store,
       gatherer,
       autoDiscovery,
-      Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new)
+      extendedScopeResolvers
     );
 
     adapter.setInstantiator(instantiator);  // TODO a bit cyclical... the extension needs instantiator, instantiator needs extensions...
