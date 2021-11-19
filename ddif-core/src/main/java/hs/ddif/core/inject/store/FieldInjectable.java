@@ -132,6 +132,7 @@ public class FieldInjectable implements ResolvableInjectable {
 
     FieldInjectable other = (FieldInjectable)obj;
 
+    // Note: field does not have generic information, type does, so compare both
     return field.equals(other.field) &&
         injectableType.equals(other.injectableType);
   }

@@ -143,6 +143,7 @@ public class MethodInjectable implements ResolvableInjectable {
 
     MethodInjectable other = (MethodInjectable)obj;
 
+    // Note: method does not have generic information, type does, so compare both
     return method.equals(other.method) &&
         injectableType.equals(other.injectableType);
   }
