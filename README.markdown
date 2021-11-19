@@ -415,8 +415,23 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 License: WTFPL (http://www.wtfpl.net/)  
 https://github.com/ronmamo/reflections
 
+### Geantyref
+
+License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)   
+https://github.com/leangen/geantyref
+
+### Apache Commons Lang
+
+License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)  
+https://commons.apache.org/proper/commons-lang/
+
+### Byte Buddy
+
+License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)  
+https://bytebuddy.net/
+
 ### DirectedGraph and TopologicalSort
 
-by Keith Schwarz
-License: Public Domain
+by Keith Schwarz  
+License: Public Domain  
 http://www.keithschwarz.com/interesting/
