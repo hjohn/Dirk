@@ -2,7 +2,7 @@ package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.annotations.WeakSingleton;
-import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectable;

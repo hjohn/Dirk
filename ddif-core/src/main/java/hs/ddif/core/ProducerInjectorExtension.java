@@ -2,9 +2,9 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Parameter;
 import hs.ddif.annotations.Producer;
-import hs.ddif.core.bind.Binding;
-import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BindingException;

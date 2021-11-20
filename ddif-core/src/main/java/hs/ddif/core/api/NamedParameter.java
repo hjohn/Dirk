@@ -1,4 +1,4 @@
-package hs.ddif.core.bind;
+package hs.ddif.core.api;
 
 import hs.ddif.annotations.Parameter;
 

@@ -1,10 +1,10 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Parameter;
-import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.api.NamedParameter;
+import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.inject.instantiator.ResolvableBinding;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 
@@ -33,8 +33,8 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  */
 public class ClassInjectable implements ResolvableInjectable {
   private final Type injectableType;
-  private final Map<AccessibleObject, List<ResolvableBinding>> bindings;
-  private final List<ResolvableBinding> externalBindings;
+  private final Map<AccessibleObject, List<Binding>> bindings;
+  private final List<Binding> externalBindings;
   private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
   private final PostConstructor postConstructor;
@@ -71,7 +71,7 @@ public class ClassInjectable implements ResolvableInjectable {
 
     this.injectableType = type;
     this.qualifiers = AnnotationExtractor.extractQualifiers(injectableClass);
-    this.bindings = ResolvableBindingProvider.ofClass(injectableClass);
+    this.bindings = BindingProvider.ofClass(injectableClass);
     this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(injectableClass);
     this.postConstructor = new PostConstructor(injectableClass);
     this.externalBindings = bindings.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
@@ -82,7 +82,7 @@ public class ClassInjectable implements ResolvableInjectable {
 
     int constructorCount = 0;
 
-    for(Map.Entry<AccessibleObject, List<ResolvableBinding>> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         constructorCount++;
       }
@@ -113,8 +113,8 @@ public class ClassInjectable implements ResolvableInjectable {
     return parameterAnnotation != null && !parameterAnnotation.value().isEmpty() ? parameterAnnotation.value() : parameter.getName();
   }
 
-  private static Map.Entry<AccessibleObject, List<ResolvableBinding>> findConstructorEntry(Map<AccessibleObject, List<ResolvableBinding>> bindings) {
-    for(Map.Entry<AccessibleObject, List<ResolvableBinding>> entry : bindings.entrySet()) {
+  private static Map.Entry<AccessibleObject, List<Binding>> findConstructorEntry(Map<AccessibleObject, List<Binding>> bindings) {
+    for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
       if(entry.getKey() instanceof Constructor) {
         return entry;
       }
@@ -152,13 +152,13 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   private void injectInstance(Instantiator instantiator, Object bean, List<NamedParameter> namedParameters) throws InstantiationException {
-    for(Map.Entry<AccessibleObject, List<ResolvableBinding>> entry : bindings.entrySet()) {
+    for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
       try {
         AccessibleObject accessibleObject = entry.getKey();
 
         if(accessibleObject instanceof Field) {
           Field field = (Field)accessibleObject;
-          ResolvableBinding binding = entry.getValue().get(0);
+          Binding binding = entry.getValue().get(0);
 
           Object valueToSet;
 
@@ -191,7 +191,7 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   private Object constructInstance(Instantiator instantiator, List<NamedParameter> namedParameters) throws InstantiationException {
-    Map.Entry<AccessibleObject, List<ResolvableBinding>> constructorEntry = findConstructorEntry(bindings);
+    Map.Entry<AccessibleObject, List<Binding>> constructorEntry = findConstructorEntry(bindings);
     Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
 
     try {
@@ -199,7 +199,7 @@ public class ClassInjectable implements ResolvableInjectable {
       Object[] values = new Object[constructorEntry.getValue().size()];  // Parameters for constructor
 
       for(int i = 0; i < values.length; i++) {
-        ResolvableBinding binding = constructorEntry.getValue().get(i);
+        Binding binding = constructorEntry.getValue().get(i);
 
         if(binding.isParameter()) {
           String name = determineParameterName(parameters[i]);
@@ -223,7 +223,7 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public List<ResolvableBinding> getBindings() {
+  public List<Binding> getBindings() {
     return externalBindings;
   }
 

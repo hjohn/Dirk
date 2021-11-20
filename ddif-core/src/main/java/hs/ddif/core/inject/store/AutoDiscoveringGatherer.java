@@ -1,9 +1,9 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.bind.Binding;
-import hs.ddif.core.bind.Key;
+import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.DiscoveryException;
 import hs.ddif.core.inject.instantiator.Gatherer;
+import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.Resolver;
