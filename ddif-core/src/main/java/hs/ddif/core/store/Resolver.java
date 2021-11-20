@@ -22,7 +22,7 @@ public interface Resolver<T extends Injectable> {
    *     <code>Singleton.class</code></li>
    * <li>{@link Annotation} or {@link AnnotationDescriptor} to match by an annotation,
    *     including matching all its values</li>
-   * <li>{@link Matcher} to match by custom criteria provided by a {@link Matcher}
+   * <li>{@link hs.ddif.core.api.Matcher} to match by custom criteria provided by a {@code Matcher}
    *     implementation</li>
    * </ul>
    * @param type the type of the Injectables to look up

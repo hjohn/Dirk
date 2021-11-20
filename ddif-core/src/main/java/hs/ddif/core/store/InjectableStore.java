@@ -1,5 +1,6 @@
 package hs.ddif.core.store;
 
+import hs.ddif.core.api.Matcher;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;

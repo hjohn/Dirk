@@ -1,4 +1,4 @@
-package hs.ddif.core.store;
+package hs.ddif.core.api;
 
 /**
  * A criteria filter for injectables.
