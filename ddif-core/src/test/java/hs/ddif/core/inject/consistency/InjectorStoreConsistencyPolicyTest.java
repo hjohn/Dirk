@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.consistency;
 
 import hs.ddif.core.TestScope;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class InjectorStoreConsistencyPolicyTest {
-  private InjectorStoreConsistencyPolicy<ScopedInjectable> policy = new InjectorStoreConsistencyPolicy<>();
+  private InjectorStoreConsistencyPolicy<ResolvableInjectable> policy = new InjectorStoreConsistencyPolicy<>();
 
   private ClassInjectable a = new ClassInjectable(A.class);
   private ClassInjectable b = new ClassInjectable(B.class);
@@ -35,7 +36,7 @@ public class InjectorStoreConsistencyPolicyTest {
   private ClassInjectable i = new ClassInjectable(I.class);
   private ClassInjectable j = new ClassInjectable(J.class);
 
-  private InjectableStore<ScopedInjectable> emptyStore = new InjectableStore<>();
+  private InjectableStore<ResolvableInjectable> emptyStore = new InjectableStore<>();
 
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {
@@ -95,7 +96,7 @@ public class InjectorStoreConsistencyPolicyTest {
 
   @Nested
   class WhenClassesAdded {
-    InjectableStore<ScopedInjectable> store = new InjectableStore<>();
+    InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
 
     @BeforeEach
     void beforeEach() {

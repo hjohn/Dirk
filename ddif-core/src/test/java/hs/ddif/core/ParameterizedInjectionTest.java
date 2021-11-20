@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Parameter;
-import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.InstantiationException;
 

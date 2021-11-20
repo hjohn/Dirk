@@ -1,5 +1,7 @@
 package hs.ddif.core.inject.consistency;
 
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -9,35 +11,35 @@ import java.util.List;
  * more than one matching dependency is available.
  */
 public class CyclicDependencyException extends InjectorStoreConsistencyException {
-  private final List<? extends ScopedInjectable> cycle;
+  private final List<? extends ResolvableInjectable> cycle;
 
   /**
    * Constructs a new instance.
    *
-   * @param cycle a list of {@link ScopedInjectable} which make up the cycle, cannot be null or empty
+   * @param cycle a list of {@link ResolvableInjectable} which make up the cycle, cannot be null or empty
    */
-  public CyclicDependencyException(List<? extends ScopedInjectable> cycle) {
+  public CyclicDependencyException(List<? extends ResolvableInjectable> cycle) {
     super("Cyclic dependency detected in chain:\n" + format(cycle));
 
     this.cycle = Collections.unmodifiableList(cycle);
   }
 
   /**
-   * Returns a list of {@link ScopedInjectable} which make up the cycle.
+   * Returns a list of {@link ResolvableInjectable} which make up the cycle.
    *
-   * @return a list of {@link ScopedInjectable} which make up the cycle, never null or empty
+   * @return a list of {@link ResolvableInjectable} which make up the cycle, never null or empty
    */
-  public List<? extends ScopedInjectable> getCycle() {
+  public List<? extends ResolvableInjectable> getCycle() {
     return cycle;
   }
 
-  private static String format(List<? extends ScopedInjectable> cycle) {
+  private static String format(List<? extends ResolvableInjectable> cycle) {
     StringBuilder b = new StringBuilder();
 
     b.append("     -----\n");
     b.append("    |     |\n");
 
-    for(ScopedInjectable i : cycle) {
+    for(ResolvableInjectable i : cycle) {
       b.append("    |     V\n");
       b.append("    | " + i + "\n");
       b.append("    |     |\n");

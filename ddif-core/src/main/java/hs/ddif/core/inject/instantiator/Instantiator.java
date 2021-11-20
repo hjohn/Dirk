@@ -1,6 +1,6 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.InjectableStore;

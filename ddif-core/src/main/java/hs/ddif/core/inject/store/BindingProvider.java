@@ -2,10 +2,10 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Parameter;
-import hs.ddif.core.bind.Key;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.inject.instantiator.ResolvableBinding;
+import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.RuntimeBeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
 
@@ -34,7 +34,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 import io.leangen.geantyref.GenericTypeReflector;
 import io.leangen.geantyref.TypeFactory;
 
-public class ResolvableBindingProvider {
+public class BindingProvider {
 
   /**
    * Returns all bindings for the given class.  Bindings are grouped by {@link AccessibleObject}
@@ -43,8 +43,8 @@ public class ResolvableBindingProvider {
    * @param injectableClass a {@link Class} to examine for bindings, cannot be null
    * @return an immutable map of bindings, never null and never contains nulls, but can be empty
    */
-  public static Map<AccessibleObject, List<ResolvableBinding>> ofClass(Class<?> injectableClass) {
-    Map<AccessibleObject, List<ResolvableBinding>> bindings = new HashMap<>();
+  public static Map<AccessibleObject, List<Binding>> ofClass(Class<?> injectableClass) {
+    Map<AccessibleObject, List<Binding>> bindings = new HashMap<>();
     Class<?> currentInjectableClass = injectableClass;
 
     while(currentInjectableClass != null) {
@@ -97,15 +97,15 @@ public class ResolvableBindingProvider {
    * @param ownerType a {@link Type} in which this executable is declared, cannot be null
    * @return an immutable list of bindings, never null and never contains nulls, but can be empty
    */
-  public static List<ResolvableBinding> ofExecutable(Executable executable, Type ownerType) {
+  public static List<Binding> ofExecutable(Executable executable, Type ownerType) {
     Annotation[][] parameterAnnotations = executable.getParameterAnnotations();
     java.lang.reflect.Parameter[] parameters = executable.getParameters();
     Type[] genericParameterTypes = executable.getGenericParameterTypes();
-    List<ResolvableBinding> bindings = new ArrayList<>();
+    List<Binding> bindings = new ArrayList<>();
 
     for(int i = 0; i < genericParameterTypes.length; i++) {
       Type type = genericParameterTypes[i];
-      ResolvableBinding binding = createBinding(executable, i, type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, extractQualifiers(parameterAnnotations[i]));
+      Binding binding = createBinding(executable, i, type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, extractQualifiers(parameterAnnotations[i]));
 
       bindings.add(binding);
     }
@@ -125,7 +125,7 @@ public class ResolvableBindingProvider {
    * @param ownerType a {@link Type} in which this executable is declared, cannot be null
    * @return an immutable list of bindings, never null and never contains nulls, but can be empty
    */
-  public static List<ResolvableBinding> ofField(Field field, Type ownerType) {
+  public static List<Binding> ofField(Field field, Type ownerType) {
 
     /*
      * Fields don't have any bindings, unless it is a non-static field in which case the
@@ -135,11 +135,11 @@ public class ResolvableBindingProvider {
     return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(createBinding(field, AbstractBinding.DECLARING_CLASS, ownerType, false, false, Set.of()));
   }
 
-  private static ResolvableBinding createBinding(AccessibleObject accessibleObject, int argNo, Type type, boolean optional, boolean isParameter, Set<AnnotationDescriptor> qualifiers) {
+  private static Binding createBinding(AccessibleObject accessibleObject, int argNo, Type type, boolean optional, boolean isParameter, Set<AnnotationDescriptor> qualifiers) {
     return createBinding(accessibleObject, argNo, false, type, optional, isParameter, qualifiers);
   }
 
-  private static ResolvableBinding createBinding(AccessibleObject accessibleObject, int argNo, boolean isProviderAlready, Type type, boolean optional, boolean isParameter, Set<AnnotationDescriptor> qualifiers) {
+  private static Binding createBinding(AccessibleObject accessibleObject, int argNo, boolean isProviderAlready, Type type, boolean optional, boolean isParameter, Set<AnnotationDescriptor> qualifiers) {
     final Class<?> cls = TypeUtils.getRawType(type, null);
 
     if(!isParameter) {
@@ -204,7 +204,7 @@ public class ResolvableBindingProvider {
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(double.class, Double.class);
   }
 
-  private static abstract class AbstractBinding implements ResolvableBinding {
+  private static abstract class AbstractBinding implements Binding {
     public static final int DECLARING_CLASS = -1;
     public static final int FIELD = -2;
 
@@ -304,9 +304,9 @@ public class ResolvableBindingProvider {
   }
 
   private static final class ProviderBinding extends AbstractBinding {
-    private final ResolvableBinding binding;
+    private final Binding binding;
 
-    private ProviderBinding(AccessibleObject accessibleObject, int argNo, ResolvableBinding binding) {
+    private ProviderBinding(AccessibleObject accessibleObject, int argNo, Binding binding) {
       super(accessibleObject, argNo, binding.getType());
 
       this.binding = binding;

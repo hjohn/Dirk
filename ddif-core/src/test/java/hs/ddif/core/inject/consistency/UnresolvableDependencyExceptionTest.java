@@ -1,8 +1,8 @@
 package hs.ddif.core.inject.consistency;
 
-import hs.ddif.core.inject.instantiator.ResolvableBinding;
+import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.store.ClassInjectable;
-import hs.ddif.core.inject.store.ResolvableBindingProvider;
+import hs.ddif.core.inject.store.BindingProvider;
 import hs.ddif.core.store.Injectables;
 
 import java.util.Collections;
@@ -20,7 +20,7 @@ public class UnresolvableDependencyExceptionTest {
 
   @Test
   void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
-    List<ResolvableBinding> bindings = new ClassInjectable(A.class).getBindings();
+    List<Binding> bindings = new ClassInjectable(A.class).getBindings();
     UnresolvableDependencyException e;
 
     e = new UnresolvableDependencyException(
@@ -40,7 +40,7 @@ public class UnresolvableDependencyExceptionTest {
       .hasMessageEndingWith(": [Injectable(String.class), Injectable(String.class)]");
 
     e = new UnresolvableDependencyException(
-      ResolvableBindingProvider.ofExecutable(A.class.getDeclaredMethod("d", Long.class), A.class).get(0),
+      BindingProvider.ofExecutable(A.class.getDeclaredMethod("d", Long.class), A.class).get(0),
       Collections.emptySet()
     );
 

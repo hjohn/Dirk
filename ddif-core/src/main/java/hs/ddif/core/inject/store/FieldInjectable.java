@@ -1,9 +1,9 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.api.NamedParameter;
+import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.inject.instantiator.ResolvableBinding;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 
@@ -29,7 +29,7 @@ public class FieldInjectable implements ResolvableInjectable {
   private final Field field;
   private final Type ownerType;
   private final Type injectableType;
-  private final List<ResolvableBinding> bindings;
+  private final List<Binding> bindings;
   private final Set<AnnotationDescriptor> qualifiers;
   private final Annotation scopeAnnotation;
 
@@ -69,7 +69,7 @@ public class FieldInjectable implements ResolvableInjectable {
     this.ownerType = ownerType;
     this.injectableType = type;
     this.qualifiers = AnnotationExtractor.extractQualifiers(field);
-    this.bindings = ResolvableBindingProvider.ofField(field, ownerType);
+    this.bindings = BindingProvider.ofField(field, ownerType);
     this.scopeAnnotation = AnnotationExtractor.findScopeAnnotation(field);
   }
 
@@ -97,7 +97,7 @@ public class FieldInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public List<ResolvableBinding> getBindings() {
+  public List<Binding> getBindings() {
     return bindings;
   }
 

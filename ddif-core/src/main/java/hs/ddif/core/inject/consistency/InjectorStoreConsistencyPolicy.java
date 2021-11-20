@@ -1,7 +1,8 @@
 package hs.ddif.core.inject.consistency;
 
-import hs.ddif.core.bind.Binding;
-import hs.ddif.core.bind.Key;
+import hs.ddif.core.inject.instantiator.Binding;
+import hs.ddif.core.inject.instantiator.Key;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.Resolver;
@@ -26,9 +27,9 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * Policy that makes sure the InjectableStore at all times contains
  * injectables that can be fully resolved.
  *
- * @param <T> the type of {@link ScopedInjectable} the policy uses
+ * @param <T> the type of {@link ResolvableInjectable} the policy uses
  */
-public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implements StoreConsistencyPolicy<T> {
+public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> implements StoreConsistencyPolicy<T> {
 
   /**
    * Map containing the number of times a specific Key (a reference to a specific class
@@ -121,7 +122,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
     decreaseReferenceCounters(injectable, referenceCounters, false);
   }
 
-  private static void increaseReferenceCounters(ScopedInjectable injectable, Map<Key, Integer> referenceCounters) {
+  private static void increaseReferenceCounters(ResolvableInjectable injectable, Map<Key, Integer> referenceCounters) {
     for(Binding binding : injectable.getBindings()) {
       Key requiredKey = binding.getRequiredKey();
 
@@ -131,7 +132,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
     }
   }
 
-  private static void decreaseReferenceCounters(ScopedInjectable injectable, Map<Key, Integer> referenceCounters, boolean allowNegativeReferenceCount) {
+  private static void decreaseReferenceCounters(ResolvableInjectable injectable, Map<Key, Integer> referenceCounters, boolean allowNegativeReferenceCount) {
     for(Binding binding : injectable.getBindings()) {
       Key requiredKey = binding.getRequiredKey();
 
@@ -202,7 +203,7 @@ public class InjectorStoreConsistencyPolicy<T extends ScopedInjectable> implemen
     }
   }
 
-  private static void ensureBindingScopeIsValid(ScopedInjectable injectable, ScopedInjectable dependentInjectable) {
+  private static void ensureBindingScopeIsValid(ResolvableInjectable injectable, ResolvableInjectable dependentInjectable) {
 
     /*
      * Perform scope check.  Having a dependency on a narrower scoped injectable would mean the injected

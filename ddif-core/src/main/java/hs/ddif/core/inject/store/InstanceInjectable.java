@@ -1,8 +1,8 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.api.NamedParameter;
+import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.inject.instantiator.ResolvableBinding;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.AnnotationUtils;
@@ -45,7 +45,7 @@ public class InstanceInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public List<ResolvableBinding> getBindings() {
+  public List<Binding> getBindings() {
     return List.of();
   }
 

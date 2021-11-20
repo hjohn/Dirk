@@ -1,6 +1,6 @@
 package hs.ddif.core;
 
-import hs.ddif.core.bind.NamedParameter;
+import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.consistency.InjectorStoreConsistencyPolicy;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
