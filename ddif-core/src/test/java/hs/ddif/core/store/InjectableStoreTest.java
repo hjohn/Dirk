@@ -1,5 +1,6 @@
 package hs.ddif.core.store;
 
+import hs.ddif.core.api.Matcher;
 import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.inject.store.FieldInjectable;
 import hs.ddif.core.inject.store.InstanceInjectable;
