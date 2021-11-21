@@ -24,9 +24,9 @@ public class WeakSingletonScopeResolver implements ScopeResolver {
 
     if(reference != null) {
       @SuppressWarnings("unchecked")
-      T bean = (T)reference.get();
+      T instance = (T)reference.get();
 
-      return bean;  // This may still return null
+      return instance;  // This may still return null
     }
 
     return null;

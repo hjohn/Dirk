@@ -92,7 +92,7 @@ public class InjectableStoreTest {
   public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() {
     store.put(new InstanceInjectable(new String("a"), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
 
-    thrown.expect(DuplicateBeanException.class);
+    thrown.expect(DuplicateInjectableException.class);
     thrown.expectMessage(" already registered for: Injectable-Instance(class java.lang.String + ");
 
     store.put(new InstanceInjectable(new String("a"), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
@@ -199,7 +199,7 @@ public class InjectableStoreTest {
       store.put(new ClassInjectable(A.class));
       fail();
     }
-    catch(DuplicateBeanException e) {
+    catch(DuplicateInjectableException e) {
       // expected, check if store is intact:
       assertTrue(store.contains(A.class));
       assertEquals(1, store.resolve(A.class).size());
@@ -212,7 +212,7 @@ public class InjectableStoreTest {
       store.putAll(List.of(new ClassInjectable(A.class), new ClassInjectable(A.class)));
       fail();
     }
-    catch(DuplicateBeanException e) {
+    catch(DuplicateInjectableException e) {
       // expected, check if store is intact:
       assertFalse(store.contains(A.class));
     }
@@ -225,7 +225,7 @@ public class InjectableStoreTest {
       store.putAll(List.of(new ClassInjectable(B.class), new ClassInjectable(A.class)));
       fail();
     }
-    catch(DuplicateBeanException e) {
+    catch(DuplicateInjectableException e) {
       // expected, check if store is intact:
       assertTrue(store.contains(A.class));
       assertFalse(store.contains(B.class));

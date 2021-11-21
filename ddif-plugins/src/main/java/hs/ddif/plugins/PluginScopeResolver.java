@@ -14,7 +14,7 @@ import java.util.Map;
  * A {@link ScopeResolver} to support the {@link PluginScoped} scope.
  */
 public class PluginScopeResolver implements ScopeResolver {
-  private final Map<Plugin, Map<Type, Object>> beansByScope = new HashMap<>();
+  private final Map<Plugin, Map<Type, Object>> instancesByScope = new HashMap<>();
   private final Map<Type, Plugin> typeToPlugin = new HashMap<>();
 
   @Override
@@ -36,9 +36,9 @@ public class PluginScopeResolver implements ScopeResolver {
     }
 
     @SuppressWarnings("unchecked")
-    T bean = (T)beansByScope.getOrDefault(currentScope, Collections.emptyMap()).get(injectableType);
+    T instance = (T)instancesByScope.getOrDefault(currentScope, Collections.emptyMap()).get(injectableType);
 
-    return bean;
+    return instance;
   }
 
   @Override
@@ -49,7 +49,7 @@ public class PluginScopeResolver implements ScopeResolver {
       throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
     }
 
-    beansByScope.computeIfAbsent(currentScope, k -> new HashMap<>()).put(injectableType, instance);
+    instancesByScope.computeIfAbsent(currentScope, k -> new HashMap<>()).put(injectableType, instance);
   }
 
   synchronized void register(Plugin plugin) {
@@ -82,7 +82,7 @@ public class PluginScopeResolver implements ScopeResolver {
       typeToPlugin.remove(type);
     }
 
-    beansByScope.remove(plugin);
+    instancesByScope.remove(plugin);
   }
 
   private Plugin getCurrentScope(Type injectableType) {

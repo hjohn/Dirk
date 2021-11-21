@@ -34,11 +34,11 @@ class PostConstructor {
     this.postConstructMethods = methods;
   }
 
-  void call(Object bean) throws InstantiationException {
+  void call(Object instance) throws InstantiationException {
     for(Method method : postConstructMethods) {
       try {
         method.setAccessible(true);
-        method.invoke(bean);
+        method.invoke(instance);
       }
       catch(Exception e) {
         throw new InstantiationException(method, "Exception in PostConstruct call", e);

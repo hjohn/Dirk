@@ -5,7 +5,7 @@ import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.InstantiationException;
 import hs.ddif.core.inject.store.BindingException;
-import hs.ddif.core.store.DuplicateBeanException;
+import hs.ddif.core.store.DuplicateInjectableException;
 import hs.ddif.core.store.NoSuchInjectableException;
 import hs.ddif.core.test.injectables.AbstractBean;
 import hs.ddif.core.test.injectables.BeanWithBigInjection;
@@ -337,7 +337,7 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenRegisteringDuplicate() {
     injector.register(String.class);
 
-    thrown.expect(DuplicateBeanException.class);
+    thrown.expect(DuplicateInjectableException.class);
 
     injector.register(String.class);
   }

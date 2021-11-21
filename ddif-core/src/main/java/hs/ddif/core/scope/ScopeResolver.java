@@ -6,7 +6,7 @@ import java.lang.reflect.Type;
 import javax.inject.Scope;
 
 /**
- * Handles resolving of beans with a specific {@link Scope} annotation.
+ * Handles resolving of types with a specific {@link Scope} annotation.
  */
 public interface ScopeResolver {
 
