@@ -1,6 +1,6 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.inject.store.BeanDefinitionStore;
+import hs.ddif.core.api.CandidateRegistry;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -19,33 +19,33 @@ import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 
 /**
- * Manages {@link Plugin}s, registering them with a {@link BeanDefinitionStore} when
+ * Manages {@link Plugin}s, registering them with a {@link CandidateRegistry} when
  * loaded and removing them when unloaded.
  */
 public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
 
-  private final BeanDefinitionStore baseStore;  // the store to add the plugin classes to, but also may contain required dependencies
+  private final CandidateRegistry baseRegistry;  // the registry to add the plugin classes to, but also may contain required dependencies
   private final PluginScopeResolver pluginScopeResolver;
 
   /**
-   * Constructs a new instance. A {@link BeanDefinitionStore} must be provided where
+   * Constructs a new instance. A {@link CandidateRegistry} must be provided where
    * types part of a {@link Plugin} can be registered and unregistered. A {@link PluginScopeResolver}
    * must be provided to support {@link hs.ddif.annotations.PluginScoped}, a scope which is specific
    * to a plugin (unlike singleton which if defined in a plugin could interfere with other plugins).
    *
-   * @param store a {@link BeanDefinitionStore}, cannot be null
+   * @param registry a {@link CandidateRegistry}, cannot be null
    * @param pluginScopeResolver a {@link PluginScopeResolver}, cannot be null
    */
-  public PluginManager(BeanDefinitionStore store, PluginScopeResolver pluginScopeResolver) {
-    if(store == null) {
-      throw new IllegalArgumentException("store cannot be null");
+  public PluginManager(CandidateRegistry registry, PluginScopeResolver pluginScopeResolver) {
+    if(registry == null) {
+      throw new IllegalArgumentException("registry cannot be null");
     }
     if(pluginScopeResolver == null) {
       throw new IllegalArgumentException("pluginScopeResolver cannot be null");
     }
 
-    this.baseStore = store;
+    this.baseRegistry = registry;
     this.pluginScopeResolver = pluginScopeResolver;
   }
 
@@ -82,13 +82,13 @@ public class PluginManager {
 
   /**
    * Attempts to unload the given plugin. This may fail if not all types can be removed for the
-   * underlying {@link BeanDefinitionStore}.
+   * underlying {@link CandidateRegistry}.
    *
    * @param plugin a {@link Plugin} to unload, cannot be null
    */
   public void unload(Plugin plugin) {
-    baseStore.remove(plugin.getTypes());  // may fail
-    pluginScopeResolver.unregister(plugin);  // can't fail, so should be done after beanStore#remove
+    baseRegistry.remove(plugin.getTypes());  // may fail
+    pluginScopeResolver.unregister(plugin);  // can't fail, so should be done after baseRegistry#remove
     plugin.destroy();  // can't fail
   }
 
@@ -135,7 +135,7 @@ public class PluginManager {
   private Plugin createPlugin(String name, List<Type> types, ClassLoader classLoader) {
     Plugin plugin = new Plugin(name, types, classLoader);
 
-    baseStore.register(plugin.getTypes());
+    baseRegistry.register(plugin.getTypes());
     pluginScopeResolver.register(plugin);
 
     return plugin;

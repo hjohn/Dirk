@@ -31,7 +31,7 @@ public class PluginSingletonTest {
     PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
     Injector injector = new Injector(true, pluginScopeResolver);
 
-    PluginManager pluginManager = new PluginManager(injector.getStore(), pluginScopeResolver);
+    PluginManager pluginManager = new PluginManager(injector.getCandidateRegistry(), pluginScopeResolver);
 
     for(int i = 0; i < 5; i++) {
       Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);

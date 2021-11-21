@@ -4,7 +4,7 @@ import hs.ddif.annotations.PluginScoped;
 import hs.ddif.annotations.Producer;
 import hs.ddif.annotations.Produces;
 import hs.ddif.annotations.WeakSingleton;
-import hs.ddif.core.inject.store.BeanDefinitionStore;
+import hs.ddif.core.api.CandidateRegistry;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -41,12 +41,12 @@ public class ComponentScanner {
 
   /**
    * Scans the given packages for annotated types and adds them to the given
-   * {@link BeanDefinitionStore}.
+   * {@link CandidateRegistry}.
    *
-   * @param store a {@link BeanDefinitionStore} to add found types, cannot be null
+   * @param registry a {@link CandidateRegistry} to add found types, cannot be null
    * @param packageNamePrefixes zero or more package name prefixes to scan
    */
-  public static void scan(BeanDefinitionStore store, String... packageNamePrefixes) {
+  public static void scan(CandidateRegistry registry, String... packageNamePrefixes) {
     LOGGER.fine("Scanning packages: " + Arrays.toString(packageNamePrefixes));
 
     Reflections reflections = createReflections(packageNamePrefixes);
@@ -55,7 +55,7 @@ public class ComponentScanner {
 
     LOGGER.fine("Registering types: " + types);
 
-    store.register(types);
+    registry.register(types);
   }
 
   static List<Type> findComponentTypes(Reflections reflections, ClassLoader classLoader) {
