@@ -45,16 +45,16 @@ class InjectorStressTest {
         double x = rnd.nextDouble();
 
         if(x < 0.01) {
-          injector.getStore().register(list);
+          injector.getCandidateRegistry().register(list);
           actual.addAll(list);
           classesNeverRegistered.removeAll(list);
         }
         else if(x < 0.02) {
-          injector.getStore().remove(list);
+          injector.getCandidateRegistry().remove(list);
           actual.removeAll(list);
         }
         else if(x < 0.03) {
-          injector.getStore().remove(new ArrayList<>(actual));
+          injector.getCandidateRegistry().remove(new ArrayList<>(actual));
           actual.clear();
         }
         else if((x < 0.55 || actual.size() == 0) && actual.size() < classes.size()) {
@@ -67,7 +67,7 @@ class InjectorStressTest {
           int amount = rnd.nextInt((toAdd.size() - 1) / 2) + 1;
 
           toAdd = toAdd.subList(0, amount);
-          injector.getStore().register(toAdd);
+          injector.getCandidateRegistry().register(toAdd);
           actual.addAll(toAdd);
           classesNeverRegistered.removeAll(toAdd);
         }
@@ -79,7 +79,7 @@ class InjectorStressTest {
           int amount = rnd.nextInt((toRemove.size() - 1) / 2) + 1;
 
           toRemove = toRemove.subList(0, amount);
-          injector.getStore().remove(toRemove);
+          injector.getCandidateRegistry().remove(toRemove);
           actual.removeAll(toRemove);
         }
 

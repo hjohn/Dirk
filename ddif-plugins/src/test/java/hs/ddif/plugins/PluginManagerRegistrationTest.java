@@ -24,7 +24,7 @@ public class PluginManagerRegistrationTest {
 
     injector.registerInstance("{jsonconfig}", AnnotationDescriptor.named("configuration"));
 
-    ComponentScanner.scan(injector.getStore(), "hs.ddif.plugins.test.project");
+    ComponentScanner.scan(injector.getCandidateRegistry(), "hs.ddif.plugins.test.project");
 
     assertNotNull(injector.getInstance(TestDatabase.class));
     assertNotNull(injector.getInstance(TestStatement.class));
@@ -39,12 +39,12 @@ public class PluginManagerRegistrationTest {
 
     injector.registerInstance("{jsonconfig}", AnnotationDescriptor.named("configuration"));
 
-    assertThatThrownBy(() -> ComponentScanner.scan(injector.getStore(), "hs.ddif.plugins.test.project"))
+    assertThatThrownBy(() -> ComponentScanner.scan(injector.getCandidateRegistry(), "hs.ddif.plugins.test.project"))
       .isInstanceOf(UnresolvableDependencyException.class);
 
     injector.register(TestAutoDiscoverableDependency.class);
 
-    ComponentScanner.scan(injector.getStore(), "hs.ddif.plugins.test.project");
+    ComponentScanner.scan(injector.getCandidateRegistry(), "hs.ddif.plugins.test.project");
 
     assertNotNull(injector.getInstance(TestDatabase.class));
     assertNotNull(injector.getInstance(TestStatement.class));

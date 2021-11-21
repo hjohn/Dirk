@@ -45,7 +45,7 @@ public class PluginManagerTest {
     PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
 
     injector = new Injector(true);
-    pluginManager = new PluginManager(injector.getStore(), pluginScopeResolver);
+    pluginManager = new PluginManager(injector.getCandidateRegistry(), pluginScopeResolver);
 
     injector.register(BeanWithTextProviders.class);
   }
