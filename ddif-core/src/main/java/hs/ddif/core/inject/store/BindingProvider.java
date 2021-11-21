@@ -2,11 +2,13 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Parameter;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.Binding;
+import hs.ddif.core.inject.instantiator.InstanceResolutionFailure;
+import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.Key;
-import hs.ddif.core.inject.instantiator.RuntimeBeanResolutionException;
+import hs.ddif.core.inject.instantiator.MultipleInstances;
+import hs.ddif.core.inject.instantiator.NoSuchInstance;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
@@ -255,7 +257,7 @@ public class BindingProvider {
     }
 
     @Override
-    public Object getValue(Instantiator instantiator) throws BeanResolutionException {
+    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure {
       List<Object> instances = instantiator.getInstances(elementType, qualifiers.toArray());
 
       return instances.isEmpty() && optional ? null : new HashSet<>(instances);
@@ -286,7 +288,7 @@ public class BindingProvider {
     }
 
     @Override
-    public Object getValue(Instantiator instantiator) throws BeanResolutionException {
+    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure {
       List<Object> instances = instantiator.getInstances(elementType, qualifiers.toArray());
 
       return instances.isEmpty() && optional ? null : instances;
@@ -327,7 +329,7 @@ public class BindingProvider {
           return instantiator.getInstance(searchType, (Object[])binding.getRequiredKey().getQualifiersAsArray());
         }
       }
-      catch(BeanResolutionException e) {
+      catch(InstanceCreationFailure | NoSuchInstance | MultipleInstances e) {
         // Ignore, create Provider on demand below
       }
 
@@ -337,8 +339,8 @@ public class BindingProvider {
           try {
             return binding.getValue(instantiator);
           }
-          catch(BeanResolutionException e) {
-            throw new RuntimeBeanResolutionException(binding.getType(), e);
+          catch(InstanceResolutionFailure f) {
+            throw f.toRuntimeException();
           }
         }
       };
@@ -369,12 +371,12 @@ public class BindingProvider {
     }
 
     @Override
-    public Object getValue(Instantiator instantiator) throws BeanResolutionException {
+    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances {
       if(optional) {
         try {
           return instantiator.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
         }
-        catch(BeanResolutionException e) {
+        catch(InstanceCreationFailure | NoSuchInstance | MultipleInstances e) {
           return null;
         }
       }

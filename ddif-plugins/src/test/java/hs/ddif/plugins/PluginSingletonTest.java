@@ -1,7 +1,7 @@
 package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.test.plugin.Database;
 
 import java.net.MalformedURLException;
@@ -27,7 +27,7 @@ public class PluginSingletonTest {
   }
 
   @Test
-  public void shouldLoadAndUnloadPluginWithPluginSingleton() throws BeanResolutionException {
+  public void shouldLoadAndUnloadPluginWithPluginSingleton() {
     PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
     Injector injector = new Injector(true, pluginScopeResolver);
 
@@ -40,7 +40,7 @@ public class PluginSingletonTest {
 
       pluginManager.unload(plugin);
 
-      assertThrows(BeanResolutionException.class, () -> injector.getInstance(Database.class));
+      assertThrows(InstanceCreationException.class, () -> injector.getInstance(Database.class));
 
       waitForPluginUnload(plugin);
 

@@ -54,19 +54,20 @@ public class Instantiator {
    * @param <T> the type of the instance
    * @param type the type of the instance required
    * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
+   * @param criteria optional list of criteria, see {@link hs.ddif.core.api.InstanceResolver}
    * @return an instance of the given class matching the given criteria, never null
-   * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
-   *   or when the given class has multiple matching candidates
+   * @throws NoSuchInstance when no matching instance could be found or created
+   * @throws MultipleInstances when multiple matching instances were found or could be created
+   * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws BeanResolutionException {
+  public synchronized <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws NoSuchInstance, MultipleInstances, InstanceCreationFailure {
     Set<ResolvableInjectable> injectables = discover(type, criteria);
 
     if(injectables.isEmpty()) {
-      throw new BeanResolutionException(type, criteria);
+      throw new NoSuchInstance(type, criteria);
     }
     if(injectables.size() > 1) {
-      throw new BeanResolutionException(injectables, type, criteria);
+      throw new MultipleInstances(type, criteria, injectables);
     }
 
     try {
@@ -75,13 +76,13 @@ public class Instantiator {
       T instance = getInstance(injectable, parameters, findScopeResolver(injectable));
 
       if(instance == null) {
-        throw new BeanResolutionException(type, criteria);
+        throw new NoSuchInstance(type, criteria);
       }
 
       return instance;
     }
-    catch(InstantiationException | OutOfScopeException e) {
-      throw new BeanResolutionException(type, e, criteria);
+    catch(OutOfScopeException e) {
+      throw new NoSuchInstance(type, criteria, e);
     }
   }
 
@@ -91,28 +92,14 @@ public class Instantiator {
    *
    * @param <T> the type of the instance
    * @param type the type of the instance required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
+   * @param criteria optional list of criteria, see {@link hs.ddif.core.api.InstanceResolver}
    * @return an instance of the given class matching the given criteria, never null
-   * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
-   *   or when the given class has multiple matching candidates
+   * @throws NoSuchInstance when no matching instance could be found or created
+   * @throws MultipleInstances when multiple matching instances were found or could be created
+   * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> T getInstance(Type type, Object... criteria) throws BeanResolutionException {
+  public synchronized <T> T getInstance(Type type, Object... criteria) throws NoSuchInstance, MultipleInstances, InstanceCreationFailure {
     return getParameterizedInstance(type, NO_PARAMETERS, criteria);
-  }
-
-  /**
-   * Returns an instance of the given class matching the given criteria (if any) in
-   * which all dependencies are injected.
-   *
-   * @param <T> the type of the instance
-   * @param cls the class of the instance required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
-   * @return an instance of the given class matching the given criteria (if any)
-   * @throws BeanResolutionException when the given class is not registered with this Injector or the bean cannot be provided
-   *   or when the given class has multiple matching candidates
-   */
-  public synchronized <T> T getInstance(Class<T> cls, Object... criteria) throws BeanResolutionException {  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
-    return getInstance((Type)cls, criteria);
   }
 
   /**
@@ -121,75 +108,51 @@ public class Instantiator {
    *
    * @param <T> the type of the instance
    * @param type the type of the instances required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
+   * @param criteria optional list of criteria, see {@link hs.ddif.core.api.InstanceResolver}
    * @return all instances of the given class matching the given criteria (if any)
-   * @throws BeanResolutionException when a required bean could not be found
+   * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> List<T> getInstances(Type type, Object... criteria) throws BeanResolutionException {
-    try {
-      List<T> instances = new ArrayList<>();
+  public synchronized <T> List<T> getInstances(Type type, Object... criteria) throws InstanceCreationFailure {
+    List<T> instances = new ArrayList<>();
 
-      for(ResolvableInjectable injectable : store.resolve(type, criteria)) {
-        ScopeResolver scopeResolver = findScopeResolver(injectable);
+    for(ResolvableInjectable injectable : store.resolve(type, criteria)) {
+      ScopeResolver scopeResolver = findScopeResolver(injectable);
 
-        if(scopeResolver == null || scopeResolver.isScopeActive(injectable.getType())) {
-          try {
-            T instance = getInstance(injectable, NO_PARAMETERS, scopeResolver);
+      if(scopeResolver == null || scopeResolver.isScopeActive(injectable.getType())) {
+        try {
+          T instance = getInstance(injectable, NO_PARAMETERS, scopeResolver);
 
-            if(instance != null) {  // Providers are allowed to return null for optional dependencies, donot include those in set.
-              instances.add(instance);
-            }
-          }
-          catch(OutOfScopeException e) {
-
-            /*
-             * Scope was checked to be active (to avoid exception cost), but it still occured...
-             */
-
-            throw new IllegalStateException("scope should have been active, concurrent modification on another thread?", e);
+          if(instance != null) {  // Providers are allowed to return null for optional dependencies, don't include those in set.
+            instances.add(instance);
           }
         }
+        catch(OutOfScopeException e) {
+
+          /*
+           * Scope was checked to be active (to avoid exception cost), but it still occurred...
+           */
+
+          throw new IllegalStateException("scope should have been active, concurrent modification on another thread?", e);
+        }
       }
+    }
 
-      return instances;
-    }
-    catch(InstantiationException e) {
-      throw new BeanResolutionException(type, e, criteria);
-    }
+    return instances;
   }
 
-  /**
-   * Returns all instances of the given class matching the given criteria (if any) and, if scoped,
-   * which are active in the current scope.  When there are no matches, an empty set is returned.
-   *
-   * @param <T> the type of the instances
-   * @param cls the class of the instances required
-   * @param criteria optional list of criteria, see {@link InjectableStore#resolve(Type, Object...)}
-   * @return all instances of the given class matching the given criteria (if any)
-   * @throws BeanResolutionException when a required bean could not be found
-   */
-  public synchronized <T> List<T> getInstances(Class<T> cls, Object... criteria) throws BeanResolutionException {
-    return getInstances((Type)cls, criteria);
+  private Set<ResolvableInjectable> discover(Type type, Object... criteria) throws DiscoveryFailure {
+    Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
+
+    if(injectables.isEmpty() && autoDiscovery && criteria.length == 0) {
+      store.putAll(gatherer.gather(type));
+
+      injectables = store.resolve(type, criteria);
+    }
+
+    return injectables;
   }
 
-  private Set<ResolvableInjectable> discover(Type type, Object... criteria) throws BeanResolutionException {
-    try {
-      Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
-
-      if(injectables.isEmpty() && autoDiscovery && criteria.length == 0) {
-        store.putAll(gatherer.gather(type));
-
-        injectables = store.resolve(type, criteria);
-      }
-
-      return injectables;
-    }
-    catch(Exception e) {
-      throw new BeanResolutionException(type, e, criteria);
-    }
-  }
-
-  private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters, ScopeResolver scopeResolver) throws InstantiationException, OutOfScopeException {
+  private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters, ScopeResolver scopeResolver) throws InstanceCreationFailure, OutOfScopeException {
     if(scopeResolver != null) {
       T instance = scopeResolver.get(injectable.getType());
 

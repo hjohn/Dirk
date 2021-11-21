@@ -3,7 +3,7 @@ package hs.ddif.core.inject.store;
 import hs.ddif.annotations.Parameter;
 import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.instantiator.Binding;
-import hs.ddif.core.inject.instantiator.InstantiationException;
+import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
@@ -124,9 +124,9 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstantiationException {
+  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure {
     if(underConstruction.get()) {
-      throw new InstantiationException(injectableType, "Already under construction (dependency creation loop in @PostConstruct method!)");
+      throw new InstanceCreationFailure(injectableType, "Already under construction (dependency creation loop in @PostConstruct method!)");
     }
 
     try {
@@ -139,7 +139,7 @@ public class ClassInjectable implements ResolvableInjectable {
       injectInstance(instantiator, instance, namedParameters);
 
       if(!namedParameters.isEmpty()) {
-        throw new InstantiationException(injectableType, "Superflous parameters supplied, expected " + (parameters.length - namedParameters.size()) + " but got: " + parameters.length);
+        throw new InstanceCreationFailure(injectableType, "Superflous parameters supplied, expected " + (parameters.length - namedParameters.size()) + " but got: " + parameters.length);
       }
 
       postConstructor.call(instance);
@@ -151,7 +151,7 @@ public class ClassInjectable implements ResolvableInjectable {
     }
   }
 
-  private void injectInstance(Instantiator instantiator, Object instance, List<NamedParameter> namedParameters) throws InstantiationException {
+  private void injectInstance(Instantiator instantiator, Object instance, List<NamedParameter> namedParameters) throws InstanceCreationFailure {
     for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
       try {
         AccessibleObject accessibleObject = entry.getKey();
@@ -175,7 +175,7 @@ public class ClassInjectable implements ResolvableInjectable {
         }
       }
       catch(Exception e) {
-        throw new InstantiationException(entry.getKey(), "Exception while injecting", e);
+        throw new InstanceCreationFailure(entry.getKey(), "Exception while injecting", e);
       }
     }
   }
@@ -190,7 +190,7 @@ public class ClassInjectable implements ResolvableInjectable {
     throw new NoSuchElementException("Parameter '" + name + "' was not supplied");
   }
 
-  private Object constructInstance(Instantiator instantiator, List<NamedParameter> namedParameters) throws InstantiationException {
+  private Object constructInstance(Instantiator instantiator, List<NamedParameter> namedParameters) throws InstanceCreationFailure {
     Map.Entry<AccessibleObject, List<Binding>> constructorEntry = findConstructorEntry(bindings);
     Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
 
@@ -218,7 +218,7 @@ public class ClassInjectable implements ResolvableInjectable {
       return constructor.newInstance(values);
     }
     catch(Exception e) {
-      throw new InstantiationException(constructor, "Exception while constructing instance", e);
+      throw new InstanceCreationFailure(constructor, "Exception while constructing instance", e);
     }
   }
 

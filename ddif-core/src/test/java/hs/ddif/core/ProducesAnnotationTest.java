@@ -1,9 +1,10 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
+import hs.ddif.core.api.MultipleInstancesException;
+import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.consistency.CyclicDependencyException;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.store.DuplicateInjectableException;
 import hs.ddif.core.test.qualifiers.Big;
@@ -114,7 +115,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  void shouldSupportGenericProducerMethod() throws BeanResolutionException {
+  void shouldSupportGenericProducerMethod() {
     injector.register(StringMethodFactory.class);
     injector.register(TypeFactory.parameterizedClass(GenericFactory1.class, Long.class));
 
@@ -138,7 +139,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  void shouldSupportGenericProducerField() throws BeanResolutionException {
+  void shouldSupportGenericProducerField() {
     StringFactory stringFactory = new StringFactory("hi");
     IntegerFactory integerFactory = new IntegerFactory(123);
 
@@ -148,7 +149,7 @@ public class ProducesAnnotationTest {
     assertEquals("hi", injector.getInstance(String.class));
     assertEquals(123, injector.getInstance(Integer.class));
 
-    assertThrows(BeanResolutionException.class, () -> injector.getInstance(new TypeReference<GenericFactory2<Long>>() {}.getType()));
+    assertThrows(NoSuchInstanceException.class, () -> injector.getInstance(new TypeReference<GenericFactory2<Long>>() {}.getType()));
 
     GenericFactory2<String> x1 = injector.getInstance(new TypeReference<GenericFactory2<String>>() {}.getType());
     GenericFactory2<String> x2 = injector.getInstance(StringFactory.class);
@@ -163,7 +164,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldRegisterSelfDependentFactory() throws BeanResolutionException {
+  public void shouldRegisterSelfDependentFactory() {
     injector.register(SelfDependentFactory.class);
 
     assertNotNull(injector.getInstance(Phone.class));
@@ -180,7 +181,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldRegisterAutoDiscoveryDependentFactory() throws BeanResolutionException {
+  public void shouldRegisterAutoDiscoveryDependentFactory() {
     autoDiscoveryInjector.register(AutoDiscoveryDependentFactory.class);
 
     assertNotNull(autoDiscoveryInjector.getInstance(Phone.class));
@@ -195,7 +196,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldRegisterFactoryWithProducesWhichRequiresProvidedClassInSameFactory() throws BeanResolutionException {
+  public void shouldRegisterFactoryWithProducesWhichRequiresProvidedClassInSameFactory() {
     injector.register(CrossDependentFactory.class);
 
     assertNotNull(injector.getInstance(Phone.class));
@@ -206,13 +207,13 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldAutoDiscoverProducesAnnotations() throws BeanResolutionException {
+  public void shouldAutoDiscoverProducesAnnotations() {
     assertNotNull(autoDiscoveryInjector.getInstance(AnotherFactory.class));
     assertNotNull(autoDiscoveryInjector.getInstance(Truck.class));
   }
 
   @Test
-  public void shouldAutoDiscoverNestedProducesAnnotations() throws BeanResolutionException {
+  public void shouldAutoDiscoverNestedProducesAnnotations() {
     Thing instance = autoDiscoveryInjector.getInstance(Thing.class);
 
     assertNotNull(instance.anotherFactory);
@@ -221,7 +222,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldAutoDiscoverComplicatedNestedProducesAnnotations() throws BeanResolutionException {
+  public void shouldAutoDiscoverComplicatedNestedProducesAnnotations() {
     ComplicatedThing instance = autoDiscoveryInjector.getInstance(ComplicatedThing.class);
 
     assertNotNull(instance.part2.part3);
@@ -232,13 +233,14 @@ public class ProducesAnnotationTest {
   @Test
   public void shouldNotRegisterClassWhichDependsOnUnregisteredClass() {
     assertThatThrownBy(() -> injector.register(StaticFieldBasedPhoneProducer.class))
-      .isInstanceOf(UnresolvableDependencyException.class)
-      .hasMessage("Missing dependency of type [class hs.ddif.core.ProducesAnnotationTest$Thing3] required for Field [hs.ddif.core.ProducesAnnotationTest$Thing3 hs.ddif.core.ProducesAnnotationTest$StaticFieldBasedPhoneProducer.thing]");
+      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .hasMessage("Missing dependency of type [class hs.ddif.core.ProducesAnnotationTest$Thing3] required for Field [hs.ddif.core.ProducesAnnotationTest$Thing3 hs.ddif.core.ProducesAnnotationTest$StaticFieldBasedPhoneProducer.thing]")
+      .hasNoCause();
     assertFalse(injector.contains(Object.class));
   }
 
   @Test
-  public void shouldRegisterClassWhichProducesInstances() throws BeanResolutionException {
+  public void shouldRegisterClassWhichProducesInstances() {
     injector.register(Thing4.class);
 
     Phone phone = injector.getInstance(Phone.class);
@@ -252,17 +254,17 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void requiredDependencySuppliedIndirectlyByStaticFieldShouldNotCauseCycle() throws BeanResolutionException {
+  public void requiredDependencySuppliedIndirectlyByStaticFieldShouldNotCauseCycle() {
     autoDiscoveryInjector.getInstance(StaticFieldBasedPhoneProducer.class);
   }
 
   @Test
-  public void requiredDependencySuppliedIndirectlyByStaticMethodShouldNotCauseCycle() throws BeanResolutionException {
+  public void requiredDependencySuppliedIndirectlyByStaticMethodShouldNotCauseCycle() {
     autoDiscoveryInjector.getInstance(StaticMethodBasedPhoneProducer.class);
   }
 
   @Test
-  public void shouldDiscoverClassWhichProducesInstances() throws BeanResolutionException {
+  public void shouldDiscoverClassWhichProducesInstances() {
     assertNotNull(autoDiscoveryInjector.getInstance(Thing4.class));
 
     Phone phone = autoDiscoveryInjector.getInstance(Phone.class);
@@ -305,7 +307,7 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void factoryScopeShouldBeRespected() throws BeanResolutionException {
+    void factoryScopeShouldBeRespected() {
       SingletonFactory factory1 = injector.getInstance(SingletonFactory.class);
       SingletonFactory factory2 = injector.getInstance(SingletonFactory.class);
 
@@ -318,19 +320,19 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void factoryShouldHaveDependenciesInjected() throws BeanResolutionException {
+    void factoryShouldHaveDependenciesInjected() {
       UnscopedFactory unscopedFactory = injector.getInstance(UnscopedFactory.class);
 
       assertEquals("pre", unscopedFactory.prefix);
     }
 
     @Test
-    void productsShouldBeAvailableDirectly() throws BeanResolutionException {
+    void productsShouldBeAvailableDirectly() {
       Car car = injector.getInstance(Car.class);
 
       assertEquals("pre-toyota-15", car.name);
 
-      assertThrows(BeanResolutionException.class, new Executable() {
+      assertThrows(MultipleInstancesException.class, new Executable() {
         @Override
         public void execute() throws Throwable {
           injector.getInstance(Phone.class);
@@ -341,7 +343,7 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void phoneScopeShouldBeRespected() throws BeanResolutionException {
+    void phoneScopeShouldBeRespected() {
       Phone redPhone1 = injector.getInstance(Phone.class, Red.class);
       Phone redPhone2 = injector.getInstance(Phone.class, Red.class);
 
@@ -354,12 +356,12 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void allPhonesShouldBeReturnedWhenGettingInstancesOfPhone() throws BeanResolutionException {
+    void allPhonesShouldBeReturnedWhenGettingInstancesOfPhone() {
       assertEquals(4, injector.getInstances(Phone.class).size());
     }
 
     @Test
-    void injectorShouldReturnGenericTypes() throws BeanResolutionException {
+    void injectorShouldReturnGenericTypes() {
       injector.getInstance(new TypeReference<Garage<Bus>>() {}.getType());
 
       Garage<Bus> busGarage1 = injector.getInstance(new TypeReference<Garage<Bus>>() {}.getType());
@@ -376,12 +378,12 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void providerCreatedViaFactoryShouldSupplyObjects() throws BeanResolutionException {
+    void providerCreatedViaFactoryShouldSupplyObjects() {
       assertEquals(Bus.class, injector.getInstance(Bus.class).getClass());
     }
 
     @Test
-    void recursiveFactoryShouldWork() throws BeanResolutionException {
+    void recursiveFactoryShouldWork() {
       assertEquals(Truck.class, injector.getInstance(Truck.class).getClass());
     }
   }

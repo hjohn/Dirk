@@ -1,9 +1,9 @@
 package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
+import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
 import hs.ddif.test.plugin.TextStyler;
@@ -60,7 +60,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldLoadThenUnloadPlugin() throws BeanResolutionException {
+  public void shouldLoadThenUnloadPlugin() {
     BeanWithTextProviders bean1 = injector.getInstance(BeanWithTextProviders.class);  // it's perfectly fine to get a bean with no text providers
 
     assertNotNull(bean1);
@@ -99,8 +99,8 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldLoadPluginAgainAfterUnload() throws BeanResolutionException {
-    assertThrows(BeanResolutionException.class, () -> injector.getInstance(Database.class));
+  public void shouldLoadPluginAgainAfterUnload() {
+    assertThrows(InstanceCreationException.class, () -> injector.getInstance(Database.class));
 
     injector.register(TextStyler.class);  // not part of plugin, so needs to be registered separate -- don't want it part of plugin either as then plugin would be unable to unload itself
 
@@ -110,7 +110,7 @@ public class PluginManagerTest {
 
     pluginManager.unload(plugin);
 
-    assertThrows(BeanResolutionException.class, () -> injector.getInstance(Database.class));
+    assertThrows(InstanceCreationException.class, () -> injector.getInstance(Database.class));
 
     plugin = pluginManager.loadPlugin(PLUGIN_URL);
 
@@ -118,7 +118,7 @@ public class PluginManagerTest {
 
     pluginManager.unload(plugin);
 
-    assertThrows(BeanResolutionException.class, () -> injector.getInstance(Database.class));
+    assertThrows(InstanceCreationException.class, () -> injector.getInstance(Database.class));
 
     assertNotNull(db1);
     assertNotNull(db2);
@@ -137,7 +137,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldLoadPluginAfterFixingSingularDependencyViolations() throws BeanResolutionException {
+  public void shouldLoadPluginAfterFixingSingularDependencyViolations() {
     injector.register(DatabaseBean.class);
     injector.register(BeanWithDatabase.class);  // Requires an unambiguous Database dependency
 

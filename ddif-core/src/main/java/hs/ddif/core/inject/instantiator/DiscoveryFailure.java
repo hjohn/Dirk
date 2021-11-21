@@ -4,9 +4,9 @@ import java.lang.reflect.Type;
 
 /**
  * Thrown when auto discovery fails. As new injectables may need to be added to
- * the underlying store, consistency checks may fail which this exception wraps.
+ * the underlying store, consistency checks may fail which this class wraps.
  */
-public class DiscoveryException extends InstantiationException {
+public class DiscoveryFailure extends InstanceCreationFailure {
 
   /**
    * Creates a new instance.
@@ -15,7 +15,7 @@ public class DiscoveryException extends InstantiationException {
    * @param message a message describing the problem
    * @param cause an optional cause, can be null
    */
-  public DiscoveryException(Type type, String message, Throwable cause) {
+  public DiscoveryFailure(Type type, String message, Throwable cause) {
     super(type, message, cause);
   }
 }

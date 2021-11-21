@@ -1,7 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.core.inject.consistency.CyclicDependencyException;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ class InjectorStressTest {
   Random rnd = new Random(4);
 
   @Test
-  void shouldSurviveStressTest() throws BeanResolutionException {
+  void shouldSurviveStressTest() {
     Injector injector = new Injector();
     actual.clear();
 

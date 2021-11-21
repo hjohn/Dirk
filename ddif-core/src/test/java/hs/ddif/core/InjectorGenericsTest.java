@@ -1,7 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +28,7 @@ public class InjectorGenericsTest {
   }
 
   @Test
-  public void shouldInjectInstancesWithMatchingGenerics() throws BeanResolutionException {
+  public void shouldInjectInstancesWithMatchingGenerics() {
     injector.register(StringToIntConverter.class);
     injector.register(IntToStringConverter.class);
     injector.register(StringToStringListConverter.class);
@@ -47,7 +46,7 @@ public class InjectorGenericsTest {
   }
 
   @Test
-  public void shouldInjectProviderInstancesWithMatchingGenerics() throws BeanResolutionException {
+  public void shouldInjectProviderInstancesWithMatchingGenerics() {
     injector.register(StringToIntConverter.class);
     injector.register(IntToStringConverter.class);
     injector.register(StringToStringListConverter.class);
@@ -65,7 +64,7 @@ public class InjectorGenericsTest {
   }
 
   @Test
-  public void shouldInjectListInstancesWithMatchingGenerics() throws BeanResolutionException {
+  public void shouldInjectListInstancesWithMatchingGenerics() {
     injector.register(StringToIntConverter.class);
     injector.register(IntToStringConverter.class);
     injector.register(StringToStringListConverter.class);

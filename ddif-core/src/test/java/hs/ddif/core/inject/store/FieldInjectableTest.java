@@ -1,8 +1,9 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.inject.instantiator.InstantiationException;
+import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.MultipleInstances;
+import hs.ddif.core.inject.instantiator.NoSuchInstance;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -67,7 +68,7 @@ public class FieldInjectableTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForNonStaticField() throws NoSuchFieldException, SecurityException, BeanResolutionException, InstantiationException {
+  void shouldReturnCorrectInjectableForNonStaticField() throws NoSuchFieldException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances {
     FieldInjectable injectable = new FieldInjectable(C.class.getField("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
@@ -81,7 +82,7 @@ public class FieldInjectableTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForStaticField() throws NoSuchFieldException, SecurityException, InstantiationException {
+  void shouldReturnCorrectInjectableForStaticField() throws NoSuchFieldException, SecurityException, InstanceCreationFailure {
     FieldInjectable injectable = new FieldInjectable(C.class.getField("e"), C.class);
 
     assertEquals(String.class, injectable.getType());

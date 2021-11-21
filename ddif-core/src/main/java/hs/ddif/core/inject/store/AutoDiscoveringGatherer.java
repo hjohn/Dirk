@@ -1,7 +1,7 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.core.inject.instantiator.Binding;
-import hs.ddif.core.inject.instantiator.DiscoveryException;
+import hs.ddif.core.inject.instantiator.DiscoveryFailure;
 import hs.ddif.core.inject.instantiator.Gatherer;
 import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
@@ -66,12 +66,12 @@ public class AutoDiscoveringGatherer implements Gatherer {
   }
 
   @Override
-  public Set<ResolvableInjectable> gather(Type type) throws DiscoveryException {
+  public Set<ResolvableInjectable> gather(Type type) throws DiscoveryFailure {
     try {
       return new Executor(List.of(new ClassInjectable(type))).executor();
     }
     catch(Exception e) {
-      throw new DiscoveryException(type, "Exception during auto discovery", e);
+      throw new DiscoveryFailure(type, "Exception during auto discovery", e);
     }
   }
 

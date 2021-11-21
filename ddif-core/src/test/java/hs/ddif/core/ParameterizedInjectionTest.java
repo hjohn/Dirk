@@ -1,9 +1,8 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Parameter;
+import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.api.NamedParameter;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.inject.instantiator.InstantiationException;
 
 import java.util.NoSuchElementException;
 
@@ -19,7 +18,7 @@ public class ParameterizedInjectionTest {
   private Injector injector = new Injector();
 
   @Test
-  void registerShouldAcceptParameterizedClass() throws BeanResolutionException {
+  void registerShouldAcceptParameterizedClass() {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestParameterizedFieldSample.class);
@@ -32,22 +31,18 @@ public class ParameterizedInjectionTest {
 
       // Incorrect parameter case:
       assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)}))
-        .isInstanceOf(BeanResolutionException.class)
-        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedFieldSample")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(InstantiationException.class)
+        .isExactlyInstanceOf(InstanceCreationException.class)
         .hasMessage("Exception while injecting: java.lang.Integer hs.ddif.core.ParameterizedInjectionTest$TestParameterizedFieldSample.interval")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(NoSuchElementException.class)
-        .hasMessage("Parameter 'interval' was not supplied");
+        .isExactlyInstanceOf(NoSuchElementException.class)
+        .hasMessage("Parameter 'interval' was not supplied")
+        .hasNoCause();
 
       // Too many parameters case:
       assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedFieldSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("interval", 30)}))
-        .isInstanceOf(BeanResolutionException.class)
-        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedFieldSample")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(InstantiationException.class)
-        .hasMessage("Superflous parameters supplied, expected 1 but got: 2: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedFieldSample");
+        .isExactlyInstanceOf(InstanceCreationException.class)
+        .hasMessage("Superflous parameters supplied, expected 1 but got: 2: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedFieldSample")
+        .hasNoCause();
 
       injector.remove(TestParameterizedFieldSample.class);
       injector.remove(TestService.class);
@@ -60,7 +55,7 @@ public class ParameterizedInjectionTest {
   }
 
   @Test
-  void registerShouldAcceptParameterizedConstructorClass() throws BeanResolutionException {
+  void registerShouldAcceptParameterizedConstructorClass() {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestParameterizedConstructorSample.class);
@@ -74,22 +69,18 @@ public class ParameterizedInjectionTest {
 
       // Incorrect parameter case:
       assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)}))
-        .isInstanceOf(BeanResolutionException.class)
-        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedConstructorSample")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(InstantiationException.class)
+        .isExactlyInstanceOf(InstanceCreationException.class)
         .hasMessage("Exception while constructing instance: public hs.ddif.core.ParameterizedInjectionTest$TestParameterizedConstructorSample(hs.ddif.core.ParameterizedInjectionTest$TestService,java.lang.Integer,java.lang.String)")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(NoSuchElementException.class)
-        .hasMessage("Parameter 'interval' was not supplied");
+        .isExactlyInstanceOf(NoSuchElementException.class)
+        .hasMessage("Parameter 'interval' was not supplied")
+        .hasNoCause();
 
       // Too many parameters case:
       assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedConstructorSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")}))
-        .isInstanceOf(BeanResolutionException.class)
-        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedConstructorSample")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(InstantiationException.class)
-        .hasMessage("Superflous parameters supplied, expected 2 but got: 3: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedConstructorSample");
+        .isExactlyInstanceOf(InstanceCreationException.class)
+        .hasMessage("Superflous parameters supplied, expected 2 but got: 3: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedConstructorSample")
+        .hasNoCause();
 
       injector.remove(TestParameterizedConstructorSample.class);
       injector.remove(TestService.class);
@@ -110,7 +101,7 @@ public class ParameterizedInjectionTest {
   }
 
   @Test
-  void registerShouldAcceptParameterizedMixedClass() throws BeanResolutionException {
+  void registerShouldAcceptParameterizedMixedClass() {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestParameterizedMixedSample.class);
@@ -124,22 +115,18 @@ public class ParameterizedInjectionTest {
 
       // Incorrect parameter case:
       assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("wrongName", 30)}))
-        .isInstanceOf(BeanResolutionException.class)
-        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedMixedSample")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(InstantiationException.class)
+        .isExactlyInstanceOf(InstanceCreationException.class)
         .hasMessage("Exception while constructing instance: public hs.ddif.core.ParameterizedInjectionTest$TestParameterizedMixedSample(hs.ddif.core.ParameterizedInjectionTest$TestService,java.lang.Integer)")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(NoSuchElementException.class)
-        .hasMessage("Parameter 'interval' was not supplied");
+        .isExactlyInstanceOf(NoSuchElementException.class)
+        .hasMessage("Parameter 'interval' was not supplied")
+        .hasNoCause();
 
       // Too many parameters case:
       assertThatThrownBy(() -> injector.getParameterizedInstance(TestParameterizedMixedSample.class, new NamedParameter[] {new NamedParameter("interval", 30), new NamedParameter("prefix", "abc"), new NamedParameter("postfix", "xyz")}))
-        .isInstanceOf(BeanResolutionException.class)
-        .hasMessage("No such bean: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedMixedSample")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(InstantiationException.class)
-        .hasMessage("Superflous parameters supplied, expected 2 but got: 3: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedMixedSample");
+        .isExactlyInstanceOf(InstanceCreationException.class)
+        .hasMessage("Superflous parameters supplied, expected 2 but got: 3: class hs.ddif.core.ParameterizedInjectionTest$TestParameterizedMixedSample")
+        .hasNoCause();
 
       injector.remove(TestParameterizedMixedSample.class);
       injector.remove(TestService.class);
@@ -159,7 +146,7 @@ public class ParameterizedInjectionTest {
   }
 
   @Test
-  void registerShouldNotCheckParameterTypesForSingularDependencyViolations() throws BeanResolutionException {
+  void registerShouldNotCheckParameterTypesForSingularDependencyViolations() {
     injector.register(TestService.class);
     injector.register(TestParameterizedFieldSample.class);
 

@@ -1,8 +1,9 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.inject.instantiator.InstantiationException;
+import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.MultipleInstances;
+import hs.ddif.core.inject.instantiator.NoSuchInstance;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public class MethodInjectableTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForNonStaticMethod() throws NoSuchMethodException, SecurityException, BeanResolutionException, InstantiationException {
+  void shouldReturnCorrectInjectableForNonStaticMethod() throws NoSuchMethodException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances {
     MethodInjectable injectable = new MethodInjectable(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
@@ -88,7 +89,7 @@ public class MethodInjectableTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForStaticMethod() throws NoSuchMethodException, SecurityException, BeanResolutionException, InstantiationException {
+  void shouldReturnCorrectInjectableForStaticMethod() throws NoSuchMethodException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances {
     MethodInjectable injectable = new MethodInjectable(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());

@@ -41,7 +41,8 @@ public class InjectorStoreConsistencyPolicyTest {
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {
     assertThatThrownBy(() -> policy.addAll(emptyStore, Set.of(new ClassInjectable(K.class))))
-      .isInstanceOf(UnknownScopeException.class);
+      .isExactlyInstanceOf(UnknownScopeException.class)
+      .hasNoCause();
   }
 
   @Test

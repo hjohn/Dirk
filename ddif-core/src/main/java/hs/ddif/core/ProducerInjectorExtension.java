@@ -3,9 +3,11 @@ package hs.ddif.core;
 import hs.ddif.annotations.Parameter;
 import hs.ddif.annotations.Producer;
 import hs.ddif.core.api.NamedParameter;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.inject.instantiator.Binding;
+import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.MultipleInstances;
+import hs.ddif.core.inject.instantiator.NoSuchInstance;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectable;
@@ -98,7 +100,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
     }
 
     @RuntimeType
-    public Object intercept(@AllArguments Object[] args) throws BeanResolutionException {
+    public Object intercept(@AllArguments Object[] args) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances {
       NamedParameter[] namedParameters = new NamedParameter[args.length];
 
       for(int i = 0; i < args.length; i++) {
