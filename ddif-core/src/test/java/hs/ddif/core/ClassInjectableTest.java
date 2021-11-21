@@ -47,7 +47,7 @@ public class ClassInjectableTest {
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
     assertEquals(SimpleClass.class.getAnnotation(Singleton.class), injectable.getScope());
     assertThat(injectable.getBindings()).hasSize(0);
-    assertTrue(injectable.getInstance(instantiator) instanceof SimpleClass);
+    assertTrue(injectable.createInstance(instantiator) instanceof SimpleClass);
 
     injectable = new ClassInjectable(ClassWithDependencies.class);
 
@@ -56,7 +56,7 @@ public class ClassInjectableTest {
     assertNull(injectable.getScope());
     assertThat(injectable.getBindings()).hasSize(4);
 
-    ClassWithDependencies instance = (ClassWithDependencies)injectable.getInstance(instantiator);
+    ClassWithDependencies instance = (ClassWithDependencies)injectable.createInstance(instantiator);
 
     assertEquals("a string", instance.s);
     assertEquals(2, instance.a);
@@ -65,7 +65,7 @@ public class ClassInjectableTest {
 
     store.put(new InstanceInjectable(new BigDecimal(5)));
 
-    instance = (ClassWithDependencies)injectable.getInstance(instantiator);
+    instance = (ClassWithDependencies)injectable.createInstance(instantiator);
 
     assertEquals(new BigDecimal(5), instance.bd);
   }

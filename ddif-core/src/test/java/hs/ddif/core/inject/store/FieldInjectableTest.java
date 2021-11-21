@@ -78,7 +78,7 @@ public class FieldInjectableTest {
 
     when(instantiator.getInstance((Type)C.class)).thenReturn(new C());
 
-    assertEquals("Bye", injectable.getInstance(instantiator));
+    assertEquals("Bye", injectable.createInstance(instantiator));
   }
 
   @Test
@@ -88,7 +88,7 @@ public class FieldInjectableTest {
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).isEmpty();
 
-    assertEquals("Hello", injectable.getInstance(instantiator));
+    assertEquals("Hello", injectable.createInstance(instantiator));
   }
 
   static class A {

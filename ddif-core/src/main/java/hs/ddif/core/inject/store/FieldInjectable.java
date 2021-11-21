@@ -74,7 +74,7 @@ public class FieldInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure {
+  public Object createInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure {
     if(parameters.length > 0) {
       throw new InstanceCreationFailure(field, "Superflous parameters supplied, none expected for producer field but got: " + Arrays.toString(parameters));
     }

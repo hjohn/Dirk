@@ -85,7 +85,7 @@ public class MethodInjectableTest {
 
     when(instantiator.getInstance((Type)C.class)).thenReturn(new C());
 
-    assertEquals("Bye", injectable.getInstance(instantiator));
+    assertEquals("Bye", injectable.createInstance(instantiator));
   }
 
   @Test
@@ -99,7 +99,7 @@ public class MethodInjectableTest {
 
     when(instantiator.getInstance((Type)D.class)).thenReturn(new D());
 
-    assertEquals("Hello D", injectable.getInstance(instantiator));
+    assertEquals("Hello D", injectable.createInstance(instantiator));
   }
 
   static class A {

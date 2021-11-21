@@ -12,14 +12,14 @@ import java.util.List;
 public interface ResolvableInjectable extends Injectable {
 
   /**
-   * Returns an instance of the type provided by this {@link Injectable}.
+   * Creates an instance of the type provided by this {@link Injectable}.
    *
    * @param instantiator the {@link Instantiator} to use to resolve dependencies, cannot be null
    * @param parameters zero or more {@link NamedParameter} required for constructing the provided instance
    * @return an instance of the type provided by this {@link Injectable}, or <code>null</code> if it could not be provided
    * @throws InstanceCreationFailure when instantiation of this injectable fails
    */
-  Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure;
+  Object createInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure;
 
   /**
    * Returns the {@link Binding}s detected.

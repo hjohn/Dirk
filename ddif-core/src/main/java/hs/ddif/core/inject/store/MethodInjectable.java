@@ -36,7 +36,7 @@ public class MethodInjectable implements ResolvableInjectable {
   /**
    * Creates a new {@link MethodInjectable} from the given {@link Method}.  The
    * resulting injectable could be used in an implementation of the method as
-   * its {@link #getInstance(Instantiator, NamedParameter...)} would match the
+   * its {@link #createInstance(Instantiator, NamedParameter...)} would match the
    * return type of the method.
    *
    * @param method a {@link Method}, cannot be null
@@ -80,7 +80,7 @@ public class MethodInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure {
+  public Object createInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure {
     if(parameters.length > 0) {
       throw new InstanceCreationFailure(method, "Superflous parameters supplied, none expected for producer method but got: " + Arrays.toString(parameters));
     }
