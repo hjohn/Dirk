@@ -4,7 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /**
- * Thrown when a scoped bean is required without the appropriate scope being active.
+ * Thrown when a scoped instance is required without the appropriate scope being active.
  */
 public class OutOfScopeException extends Exception {
 

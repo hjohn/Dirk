@@ -134,24 +134,24 @@ public class ClassInjectable implements ResolvableInjectable {
 
       List<NamedParameter> namedParameters = new ArrayList<>(Arrays.asList(parameters));
 
-      Object bean = constructInstance(instantiator, namedParameters);
+      Object instance = constructInstance(instantiator, namedParameters);
 
-      injectInstance(instantiator, bean, namedParameters);
+      injectInstance(instantiator, instance, namedParameters);
 
       if(!namedParameters.isEmpty()) {
         throw new InstantiationException(injectableType, "Superflous parameters supplied, expected " + (parameters.length - namedParameters.size()) + " but got: " + parameters.length);
       }
 
-      postConstructor.call(bean);
+      postConstructor.call(instance);
 
-      return bean;
+      return instance;
     }
     finally {
       underConstruction.set(false);
     }
   }
 
-  private void injectInstance(Instantiator instantiator, Object bean, List<NamedParameter> namedParameters) throws InstantiationException {
+  private void injectInstance(Instantiator instantiator, Object instance, List<NamedParameter> namedParameters) throws InstantiationException {
     for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
       try {
         AccessibleObject accessibleObject = entry.getKey();
@@ -170,7 +170,7 @@ public class ClassInjectable implements ResolvableInjectable {
           }
 
           if(valueToSet != null) {  // Donot set fields to null, leave default value instead
-            field.set(bean, valueToSet);
+            field.set(instance, valueToSet);
           }
         }
       }

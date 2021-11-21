@@ -5,14 +5,14 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * Abstract base implementation of a {@link ScopeResolver} which manages a map of beans per scope.  Scopes
- * are weak referenced, and if the scope is no longer strongly referenced it and all its beans will become
- * eligble for garbage collection.
+ * Abstract base implementation of a {@link ScopeResolver} which manages a map of instances per scope.  Scopes
+ * are weak referenced, and if the scope is no longer strongly referenced it and all its instances will become
+ * eligible for garbage collection.
  *
  * @param <S> the type of the scope discriminator object
  */
 public abstract class AbstractScopeResolver<S> implements ScopeResolver {
-  private final Map<S, Map<Type, Object>> beansByScope = new WeakHashMap<>();
+  private final Map<S, Map<Type, Object>> instancesByScope = new WeakHashMap<>();
 
   /**
    * Returns the current scope, or <code>null</code> if there is no current scope.
@@ -34,13 +34,13 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
       throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
     }
 
-    Map<Type, Object> beans = beansByScope.get(currentScope);
+    Map<Type, Object> instances = instancesByScope.get(currentScope);
 
-    if(beans != null) {
+    if(instances != null) {
       @SuppressWarnings("unchecked")
-      T bean = (T)beans.get(injectableType);
+      T instance = (T)instances.get(injectableType);
 
-      return bean;  // This may still return null
+      return instance;  // This may still return null
     }
 
     return null;
@@ -54,10 +54,10 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
       throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
     }
 
-    beansByScope.computeIfAbsent(currentScope, k -> new WeakHashMap<>()).put(injectableType, instance);
+    instancesByScope.computeIfAbsent(currentScope, k -> new WeakHashMap<>()).put(injectableType, instance);
   }
 
   protected void clear() {
-    beansByScope.clear();
+    instancesByScope.clear();
   }
 }

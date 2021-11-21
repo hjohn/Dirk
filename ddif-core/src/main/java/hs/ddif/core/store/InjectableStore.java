@@ -269,7 +269,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(Object.class);
 
     if(injectablesByDescriptor != null && injectablesByDescriptor.get(null).contains(injectable)) {
-      throw new DuplicateBeanException(TypeUtils.getRawType(injectable.getType(), null), injectable);
+      throw new DuplicateInjectableException(TypeUtils.getRawType(injectable.getType(), null), injectable);
     }
   }
 

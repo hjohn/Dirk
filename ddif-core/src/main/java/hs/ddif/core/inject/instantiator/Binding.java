@@ -78,7 +78,7 @@ public interface Binding {
    *
    * @param instantiator an {@link Instantiator} for creating further dependencies, cannot be null
    * @return the current value of this binding, can be null
-   * @throws BeanResolutionException when a bean could not be found
+   * @throws BeanResolutionException when an instance could not be found or created
    */
   Object getValue(Instantiator instantiator) throws BeanResolutionException;
 }

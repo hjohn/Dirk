@@ -191,26 +191,26 @@ public class Instantiator {
 
   private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters, ScopeResolver scopeResolver) throws InstantiationException, OutOfScopeException {
     if(scopeResolver != null) {
-      T bean = scopeResolver.get(injectable.getType());
+      T instance = scopeResolver.get(injectable.getType());
 
-      if(bean != null) {
-        return bean;
+      if(instance != null) {
+        return instance;
       }
     }
 
     @SuppressWarnings("unchecked")
-    T bean = (T)injectable.getInstance(this, namedParameters);
+    T instance = (T)injectable.getInstance(this, namedParameters);
 
-    if(bean != null && scopeResolver != null) {
+    if(instance != null && scopeResolver != null) {
 
       /*
        * Store the result if scoped.
        */
 
-      scopeResolver.put(injectable.getType(), bean);
+      scopeResolver.put(injectable.getType(), instance);
     }
 
-    return bean;
+    return instance;
   }
 
   private ScopeResolver findScopeResolver(ResolvableInjectable injectable) {
