@@ -2,9 +2,10 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Parameter;
 import hs.ddif.annotations.Producer;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.inject.instantiator.InstantiationException;
+import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.inject.store.BindingException;
+
+import java.util.NoSuchElementException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -21,17 +22,18 @@ public class ProducerAssistedInjectionTest {
   private Injector injector = new Injector();
 
   @Test
-  public void shouldAcceptProducerInterface() throws BeanResolutionException {
+  public void shouldAcceptProducerInterface() {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestAssistedSample.class);
 
       assertThatThrownBy(() -> injector.getInstance(TestAssistedSample.class))
-        .isInstanceOf(BeanResolutionException.class)
-        .hasMessage("No such bean: class hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedSample")
+        .isExactlyInstanceOf(InstanceCreationException.class)
+        .hasMessage("Exception while injecting: public java.lang.Integer hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedSample.interval")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isInstanceOf(InstantiationException.class)
-        .hasMessage("Exception while injecting: public java.lang.Integer hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedSample.interval");
+        .isExactlyInstanceOf(NoSuchElementException.class)
+        .hasMessage("Parameter 'interval' was not supplied")
+        .hasNoCause();
 
       TestAssistedSampleFactory factory = injector.getInstance(TestAssistedSampleFactory.class);
 
@@ -46,17 +48,18 @@ public class ProducerAssistedInjectionTest {
   }
 
   @Test
-  public void shouldAcceptProducerAbstractClass() throws BeanResolutionException {
+  public void shouldAcceptProducerAbstractClass() {
     injector.register(ValueSupplier.class);
     injector.register(TestService.class);
     injector.register(TestAssistedAbstractSample.class);
 
     assertThatThrownBy(() -> injector.getInstance(TestAssistedAbstractSample.class))
-      .isInstanceOf(BeanResolutionException.class)
-      .hasMessage("No such bean: class hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedAbstractSample")
+      .isExactlyInstanceOf(InstanceCreationException.class)
+      .hasMessage("Exception while injecting: public java.lang.Double hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedAbstractSample.factor")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isInstanceOf(InstantiationException.class)
-      .hasMessage("Exception while injecting: public java.lang.Double hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedAbstractSample.factor");
+      .isExactlyInstanceOf(NoSuchElementException.class)
+      .hasMessage("Parameter 'factor' was not supplied")
+      .hasNoCause();
 
     TestAssistedAbstractSampleFactory factory = injector.getInstance(TestAssistedAbstractSampleFactory.class);
 
@@ -210,7 +213,7 @@ public class ProducerAssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptProducerWhichNeedsNoFurtherConstruction() throws BeanResolutionException {
+  public void registerShouldAcceptProducerWhichNeedsNoFurtherConstruction() {
     injector.register(TestTargetWithAutonomousProducer.class);
 
     AutonomousProducer producer = injector.getInstance(AutonomousProducer.class);
@@ -237,7 +240,7 @@ public class ProducerAssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptAbstractProducerWithNoParametersWhichNeedsNoFurtherConstruction() throws BeanResolutionException {
+  public void registerShouldAcceptAbstractProducerWithNoParametersWhichNeedsNoFurtherConstruction() {
     injector.register(TestTargetWithAbstactProducerAndNoParameters.class);
 
     AbstractProducerWithNoParameters producer = injector.getInstance(AbstractProducerWithNoParameters.class);
@@ -262,7 +265,7 @@ public class ProducerAssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptInterfaceProducerWithNoParametersWhichNeedsNoFurtherConstruction() throws BeanResolutionException {
+  public void registerShouldAcceptInterfaceProducerWithNoParametersWhichNeedsNoFurtherConstruction() {
     injector.register(TestTargetWithInterfaceProducerAndNoParameters.class);
 
     InterfaceProducerWithNoParameters producer = injector.getInstance(InterfaceProducerWithNoParameters.class);

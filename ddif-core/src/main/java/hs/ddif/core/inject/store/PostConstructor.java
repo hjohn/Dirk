@@ -1,6 +1,6 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.inject.instantiator.InstantiationException;
+import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -34,14 +34,14 @@ class PostConstructor {
     this.postConstructMethods = methods;
   }
 
-  void call(Object instance) throws InstantiationException {
+  void call(Object instance) throws InstanceCreationFailure {
     for(Method method : postConstructMethods) {
       try {
         method.setAccessible(true);
         method.invoke(instance);
       }
       catch(Exception e) {
-        throw new InstantiationException(method, "Exception in PostConstruct call", e);
+        throw new InstanceCreationFailure(method, "Exception in PostConstruct call", e);
       }
     }
   }

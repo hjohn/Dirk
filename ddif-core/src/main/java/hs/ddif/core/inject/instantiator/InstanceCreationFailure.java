@@ -1,5 +1,7 @@
 package hs.ddif.core.inject.instantiator;
 
+import hs.ddif.core.api.InstanceCreationException;
+
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 
@@ -11,7 +13,7 @@ import javax.annotation.PostConstruct;
  * which trigger further dependency construction which eventually need
  * the current object under construction (causing a loop) and so on.
  */
-public class InstantiationException extends Exception {
+public class InstanceCreationFailure extends InstanceResolutionFailure {
 
   /**
    * Constructs a new instance.
@@ -20,7 +22,7 @@ public class InstantiationException extends Exception {
    * @param message a message
    * @param cause a {@link Throwable} to use as cause
    */
-  public InstantiationException(AccessibleObject accessibleObject, String message, Throwable cause) {
+  public InstanceCreationFailure(AccessibleObject accessibleObject, String message, Throwable cause) {
     super(message + ": " + accessibleObject, cause);
   }
 
@@ -30,7 +32,7 @@ public class InstantiationException extends Exception {
    * @param accessibleObject the constructor, method or field involved, cannot be null
    * @param message a message
    */
-  public InstantiationException(AccessibleObject accessibleObject, String message) {
+  public InstanceCreationFailure(AccessibleObject accessibleObject, String message) {
     super(message + ": " + accessibleObject);
   }
 
@@ -41,7 +43,7 @@ public class InstantiationException extends Exception {
    * @param message a message
    * @param cause a {@link Throwable} to use as cause
    */
-  public InstantiationException(Type type, String message, Throwable cause) {
+  public InstanceCreationFailure(Type type, String message, Throwable cause) {
     super(message + ": " + type, cause);
   }
 
@@ -51,7 +53,12 @@ public class InstantiationException extends Exception {
    * @param type type involved, cannot be null
    * @param message a message
    */
-  public InstantiationException(Type type, String message) {
+  public InstanceCreationFailure(Type type, String message) {
     super(message + ": " + type);
+  }
+
+  @Override
+  public InstanceCreationException toRuntimeException() {
+    return new InstanceCreationException(getMessage(), getCause());
   }
 }

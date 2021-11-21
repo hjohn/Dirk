@@ -26,7 +26,7 @@ public interface Gatherer {
    *
    * @param type a {@link Type}, cannot be {@code null}
    * @return a fully expanded set of injectables, never {@code null} or empty and never contains {@code null}
-   * @throws DiscoveryException when the given type cannot be converted into a suitable injectable
+   * @throws DiscoveryFailure when the given type cannot be converted into a suitable injectable
    */
-  Set<ResolvableInjectable> gather(Type type) throws DiscoveryException;
+  Set<ResolvableInjectable> gather(Type type) throws DiscoveryFailure;
 }

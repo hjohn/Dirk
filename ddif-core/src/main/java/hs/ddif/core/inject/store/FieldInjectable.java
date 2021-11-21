@@ -2,7 +2,7 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.instantiator.Binding;
-import hs.ddif.core.inject.instantiator.InstantiationException;
+import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
@@ -74,15 +74,15 @@ public class FieldInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstantiationException {
+  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure {
     if(parameters.length > 0) {
-      throw new InstantiationException(field, "Superflous parameters supplied, none expected for producer field but got: " + Arrays.toString(parameters));
+      throw new InstanceCreationFailure(field, "Superflous parameters supplied, none expected for producer field but got: " + Arrays.toString(parameters));
     }
 
     return constructInstance(instantiator);
   }
 
-  private Object constructInstance(Instantiator instantiator) throws InstantiationException {
+  private Object constructInstance(Instantiator instantiator) throws InstanceCreationFailure {
     try {
       boolean isStatic = Modifier.isStatic(field.getModifiers());
       Object obj = isStatic ? null : instantiator.getInstance(ownerType);
@@ -92,7 +92,7 @@ public class FieldInjectable implements ResolvableInjectable {
       return field.get(obj);
     }
     catch(Exception e) {
-      throw new InstantiationException(field, "Exception while constructing instance via Producer", e);
+      throw new InstanceCreationFailure(field, "Exception while constructing instance via Producer", e);
     }
   }
 

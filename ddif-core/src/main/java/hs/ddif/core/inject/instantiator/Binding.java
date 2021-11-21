@@ -48,7 +48,7 @@ public interface Binding {
    * Returns the current value of this binding.<p>
    *
    * If <code>null</code> is returned, any default value should be left intact (only relevant
-   * for field injection).  Whether <code>null</code> can be returned (as opposed to a {@link BeanResolutionException})
+   * for field injection).  Whether <code>null</code> can be returned (as opposed to a {@link InstanceCreationFailure})
    * is determined by the presence of a <code>Nullable</code> annotation at the injection site.<p>
    *
    * Bindings determine how and when they return <code>null</code>.  For a List or Set binding for
@@ -78,7 +78,7 @@ public interface Binding {
    *
    * @param instantiator an {@link Instantiator} for creating further dependencies, cannot be null
    * @return the current value of this binding, can be null
-   * @throws BeanResolutionException when an instance could not be found or created
+   * @throws InstanceCreationFailure when an instance could not be found or created
    */
-  Object getValue(Instantiator instantiator) throws BeanResolutionException;
+  Object getValue(Instantiator instantiator) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance;
 }

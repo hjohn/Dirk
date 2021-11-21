@@ -2,7 +2,6 @@ package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableDependency;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableInjectAnnotatedDependency;
@@ -19,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class PluginManagerRegistrationTest {
 
   @Test
-  public void shouldLoadWithAutoDiscovery() throws BeanResolutionException {
+  public void shouldLoadWithAutoDiscovery() {
     Injector injector = new Injector(true);
 
     injector.registerInstance("{jsonconfig}", AnnotationDescriptor.named("configuration"));
@@ -34,13 +33,14 @@ public class PluginManagerRegistrationTest {
   }
 
   @Test
-  public void shouldLoadWithoutAutoDiscovery() throws BeanResolutionException {
+  public void shouldLoadWithoutAutoDiscovery() {
     Injector injector = new Injector(false);
 
     injector.registerInstance("{jsonconfig}", AnnotationDescriptor.named("configuration"));
 
     assertThatThrownBy(() -> ComponentScanner.scan(injector.getCandidateRegistry(), "hs.ddif.plugins.test.project"))
-      .isInstanceOf(UnresolvableDependencyException.class);
+      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .hasNoCause();
 
     injector.register(TestAutoDiscoverableDependency.class);
 
