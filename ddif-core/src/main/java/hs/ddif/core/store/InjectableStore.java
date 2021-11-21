@@ -126,10 +126,6 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
   }
 
-  public synchronized boolean contains(Class<?> concreteClass) {
-    return injectablesByDescriptorByType.containsKey(concreteClass);
-  }
-
   public synchronized boolean contains(Type type, Object... criteria) {
     Class<?> cls = TypeUtils.getRawType(type, null);
     Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
