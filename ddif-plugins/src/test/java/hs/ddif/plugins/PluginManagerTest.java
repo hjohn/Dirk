@@ -66,7 +66,7 @@ public class PluginManagerTest {
     assertNotNull(bean1);
     assertThat(bean1.getTextProviders()).isEmpty();
 
-    injector.register(TextStyler.class);  // not part of plugin, so needs to be registered seperate -- don't want it part of plugin either as then plugin would be unable to unload itself
+    injector.register(TextStyler.class);  // not part of plugin, so needs to be registered separate -- don't want it part of plugin either as then plugin would be unable to unload itself
 
     Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);
 
@@ -102,7 +102,7 @@ public class PluginManagerTest {
   public void shouldLoadPluginAgainAfterUnload() throws BeanResolutionException {
     assertThrows(BeanResolutionException.class, () -> injector.getInstance(Database.class));
 
-    injector.register(TextStyler.class);  // not part of plugin, so needs to be registered seperate -- don't want it part of plugin either as then plugin would be unable to unload itself
+    injector.register(TextStyler.class);  // not part of plugin, so needs to be registered separate -- don't want it part of plugin either as then plugin would be unable to unload itself
 
     Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);
 
@@ -131,7 +131,7 @@ public class PluginManagerTest {
   @Test
   public void shouldNotLoadPluginWhenLoadingWouldViolateSingularDependencies() {
     injector.register(DatabaseBean.class);  // Provides Database
-    injector.register(BeanWithDatabase.class);  // Requires an unambigious Database dependency
+    injector.register(BeanWithDatabase.class);  // Requires an unambiguous Database dependency
 
     assertThrows(ViolatesSingularDependencyException.class, () -> pluginManager.loadPlugin(PLUGIN_URL));  // Provides Database as well, but fails as BeanWithDatabase's dependency would become ambigious
   }
@@ -139,7 +139,7 @@ public class PluginManagerTest {
   @Test
   public void shouldLoadPluginAfterFixingSingularDependencyViolations() throws BeanResolutionException {
     injector.register(DatabaseBean.class);
-    injector.register(BeanWithDatabase.class);  // Requires an unambigious Database dependency
+    injector.register(BeanWithDatabase.class);  // Requires an unambiguous Database dependency
 
     try {
       pluginManager.loadPlugin(PLUGIN_URL);
@@ -148,19 +148,19 @@ public class PluginManagerTest {
     catch(ViolatesSingularDependencyException e) {
     }
 
-    injector.remove(BeanWithDatabase.class);  // Removes the requirement on an unambigious Database
+    injector.remove(BeanWithDatabase.class);  // Removes the requirement on an unambiguous Database
 
     pluginManager.loadPlugin(PLUGIN_URL);  // Plugin now loads
 
     try {
-      injector.register(BeanWithDatabase.class);  // Fails, requires an unambigious Database dependency
+      injector.register(BeanWithDatabase.class);  // Fails, requires an unambiguous Database dependency
       fail();
     }
     catch(UnresolvableDependencyException e) {
     }
 
     injector.remove(DatabaseBean.class);  // Removes one of the Database beans
-    injector.register(BeanWithDatabase.class);  // Succeeds, requires an unambigious Database dependency
+    injector.register(BeanWithDatabase.class);  // Succeeds, requires an unambiguous Database dependency
 
     assertNotNull(injector.getInstance(BeanWithDatabase.class));
   }

@@ -42,7 +42,7 @@ public class ClassInjectable implements ResolvableInjectable {
   /**
    * When true, the object is currently being constructed.  This is used to
    * detect loops in {@link PostConstruct} annotated methods, where another
-   * depedency is created that depends on this object, which isn't fully
+   * dependency is created that depends on this object, which isn't fully
    * constructed yet (and thus not yet available as dependency, triggering
    * another creation).
    */
