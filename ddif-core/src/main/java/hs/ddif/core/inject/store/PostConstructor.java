@@ -12,24 +12,23 @@ import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
 class PostConstructor {
+  private static final Comparator<Method> CLASS_HIERARCHY_COMPARATOR = (a, b) -> {
+    if(a.getDeclaringClass().isAssignableFrom(b.getDeclaringClass())) {
+      return -1;
+    }
+    else if(b.getDeclaringClass().isAssignableFrom(a.getDeclaringClass())) {
+      return 1;
+    }
+
+    return 0;
+  };
+
   private final List<Method> postConstructMethods;
 
   PostConstructor(Class<?> cls) {
     List<Method> methods = MethodUtils.getMethodsListWithAnnotation(cls, PostConstruct.class, true, true);
 
-    Collections.sort(methods, new Comparator<Method>() {
-      @Override
-      public int compare(Method a, Method b) {
-        if(a.getDeclaringClass().isAssignableFrom(b.getDeclaringClass())) {
-          return -1;
-        }
-        else if(b.getDeclaringClass().isAssignableFrom(a.getDeclaringClass())) {
-          return 1;
-        }
-
-        return 0;
-      }
-    });
+    Collections.sort(methods, CLASS_HIERARCHY_COMPARATOR);
 
     this.postConstructMethods = methods;
   }
