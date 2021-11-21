@@ -37,10 +37,18 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   private final StoreConsistencyPolicy<T> policy;
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param policy a {@link StoreConsistencyPolicy} to enforce invariants, can be null
+   */
   public InjectableStore(StoreConsistencyPolicy<T> policy) {
     this.policy = policy == null ? new NoStoreConsistencyPolicy() : policy;
   }
 
+  /**
+   * Constructs a new instance.
+   */
   public InjectableStore() {
     this(null);
   }

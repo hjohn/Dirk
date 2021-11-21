@@ -31,7 +31,7 @@ import javax.inject.Provider;
  *
  * The potential candidates for injection can be registered with the injector in various ways,
  * for example by providing classes or existing instances. These candidates are called "injectables".
- * In order to succesfully register an injectable, all its dependencies must be met as well, and all
+ * In order to successfully register an injectable, all its dependencies must be met as well, and all
  * dependencies it provides must not conflict with any injectables already registered. If a conflict
  * or cycle is detected registering will throw an exception.<p>
  *
@@ -40,10 +40,10 @@ import javax.inject.Provider;
  *
  * <ul>
  * <li>Removing class B; this would make construction of A impossible as B is a requirement.</li>
- * <li>Registering a subclass of B; this would make construction of A ambigious as there are two
+ * <li>Registering a subclass of B; this would make construction of A ambiguous as there are two
  *     possible injectables for the required B.</li>
  * <li>Registering a class which either provides or produces instances of B (or a subclass); again
- *     this would make construction of A ambigious.</li>
+ *     this would make construction of A ambiguous.</li>
  * </ul>
  *
  * <h2>Scoping</h2>

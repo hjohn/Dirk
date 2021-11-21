@@ -179,7 +179,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
   private void ensureRequiredBindingsAreAvailable(Resolver<T> resolver, T injectable) {
 
     /*
-     * Check the created bindings for unresolved or ambigious dependencies and scope problems:
+     * Check the created bindings for unresolved or ambiguous dependencies and scope problems:
      */
 
     for(Binding binding : injectable.getBindings()) {

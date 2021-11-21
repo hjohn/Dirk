@@ -10,11 +10,12 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Qualifier;
+import javax.inject.Scope;
 
 public class AnnotationExtractor {
 
   public static Annotation findScopeAnnotation(AnnotatedElement element) {
-    List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(element, javax.inject.Scope.class);
+    List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(element, Scope.class);
 
     if(matchingAnnotations.size() > 1) {
       throw new BindingException("Multiple scope annotations found, but only one allowed: " + element + ", found: " + matchingAnnotations);
