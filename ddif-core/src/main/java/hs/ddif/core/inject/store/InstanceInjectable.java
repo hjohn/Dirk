@@ -40,7 +40,7 @@ public class InstanceInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Object getInstance(Instantiator instantiator, NamedParameter... namedParameters) {
+  public Object createInstance(Instantiator instantiator, NamedParameter... namedParameters) {
     return instance;
   }
 

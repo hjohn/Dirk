@@ -124,7 +124,7 @@ public class ClassInjectable implements ResolvableInjectable {
   }
 
   @Override
-  public Object getInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure {
+  public Object createInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure {
     if(underConstruction.get()) {
       throw new InstanceCreationFailure(injectableType, "Already under construction (dependency creation loop in @PostConstruct method!)");
     }
