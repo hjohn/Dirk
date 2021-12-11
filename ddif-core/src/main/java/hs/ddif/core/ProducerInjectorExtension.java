@@ -67,6 +67,22 @@ public class ProducerInjectorExtension implements Injector.Extension {
         // new method is created that overrides it and when intercepted will construct
         // the type.
 
+        // TODO provide instantiator in a different way here?
+        //
+        // We're basically creating a ClassInjectable here for a factory.  The factory
+        // gets injected and has a method that has some additional required parameters.
+        // When called, this method takes the parameters and does a #getInstance call
+        // on the Instantiator.
+        //
+        // But... the factory class is just another class, albeit generated with ByteBuddy.
+        // If we generate a private field with @Inject annotation for the Instantiator, then
+        // ddif should be able to inject this, and it would then be accessible?
+        //
+        // The ClassInjectable code should see this annotation (or constructor parameter)
+        // and create a Key for it. The Injector can then provide it. As Instantiator is
+        // not always registered, we may need to do some additional trickage or always
+        // pre-register it.
+
         producerInjectable = new ClassInjectable(new ByteBuddy()
           .subclass(producer.value())
           .annotateType(AnnotationDescription.Builder.ofType(Singleton.class).build())  // It is a singleton, avoids scope problems

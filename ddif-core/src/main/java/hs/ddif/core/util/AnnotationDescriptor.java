@@ -64,7 +64,7 @@ public class AnnotationDescriptor {
   /**
    * Returns the type of the {@link Annotation}.
    *
-   * @return tyhe type of the {@link Annotation}, never null
+   * @return the type of the {@link Annotation}, never null
    */
   public Class<? extends Annotation> annotationType() {
     return annotationType;
