@@ -133,7 +133,7 @@ public class InstantiatorTest {
         .hasMessage("No such instance: class hs.ddif.core.inject.instantiator.InstantiatorTest$D")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(OutOfScopeException.class)
-        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.InstantiatorTest$TestScoped for type: class hs.ddif.core.inject.instantiator.InstantiatorTest$D")
+        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.InstantiatorTest$TestScoped for key: Injectable-Class(class hs.ddif.core.inject.instantiator.InstantiatorTest$D)")
         .hasNoCause();
     }
 

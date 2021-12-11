@@ -118,7 +118,7 @@ public class Instantiator {
     for(ResolvableInjectable injectable : store.resolve(type, criteria)) {
       ScopeResolver scopeResolver = findScopeResolver(injectable);
 
-      if(scopeResolver == null || scopeResolver.isScopeActive(injectable.getType())) {
+      if(scopeResolver == null || scopeResolver.isScopeActive(injectable)) {
         try {
           T instance = getInstance(injectable, NO_PARAMETERS, scopeResolver);
 
@@ -154,7 +154,7 @@ public class Instantiator {
 
   private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters, ScopeResolver scopeResolver) throws InstanceCreationFailure, OutOfScopeException {
     if(scopeResolver != null) {
-      T instance = scopeResolver.get(injectable.getType());
+      T instance = scopeResolver.get(injectable);
 
       if(instance != null) {
         return instance;
@@ -170,7 +170,7 @@ public class Instantiator {
        * Store the result if scoped.
        */
 
-      scopeResolver.put(injectable.getType(), instance);
+      scopeResolver.put(injectable, instance);
     }
 
     return instance;

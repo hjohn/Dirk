@@ -69,6 +69,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isA;
@@ -304,6 +305,9 @@ public class InjectorTest {
     injector.registerInstance("b");
     injector.registerInstance("c");
     injector.registerInstance("d");
+
+    assertThat(injector.getInstances(String.class))
+      .containsExactlyInAnyOrder("a", "b", "c", "d");
   }
 
   @Test

@@ -1,26 +1,26 @@
 package hs.ddif.core.scope;
 
 import hs.ddif.annotations.WeakSingleton;
+import hs.ddif.core.store.Injectable;
 import hs.ddif.core.util.InformationalWeakReference;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.WeakHashMap;
 
 public class WeakSingletonScopeResolver implements ScopeResolver {
   private static final WeakReferenceCleanupLogger cleanupLogger = new WeakReferenceCleanupLogger();
 
-  private final Map<Type, InformationalWeakReference<Object>> singletons = new WeakHashMap<>();
+  private final Map<Injectable, InformationalWeakReference<Object>> singletons = new WeakHashMap<>();
 
   @Override
-  public boolean isScopeActive(Type injectableType) {
+  public boolean isScopeActive(Injectable key) {
     return true;
   }
 
   @Override
-  public <T> T get(Type injectableType) {
-    InformationalWeakReference<Object> reference = singletons.get(injectableType);
+  public <T> T get(Injectable key) {
+    InformationalWeakReference<Object> reference = singletons.get(key);
 
     if(reference != null) {
       @SuppressWarnings("unchecked")
@@ -33,8 +33,8 @@ public class WeakSingletonScopeResolver implements ScopeResolver {
   }
 
   @Override
-  public <T> void put(Type injectableType, T instance) {
-    singletons.put(injectableType, new InformationalWeakReference<>(instance, cleanupLogger.getReferenceQueue()));
+  public <T> void put(Injectable key, T instance) {
+    singletons.put(key, new InformationalWeakReference<>(instance, cleanupLogger.getReferenceQueue()));
   }
 
   @Override
