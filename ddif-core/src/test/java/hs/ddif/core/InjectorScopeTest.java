@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.consistency.ScopeConflictException;
 import hs.ddif.core.inject.store.BindingException;
@@ -9,11 +10,13 @@ import hs.ddif.core.scope.OutOfScopeException;
 import java.lang.annotation.Annotation;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -232,6 +235,21 @@ public class InjectorScopeTest {
         return null;
       }
     }
+  }
+
+  @Test
+  public void shouldKeepSameTypesWithDifferentQualifiersSeparated() {
+    TestScopeResolver scopeResolver = new TestScopeResolver();
+    Injector injector = new Injector(scopeResolver);
+
+    injector.register(Producers.class);
+    assertThat(injector.getInstances(String.class))
+      .containsExactlyInAnyOrder("a", "b");
+  }
+
+  public static class Producers {
+    @Produces @TestScope @Named("a") static String a = "a";
+    @Produces @TestScope @Named("b") static String b = "b";
   }
 
   static class TestScopeResolver extends AbstractScopeResolver<String> {

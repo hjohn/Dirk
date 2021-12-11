@@ -1,7 +1,9 @@
 package hs.ddif.plugins;
 
 import hs.ddif.annotations.PluginScoped;
+import hs.ddif.core.inject.store.ClassInjectable;
 import hs.ddif.core.scope.OutOfScopeException;
+import hs.ddif.core.store.Injectable;
 
 import java.util.List;
 
@@ -12,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PluginScopeResolverTest {
+  private static final Injectable INJECTABLE = new ClassInjectable(String.class);
+
   private final Plugin plugin = new Plugin("name", List.of(String.class), getClass().getClassLoader());
   private final Plugin plugin2 = new Plugin("name2", List.of(String.class), getClass().getClassLoader());
   private final PluginScopeResolver resolver = new PluginScopeResolver();
@@ -23,8 +27,8 @@ public class PluginScopeResolverTest {
 
   @Test
   void shouldThrowOutOfScopeExceptionWhenNoScopeActive() {
-    assertThrows(OutOfScopeException.class, () -> resolver.get(String.class));
-    assertThrows(OutOfScopeException.class, () -> resolver.put(String.class, "Hello"));
+    assertThrows(OutOfScopeException.class, () -> resolver.get(INJECTABLE));
+    assertThrows(OutOfScopeException.class, () -> resolver.put(INJECTABLE, "Hello"));
   }
 
   @Test
@@ -58,7 +62,7 @@ public class PluginScopeResolverTest {
     class AndAnInstanceWasPut {
       {
         try {
-          resolver.put(String.class, "Hello");
+          resolver.put(INJECTABLE, "Hello");
         }
         catch(OutOfScopeException e) {
           throw new IllegalStateException(e);
@@ -67,7 +71,7 @@ public class PluginScopeResolverTest {
 
       @Test
       void shouldReturnInstance() throws OutOfScopeException {
-        assertEquals("Hello", resolver.get(String.class));
+        assertEquals("Hello", resolver.get(INJECTABLE));
       }
     }
   }

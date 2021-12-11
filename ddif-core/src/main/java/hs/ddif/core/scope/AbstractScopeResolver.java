@@ -1,6 +1,7 @@
 package hs.ddif.core.scope;
 
-import java.lang.reflect.Type;
+import hs.ddif.core.store.Injectable;
+
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -12,7 +13,7 @@ import java.util.WeakHashMap;
  * @param <S> the type of the scope discriminator object
  */
 public abstract class AbstractScopeResolver<S> implements ScopeResolver {
-  private final Map<S, Map<Type, Object>> instancesByScope = new WeakHashMap<>();
+  private final Map<S, Map<Injectable, Object>> instancesByScope = new WeakHashMap<>();
 
   /**
    * Returns the current scope, or <code>null</code> if there is no current scope.
@@ -22,23 +23,23 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   public abstract S getCurrentScope();
 
   @Override
-  public boolean isScopeActive(Type injectableType) {
+  public boolean isScopeActive(Injectable key) {
     return getCurrentScope() != null;
   }
 
   @Override
-  public <T> T get(Type injectableType) throws OutOfScopeException {
+  public <T> T get(Injectable key) throws OutOfScopeException {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
-      throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
+      throw new OutOfScopeException(key, getScopeAnnotationClass());
     }
 
-    Map<Type, Object> instances = instancesByScope.get(currentScope);
+    Map<Injectable, Object> instances = instancesByScope.get(currentScope);
 
     if(instances != null) {
       @SuppressWarnings("unchecked")
-      T instance = (T)instances.get(injectableType);
+      T instance = (T)instances.get(key);
 
       return instance;  // This may still return null
     }
@@ -47,14 +48,14 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   }
 
   @Override
-  public <T> void put(Type injectableType, T instance) throws OutOfScopeException {
+  public <T> void put(Injectable key, T instance) throws OutOfScopeException {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
-      throw new OutOfScopeException(injectableType, getScopeAnnotationClass());
+      throw new OutOfScopeException(key, getScopeAnnotationClass());
     }
 
-    instancesByScope.computeIfAbsent(currentScope, k -> new WeakHashMap<>()).put(injectableType, instance);
+    instancesByScope.computeIfAbsent(currentScope, k -> new WeakHashMap<>()).put(key, instance);
   }
 
   protected void clear() {
