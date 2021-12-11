@@ -26,7 +26,7 @@ class InjectorStressTest {
 
   @Test
   void shouldSurviveStressTest() {
-    Injector injector = new Injector();
+    Injector injector = Injectors.manual();
     actual.clear();
 
     List<Type> classes = new ArrayList<>(List.of(A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class, K.class));

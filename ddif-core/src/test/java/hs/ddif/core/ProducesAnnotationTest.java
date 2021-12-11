@@ -41,7 +41,7 @@ import io.leangen.geantyref.TypeFactory;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class ProducesAnnotationTest {
-  private Injector injector = new Injector();
+  private Injector injector = Injectors.manual();
   private Injector autoDiscoveryInjector = new Injector(true);
 
   @Test

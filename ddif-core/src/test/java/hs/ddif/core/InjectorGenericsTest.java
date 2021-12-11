@@ -24,7 +24,7 @@ public class InjectorGenericsTest {
 
   @Before
   public void before() {
-    injector = new Injector();
+    injector = Injectors.manual();
   }
 
   @Test
