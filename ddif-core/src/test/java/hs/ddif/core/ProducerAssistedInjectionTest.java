@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class ProducerAssistedInjectionTest {
-  private Injector injector = new Injector();
+  private Injector injector = Injectors.manual();
 
   @Test
   public void shouldAcceptProducerInterface() {

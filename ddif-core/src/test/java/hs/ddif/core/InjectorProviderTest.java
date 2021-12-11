@@ -39,7 +39,7 @@ public class InjectorProviderTest {
 
   @BeforeEach
   public void beforeEach() {
-    injector = new Injector();
+    injector = Injectors.manual();
   }
 
   @Test

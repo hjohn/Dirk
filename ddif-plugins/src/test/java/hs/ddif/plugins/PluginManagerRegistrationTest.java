@@ -1,6 +1,7 @@
 package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
+import hs.ddif.core.Injectors;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableDependency;
@@ -19,7 +20,7 @@ public class PluginManagerRegistrationTest {
 
   @Test
   public void shouldLoadWithAutoDiscovery() {
-    Injector injector = new Injector(true);
+    Injector injector = Injectors.autoDiscovering();
 
     injector.registerInstance("{jsonconfig}", AnnotationDescriptor.named("configuration"));
 
@@ -34,7 +35,7 @@ public class PluginManagerRegistrationTest {
 
   @Test
   public void shouldLoadWithoutAutoDiscovery() {
-    Injector injector = new Injector(false);
+    Injector injector = Injectors.manual();
 
     injector.registerInstance("{jsonconfig}", AnnotationDescriptor.named("configuration"));
 

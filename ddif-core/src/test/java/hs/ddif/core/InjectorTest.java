@@ -84,7 +84,7 @@ public class InjectorTest {
 
   @BeforeEach
   public void beforeEach() {
-    injector = new Injector();
+    injector = Injectors.manual();
 
     injector.register(SimpleBean.class);
     injector.register(BeanWithInjection.class);

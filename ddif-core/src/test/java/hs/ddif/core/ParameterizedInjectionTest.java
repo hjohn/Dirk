@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ParameterizedInjectionTest {
-  private Injector injector = new Injector();
+  private Injector injector = Injectors.manual();
 
   @Test
   void registerShouldAcceptParameterizedClass() {

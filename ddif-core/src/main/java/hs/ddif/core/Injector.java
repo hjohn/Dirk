@@ -4,9 +4,9 @@ import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.consistency.InjectorStoreConsistencyPolicy;
-import hs.ddif.core.inject.instantiator.InstantiatorBasedInstanceResolver;
 import hs.ddif.core.inject.instantiator.Gatherer;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.InstantiatorBasedInstanceResolver;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.store.InjectableStoreCandidateRegistry;
@@ -75,7 +75,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
   private final InstanceResolver instanceResolver;
   private final CandidateRegistry registry;
 
-  public Injector(boolean autoDiscovery, ScopeResolver... scopeResolvers) {
+  Injector(boolean autoDiscovery, ScopeResolver... scopeResolvers) {
     ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
     ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
     GathererExtensionAdapter adapter = new GathererExtensionAdapter(new ProducerInjectorExtension());
@@ -89,14 +89,6 @@ public class Injector implements InstanceResolver, CandidateRegistry {
     this.instanceResolver = new InstantiatorBasedInstanceResolver(instantiator);
 
     adapter.setInstantiator(instantiator);  // TODO a bit cyclical... the extension needs instantiator, instantiator needs extensions...
-  }
-
-  public Injector(ScopeResolver... scopeResolvers) {
-    this(false, scopeResolvers);
-  }
-
-  public Injector() {
-    this(false);
   }
 
   private static class GathererExtensionAdapter implements AutoDiscoveringGatherer.Extension {

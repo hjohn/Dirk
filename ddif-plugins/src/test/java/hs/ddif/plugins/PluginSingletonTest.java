@@ -1,6 +1,7 @@
 package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
+import hs.ddif.core.Injectors;
 import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.test.plugin.Database;
 
@@ -29,7 +30,7 @@ public class PluginSingletonTest {
   @Test
   public void shouldLoadAndUnloadPluginWithPluginSingleton() {
     PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
-    Injector injector = new Injector(true, pluginScopeResolver);
+    Injector injector = Injectors.autoDiscovering(pluginScopeResolver);
 
     PluginManager pluginManager = new PluginManager(injector.getCandidateRegistry(), pluginScopeResolver);
 

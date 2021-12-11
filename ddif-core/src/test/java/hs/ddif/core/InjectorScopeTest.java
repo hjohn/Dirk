@@ -31,7 +31,7 @@ public class InjectorScopeTest {
 
       scopeResolver.currentScope = null;
 
-      Injector injector = new Injector(scopeResolver);
+      Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(TestScopedBean.class);
 
@@ -43,7 +43,7 @@ public class InjectorScopeTest {
     @Test
     public void shouldKeepScopesSeparated() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
-      Injector injector = new Injector(scopeResolver);
+      Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(TestScopedBean.class);
       injector.register(SomeUserBeanWithTestScope.class);
@@ -74,7 +74,7 @@ public class InjectorScopeTest {
     @Test
     public void shouldKeepScopesSeparatedInReferences() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
-      Injector injector = new Injector(scopeResolver);
+      Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(TestScopedBean.class);
       injector.register(SomeUserBean.class);
@@ -105,7 +105,7 @@ public class InjectorScopeTest {
     @Test(expected = ScopeConflictException.class)
     public void shouldThrowExceptionWhenNarrowScopedBeansAreInjectedIntoBroaderScopedBeans() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
-      Injector injector = new Injector(scopeResolver);
+      Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(TestScopedBean.class);
       injector.register(IllegalSingletonBean.class);
@@ -114,7 +114,7 @@ public class InjectorScopeTest {
     @Test(expected = ScopeConflictException.class)
     public void shouldThrowExceptionWhenNarrowScopedBeansAreInjectedIntoBroaderScopedBeans2() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
-      Injector injector = new Injector(scopeResolver);
+      Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(UnscopedBean.class);
       injector.register(SomeUserBeanWithTestScope2.class);
@@ -123,7 +123,7 @@ public class InjectorScopeTest {
     @Test(expected = BindingException.class)
     public void shouldThrowExceptionWhenMultipleScopesDefinedOnBean() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
-      Injector injector = new Injector(scopeResolver);
+      Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(TestScopedBean.class);
       injector.register(IllegalMultiScopedBean.class);
@@ -139,7 +139,7 @@ public class InjectorScopeTest {
     // Singleton -> Singleton = OK
     @Test
     public void shouldRegisterSingletonBeanDependentOnXWhenXIsProvidedAsSingleton() {
-      Injector injector = new Injector();
+      Injector injector = Injectors.manual();
 
       injector.registerInstance(new X());
       injector.register(SingletonBeanDependentOnX.class);
@@ -148,7 +148,7 @@ public class InjectorScopeTest {
     // Prototype -> Prototype = OK
     @Test
     public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsPrototype() {
-      Injector injector = new Injector();
+      Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
       injector.register(PrototypeBeanDependantOnX.class);
@@ -157,7 +157,7 @@ public class InjectorScopeTest {
     // Prototype -> Singleton = OK
     @Test
     public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsSingleton() {
-      Injector injector = new Injector();
+      Injector injector = Injectors.manual();
 
       injector.registerInstance(new X());
       injector.register(PrototypeBeanDependantOnX.class);
@@ -166,7 +166,7 @@ public class InjectorScopeTest {
     // Singleton -> Prototype = ERROR
     @Test(expected = ScopeConflictException.class)
     public void shouldThrowExceptionWhenRegisteringSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() {
-      Injector injector = new Injector();
+      Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
       injector.register(SingletonBeanDependentOnX.class);
@@ -175,7 +175,7 @@ public class InjectorScopeTest {
     // Singleton -> Provider<Singleton> = OK
     @Test
     public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsSingleton() {
-      Injector injector = new Injector();
+      Injector injector = Injectors.manual();
 
       injector.registerInstance(new X());
       injector.register(SingletonBeanDependentOnXProvider.class);
@@ -184,7 +184,7 @@ public class InjectorScopeTest {
     // Prototype -> Provider<Prototype> = OK
     @Test
     public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsPrototype() {
-      Injector injector = new Injector();
+      Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
       injector.register(PrototypeBeanDependantOnXProvider.class);
@@ -193,7 +193,7 @@ public class InjectorScopeTest {
     // Prototype -> Provider<Singleton> = OK
     @Test
     public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsSingleton() {
-      Injector injector = new Injector();
+      Injector injector = Injectors.manual();
 
       injector.registerInstance(new X());
       injector.register(PrototypeBeanDependantOnXProvider.class);
@@ -202,7 +202,7 @@ public class InjectorScopeTest {
     // Singleton -> Provider<Prototype> = OK
     @Test
     public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsPrototype() {
-      Injector injector = new Injector();
+      Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
       injector.register(SingletonBeanDependentOnXProvider.class);
@@ -240,7 +240,7 @@ public class InjectorScopeTest {
   @Test
   public void shouldKeepSameTypesWithDifferentQualifiersSeparated() {
     TestScopeResolver scopeResolver = new TestScopeResolver();
-    Injector injector = new Injector(scopeResolver);
+    Injector injector = Injectors.manual(scopeResolver);
 
     injector.register(Producers.class);
     assertThat(injector.getInstances(String.class))
