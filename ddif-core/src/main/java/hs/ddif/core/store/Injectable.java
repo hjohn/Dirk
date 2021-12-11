@@ -12,8 +12,8 @@ import java.util.Set;
  *
  * Implementations of this interface must provide implementations of {@link Object#equals(Object)}
  * and {@link Object#hashCode()}. Two injectables are considered equal when the
- * full generic type is equal and they come from the exact same source (same class,
- * same method, same field, etc.)
+ * full generic type is equal, their qualifiers are equal and they come from the
+ * exact same source (same class, same method, same field, etc.)
  */
 public interface Injectable {
 
