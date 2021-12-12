@@ -820,4 +820,28 @@ public class InjectorTest {
 
     assertTrue(Bean3.class.isInstance(b.callProvider()));
   }
+
+  public static class BadPostConstruct {
+    @Inject Provider<BadPostConstruct> provider;
+
+    @PostConstruct
+    void postConstruct() {
+      provider.get();  // not allowed as this class is still under construction until all post constructors have finished
+    }
+  }
+
+  @Test
+  public void postConstructShouldRejectReferringToObjectUnderConstruction() {
+    injector.register(BadPostConstruct.class);
+
+    assertThatThrownBy(() -> injector.getInstance(BadPostConstruct.class))
+      .isExactlyInstanceOf(InstanceCreationException.class)
+      .hasMessage("Exception in PostConstruct call: void hs.ddif.core.InjectorTest$BadPostConstruct.postConstruct()")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(InvocationTargetException.class)
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(InstanceCreationException.class)
+      .hasMessage("Already under construction (dependency creation loop in @PostConstruct method!): class hs.ddif.core.InjectorTest$BadPostConstruct")
+      .hasNoCause();
+  }
 }
