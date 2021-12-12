@@ -15,7 +15,6 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -152,24 +151,26 @@ public class AutoDiscoveringGatherer implements Gatherer {
   private static List<Supplier<ResolvableInjectable>> autoDiscover(Resolver<ResolvableInjectable> resolver, ResolvableInjectable injectable) {
     List<Supplier<ResolvableInjectable>> suppliers = new ArrayList<>();
 
-    for(Key key : gatherKeys(injectable)) {
-      suppliers.add(() -> {
-        if(!isResolvable(resolver, key)) {
-          return attemptCreateInjectable(key);
-        }
+    for(Binding binding : injectable.getBindings()) {
+      Key key = binding.getRequiredKey();
 
-        return null;
-      });
+      if(key != null) {
+        suppliers.add(() -> {
+          if(!isResolvable(resolver, key)) {
+            try {
+              return attemptCreateInjectable(key);
+            }
+            catch(Exception e) {
+              throw new BindingException("Unable to inject: " + binding + " with: " + key, e);
+            }
+          }
+
+          return null;
+        });
+      }
     }
 
     return suppliers;
-  }
-
-  private static List<Key> gatherKeys(ResolvableInjectable injectable) {
-    return injectable.getBindings().stream()
-      .map(Binding::getRequiredKey)
-      .filter(Objects::nonNull)
-      .collect(Collectors.toList());
   }
 
   /*
