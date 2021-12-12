@@ -144,9 +144,16 @@ public class Instantiator {
     Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
 
     if(injectables.isEmpty() && autoDiscovery && criteria.length == 0) {
-      store.putAll(gatherer.gather(type));
+      Set<ResolvableInjectable> gatheredInjectables = gatherer.gather(type);
 
-      injectables = store.resolve(type, criteria);
+      try {
+        store.putAll(gatheredInjectables);
+
+        injectables = store.resolve(type, criteria);
+      }
+      catch(Exception e) {
+        throw new DiscoveryFailure(type, "Exception while adding auto discovered injectables: " + gatheredInjectables + " to injector for", e);
+      }
     }
 
     return injectables;

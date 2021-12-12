@@ -131,6 +131,9 @@ public class AutoDiscoveringGathererTest {
           .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_C")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
+          .hasMessage("Unable to inject: Field [hs.ddif.core.inject.store.AutoDiscoveringGathererTest$J hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_C.j] with: [@hs.ddif.core.test.qualifiers.Red class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$J]")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
           .hasMessage("Auto discovered class cannot be required to have qualifiers: [@hs.ddif.core.test.qualifiers.Red class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$J]")
           .hasNoCause();
       }
@@ -140,6 +143,9 @@ public class AutoDiscoveringGathererTest {
         assertThatThrownBy(() -> gatherer.gather(Bad_A.class))
           .isExactlyInstanceOf(DiscoveryFailure.class)
           .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_A")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
+          .hasMessage("Unable to inject: Field [hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_A.c] with: [class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C")
@@ -155,8 +161,8 @@ public class AutoDiscoveringGathererTest {
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("Unable to resolve 2 binding(s) while processing extensions")
-          .hasSuppressedException(new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$E"))
-          .hasSuppressedException(new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C"))
+          .hasSuppressedException(new BindingException("Unable to inject: Field [hs.ddif.core.inject.store.AutoDiscoveringGathererTest$E hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_B.e] with: [class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$E]", new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$E")))
+          .hasSuppressedException(new BindingException("Unable to inject: Field [hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_B.c] with: [class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C]", new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C")))
           .hasNoCause();
       }
     }
