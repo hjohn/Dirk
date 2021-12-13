@@ -169,7 +169,7 @@ public class Instantiator {
     }
 
     @SuppressWarnings("unchecked")
-    T instance = (T)injectable.createInstance(this, namedParameters);
+    T instance = (T)injectable.getObjectFactory().createInstance(this, namedParameters);
 
     if(instance != null && scopeResolver != null) {
 

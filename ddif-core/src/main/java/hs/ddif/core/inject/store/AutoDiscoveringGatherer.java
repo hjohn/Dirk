@@ -45,6 +45,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
   private final Resolver<ResolvableInjectable> resolver;
   private final boolean autoDiscovery;
   private final List<Extension> extensions;
+  private final ClassInjectableFactory classInjectableFactory;
 
   /**
    * Constructs a new instance.
@@ -52,11 +53,13 @@ public class AutoDiscoveringGatherer implements Gatherer {
    * @param resolver a {@link Resolver}, cannot be null
    * @param extensions a list of {@link Extension}s, cannot be null or contain null but can be empty
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
+   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be null
    */
-  public AutoDiscoveringGatherer(Resolver<ResolvableInjectable> resolver, boolean autoDiscovery, List<Extension> extensions) {
+  public AutoDiscoveringGatherer(Resolver<ResolvableInjectable> resolver, boolean autoDiscovery, List<Extension> extensions, ClassInjectableFactory classInjectableFactory) {
     this.resolver = resolver;
     this.autoDiscovery = autoDiscovery;
     this.extensions = extensions;
+    this.classInjectableFactory = classInjectableFactory;
   }
 
   @Override
@@ -67,7 +70,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
   @Override
   public Set<ResolvableInjectable> gather(Type type) throws DiscoveryFailure {
     try {
-      return new Executor(List.of(new ClassInjectable(type))).executor();
+      return new Executor(List.of(classInjectableFactory.create(type))).executor();
     }
     catch(Exception e) {
       throw new DiscoveryFailure(type, "Exception during auto discovery", e);
@@ -148,7 +151,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
     }
   }
 
-  private static List<Supplier<ResolvableInjectable>> autoDiscover(Resolver<ResolvableInjectable> resolver, ResolvableInjectable injectable) {
+  private List<Supplier<ResolvableInjectable>> autoDiscover(Resolver<ResolvableInjectable> resolver, ResolvableInjectable injectable) {
     List<Supplier<ResolvableInjectable>> suppliers = new ArrayList<>();
 
     for(Binding binding : injectable.getBindings()) {
@@ -178,12 +181,12 @@ public class AutoDiscoveringGatherer implements Gatherer {
    * fail if the type is abstract or if the key has any qualifiers as a class injectable
    * cannot have qualifiers.
    */
-  private static ResolvableInjectable attemptCreateInjectable(Key requiredKey) {
+  private ResolvableInjectable attemptCreateInjectable(Key requiredKey) {
     Type type = requiredKey.getType();
     Object[] qualifiersAsArray = requiredKey.getQualifiersAsArray();
 
     if(qualifiersAsArray.length == 0) {
-      return new ClassInjectable(type);
+      return classInjectableFactory.create(type);
     }
 
     throw new BindingException("Auto discovered class cannot be required to have qualifiers: " + requiredKey);

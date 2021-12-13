@@ -24,6 +24,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class AutoDiscoveringGathererTest {
   private final InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory();
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
 
   /*
    * Note: the produced Sets by the gatherer in these tests could be incomplete or contain multiple
@@ -34,17 +37,17 @@ public class AutoDiscoveringGathererTest {
 
   @Nested
   class When_autoDiscovery_isDisabled {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of(new ProducesGathererExtension()));
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of(new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)), classInjectableFactory);
 
     @Nested
     class And_gather_With_ResolvableInjectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(Set.of(new ClassInjectable(A.class)))).containsExactlyInAnyOrder(
-          new ClassInjectable(A.class),
-          new FieldInjectable(A.class.getDeclaredField("b"), A.class),
-          new MethodInjectable(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
-          new FieldInjectable(B.class.getDeclaredField("e"), B.class)
+        assertThat(gatherer.gather(Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(A.class),
+          fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
+          methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
+          fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class)
         );
       }
     }
@@ -54,10 +57,10 @@ public class AutoDiscoveringGathererTest {
       @Test
       void shouldFindProducedTypes() throws Exception {
         assertThat(gatherer.gather(A.class)).containsExactlyInAnyOrder(
-          new ClassInjectable(A.class),
-          new FieldInjectable(A.class.getDeclaredField("b"), A.class),
-          new MethodInjectable(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
-          new FieldInjectable(B.class.getDeclaredField("e"), B.class)
+          classInjectableFactory.create(A.class),
+          fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
+          methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
+          fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class)
         );
       }
 
@@ -75,7 +78,7 @@ public class AutoDiscoveringGathererTest {
       @Test
       void shouldNotDoDiscovery() throws DiscoveryFailure {
         assertThat(gatherer.gather(Bad_C.class)).containsExactlyInAnyOrder(
-          new ClassInjectable(Bad_C.class)
+          classInjectableFactory.create(Bad_C.class)
         );
       }
     }
@@ -84,18 +87,18 @@ public class AutoDiscoveringGathererTest {
 
   @Nested
   class When_autoDiscovery_isEnabled {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, true, List.of(new ProducesGathererExtension()));
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, true, List.of(new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)), classInjectableFactory);
 
     @Nested
     class And_gather_With_ResolvableInjectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(Set.of(new ClassInjectable(A.class)))).containsExactlyInAnyOrder(
-          new ClassInjectable(A.class),
-          new FieldInjectable(A.class.getDeclaredField("b"), A.class),
-          new ClassInjectable(D.class),
-          new MethodInjectable(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
-          new FieldInjectable(B.class.getDeclaredField("e"), B.class)
+        assertThat(gatherer.gather(Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(A.class),
+          fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
+          classInjectableFactory.create(D.class),
+          methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
+          fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class)
         );
       }
     }
@@ -105,11 +108,11 @@ public class AutoDiscoveringGathererTest {
       @Test
       void shouldDiscoverTypesAndFindProducedTypes() throws Exception {
         assertThat(gatherer.gather(A.class)).containsExactlyInAnyOrder(
-          new ClassInjectable(A.class),
-          new FieldInjectable(A.class.getDeclaredField("b"), A.class),
-          new ClassInjectable(D.class),
-          new MethodInjectable(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
-          new FieldInjectable(B.class.getDeclaredField("e"), B.class)
+          classInjectableFactory.create(A.class),
+          fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
+          classInjectableFactory.create(D.class),
+          methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
+          fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class)
         );
       }
 

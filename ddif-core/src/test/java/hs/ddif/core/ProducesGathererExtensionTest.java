@@ -2,9 +2,9 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.inject.store.ClassInjectable;
-import hs.ddif.core.inject.store.FieldInjectable;
-import hs.ddif.core.inject.store.MethodInjectable;
+import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.FieldInjectableFactory;
+import hs.ddif.core.inject.store.MethodInjectableFactory;
 
 import java.util.List;
 
@@ -13,17 +13,21 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProducesGathererExtensionTest {
-  private ProducesGathererExtension extension = new ProducesGathererExtension();
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory();
+
+  private ProducesGathererExtension extension = new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory);
 
   @Test
   void shouldFindProducesAnnotatedMethods() throws NoSuchMethodException, SecurityException, NoSuchFieldException {
-    List<ResolvableInjectable> injectables = extension.getDerived(new ClassInjectable(A.class));
+    List<ResolvableInjectable> injectables = extension.getDerived(classInjectableFactory.create(A.class));
 
     assertThat(injectables).containsExactlyInAnyOrder(
-      new MethodInjectable(A.class.getDeclaredMethod("createB"), A.class),
-      new MethodInjectable(A.class.getDeclaredMethod("createC"), A.class),
-      new FieldInjectable(A.class.getDeclaredField("d"), A.class),
-      new FieldInjectable(A.class.getDeclaredField("e"), A.class)
+      methodInjectableFactory.create(A.class.getDeclaredMethod("createB"), A.class),
+      methodInjectableFactory.create(A.class.getDeclaredMethod("createC"), A.class),
+      fieldInjectableFactory.create(A.class.getDeclaredField("d"), A.class),
+      fieldInjectableFactory.create(A.class.getDeclaredField("e"), A.class)
     );
   }
 
