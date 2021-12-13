@@ -10,7 +10,7 @@ import hs.ddif.core.inject.instantiator.MultipleInstances;
 import hs.ddif.core.inject.instantiator.NoSuchInstance;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BindingException;
-import hs.ddif.core.inject.store.ClassInjectable;
+import hs.ddif.core.inject.store.ClassInjectableFactory;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
@@ -42,7 +42,18 @@ import net.bytebuddy.matcher.ElementMatchers;
  * the {@link Producer} and {@link Parameter} annotations.
  */
 public class ProducerInjectorExtension implements Injector.Extension {
-  private static final Map<Class<?>, ClassInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
+  private static final Map<Class<?>, ResolvableInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
+
+  private final ClassInjectableFactory classInjectableFactory;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be null
+   */
+  public ProducerInjectorExtension(ClassInjectableFactory classInjectableFactory) {
+    this.classInjectableFactory = classInjectableFactory;
+  }
 
   @Override
   public List<ResolvableInjectable> getDerived(final Instantiator instantiator, final ResolvableInjectable injectable) {
@@ -52,13 +63,13 @@ public class ProducerInjectorExtension implements Injector.Extension {
       return Collections.emptyList();
     }
 
-    ClassInjectable producerInjectable = PRODUCER_INJECTABLES.get(injectable.getType());
+    ResolvableInjectable producerInjectable = PRODUCER_INJECTABLES.get(injectable.getType());
 
     if(producerInjectable == null) {
       String[] names = validateProducerAndReturnParameterNames(injectable, producer);
 
       if(names.length == 0 && !Modifier.isAbstract(producer.value().getModifiers())) {
-        producerInjectable = new ClassInjectable(producer.value());
+        producerInjectable = classInjectableFactory.create(producer.value());
       }
       else {
         // Creates a subclass of type producer.value() which will serve as a Factory
@@ -83,7 +94,7 @@ public class ProducerInjectorExtension implements Injector.Extension {
         // not always registered, we may need to do some additional trickage or always
         // pre-register it.
 
-        producerInjectable = new ClassInjectable(new ByteBuddy()
+        producerInjectable = classInjectableFactory.create(new ByteBuddy()
           .subclass(producer.value())
           .annotateType(AnnotationDescription.Builder.ofType(Singleton.class).build())  // It is a singleton, avoids scope problems
           .method(ElementMatchers.returns((Class<?>)injectable.getType()).and(ElementMatchers.isAbstract()))

@@ -5,9 +5,9 @@ import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.store.BindingException;
-import hs.ddif.core.inject.store.ClassInjectable;
-import hs.ddif.core.inject.store.InstanceInjectable;
-import hs.ddif.core.inject.store.MethodInjectable;
+import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.InstanceInjectableFactory;
+import hs.ddif.core.inject.store.MethodInjectableFactory;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
@@ -53,11 +53,15 @@ public class InstantiatorTest {
 
   private final ScopeResolver[] scopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver(), scopeResolver};
 
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory();
+
   private String currentScope;
 
   @Nested
   class WhenStoreIsEmpty {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of());
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of(), classInjectableFactory);
     private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolvers);
 
     @Test
@@ -79,22 +83,22 @@ public class InstantiatorTest {
 
   @Nested
   class WhenStoreNotEmpty {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of());
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of(), classInjectableFactory);
     private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolvers);
 
     {
       try {
-        store.put(new ClassInjectable(A.class));
-        store.put(new ClassInjectable(B.class));
-        store.put(new ClassInjectable(C.class));
-        store.put(new ClassInjectable(D.class));
-        store.put(new ClassInjectable(F.class));
-        store.put(new ClassInjectable(G.class));
-        store.put(new InstanceInjectable("red", AnnotationDescriptor.describe(Red.class)));
-        store.put(new InstanceInjectable("green", AnnotationDescriptor.named("green")));
-        store.put(new MethodInjectable(B.class.getDeclaredMethod("createH"), B.class));
-        store.put(new MethodInjectable(B.class.getDeclaredMethod("createI"), B.class));
-        store.put(new ClassInjectable(K.class));
+        store.put(classInjectableFactory.create(A.class));
+        store.put(classInjectableFactory.create(B.class));
+        store.put(classInjectableFactory.create(C.class));
+        store.put(classInjectableFactory.create(D.class));
+        store.put(classInjectableFactory.create(F.class));
+        store.put(classInjectableFactory.create(G.class));
+        store.put(instanceInjectableFactory.create("red", AnnotationDescriptor.describe(Red.class)));
+        store.put(instanceInjectableFactory.create("green", AnnotationDescriptor.named("green")));
+        store.put(methodInjectableFactory.create(B.class.getDeclaredMethod("createH"), B.class));
+        store.put(methodInjectableFactory.create(B.class.getDeclaredMethod("createI"), B.class));
+        store.put(classInjectableFactory.create(K.class));
       }
       catch(NoSuchMethodException | SecurityException e) {
         throw new IllegalStateException();
@@ -133,7 +137,7 @@ public class InstantiatorTest {
         .hasMessage("No such instance: class hs.ddif.core.inject.instantiator.InstantiatorTest$D")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(OutOfScopeException.class)
-        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.InstantiatorTest$TestScoped for key: Injectable-Class(class hs.ddif.core.inject.instantiator.InstantiatorTest$D)")
+        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.InstantiatorTest$TestScoped for key: Injectable[hs.ddif.core.inject.instantiator.InstantiatorTest$D]")
         .hasNoCause();
     }
 
@@ -207,7 +211,7 @@ public class InstantiatorTest {
 
   @Nested
   class WhenStoreEmptyAndAutoDiscoveryIsActive {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, true, List.of());
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, true, List.of(), classInjectableFactory);
     private final Instantiator instantiator = new Instantiator(store, gatherer, true, scopeResolvers);
 
     @Test

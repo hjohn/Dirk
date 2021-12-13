@@ -1,10 +1,10 @@
 package hs.ddif.core.store;
 
 import hs.ddif.core.api.Matcher;
-import hs.ddif.core.inject.store.ClassInjectable;
-import hs.ddif.core.inject.store.FieldInjectable;
-import hs.ddif.core.inject.store.InstanceInjectable;
-import hs.ddif.core.inject.store.MethodInjectable;
+import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.FieldInjectableFactory;
+import hs.ddif.core.inject.store.InstanceInjectableFactory;
+import hs.ddif.core.inject.store.MethodInjectableFactory;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;
@@ -44,6 +44,11 @@ public class InjectableStoreTest {
   @Rule @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory();
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory();
+
   private InjectableStore<Injectable> store;
 
   @Before
@@ -53,32 +58,32 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldStore() {
-    store.put(new ClassInjectable(BeanWithBigRedInjection.class));
+    store.put(classInjectableFactory.create(BeanWithBigRedInjection.class));
 
     assertThat(store.resolve(Object.class, Big.class, Red.class)).isEmpty();
 
-    store.put(new ClassInjectable(BigRedBean.class));
+    store.put(classInjectableFactory.create(BigRedBean.class));
 
     assertThat(store.resolve(Object.class, Big.class, Red.class)).hasSize(1);
   }
 
   @Test
   public void shouldNotAllowRemovingInjectablesThatWereNeverAdded() {
-    store.put(new ClassInjectable(Y.class));
+    store.put(classInjectableFactory.create(Y.class));
 
     assertThat(store.resolve(Y.class)).isNotNull();
     assertThat(store.resolve(X.class)).isNotNull();
 
-    assertThrows(NoSuchInjectableException.class, () -> store.remove(new ClassInjectable(X.class)));
+    assertThrows(NoSuchInjectableException.class, () -> store.remove(classInjectableFactory.create(X.class)));
   }
 
   @Test
   public void shouldStoreWithQualifier() {
-    store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
-    store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
-    store.put(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new InstanceInjectable("d", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new InstanceInjectable("f", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
+    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
+    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
+    store.put(instanceInjectableFactory.create("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(instanceInjectableFactory.create("d", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(instanceInjectableFactory.create("f", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
 
     assertThat(store.resolve(String.class), hasSize(5));
     assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))), hasSize(1));
@@ -90,34 +95,34 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() {
-    store.put(new InstanceInjectable(new String("a"), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
+    store.put(instanceInjectableFactory.create(new String("a"), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
 
     thrown.expect(DuplicateInjectableException.class);
-    thrown.expectMessage(" already registered for: Injectable-Instance(class java.lang.String + ");
+    thrown.expectMessage(" already registered for: Injectable[@javax.inject.Named[value=parameter-a] java.lang.String]");
 
-    store.put(new InstanceInjectable(new String("a"), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
+    store.put(instanceInjectableFactory.create(new String("a"), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
   }
 
   @Test
   public void shouldRemoveWithQualifier() {
-    store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
-    store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
-    store.put(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
+    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
+    store.put(instanceInjectableFactory.create("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
 
-    store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
-    store.remove(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
-    store.remove(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.remove(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
+    store.remove(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
+    store.remove(instanceInjectableFactory.create("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
   }
 
   private void setupStore() {
-    store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
-    store.put(new InstanceInjectable("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b")), AnnotationDescriptor.describe(Red.class)));
-    store.put(new InstanceInjectable("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(new InstanceInjectable(4L));
-    store.put(new InstanceInjectable(2));
-    store.put(new InstanceInjectable(6L, AnnotationDescriptor.describe(Red.class)));
-    store.put(new InstanceInjectable(8));
-    store.put(new InstanceInjectable(new Random()));
+    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
+    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b")), AnnotationDescriptor.describe(Red.class)));
+    store.put(instanceInjectableFactory.create("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(instanceInjectableFactory.create(4L));
+    store.put(instanceInjectableFactory.create(2));
+    store.put(instanceInjectableFactory.create(6L, AnnotationDescriptor.describe(Red.class)));
+    store.put(instanceInjectableFactory.create(8));
+    store.put(instanceInjectableFactory.create(new Random()));
   }
 
   @Test
@@ -195,8 +200,8 @@ public class InjectableStoreTest {
   @Test
   public void putShouldRejectDuplicateBeans() {
     try {
-      store.put(new ClassInjectable(A.class));
-      store.put(new ClassInjectable(A.class));
+      store.put(classInjectableFactory.create(A.class));
+      store.put(classInjectableFactory.create(A.class));
       fail();
     }
     catch(DuplicateInjectableException e) {
@@ -209,7 +214,7 @@ public class InjectableStoreTest {
   @Test
   public void putAllShouldRejectDuplicateBeans() {
     try {
-      store.putAll(List.of(new ClassInjectable(A.class), new ClassInjectable(A.class)));
+      store.putAll(List.of(classInjectableFactory.create(A.class), classInjectableFactory.create(A.class)));
       fail();
     }
     catch(DuplicateInjectableException e) {
@@ -221,8 +226,8 @@ public class InjectableStoreTest {
   @Test
   public void putAllShouldRejectDuplicateBeansWhenOnePresentAlready() {
     try {
-      store.put(new ClassInjectable(A.class));
-      store.putAll(List.of(new ClassInjectable(B.class), new ClassInjectable(A.class)));
+      store.put(classInjectableFactory.create(A.class));
+      store.putAll(List.of(classInjectableFactory.create(B.class), classInjectableFactory.create(A.class)));
       fail();
     }
     catch(DuplicateInjectableException e) {
@@ -235,7 +240,7 @@ public class InjectableStoreTest {
 
   @Test
   public void containsShouldWork() {
-    store.put(new ClassInjectable(A.class));
+    store.put(classInjectableFactory.create(A.class));
 
     assertTrue(store.contains(A.class, Big.class));
     assertTrue(store.contains(A.class, Red.class));
@@ -243,7 +248,7 @@ public class InjectableStoreTest {
     assertFalse(store.contains(B.class, Big.class, Red.class));
     assertFalse(store.contains(A.class, Small.class, Red.class));
 
-    store.put(new ClassInjectable(StringProvider.class));
+    store.put(classInjectableFactory.create(StringProvider.class));
 
     assertTrue(store.contains(TypeFactory.parameterizedClass(Provider.class, String.class)));
     assertTrue(store.contains(new TypeReference<Provider<String>>() {}.getType()));
@@ -252,11 +257,11 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldAllowRegistrationOfMethodsAndFieldsThatProvideTheExactSameType() throws Exception {
-    store.put(new FieldInjectable(P.class.getDeclaredField("a"), P.class));
-    store.put(new FieldInjectable(P.class.getDeclaredField("b"), P.class));
+    store.put(fieldInjectableFactory.create(P.class.getDeclaredField("a"), P.class));
+    store.put(fieldInjectableFactory.create(P.class.getDeclaredField("b"), P.class));
 
-    store.put(new MethodInjectable(P.class.getDeclaredMethod("a"), P.class));
-    store.put(new MethodInjectable(P.class.getDeclaredMethod("b"), P.class));
+    store.put(methodInjectableFactory.create(P.class.getDeclaredMethod("a"), P.class));
+    store.put(methodInjectableFactory.create(P.class.getDeclaredMethod("b"), P.class));
 
     assertThat(store.resolve(A.class)).hasSize(4);
   }

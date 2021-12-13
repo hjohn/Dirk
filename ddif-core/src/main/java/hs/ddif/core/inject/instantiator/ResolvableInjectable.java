@@ -1,37 +1,112 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.api.NamedParameter;
-import hs.ddif.core.store.Injectable;
+import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * An {@link Injectable} which can be resolved to an instance.
+ * An implementation of {@link DependentInjectable} which can be resolved to an
+ * instance.
  */
-public interface ResolvableInjectable extends Injectable {
+public class ResolvableInjectable implements DependentInjectable {
+  private final Type type;
+  private final Set<AnnotationDescriptor> qualifiers;
+  private final List<Binding> bindings;
+  private final Annotation scope;
+  private final Object discriminator;
+  private final ObjectFactory objectFactory;
 
   /**
-   * Creates an instance of the type provided by this {@link Injectable}.
+   * Constructs a new instance.
    *
-   * @param instantiator the {@link Instantiator} to use to resolve dependencies, cannot be null
-   * @param parameters zero or more {@link NamedParameter} required for constructing the provided instance
-   * @return an instance of the type provided by this {@link Injectable}, or <code>null</code> if it could not be provided
-   * @throws InstanceCreationFailure when instantiation of this injectable fails
+   * @param type a {@link Type}, cannot be null
+   * @param qualifiers a set of {@link AnnotationDescriptor}s, cannot be null or contain nulls, but can be empty
+   * @param bindings a list of {@link Binding}s, cannot be null or contain nulls, but can be empty
+   * @param scope a scope {@link Annotation}, can be null
+   * @param discriminator an object to serve as a discriminator for similar injectables, can be null
+   * @param objectFactory an {@link ObjectFactory}, cannot be null
    */
-  Object createInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure;
+  public ResolvableInjectable(Type type, Set<AnnotationDescriptor> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) {
+    if(type == null) {
+      throw new IllegalArgumentException("type cannot be null");
+    }
+    if(qualifiers == null) {
+      throw new IllegalArgumentException("qualifiers cannot be null");
+    }
+    if(bindings == null) {
+      throw new IllegalArgumentException("bindings cannot be null");
+    }
+    if(objectFactory == null) {
+      throw new IllegalArgumentException("objectFactory cannot be null");
+    }
+
+    this.type = type;
+    this.qualifiers = Collections.unmodifiableSet(qualifiers);
+    this.bindings = Collections.unmodifiableList(bindings);
+    this.scope = scope;
+    this.discriminator = discriminator;
+    this.objectFactory = objectFactory;
+  }
 
   /**
-   * Returns the {@link Binding}s detected.
+   * Returns an {@link ObjectFactory} for this injectable.
    *
-   * @return a list {@link Binding}s, never null, can be empty if no bindings are detected.
+   * @return an {@link ObjectFactory}, never null
    */
-  List<Binding> getBindings();
+  ObjectFactory getObjectFactory() {
+    return objectFactory;
+  }
 
-  /**
-   * Returns the scope of this {@link Injectable}.
-   *
-   * @return the scope of this {@link Injectable}, can be <code>null</code>
-   */
-  Annotation getScope();
+  @Override
+  public Type getType() {
+    return type;
+  }
+
+  @Override
+  public Set<AnnotationDescriptor> getQualifiers() {
+    return qualifiers;
+  }
+
+  @Override
+  public List<Binding> getBindings() {
+    return bindings;
+  }
+
+  @Override
+  public Annotation getScope() {
+    return scope;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(type, discriminator, getQualifiers());
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if(this == obj) {
+      return true;
+    }
+    if(obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+
+    ResolvableInjectable other = (ResolvableInjectable)obj;
+
+    return type.equals(other.type)
+      && Objects.equals(discriminator, other.discriminator)
+      && getQualifiers().equals(other.getQualifiers());
+  }
+
+  @Override
+  public String toString() {
+    return "Injectable[" + (qualifiers.isEmpty() ? "" : qualifiers.stream().map(Object::toString).collect(Collectors.joining(" ")) + " ") + type.getTypeName() + (discriminator instanceof AccessibleObject ? " <- " + discriminator : "") + "]";
+  }
 }

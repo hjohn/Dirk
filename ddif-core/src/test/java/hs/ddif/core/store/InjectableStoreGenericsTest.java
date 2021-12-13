@@ -1,8 +1,8 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.inject.store.ClassInjectable;
-import hs.ddif.core.inject.store.InstanceInjectable;
-import hs.ddif.core.inject.store.MethodInjectable;
+import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.InstanceInjectableFactory;
+import hs.ddif.core.inject.store.MethodInjectableFactory;
 import hs.ddif.core.util.TypeReference;
 
 import java.io.Serializable;
@@ -18,6 +18,10 @@ import org.junit.rules.ExpectedException;
 import static org.junit.Assert.assertTrue;
 
 public class InjectableStoreGenericsTest {
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory();
+
   private InjectableStore<Injectable> store;
 
   @Rule @SuppressWarnings("deprecation")
@@ -34,8 +38,8 @@ public class InjectableStoreGenericsTest {
    */
   @Test
   public void shouldResolveToStringWhenUsingGenerics() {
-    store.put(new ClassInjectable(String.class));   // String extends Object implements CharSequence, Serializable, Comparable<String>
-    store.put(new InstanceInjectable(Integer.MAX_VALUE));  // Integer extends Number implements Serializable, Comparable<Integer>
+    store.put(classInjectableFactory.create(String.class));   // String extends Object implements CharSequence, Serializable, Comparable<String>
+    store.put(instanceInjectableFactory.create(Integer.MAX_VALUE));  // Integer extends Number implements Serializable, Comparable<Integer>
 
     // Resolvables
     assertTrue(store.resolve(Object.class).size() == 2);
@@ -65,7 +69,7 @@ public class InjectableStoreGenericsTest {
 
   @Test
   public void shouldAcceptGenericTypesWithoutTypeVariables() {
-    store.put(new ClassInjectable(TypeUtils.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted
+    store.put(classInjectableFactory.create(TypeUtils.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted
   }
 
   /**
@@ -74,8 +78,8 @@ public class InjectableStoreGenericsTest {
    */
   @Test
   public void shouldResolveInjectablesWithMultipleGenericParameters() {
-    store.put(new ClassInjectable(OrangeToOrangeJuiceConverter.class));
-    store.put(new ClassInjectable(AppleToSlicedAppleConverter.class));
+    store.put(classInjectableFactory.create(OrangeToOrangeJuiceConverter.class));
+    store.put(classInjectableFactory.create(AppleToSlicedAppleConverter.class));
 
     assertTrue(store.resolve(OrangeToOrangeJuiceConverter.class).size() == 1);
     assertTrue(store.resolve(new TypeReference<Converter<? extends Fruit, ? extends Juice<?>>>() {}.getType()).size() == 1);
@@ -88,7 +92,7 @@ public class InjectableStoreGenericsTest {
 
   @Test
   public void shouldBeAbleToAddAndRemoveResolvedGenericInterface() throws NoSuchMethodException, SecurityException {
-    MethodInjectable injectable = new MethodInjectable(
+    Injectable injectable = methodInjectableFactory.create(
       SuppliesGenericResolvedInterface.class.getDeclaredMethod("supply"),
       SuppliesGenericResolvedInterface.class
     );

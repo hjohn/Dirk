@@ -2,7 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
-import hs.ddif.core.inject.store.MethodInjectable;
+import hs.ddif.core.inject.store.MethodInjectableFactory;
 
 import java.util.List;
 
@@ -15,6 +15,16 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * and additional injectable for the type the provider provides.
  */
 public class ProviderGathererExtension implements AutoDiscoveringGatherer.Extension {
+  private final MethodInjectableFactory methodInjectableFactory;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be null
+   */
+  public ProviderGathererExtension(MethodInjectableFactory methodInjectableFactory) {
+    this.methodInjectableFactory = methodInjectableFactory;
+  }
 
   @Override
   public List<ResolvableInjectable> getDerived(ResolvableInjectable injectable) {
@@ -22,7 +32,7 @@ public class ProviderGathererExtension implements AutoDiscoveringGatherer.Extens
 
     if(Provider.class.isAssignableFrom(cls)) {
       try {
-        return List.of(new MethodInjectable(cls.getMethod("get"), injectable.getType()));
+        return List.of(methodInjectableFactory.create(cls.getMethod("get"), injectable.getType()));
       }
       catch(NoSuchMethodException | SecurityException e) {
         throw new IllegalStateException(e);

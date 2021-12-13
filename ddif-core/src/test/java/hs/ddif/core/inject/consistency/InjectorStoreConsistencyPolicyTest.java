@@ -2,7 +2,7 @@ package hs.ddif.core.inject.consistency;
 
 import hs.ddif.core.TestScope;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.inject.store.ClassInjectable;
+import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
 
@@ -23,24 +23,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class InjectorStoreConsistencyPolicyTest {
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
+
   private InjectorStoreConsistencyPolicy<ResolvableInjectable> policy = new InjectorStoreConsistencyPolicy<>();
 
-  private ClassInjectable a = new ClassInjectable(A.class);
-  private ClassInjectable b = new ClassInjectable(B.class);
-  private ClassInjectable c = new ClassInjectable(C.class);
-  private ClassInjectable d = new ClassInjectable(D.class);
-  private ClassInjectable e = new ClassInjectable(E.class);
-  private ClassInjectable f = new ClassInjectable(F.class);
-  private ClassInjectable g = new ClassInjectable(G.class);
-  private ClassInjectable h = new ClassInjectable(H.class);
-  private ClassInjectable i = new ClassInjectable(I.class);
-  private ClassInjectable j = new ClassInjectable(J.class);
+  private ResolvableInjectable a = classInjectableFactory.create(A.class);
+  private ResolvableInjectable b = classInjectableFactory.create(B.class);
+  private ResolvableInjectable c = classInjectableFactory.create(C.class);
+  private ResolvableInjectable d = classInjectableFactory.create(D.class);
+  private ResolvableInjectable e = classInjectableFactory.create(E.class);
+  private ResolvableInjectable f = classInjectableFactory.create(F.class);
+  private ResolvableInjectable g = classInjectableFactory.create(G.class);
+  private ResolvableInjectable h = classInjectableFactory.create(H.class);
+  private ResolvableInjectable i = classInjectableFactory.create(I.class);
+  private ResolvableInjectable j = classInjectableFactory.create(J.class);
 
   private InjectableStore<ResolvableInjectable> emptyStore = new InjectableStore<>();
 
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {
-    assertThatThrownBy(() -> policy.addAll(emptyStore, Set.of(new ClassInjectable(K.class))))
+    assertThatThrownBy(() -> policy.addAll(emptyStore, Set.of(classInjectableFactory.create(K.class))))
       .isExactlyInstanceOf(UnknownScopeException.class)
       .hasNoCause();
   }

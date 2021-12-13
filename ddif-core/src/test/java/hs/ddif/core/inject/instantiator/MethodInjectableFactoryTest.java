@@ -1,9 +1,8 @@
-package hs.ddif.core.inject.store;
+package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
-import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.inject.instantiator.MultipleInstances;
-import hs.ddif.core.inject.instantiator.NoSuchInstance;
+import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.store.MethodInjectableFactory;
+import hs.ddif.core.store.Injectable;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -22,84 +21,86 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class MethodInjectableTest {
+public class MethodInjectableFactoryTest {
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
+
   @Mock private Instantiator instantiator;
 
   @Test
   void constructorShouldRejectNullMethod() {
-    assertThat(assertThrows(IllegalArgumentException.class, () -> new MethodInjectable(null, A.class)))
+    assertThat(assertThrows(IllegalArgumentException.class, () -> methodInjectableFactory.create(null, A.class)))
       .hasMessage("method cannot be null");
   }
 
   @Test
   void constructorShouldRejectNullOwnerType() {
-    assertThat(assertThrows(IllegalArgumentException.class, () -> new MethodInjectable(A.class.getDeclaredMethod("a"), null)))
+    assertThat(assertThrows(IllegalArgumentException.class, () -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), null)))
       .hasMessage("ownerType cannot be null");
   }
 
   @Test
   void constructorShouldRejectIncompatibleOwnerType() {
-    assertThat(assertThrows(IllegalArgumentException.class, () -> new MethodInjectable(A.class.getDeclaredMethod("a"), B.class)))
+    assertThat(assertThrows(IllegalArgumentException.class, () -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), B.class)))
       .hasMessageStartingWith("ownerType must be assignable to method's declaring class:");
   }
 
   @Test
   void constructorShouldRejectMethodWithUnresolvableReturnType() {
-    assertThat(assertThrows(BindingException.class, () -> new MethodInjectable(B.class.getDeclaredMethod("b"), B.class)))
+    assertThat(assertThrows(BindingException.class, () -> methodInjectableFactory.create(B.class.getDeclaredMethod("b"), B.class)))
       .hasMessageStartingWith("Method has unresolved return type:");
   }
 
   @Test
   void constructorShouldRejectMethodWithUnresolvableTypeVariables() {
-    assertThat(assertThrows(BindingException.class, () -> new MethodInjectable(B.class.getDeclaredMethod("d"), B.class)))
+    assertThat(assertThrows(BindingException.class, () -> methodInjectableFactory.create(B.class.getDeclaredMethod("d"), B.class)))
       .hasMessageStartingWith("Method has unresolved type variables:");
   }
 
   @Test
   void constructorShouldRejectVoidMethod() {
-    assertThat(assertThrows(BindingException.class, () -> new MethodInjectable(A.class.getDeclaredMethod("a"), A.class)))
+    assertThat(assertThrows(BindingException.class, () -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), A.class)))
       .hasMessageStartingWith("Method has no return type:");
   }
 
   @Test
   void constructorShouldRejectMethodAnnotatedWithInject() {
-    assertThat(assertThrows(BindingException.class, () -> new MethodInjectable(A.class.getDeclaredMethod("c"), A.class)))
+    assertThat(assertThrows(BindingException.class, () -> methodInjectableFactory.create(A.class.getDeclaredMethod("c"), A.class)))
       .hasMessageStartingWith("Method cannot be annotated with Inject:");
   }
 
   @Test
   void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
-    MethodInjectable injectable = new MethodInjectable(C.class.getMethod("b"), C.class);
+    Injectable injectable = methodInjectableFactory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
   }
 
   @Test
   void shouldReturnCorrectInjectableForNonStaticMethod() throws NoSuchMethodException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances {
-    MethodInjectable injectable = new MethodInjectable(C.class.getMethod("b"), C.class);
+    ResolvableInjectable injectable = methodInjectableFactory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
-      "Declaring Class of [public java.lang.Object hs.ddif.core.inject.store.MethodInjectableTest$B.b()]"
+      "Declaring Class of [public java.lang.Object hs.ddif.core.inject.instantiator.MethodInjectableFactoryTest$B.b()]"
     );
 
     when(instantiator.getInstance((Type)C.class)).thenReturn(new C());
 
-    assertEquals("Bye", injectable.createInstance(instantiator));
+    assertEquals("Bye", injectable.getObjectFactory().createInstance(instantiator));
   }
 
   @Test
   void shouldReturnCorrectInjectableForStaticMethod() throws NoSuchMethodException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances {
-    MethodInjectable injectable = new MethodInjectable(C.class.getMethod("e", D.class), C.class);
+    ResolvableInjectable injectable = methodInjectableFactory.create(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
-      "Parameter 0 of [public static java.lang.String hs.ddif.core.inject.store.MethodInjectableTest$C.e(hs.ddif.core.inject.store.MethodInjectableTest$D)]"
+      "Parameter 0 of [public static java.lang.String hs.ddif.core.inject.instantiator.MethodInjectableFactoryTest$C.e(hs.ddif.core.inject.instantiator.MethodInjectableFactoryTest$D)]"
     );
 
     when(instantiator.getInstance((Type)D.class)).thenReturn(new D());
 
-    assertEquals("Hello D", injectable.createInstance(instantiator));
+    assertEquals("Hello D", injectable.getObjectFactory().createInstance(instantiator));
   }
 
   static class A {

@@ -16,10 +16,22 @@ import java.util.stream.Collectors;
 public class InjectableStoreCandidateRegistry implements CandidateRegistry {
   private final InjectableStore<ResolvableInjectable> store;
   private final Gatherer gatherer;
+  private final ClassInjectableFactory classInjectableFactory;
+  private final InstanceInjectableFactory instanceInjectableFactory;
 
-  public InjectableStoreCandidateRegistry(InjectableStore<ResolvableInjectable> store, Gatherer gatherer) {
+  /**
+   * Constructs a new instance.
+   *
+   * @param store an {@link InjectableStore}, cannot be null
+   * @param gatherer a {@link Gatherer}, cannot be null
+   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be null
+   * @param instanceInjectableFactory an {@link InstanceInjectableFactory}, cannot be null
+   */
+  public InjectableStoreCandidateRegistry(InjectableStore<ResolvableInjectable> store, Gatherer gatherer, ClassInjectableFactory classInjectableFactory, InstanceInjectableFactory instanceInjectableFactory) {
     this.store = store;
     this.gatherer = gatherer;
+    this.classInjectableFactory = classInjectableFactory;
+    this.instanceInjectableFactory = instanceInjectableFactory;
   }
 
   @Override
@@ -29,32 +41,32 @@ public class InjectableStoreCandidateRegistry implements CandidateRegistry {
 
   @Override
   public void register(Type concreteType) {
-    registerInternal(List.of(new ClassInjectable(concreteType)));
+    registerInternal(List.of(classInjectableFactory.create(concreteType)));
   }
 
   @Override
   public void register(List<Type> concreteTypes) {
-    registerInternal(concreteTypes.stream().map(ClassInjectable::new).collect(Collectors.toList()));
+    registerInternal(concreteTypes.stream().map(classInjectableFactory::create).collect(Collectors.toList()));
   }
 
   @Override
   public void registerInstance(Object instance, AnnotationDescriptor... qualifiers) {
-    registerInternal(List.of(new InstanceInjectable(instance, qualifiers)));
+    registerInternal(List.of(instanceInjectableFactory.create(instance, qualifiers)));
   }
 
   @Override
   public void remove(Type concreteType) {
-    removeInternal(List.of(new ClassInjectable(concreteType)));
+    removeInternal(List.of(classInjectableFactory.create(concreteType)));
   }
 
   @Override
   public void remove(List<Type> concreteTypes) {
-    removeInternal(concreteTypes.stream().map(ClassInjectable::new).collect(Collectors.toList()));
+    removeInternal(concreteTypes.stream().map(classInjectableFactory::create).collect(Collectors.toList()));
   }
 
   @Override
   public void removeInstance(Object instance) {
-    removeInternal(List.of(new InstanceInjectable(instance)));
+    removeInternal(List.of(instanceInjectableFactory.create(instance)));
   }
 
   private void registerInternal(List<ResolvableInjectable> injectables) {

@@ -9,7 +9,11 @@ import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.InstantiatorBasedInstanceResolver;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
+import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.FieldInjectableFactory;
 import hs.ddif.core.inject.store.InjectableStoreCandidateRegistry;
+import hs.ddif.core.inject.store.InstanceInjectableFactory;
+import hs.ddif.core.inject.store.MethodInjectableFactory;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.scope.WeakSingletonScopeResolver;
@@ -74,18 +78,23 @@ public class Injector implements InstanceResolver, CandidateRegistry {
 
   private final InstanceResolver instanceResolver;
   private final CandidateRegistry registry;
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory();
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory();
 
   Injector(boolean autoDiscovery, ScopeResolver... scopeResolvers) {
     ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
     ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
-    GathererExtensionAdapter adapter = new GathererExtensionAdapter(new ProducerInjectorExtension());
+    GathererExtensionAdapter adapter = new GathererExtensionAdapter(new ProducerInjectorExtension(classInjectableFactory));
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
+    List<AutoDiscoveringGatherer.Extension> extensions = List.of(adapter, new ProviderGathererExtension(methodInjectableFactory), new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory));
 
-    Gatherer gatherer = new AutoDiscoveringGatherer(store, autoDiscovery, List.of(adapter, new ProviderGathererExtension(), new ProducesGathererExtension()));
+    Gatherer gatherer = new AutoDiscoveringGatherer(store, autoDiscovery, extensions, classInjectableFactory);
 
     Instantiator instantiator = new Instantiator(store, gatherer, autoDiscovery, extendedScopeResolvers);
 
-    this.registry = new InjectableStoreCandidateRegistry(store, gatherer);
+    this.registry = new InjectableStoreCandidateRegistry(store, gatherer, classInjectableFactory, instanceInjectableFactory);
     this.instanceResolver = new InstantiatorBasedInstanceResolver(instantiator);
 
     adapter.setInstantiator(instantiator);  // TODO a bit cyclical... the extension needs instantiator, instantiator needs extensions...
