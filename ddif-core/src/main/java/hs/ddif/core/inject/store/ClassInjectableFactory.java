@@ -30,6 +30,16 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * concrete classes.
  */
 public class ClassInjectableFactory {
+  private final ResolvableInjectableFactory factory;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
+   */
+  public ClassInjectableFactory(ResolvableInjectableFactory factory) {
+    this.factory = factory;
+  }
 
   /**
    * Creates a new {@link ResolvableInjectable} from the given {@link Type}.
@@ -81,7 +91,7 @@ public class ClassInjectableFactory {
       throw new BindingException("Multiple @Inject annotated constructors found, but only one allowed: " + injectableClass);
     }
 
-    return new ResolvableInjectable(
+    return factory.create(
       type,
       AnnotationExtractor.extractQualifiers(injectableClass),
       bindingsMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList()),

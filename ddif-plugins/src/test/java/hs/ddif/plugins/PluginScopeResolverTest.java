@@ -1,6 +1,7 @@
 package hs.ddif.plugins;
 
 import hs.ddif.annotations.PluginScoped;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.Injectable;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PluginScopeResolverTest {
-  private static final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
+  private static final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
   private static final Injectable INJECTABLE = classInjectableFactory.create(String.class);
 
   private final Plugin plugin = new Plugin("name", List.of(String.class), getClass().getClassLoader());

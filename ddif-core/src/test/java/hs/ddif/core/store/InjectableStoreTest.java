@@ -1,6 +1,7 @@
 package hs.ddif.core.store;
 
 import hs.ddif.core.api.Matcher;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.inject.store.FieldInjectableFactory;
 import hs.ddif.core.inject.store.InstanceInjectableFactory;
@@ -44,10 +45,10 @@ public class InjectableStoreTest {
   @Rule @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
-  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
-  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory();
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
 
   private InjectableStore<Injectable> store;
 

@@ -22,6 +22,16 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * owner {@link Type}.
  */
 public class FieldInjectableFactory {
+  private final ResolvableInjectableFactory factory;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
+   */
+  public FieldInjectableFactory(ResolvableInjectableFactory factory) {
+    this.factory = factory;
+  }
 
   /**
    * Creates a new {@link ResolvableInjectable}.
@@ -56,7 +66,7 @@ public class FieldInjectableFactory {
       throw new BindingException("Field cannot be annotated with Inject: " + field);
     }
 
-    return new ResolvableInjectable(
+    return factory.create(
       type,
       AnnotationExtractor.extractQualifiers(field),
       BindingProvider.ofField(field, ownerType),

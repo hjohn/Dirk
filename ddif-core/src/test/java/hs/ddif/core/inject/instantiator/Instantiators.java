@@ -10,7 +10,7 @@ import hs.ddif.core.store.InjectableStore;
 import java.util.List;
 
 public class Instantiators {
-  private static final ClassInjectableFactory FACTORY = new ClassInjectableFactory();
+  private static final ClassInjectableFactory FACTORY = new ClassInjectableFactory(ResolvableInjectable::new);
 
   public static Instantiator create(InjectableStore<ResolvableInjectable> store) {
     ScopeResolver[] scopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};

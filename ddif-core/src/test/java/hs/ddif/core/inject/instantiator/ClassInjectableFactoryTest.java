@@ -26,8 +26,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ClassInjectableFactoryTest {
-  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
-  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory();
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
 
   private InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
   private Instantiator instantiator = Instantiators.create(store);

@@ -53,9 +53,9 @@ public class InstantiatorTest {
 
   private final ScopeResolver[] scopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver(), scopeResolver};
 
-  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
-  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory();
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
 
   private String currentScope;
 

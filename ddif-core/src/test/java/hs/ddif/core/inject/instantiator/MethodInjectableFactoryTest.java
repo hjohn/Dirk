@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class MethodInjectableFactoryTest {
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
 
   @Mock private Instantiator instantiator;
 
