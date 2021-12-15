@@ -78,10 +78,10 @@ public class Injector implements InstanceResolver, CandidateRegistry {
 
   private final InstanceResolver instanceResolver;
   private final CandidateRegistry registry;
-  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory();
-  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory();
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
 
   Injector(boolean autoDiscovery, ScopeResolver... scopeResolvers) {
     ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};

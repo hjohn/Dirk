@@ -24,6 +24,16 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * owner {@link Type}.
  */
 public class MethodInjectableFactory {
+  private final ResolvableInjectableFactory factory;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
+   */
+  public MethodInjectableFactory(ResolvableInjectableFactory factory) {
+    this.factory = factory;
+  }
 
   /**
    * Creates a new {@link ResolvableInjectable}.
@@ -63,7 +73,7 @@ public class MethodInjectableFactory {
 
     List<Binding> bindings = BindingProvider.ofExecutable(method, ownerType);
 
-    return new ResolvableInjectable(
+    return factory.create(
       returnType,
       AnnotationExtractor.extractQualifiers(method),
       bindings,

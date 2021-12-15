@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class FieldInjectableFactoryTest {
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory();
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
 
   @Mock private Instantiator instantiator;
 

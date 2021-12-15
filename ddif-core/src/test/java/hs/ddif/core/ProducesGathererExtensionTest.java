@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProducesGathererExtensionTest {
-  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory();
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory();
+  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
 
   private ProducesGathererExtension extension = new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory);
 

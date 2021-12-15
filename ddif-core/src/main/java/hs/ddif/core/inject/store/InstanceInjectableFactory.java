@@ -16,6 +16,17 @@ import javax.inject.Singleton;
 public class InstanceInjectableFactory {
   private static final Annotation SINGLETON = AnnotationUtils.of(Singleton.class);
 
+  private final ResolvableInjectableFactory factory;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
+   */
+  public InstanceInjectableFactory(ResolvableInjectableFactory factory) {
+    this.factory = factory;
+  }
+
   /**
    * Creates a new {@link ResolvableInjectable}.
    *
@@ -28,7 +39,7 @@ public class InstanceInjectableFactory {
       throw new IllegalArgumentException("instance cannot be null");
     }
 
-    return new ResolvableInjectable(
+    return factory.create(
       instance.getClass(),
       Set.of(descriptors),
       List.of(),
