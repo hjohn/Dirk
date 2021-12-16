@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.scope.ScopeResolver;
 
 /**
@@ -15,7 +16,7 @@ public class Injectors {
    * @return an {@link Injector}, never null
    */
   public static Injector autoDiscovering(ScopeResolver... scopeResolvers) {
-    return new Injector(true, scopeResolvers);
+    return new Injector(ResolvableInjectable::new, true, scopeResolvers);
   }
 
   /**
@@ -26,6 +27,6 @@ public class Injectors {
    * @return an {@link Injector}, never null
    */
   public static Injector manual(ScopeResolver... scopeResolvers) {
-    return new Injector(false, scopeResolvers);
+    return new Injector(ResolvableInjectable::new, false, scopeResolvers);
   }
 }
