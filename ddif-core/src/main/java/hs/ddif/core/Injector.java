@@ -61,22 +61,6 @@ import javax.inject.Provider;
  * {@link hs.ddif.annotations.Produces} annotated methods or fields.
  */
 public class Injector implements InstanceResolver, CandidateRegistry {
-
-  /**
-   * Allows simple extensions to a {@link Injector}.
-   */
-  public interface Extension {
-
-    /**
-     * Gets zero or more {@link ResolvableInjectable}s derived from the given injectable.
-     *
-     * @param instantiator an {@link Instantiator}, never null
-     * @param injectable a {@link ResolvableInjectable}, never null
-     * @return a list of {@link ResolvableInjectable} derived from the given injectable, never null, but can be empty
-     */
-    List<ResolvableInjectable> getDerived(Instantiator instantiator, ResolvableInjectable injectable);
-  }
-
   private final InstanceResolver instanceResolver;
   private final CandidateRegistry registry;
 
@@ -88,9 +72,13 @@ public class Injector implements InstanceResolver, CandidateRegistry {
 
     ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
     ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
-    GathererExtensionAdapter adapter = new GathererExtensionAdapter(new ProducerInjectorExtension(classInjectableFactory));
+
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
-    List<AutoDiscoveringGatherer.Extension> extensions = List.of(adapter, new ProviderGathererExtension(methodInjectableFactory), new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory));
+    List<AutoDiscoveringGatherer.Extension> extensions = List.of(
+      new ProducerInjectorExtension(resolvableInjectableFactory),
+      new ProviderGathererExtension(methodInjectableFactory),
+      new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)
+    );
 
     Gatherer gatherer = new AutoDiscoveringGatherer(store, autoDiscovery, extensions, classInjectableFactory);
 
@@ -98,27 +86,6 @@ public class Injector implements InstanceResolver, CandidateRegistry {
 
     this.registry = new InjectableStoreCandidateRegistry(store, gatherer, classInjectableFactory, instanceInjectableFactory);
     this.instanceResolver = new InstantiatorBasedInstanceResolver(instantiator);
-
-    adapter.setInstantiator(instantiator);  // TODO a bit cyclical... the extension needs instantiator, instantiator needs extensions...
-  }
-
-  private static class GathererExtensionAdapter implements AutoDiscoveringGatherer.Extension {
-    private final Extension extension;
-
-    private Instantiator instantiator;
-
-    GathererExtensionAdapter(Extension extension) {
-      this.extension = extension;
-    }
-
-    void setInstantiator(Instantiator instantiator) {
-      this.instantiator = instantiator;
-    }
-
-    @Override
-    public List<ResolvableInjectable> getDerived(ResolvableInjectable injectable) {
-      return extension.getDerived(instantiator, injectable);
-    }
   }
 
   /**

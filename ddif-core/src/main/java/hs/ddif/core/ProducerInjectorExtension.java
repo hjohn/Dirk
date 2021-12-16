@@ -8,10 +8,15 @@ import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.MultipleInstances;
 import hs.ddif.core.inject.instantiator.NoSuchInstance;
+import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.inject.store.AutoDiscoveringGatherer.Extension;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.ResolvableInjectableFactory;
+import hs.ddif.core.util.AnnotationDescriptor;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -23,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
@@ -32,8 +38,11 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.annotation.AnnotationDescription;
+import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
+import net.bytebuddy.implementation.bind.annotation.FieldValue;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.matcher.ElementMatchers;
 
@@ -41,22 +50,39 @@ import net.bytebuddy.matcher.ElementMatchers;
  * An injector extension which provider support for assisted injection through
  * the {@link Producer} and {@link Parameter} annotations.
  */
-public class ProducerInjectorExtension implements Injector.Extension {
+public class ProducerInjectorExtension implements Extension {
   private static final Map<Class<?>, ResolvableInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
+  private static final String INSTANTIATOR_FIELD_NAME = "_instantiator_";
 
+  private final ResolvableInjectableFactory factory;
   private final ClassInjectableFactory classInjectableFactory;
 
   /**
    * Constructs a new instance.
    *
-   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be null
+   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
    */
-  public ProducerInjectorExtension(ClassInjectableFactory classInjectableFactory) {
-    this.classInjectableFactory = classInjectableFactory;
+  public ProducerInjectorExtension(ResolvableInjectableFactory factory) {
+    this.factory = factory;
+    this.classInjectableFactory = new ClassInjectableFactory(this::create);
+  }
+
+  private ResolvableInjectable create(Type type, Set<AnnotationDescriptor> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) {
+    return factory.create(type, qualifiers, bindings, scope, discriminator, (instantiator, parameters) -> createInstance(objectFactory, instantiator, parameters));
+  }
+
+  private static Object createInstance(ObjectFactory objectFactory, Instantiator instantiator, NamedParameter[] parameters) throws InstanceCreationFailure {
+    Object obj = objectFactory.createInstance(instantiator, parameters);
+
+    if(obj instanceof InstantiatorSetter) {
+      ((InstantiatorSetter)obj).setInstantiator(instantiator);
+    }
+
+    return obj;
   }
 
   @Override
-  public List<ResolvableInjectable> getDerived(final Instantiator instantiator, final ResolvableInjectable injectable) {
+  public List<ResolvableInjectable> getDerived(ResolvableInjectable injectable) {
     final Producer producer = (TypeUtils.getRawType(injectable.getType(), null)).getAnnotation(Producer.class);
 
     if(producer == null) {
@@ -78,27 +104,14 @@ public class ProducerInjectorExtension implements Injector.Extension {
         // new method is created that overrides it and when intercepted will construct
         // the type.
 
-        // TODO provide instantiator in a different way here?
-        //
-        // We're basically creating a ClassInjectable here for a factory.  The factory
-        // gets injected and has a method that has some additional required parameters.
-        // When called, this method takes the parameters and does a #getInstance call
-        // on the Instantiator.
-        //
-        // But... the factory class is just another class, albeit generated with ByteBuddy.
-        // If we generate a private field with @Inject annotation for the Instantiator, then
-        // ddif should be able to inject this, and it would then be accessible?
-        //
-        // The ClassInjectable code should see this annotation (or constructor parameter)
-        // and create a Key for it. The Injector can then provide it. As Instantiator is
-        // not always registered, we may need to do some additional trickage or always
-        // pre-register it.
-
         producerInjectable = classInjectableFactory.create(new ByteBuddy()
           .subclass(producer.value())
           .annotateType(AnnotationDescription.Builder.ofType(Singleton.class).build())  // It is a singleton, avoids scope problems
+          .defineField(INSTANTIATOR_FIELD_NAME, Instantiator.class, Visibility.PRIVATE)
+          .implement(InstantiatorSetter.class)
+          .intercept(FieldAccessor.ofField(INSTANTIATOR_FIELD_NAME))
           .method(ElementMatchers.returns((Class<?>)injectable.getType()).and(ElementMatchers.isAbstract()))
-          .intercept(MethodDelegation.to(new Interceptor(instantiator, injectable.getType(), names)))
+          .intercept(MethodDelegation.to(new Interceptor(injectable.getType(), names)))
           .make()
           .load(getClass().getClassLoader())
           .getLoaded()
@@ -112,22 +125,28 @@ public class ProducerInjectorExtension implements Injector.Extension {
   }
 
   /**
+   * Interface used to set the {@link Instantiator}. Internal use only, public to avoid an
+   * {@code IllegalAccessException}.
+   */
+  public interface InstantiatorSetter {
+    void setInstantiator(Instantiator instantiator);
+  }
+
+  /**
    * Interceptor for the implemented factory method. Internal use only, public to avoid an
    * {@code IllegalAccessException}.
    */
   public static class Interceptor {
-    private final Instantiator instantiator;
     private final Type type;
     private final String[] names;
 
-    Interceptor(Instantiator instantiator, Type type, String[] names) {
-      this.instantiator = instantiator;
+    Interceptor(Type type, String[] names) {
       this.type = type;
       this.names = names;
     }
 
     @RuntimeType
-    public Object intercept(@AllArguments Object[] args) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances {
+    public Object intercept(@FieldValue(INSTANTIATOR_FIELD_NAME) Instantiator instantiator, @AllArguments Object[] args) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances {
       NamedParameter[] namedParameters = new NamedParameter[args.length];
 
       for(int i = 0; i < args.length; i++) {
