@@ -37,13 +37,13 @@ public class AutoDiscoveringGathererTest {
 
   @Nested
   class When_autoDiscovery_isDisabled {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of(new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)), classInjectableFactory);
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)), classInjectableFactory);
 
     @Nested
     class And_gather_With_ResolvableInjectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(
+        assertThat(gatherer.gather(store, Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
@@ -56,7 +56,7 @@ public class AutoDiscoveringGathererTest {
     class And_gather_With_Type_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(A.class)).containsExactlyInAnyOrder(
+        assertThat(gatherer.gather(store, A.class)).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
@@ -66,7 +66,7 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldRejectTypeThatIsAbstract() {
-        assertThatThrownBy(() -> gatherer.gather(I.class))
+        assertThatThrownBy(() -> gatherer.gather(store, I.class))
           .isExactlyInstanceOf(DiscoveryFailure.class)
           .hasMessage("Exception during auto discovery: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -77,7 +77,7 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldNotDoDiscovery() throws DiscoveryFailure {
-        assertThat(gatherer.gather(Bad_C.class)).containsExactlyInAnyOrder(
+        assertThat(gatherer.gather(store, Bad_C.class)).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_C.class)
         );
       }
@@ -87,13 +87,13 @@ public class AutoDiscoveringGathererTest {
 
   @Nested
   class When_autoDiscovery_isEnabled {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, true, List.of(new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)), classInjectableFactory);
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(true, List.of(new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)), classInjectableFactory);
 
     @Nested
     class And_gather_With_ResolvableInjectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(
+        assertThat(gatherer.gather(store, Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           classInjectableFactory.create(D.class),
@@ -107,7 +107,7 @@ public class AutoDiscoveringGathererTest {
     class And_gather_With_Type_IsCalled {
       @Test
       void shouldDiscoverTypesAndFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(A.class)).containsExactlyInAnyOrder(
+        assertThat(gatherer.gather(store, A.class)).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           classInjectableFactory.create(D.class),
@@ -118,7 +118,7 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldRejectTypeThatIsAbstract() {
-        assertThatThrownBy(() -> gatherer.gather(I.class))
+        assertThatThrownBy(() -> gatherer.gather(store, I.class))
           .isExactlyInstanceOf(DiscoveryFailure.class)
           .hasMessage("Exception during auto discovery: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -129,7 +129,7 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldRejectTypeThatHasQualifiers() {
-        assertThatThrownBy(() -> gatherer.gather(Bad_C.class))
+        assertThatThrownBy(() -> gatherer.gather(store, Bad_C.class))
           .isExactlyInstanceOf(DiscoveryFailure.class)
           .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_C")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -143,7 +143,7 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldRejectTypeWithUndiscoverableDependency() {
-        assertThatThrownBy(() -> gatherer.gather(Bad_A.class))
+        assertThatThrownBy(() -> gatherer.gather(store, Bad_A.class))
           .isExactlyInstanceOf(DiscoveryFailure.class)
           .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_A")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -158,7 +158,7 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldRejectTypeWithMultipleUndiscoverableDependenciesAndUseSuppressedExceptionsForDetails() {
-        assertThatThrownBy(() -> gatherer.gather(Bad_B.class))
+        assertThatThrownBy(() -> gatherer.gather(store, Bad_B.class))
           .isExactlyInstanceOf(DiscoveryFailure.class)
           .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_B")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)

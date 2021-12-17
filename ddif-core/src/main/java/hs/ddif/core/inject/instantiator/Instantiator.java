@@ -144,7 +144,7 @@ public class Instantiator {
     Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
 
     if(injectables.isEmpty() && autoDiscovery && criteria.length == 0) {
-      Set<ResolvableInjectable> gatheredInjectables = gatherer.gather(type);
+      Set<ResolvableInjectable> gatheredInjectables = gatherer.gather(store, type);
 
       try {
         store.putAll(gatheredInjectables);

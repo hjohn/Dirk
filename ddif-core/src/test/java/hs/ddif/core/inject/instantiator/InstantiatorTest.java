@@ -61,7 +61,7 @@ public class InstantiatorTest {
 
   @Nested
   class WhenStoreIsEmpty {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of(), classInjectableFactory);
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), classInjectableFactory);
     private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolvers);
 
     @Test
@@ -83,7 +83,7 @@ public class InstantiatorTest {
 
   @Nested
   class WhenStoreNotEmpty {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of(), classInjectableFactory);
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), classInjectableFactory);
     private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolvers);
 
     {
@@ -211,7 +211,7 @@ public class InstantiatorTest {
 
   @Nested
   class WhenStoreEmptyAndAutoDiscoveryIsActive {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, true, List.of(), classInjectableFactory);
+    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(true, List.of(), classInjectableFactory);
     private final Instantiator instantiator = new Instantiator(store, gatherer, true, scopeResolvers);
 
     @Test

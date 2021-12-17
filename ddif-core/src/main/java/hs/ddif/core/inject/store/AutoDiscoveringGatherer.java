@@ -42,7 +42,6 @@ public class AutoDiscoveringGatherer implements Gatherer {
     List<ResolvableInjectable> getDerived(ResolvableInjectable injectable);
   }
 
-  private final Resolver<ResolvableInjectable> resolver;
   private final boolean autoDiscovery;
   private final List<Extension> extensions;
   private final ClassInjectableFactory classInjectableFactory;
@@ -50,27 +49,25 @@ public class AutoDiscoveringGatherer implements Gatherer {
   /**
    * Constructs a new instance.
    *
-   * @param resolver a {@link Resolver}, cannot be null
    * @param extensions a list of {@link Extension}s, cannot be null or contain null but can be empty
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
    * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be null
    */
-  public AutoDiscoveringGatherer(Resolver<ResolvableInjectable> resolver, boolean autoDiscovery, List<Extension> extensions, ClassInjectableFactory classInjectableFactory) {
-    this.resolver = resolver;
+  public AutoDiscoveringGatherer(boolean autoDiscovery, List<Extension> extensions, ClassInjectableFactory classInjectableFactory) {
     this.autoDiscovery = autoDiscovery;
     this.extensions = extensions;
     this.classInjectableFactory = classInjectableFactory;
   }
 
   @Override
-  public Set<ResolvableInjectable> gather(Collection<ResolvableInjectable> inputInjectables) {
-    return new Executor(inputInjectables).executor();
+  public Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Collection<ResolvableInjectable> inputInjectables) {
+    return new Executor(resolver, inputInjectables).executor();
   }
 
   @Override
-  public Set<ResolvableInjectable> gather(Type type) throws DiscoveryFailure {
+  public Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Type type) throws DiscoveryFailure {
     try {
-      return new Executor(List.of(classInjectableFactory.create(type))).executor();
+      return new Executor(resolver, List.of(classInjectableFactory.create(type))).executor();
     }
     catch(Exception e) {
       throw new DiscoveryFailure(type, "Exception during auto discovery", e);
@@ -79,10 +76,12 @@ public class AutoDiscoveringGatherer implements Gatherer {
 
   class Executor {
     private final InjectableStore<ResolvableInjectable> tempStore = new InjectableStore<>();
-    private final IncludingResolver includingResolver = new IncludingResolver(resolver::resolve, tempStore);
     private final Deque<Supplier<ResolvableInjectable>> suppliers = new ArrayDeque<>();
+    private final IncludingResolver includingResolver;
 
-    Executor(Collection<ResolvableInjectable> inputInjectables) {
+    Executor(Resolver<ResolvableInjectable> resolver, Collection<ResolvableInjectable> inputInjectables) {
+      this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
+
       inputInjectables.forEach(this::add);
     }
 
