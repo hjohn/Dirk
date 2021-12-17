@@ -15,7 +15,7 @@ public class Instantiators {
   public static Instantiator create(InjectableStore<ResolvableInjectable> store) {
     ScopeResolver[] scopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
 
-    AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(store, false, List.of(), FACTORY);
+    AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), FACTORY);
 
     return new Instantiator(store, gatherer, false, scopeResolvers);
   }

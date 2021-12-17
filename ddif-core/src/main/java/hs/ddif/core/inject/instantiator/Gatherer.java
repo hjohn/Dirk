@@ -1,5 +1,7 @@
 package hs.ddif.core.inject.instantiator;
 
+import hs.ddif.core.store.Resolver;
+
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Set;
@@ -16,17 +18,19 @@ public interface Gatherer {
    * Given a collection of {@link ResolvableInjectable}s, return a fully expanded
    * set of injectables.
    *
+   * @param resolver a {@link Resolver}, cannot be null
    * @param injectables a collection of {@link ResolvableInjectable}s, cannot be {@code null} or contain {@code null}
    * @return a fully expanded set of injectables, never {@code null} and never contains {@code null}
    */
-  Set<ResolvableInjectable> gather(Collection<ResolvableInjectable> injectables);
+  Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Collection<ResolvableInjectable> injectables);
 
   /**
    * Given a {@link Type}, return a fully expanded set of injectables.
    *
+   * @param resolver a {@link Resolver}, cannot be null
    * @param type a {@link Type}, cannot be {@code null}
    * @return a fully expanded set of injectables, never {@code null} or empty and never contains {@code null}
    * @throws DiscoveryFailure when the given type cannot be converted into a suitable injectable
    */
-  Set<ResolvableInjectable> gather(Type type) throws DiscoveryFailure;
+  Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Type type) throws DiscoveryFailure;
 }

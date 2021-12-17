@@ -70,10 +70,10 @@ public class InjectableStoreCandidateRegistry implements CandidateRegistry {
   }
 
   private void registerInternal(List<ResolvableInjectable> injectables) {
-    store.putAll(gatherer.gather(injectables));
+    store.putAll(gatherer.gather(store, injectables));
   }
 
   private void removeInternal(List<ResolvableInjectable> injectables) {
-    store.removeAll(gatherer.gather(injectables));
+    store.removeAll(gatherer.gather(store, injectables));
   }
 }
