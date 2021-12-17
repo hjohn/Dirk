@@ -22,7 +22,6 @@ public class Instantiator {
 
   private final InjectableStore<ResolvableInjectable> store;
   private final Gatherer gatherer;
-  private final boolean autoDiscovery;
 
   /**
    * Map containing {@link ScopeResolver}s this injector can use.
@@ -34,13 +33,11 @@ public class Instantiator {
    *
    * @param store a {@link InjectableStore}, cannot be null
    * @param gatherer a {@link Gatherer}, cannot be null
-   * @param autoDiscovery {@code true} when injectables should be discovered if missing, otherwise set to {@code false}
    * @param scopeResolvers an array of {@link ScopeResolver}s this instance should use
    */
-  public Instantiator(InjectableStore<ResolvableInjectable> store, Gatherer gatherer, boolean autoDiscovery, ScopeResolver... scopeResolvers) {
+  public Instantiator(InjectableStore<ResolvableInjectable> store, Gatherer gatherer, ScopeResolver... scopeResolvers) {
     this.store = store;
     this.gatherer = gatherer;
-    this.autoDiscovery = autoDiscovery;
 
     for(ScopeResolver scopeResolver : scopeResolvers) {
       scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
@@ -143,20 +140,24 @@ public class Instantiator {
   private Set<ResolvableInjectable> discover(Type type, Object... criteria) throws DiscoveryFailure {
     Set<ResolvableInjectable> injectables = store.resolve(type, criteria);
 
-    if(injectables.isEmpty() && autoDiscovery && criteria.length == 0) {
-      Set<ResolvableInjectable> gatheredInjectables = gatherer.gather(store, type);
-
-      try {
-        store.putAll(gatheredInjectables);
-
-        injectables = store.resolve(type, criteria);
-      }
-      catch(Exception e) {
-        throw new DiscoveryFailure(type, "Exception while adding auto discovered injectables: " + gatheredInjectables + " to injector for", e);
-      }
+    if(!injectables.isEmpty()) {
+      return injectables;
     }
 
-    return injectables;
+    Set<ResolvableInjectable> gatheredInjectables = gatherer.gather(store, type, criteria);
+
+    if(gatheredInjectables.isEmpty()) {
+      return injectables;
+    }
+
+    try {
+      store.putAll(gatheredInjectables);
+
+      return store.resolve(type, criteria);
+    }
+    catch(Exception e) {
+      throw new DiscoveryFailure(type, "Exception while adding auto discovered injectables: " + gatheredInjectables + " to injector for", e);
+    }
   }
 
   private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters, ScopeResolver scopeResolver) throws InstanceCreationFailure, OutOfScopeException {

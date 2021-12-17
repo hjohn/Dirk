@@ -55,31 +55,11 @@ public class AutoDiscoveringGathererTest {
     @Nested
     class And_gather_With_Type_IsCalled {
       @Test
-      void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(store, A.class)).containsExactlyInAnyOrder(
-          classInjectableFactory.create(A.class),
-          fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
-          methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
-          fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class)
-        );
-      }
-
-      @Test
-      void shouldRejectTypeThatIsAbstract() {
-        assertThatThrownBy(() -> gatherer.gather(store, I.class))
-          .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Exception during auto discovery: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("Type cannot be abstract: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
-          .hasNoCause();
-      }
-
-      @Test
-      void shouldNotDoDiscovery() throws DiscoveryFailure {
-        assertThat(gatherer.gather(store, Bad_C.class)).containsExactlyInAnyOrder(
-          classInjectableFactory.create(Bad_C.class)
-        );
+      void shouldAlwaysReturnEmptySet() throws DiscoveryFailure {
+        assertThat(gatherer.gather(store, A.class)).isEmpty();
+        assertThat(gatherer.gather(store, A.class, Red.class)).isEmpty();
+        assertThat(gatherer.gather(store, I.class)).isEmpty();
+        assertThat(gatherer.gather(store, Bad_C.class)).isEmpty();
       }
     }
   }
@@ -114,6 +94,18 @@ public class AutoDiscoveringGathererTest {
           methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
           fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class)
         );
+      }
+
+      @Test
+      void shouldReturnEmptySetWhenTypeUnsuitableForAutoDiscovery() throws DiscoveryFailure {
+        assertThat(gatherer.gather(store, A.class, Red.class)).isEmpty();
+      }
+
+      @Test
+      void shouldReturnEmptySetWhenTypeAlreadyResolvable() throws DiscoveryFailure {
+        store.put(classInjectableFactory.create(A.class));
+
+        assertThat(gatherer.gather(store, A.class)).isEmpty();
       }
 
       @Test

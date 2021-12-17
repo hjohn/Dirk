@@ -65,7 +65,11 @@ public class AutoDiscoveringGatherer implements Gatherer {
   }
 
   @Override
-  public Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Type type) throws DiscoveryFailure {
+  public Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Type type, Object... criteria) throws DiscoveryFailure {
+    if(!autoDiscovery || criteria.length != 0 || !resolver.resolve(type, criteria).isEmpty()) {
+      return Set.of();
+    }
+
     try {
       return new Executor(resolver, List.of(classInjectableFactory.create(type))).executor();
     }
