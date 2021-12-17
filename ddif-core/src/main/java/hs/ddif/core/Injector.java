@@ -82,7 +82,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
 
     Gatherer gatherer = new AutoDiscoveringGatherer(autoDiscovery, extensions, classInjectableFactory);
 
-    Instantiator instantiator = new Instantiator(store, gatherer, autoDiscovery, extendedScopeResolvers);
+    Instantiator instantiator = new Instantiator(store, gatherer, extendedScopeResolvers);
 
     this.registry = new InjectableStoreCandidateRegistry(store, gatherer, classInjectableFactory, instanceInjectableFactory);
     this.instanceResolver = new InstantiatorBasedInstanceResolver(instantiator);

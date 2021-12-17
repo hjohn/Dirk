@@ -16,7 +16,7 @@ public interface Gatherer {
 
   /**
    * Given a collection of {@link ResolvableInjectable}s, return a fully expanded
-   * set of injectables.
+   * set of required injectables which are not part of the given resolver yet.
    *
    * @param resolver a {@link Resolver}, cannot be null
    * @param injectables a collection of {@link ResolvableInjectable}s, cannot be {@code null} or contain {@code null}
@@ -25,12 +25,18 @@ public interface Gatherer {
   Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Collection<ResolvableInjectable> injectables);
 
   /**
-   * Given a {@link Type}, return a fully expanded set of injectables.
+   * Given a {@link Type} and a set of criteria, return a fully expanded set of
+   * required injectables which are not part of the given resolver yet.<p>
+   *
+   * Note, that if this gatherer is unable to automatically discover new
+   * injectables, or the given type is unsuitable for automatic discovery, or
+   * the type given is already resolvable then this method will return the empty set.
    *
    * @param resolver a {@link Resolver}, cannot be null
    * @param type a {@link Type}, cannot be {@code null}
-   * @return a fully expanded set of injectables, never {@code null} or empty and never contains {@code null}
+   * @param criteria optional list of criteria, see {@link hs.ddif.core.api.InstanceResolver}
+   * @return a fully expanded set of injectables, never {@code null} and never contains {@code null}, but can be empty
    * @throws DiscoveryFailure when the given type cannot be converted into a suitable injectable
    */
-  Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Type type) throws DiscoveryFailure;
+  Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Type type, Object... criteria) throws DiscoveryFailure;
 }

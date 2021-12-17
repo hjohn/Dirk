@@ -62,7 +62,7 @@ public class InstantiatorTest {
   @Nested
   class WhenStoreIsEmpty {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), classInjectableFactory);
-    private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolvers);
+    private final Instantiator instantiator = new Instantiator(store, gatherer, scopeResolvers);
 
     @Test
     void shouldThrowExceptionWhenGettingSingleInstance() {
@@ -84,7 +84,7 @@ public class InstantiatorTest {
   @Nested
   class WhenStoreNotEmpty {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), classInjectableFactory);
-    private final Instantiator instantiator = new Instantiator(store, gatherer, false, scopeResolvers);
+    private final Instantiator instantiator = new Instantiator(store, gatherer, scopeResolvers);
 
     {
       try {
@@ -212,7 +212,7 @@ public class InstantiatorTest {
   @Nested
   class WhenStoreEmptyAndAutoDiscoveryIsActive {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(true, List.of(), classInjectableFactory);
-    private final Instantiator instantiator = new Instantiator(store, gatherer, true, scopeResolvers);
+    private final Instantiator instantiator = new Instantiator(store, gatherer, scopeResolvers);
 
     @Test
     void getInstancesShouldNeverDiscoverTypes() throws InstanceCreationFailure {
