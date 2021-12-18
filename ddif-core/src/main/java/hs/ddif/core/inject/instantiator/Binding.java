@@ -1,5 +1,7 @@
 package hs.ddif.core.inject.instantiator;
 
+import hs.ddif.core.scope.OutOfScopeException;
+
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 
@@ -77,8 +79,11 @@ public interface Binding {
    * </ul>
    *
    * @param instantiator an {@link Instantiator} for creating further dependencies, cannot be null
-   * @return the current value of this binding, can be null
-   * @throws InstanceCreationFailure when an instance could not be found or created
+   * @return the current value of this binding, or {@code null} when binding unavailable and its optional
+   * @throws OutOfScopeException when out of scope
+   * @throws NoSuchInstance when no matching instance could be found or created
+   * @throws MultipleInstances when multiple matching instances were found or could be created
+   * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  Object getValue(Instantiator instantiator) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance;
+  Object getValue(Instantiator instantiator) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance, OutOfScopeException;
 }

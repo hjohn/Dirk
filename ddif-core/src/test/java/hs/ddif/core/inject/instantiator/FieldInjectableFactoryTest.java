@@ -2,6 +2,7 @@ package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.FieldInjectableFactory;
+import hs.ddif.core.scope.OutOfScopeException;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -68,7 +69,7 @@ public class FieldInjectableFactoryTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForNonStaticField() throws NoSuchFieldException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances {
+  void shouldReturnCorrectInjectableForNonStaticField() throws NoSuchFieldException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
     ResolvableInjectable injectable = fieldInjectableFactory.create(C.class.getField("b"), C.class);
 
     assertEquals(String.class, injectable.getType());

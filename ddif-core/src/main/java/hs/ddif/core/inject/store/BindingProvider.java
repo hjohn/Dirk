@@ -2,13 +2,15 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Parameter;
+import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.instantiator.Binding;
-import hs.ddif.core.inject.instantiator.InstanceResolutionFailure;
 import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
+import hs.ddif.core.inject.instantiator.InstanceResolutionFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.MultipleInstances;
 import hs.ddif.core.inject.instantiator.NoSuchInstance;
+import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
@@ -315,22 +317,20 @@ public class BindingProvider {
     }
 
     @Override
-    public Object getValue(final Instantiator instantiator) {
+    public Object getValue(final Instantiator instantiator) throws MultipleInstances, InstanceCreationFailure, OutOfScopeException {
 
       /*
        * When supplying a Provider<X>, check if such a provider is implemented by a concrete class first, otherwise
        * create one.
        */
 
-      try {
-        if(binding.getRequiredKey() != null) {
-          Type searchType = TypeFactory.parameterizedClass(Provider.class, binding.getRequiredKey().getType());
+      if(binding.getRequiredKey() != null) {
+        Type searchType = TypeFactory.parameterizedClass(Provider.class, binding.getRequiredKey().getType());
+        Object instance = instantiator.findInstance(searchType, (Object[])binding.getRequiredKey().getQualifiersAsArray());
 
-          return instantiator.getInstance(searchType, (Object[])binding.getRequiredKey().getQualifiersAsArray());
+        if(instance != null) {
+          return instance;
         }
-      }
-      catch(InstanceCreationFailure | NoSuchInstance | MultipleInstances e) {
-        // Ignore, create Provider on demand below
       }
 
       return new Provider<>() {
@@ -341,6 +341,9 @@ public class BindingProvider {
           }
           catch(InstanceResolutionFailure f) {
             throw f.toRuntimeException();
+          }
+          catch(OutOfScopeException e) {
+            throw new NoSuchInstanceException(e.getMessage(), e);
           }
         }
       };
@@ -371,14 +374,9 @@ public class BindingProvider {
     }
 
     @Override
-    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances {
+    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
       if(optional) {
-        try {
-          return instantiator.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
-        }
-        catch(InstanceCreationFailure | NoSuchInstance | MultipleInstances e) {
-          return null;
-        }
+        return instantiator.findInstance(key.getType(), (Object[])key.getQualifiersAsArray());
       }
 
       return instantiator.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());

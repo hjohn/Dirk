@@ -54,33 +54,47 @@ public class Instantiator {
    * @param criteria optional list of criteria, see {@link hs.ddif.core.api.InstanceResolver}
    * @return an instance of the given class matching the given criteria, never null
    * @throws NoSuchInstance when no matching instance could be found or created
+   * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws NoSuchInstance, MultipleInstances, InstanceCreationFailure {
+  public synchronized <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
+    T object = findParameterizedInstance(type, parameters, criteria);
+
+    if(object == null) {
+      throw new NoSuchInstance(type, criteria);
+    }
+
+    return object;
+  }
+
+  /**
+   * Finds an instance of the given type matching the given criteria (if any) in
+   * which all dependencies and parameters are injected. If not found, {@code null}
+   * is returned.
+   *
+   * @param <T> the type of the instance
+   * @param type the type of the instance required
+   * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
+   * @param criteria optional list of criteria, see {@link hs.ddif.core.api.InstanceResolver}
+   * @return an instance of the given class matching the given criteria, or {@code null} when no instance was found
+   * @throws OutOfScopeException when out of scope
+   * @throws MultipleInstances when multiple matching instances were found or could be created
+   * @throws InstanceCreationFailure when instantiation of an instance failed
+   */
+  public synchronized <T> T findParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
     Set<ResolvableInjectable> injectables = discover(type, criteria);
 
     if(injectables.isEmpty()) {
-      throw new NoSuchInstance(type, criteria);
+      return null;
     }
     if(injectables.size() > 1) {
       throw new MultipleInstances(type, criteria, injectables);
     }
 
-    try {
-      ResolvableInjectable injectable = injectables.iterator().next();
+    ResolvableInjectable injectable = injectables.iterator().next();
 
-      T instance = getInstance(injectable, parameters, findScopeResolver(injectable));
-
-      if(instance == null) {
-        throw new NoSuchInstance(type, criteria);
-      }
-
-      return instance;
-    }
-    catch(OutOfScopeException e) {
-      throw new NoSuchInstance(type, criteria, e);
-    }
+    return getInstance(injectable, parameters, findScopeResolver(injectable));
   }
 
   /**
@@ -91,12 +105,30 @@ public class Instantiator {
    * @param type the type of the instance required
    * @param criteria optional list of criteria, see {@link hs.ddif.core.api.InstanceResolver}
    * @return an instance of the given class matching the given criteria, never null
+   * @throws OutOfScopeException when out of scope
    * @throws NoSuchInstance when no matching instance could be found or created
    * @throws MultipleInstances when multiple matching instances were found or could be created
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> T getInstance(Type type, Object... criteria) throws NoSuchInstance, MultipleInstances, InstanceCreationFailure {
+  public synchronized <T> T getInstance(Type type, Object... criteria) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
     return getParameterizedInstance(type, NO_PARAMETERS, criteria);
+  }
+
+  /**
+   * Finds an instance of the given type matching the given criteria (if any) in
+   * which all dependencies are injected. If not found, {@code null}
+   * is returned.
+   *
+   * @param <T> the type of the instance
+   * @param type the type of the instance required
+   * @param criteria optional list of criteria, see {@link hs.ddif.core.api.InstanceResolver}
+   * @return an instance of the given class matching the given criteria, or {@code null} when no instance was found
+   * @throws OutOfScopeException when out of scope
+   * @throws MultipleInstances when multiple matching instances were found or could be created
+   * @throws InstanceCreationFailure when instantiation of an instance failed
+   */
+  public synchronized <T> T findInstance(Type type, Object... criteria) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
+    return findParameterizedInstance(type, NO_PARAMETERS, criteria);
   }
 
   /**

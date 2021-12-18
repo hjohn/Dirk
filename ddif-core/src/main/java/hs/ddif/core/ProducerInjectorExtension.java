@@ -14,6 +14,7 @@ import hs.ddif.core.inject.store.AutoDiscoveringGatherer.Extension;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.inject.store.ResolvableInjectableFactory;
+import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
@@ -146,7 +147,7 @@ public class ProducerInjectorExtension implements Extension {
     }
 
     @RuntimeType
-    public Object intercept(@FieldValue(INSTANTIATOR_FIELD_NAME) Instantiator instantiator, @AllArguments Object[] args) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances {
+    public Object intercept(@FieldValue(INSTANTIATOR_FIELD_NAME) Instantiator instantiator, @AllArguments Object[] args) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
       NamedParameter[] namedParameters = new NamedParameter[args.length];
 
       for(int i = 0; i < args.length; i++) {

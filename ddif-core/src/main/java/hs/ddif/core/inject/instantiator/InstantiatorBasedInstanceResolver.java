@@ -2,6 +2,8 @@ package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.api.NamedParameter;
+import hs.ddif.core.api.NoSuchInstanceException;
+import hs.ddif.core.scope.OutOfScopeException;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -32,6 +34,9 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
     catch(InstanceResolutionFailure f) {
       throw f.toRuntimeException();
     }
+    catch(OutOfScopeException e) {
+      throw new NoSuchInstanceException(e.getMessage(), e);
+    }
   }
 
   @Override
@@ -41,7 +46,7 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
 
   @Override
   public synchronized <T> T getInstance(Class<T> cls, Object... criteria) {
-    return getInstance((Type)cls, criteria);
+    return getParameterizedInstance((Type)cls, NO_PARAMETERS, criteria);
   }
 
   @Override
