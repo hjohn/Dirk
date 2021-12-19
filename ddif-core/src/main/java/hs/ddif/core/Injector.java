@@ -75,7 +75,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
 
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
     List<AutoDiscoveringGatherer.Extension> extensions = List.of(
-      new ProducerInjectorExtension(resolvableInjectableFactory),
+      new ProducerGathererExtension(resolvableInjectableFactory),
       new ProviderGathererExtension(methodInjectableFactory),
       new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)
     );
