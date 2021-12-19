@@ -51,7 +51,7 @@ import net.bytebuddy.matcher.ElementMatchers;
  * An injector extension which provider support for assisted injection through
  * the {@link Producer} and {@link Parameter} annotations.
  */
-public class ProducerInjectorExtension implements Extension {
+public class ProducerGathererExtension implements Extension {
   private static final Map<Class<?>, ResolvableInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
   private static final String INSTANTIATOR_FIELD_NAME = "_instantiator_";
 
@@ -63,7 +63,7 @@ public class ProducerInjectorExtension implements Extension {
    *
    * @param factory a {@link ResolvableInjectableFactory}, cannot be null
    */
-  public ProducerInjectorExtension(ResolvableInjectableFactory factory) {
+  public ProducerGathererExtension(ResolvableInjectableFactory factory) {
     this.factory = factory;
     this.classInjectableFactory = new ClassInjectableFactory(this::create);
   }
