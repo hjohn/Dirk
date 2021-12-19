@@ -222,10 +222,20 @@ public class InjectorTest {
     assertNotNull(instance);
     assertNotNull(instance.getUnavailableBeanProvider());
 
-    // Previously the call below would throw a BeanResolutionException (because the provider was wrapped in another provider),
-    // however, now the given provider is injected unaltered.  As it is injected as-is, there is no way to prevent
-    // it from returning null, so it returning null is the expected behaviour now.
-    assertNull(instance.getUnavailableBeanProvider().get());
+    /*
+     * Depending on how Providers are resolved, this could inject the "bad" provider
+     * directly (which can return null) or a wrapper (which can check for null).
+     *
+     * The implementation has changed to always wrap a provider, because resolving providers
+     * is very hard as searching the store for a Provider with qualifiers on its provided
+     * type is not possible.  Also see InjectorProviderTest#providersShouldRespectQualifiers
+     * comments.
+     */
+
+    assertThatThrownBy(() -> instance.getUnavailableBeanProvider().get())
+      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .hasMessage("No such instance: class hs.ddif.core.test.injectables.UnavailableBean")
+      .hasNoCause();
   }
 
   @Test

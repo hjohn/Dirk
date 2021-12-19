@@ -36,7 +36,6 @@ import javax.inject.Qualifier;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 import io.leangen.geantyref.GenericTypeReflector;
-import io.leangen.geantyref.TypeFactory;
 
 public class BindingProvider {
 
@@ -320,18 +319,20 @@ public class BindingProvider {
     public Object getValue(final Instantiator instantiator) throws MultipleInstances, InstanceCreationFailure, OutOfScopeException {
 
       /*
-       * When supplying a Provider<X>, check if such a provider is implemented by a concrete class first, otherwise
-       * create one.
+       * Although it is possible to attempt to inject an external Provider that is known, it is currently hard
+       * to find the correct instance when qualifiers on the provided type are in play. The store does not
+       * allow searching for a Provider<@Qualifier X>, and searching for @Qualifier Provider<X> (which previous
+       * implementations did) is not at all the same thing.
+       *
+       * To allow for this kind of matching one could instead look for the provided type directly, then use a
+       * custom Matcher. The Matcher interface would need to expose more information (Injectable instead of just
+       * the Class), and Injectable would have to expose its owner type. In that case a Matcher could check the
+       * method (see if it is called "get") and the owner type (see if it is a Provider).
+       *
+       * However, injecting an externally supplied Provider has one disadvantage: a badly behaving provider (which
+       * returns null) can't be prevented. The wrapper approach (which is at the moment always used) can however
+       * check for nulls and throw an exception.
        */
-
-      if(binding.getRequiredKey() != null) {
-        Type searchType = TypeFactory.parameterizedClass(Provider.class, binding.getRequiredKey().getType());
-        Object instance = instantiator.findInstance(searchType, (Object[])binding.getRequiredKey().getQualifiersAsArray());
-
-        if(instance != null) {
-          return instance;
-        }
-      }
 
       return new Provider<>() {
         @Override
