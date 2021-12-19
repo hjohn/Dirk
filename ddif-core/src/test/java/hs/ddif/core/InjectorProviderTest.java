@@ -404,6 +404,48 @@ public class InjectorProviderTest {
     assertThatThrownBy(() -> injector.getInstance(Z.class, Small.class))
       .isExactlyInstanceOf(NoSuchInstanceException.class)
       .hasNoCause();
+
+    injector.register(X.class);
+
+    X x = injector.getInstance(X.class);
+
+    /*
+     * Note, the below tests for the red and green fields could test if the injected
+     * field is an instance of A or B.  However, the injector has trouble locating
+     * these in the store as it is not (currently) possible to locate a Provider
+     * where its supplied type must have certain qualifiers (@Red/@Green).
+     *
+     * So the injector instead creates a custom Provider which, indirectly, still
+     * obtains the target type via the "get" methods of the registered Providers
+     * A and B. This extra provider wrapper is unnecessary, but should not cause
+     * inconsistencies.
+     *
+     * In the future it might be possible to instead locate the supplied type
+     * directly, then have a Matcher filter out the correct match. This would
+     * require Matcher to accept Injectable and Injectable to expose its owner type.
+     * In this way it is possible to search for a method Injectable for a "get"
+     * method and via the owner type it can be checked if it implements Provider.
+     */
+
+    assertThat(x.red).isNotNull();
+    assertThat(x.green).isNotNull();
+
+    assertThat(x.red.get().name).isEqualTo("red");
+    assertThat(x.green.get().name).isEqualTo("green");
+  }
+
+  @Test
+  public void multipleProvidersOfSameTypeShouldReturnMultipleInstances() {
+    injector.register(B.class);  // provides @Green Z("green")
+    injector.register(E.class);  // provides @Green Z("light green")
+
+    assertThat(injector.getInstances(Z.class)).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+    assertThat(injector.getInstances(new TypeReference<Provider<Z>>() {}.getType())).hasSize(2);
+
+    injector.register(W.class);
+    W w = injector.getInstance(W.class);
+
+    assertThat(List.of(w.providers.get(0).get().name, w.providers.get(1).get().name)).containsExactlyInAnyOrder("green", "light green");
   }
 
   @Test
@@ -441,7 +483,7 @@ public class InjectorProviderTest {
     @Override
     @Red
     public Z get() {
-      return new Z();
+      return new Z("red");
     }
   }
 
@@ -449,7 +491,7 @@ public class InjectorProviderTest {
     @Override
     @Green
     public Z get() {
-      return new Z();
+      return new Z("green");
     }
   }
 
@@ -458,7 +500,7 @@ public class InjectorProviderTest {
     @Big
     @Singleton
     public Z get() {
-      return new Z();
+      return new Z("big");
     }
   }
 
@@ -466,6 +508,14 @@ public class InjectorProviderTest {
     @Override
     public Y get() {
       return new Y();
+    }
+  }
+
+  public static class E implements Provider<Z> {
+    @Override
+    @Green
+    public Z get() {
+      return new Z("light green");
     }
   }
 
@@ -484,9 +534,23 @@ public class InjectorProviderTest {
     @Inject @Green Z z;
   }
 
+  public static class W {
+    @Inject List<Provider<Z>> providers;
+  }
+
+  public static class X {
+    @Inject @Red Provider<Z> red;
+    @Inject @Green Provider<Z> green;
+  }
+
   public static class Y {
   }
 
   public static class Z {
+    public final String name;
+
+    public Z(String name) {
+      this.name = name;
+    }
   }
 }
