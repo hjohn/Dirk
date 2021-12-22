@@ -4,6 +4,7 @@ import hs.ddif.core.TestScope;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.util.Nullable;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.List;
@@ -12,7 +13,6 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,72 +37,122 @@ public class InjectorStoreConsistencyPolicyTest {
   private ResolvableInjectable h = classInjectableFactory.create(H.class);
   private ResolvableInjectable i = classInjectableFactory.create(I.class);
   private ResolvableInjectable j = classInjectableFactory.create(J.class);
+  private ResolvableInjectable l = classInjectableFactory.create(L.class);
 
-  private InjectableStore<ResolvableInjectable> emptyStore = new InjectableStore<>();
+  private InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
 
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {
-    assertThatThrownBy(() -> policy.addAll(emptyStore, Set.of(classInjectableFactory.create(K.class))))
+    assertThatThrownBy(() -> policy.addAll(store, Set.of(classInjectableFactory.create(K.class))))
       .isExactlyInstanceOf(UnknownScopeException.class)
       .hasNoCause();
   }
 
   @Test
   void addAllShouldRejectInjectablesWithCyclicDependency() {
-    emptyStore.putAll(List.of(e, b, c, d));
+    store.putAll(List.of(e, b, c, d));
 
-    CyclicDependencyException ex = assertThrows(CyclicDependencyException.class, () -> policy.addAll(emptyStore, List.of(e, b, c, d)));
+    CyclicDependencyException ex = assertThrows(CyclicDependencyException.class, () -> policy.addAll(store, List.of(e, b, c, d)));
 
     assertEquals(4, ex.getCycle().size());
   }
 
   @Test
   void addBShouldFailAsItHasUnresolvableDependency() {
-    emptyStore.put(b);
+    store.put(b);
 
-    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(emptyStore, List.of(b)));
+    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(b)));
   }
 
   @Test
-  void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB() {
-    emptyStore.putAll(List.of(a, b, h));
+  void addAAndBAndHShouldFailsAsThereAreMultipleCandidatesOfZForB() {
+    store.putAll(List.of(a, b, h));
 
-    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(emptyStore, List.of(a, b, h)));
+    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(a, b, h)));
   }
 
   @Test
   void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB2() {
-    emptyStore.putAll(List.of(b, a, h));
+    store.putAll(List.of(b, a, h));
 
-    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(emptyStore, List.of(b, a, h)));
+    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(b, a, h)));
   }
   @Test
   void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB3() {
-    emptyStore.putAll(List.of(a, h, b));
+    store.putAll(List.of(a, h, b));
 
-    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(emptyStore, List.of(a, h, b)));
+    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(a, h, b)));
   }
 
   @Test
   void addIShouldFail() {
-    emptyStore.put(i);
+    store.put(i);
 
-    assertThrows(CyclicDependencyException.class, () -> policy.addAll(emptyStore, List.of(i)));
+    assertThrows(CyclicDependencyException.class, () -> policy.addAll(store, List.of(i)));
   }
 
   @Test
   void addJShouldFail() {
-    emptyStore.put(j);
+    store.put(j);
 
-    assertThrows(CyclicDependencyException.class, () -> policy.addAll(emptyStore, List.of(j)));
+    assertThrows(CyclicDependencyException.class, () -> policy.addAll(store, List.of(j)));
+  }
+
+  @Test
+  void addLShouldWork() {
+    store.put(l);
+    policy.addAll(store, List.of(l));
+  }
+
+  @Test
+  void addLAndAShouldWork() {
+    store.putAll(List.of(l, a));
+    policy.addAll(store, List.of(l, a));
   }
 
   @Nested
-  class WhenClassesAdded {
-    InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
+  class WhenClasses_A_And_H_AreAdded {
+    {
+      store.putAll(List.of(a, h));
+      policy.addAll(store, List.of(a, h));
+    }
 
-    @BeforeEach
-    void beforeEach() {
+    @Test
+    void add_L_ShouldFailBecause_Z_IsProvidedTwice() {
+      store.putAll(List.of(l));
+      assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(l)));
+    }
+  }
+
+  @Nested
+  class When_L_IsAdded {
+    {
+      store.putAll(List.of(l));
+      policy.addAll(store, List.of(l));
+    }
+
+    @Test
+    void remove_L_ShouldWork() {
+      store.remove(l);
+      policy.removeAll(store, List.of(l));
+    }
+
+    @Test
+    void add_A_ShouldWork() {
+      store.putAll(List.of(a));
+      policy.addAll(store, List.of(a));
+    }
+
+    @Test
+    void add_A_and_H_ShouldFailBecause_Z_IsProvidedTwice() {
+      store.putAll(List.of(a, h));
+      assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(a, h)));
+    }
+  }
+
+  @Nested
+  class WhenClassesAAndBAndCAndDAreAdded {
+    {
       store.putAll(List.of(a, b, c, d));
       policy.addAll(store, List.of(b, d, c, a));
     }
@@ -177,6 +227,12 @@ public class InjectorStoreConsistencyPolicyTest {
       store.putAll(List.of(g, h, f));
       assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(g, h, f)));
     }
+
+    @Test
+    void addLShouldWork() {
+      store.putAll(List.of(l));
+      policy.addAll(store, List.of(l));
+    }
   }
 
   interface Z {
@@ -224,5 +280,9 @@ public class InjectorStoreConsistencyPolicyTest {
 
   @TestScope
   public static class K {
+  }
+
+  public static class L {
+    @Inject @Nullable Z z;
   }
 }

@@ -115,7 +115,7 @@ public class BindingProvider {
 
     if(!Modifier.isStatic(executable.getModifiers()) && executable instanceof Method) {
       // For a non-static method, the class itself is also a required binding:
-      bindings.add(createBinding(executable, AbstractBinding.DECLARING_CLASS, ownerType, false, false, Set.of()));
+      bindings.add(new DirectBinding(executable, AbstractBinding.DECLARING_CLASS, new Key(ownerType, Set.of()), false, false));
     }
 
     return Collections.unmodifiableList(bindings);
@@ -135,7 +135,7 @@ public class BindingProvider {
      * declaring class is required before the field can be accessed.
      */
 
-    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(createBinding(field, AbstractBinding.DECLARING_CLASS, ownerType, false, false, Set.of()));
+    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(new DirectBinding(field, AbstractBinding.DECLARING_CLASS, new Key(ownerType, Set.of()), false, false));
   }
 
   private static Binding createBinding(AccessibleObject accessibleObject, int argNo, Type type, boolean optional, boolean isParameter, Set<AnnotationDescriptor> qualifiers) {
@@ -213,12 +213,12 @@ public class BindingProvider {
 
     private final AccessibleObject accessibleObject;
     private final int argNo;
-    private final Type type;
+    private final Key key;
 
-    AbstractBinding(AccessibleObject accessibleObject, int argNo, Type type) {
+    AbstractBinding(AccessibleObject accessibleObject, int argNo, Key key) {
       this.accessibleObject = accessibleObject;
       this.argNo = argNo;
-      this.type = type;
+      this.key = key;
     }
 
     @Override
@@ -227,8 +227,8 @@ public class BindingProvider {
     }
 
     @Override
-    public final Type getType() {
-      return type;
+    public Key getKey() {
+      return key;
     }
 
     @Override
@@ -250,7 +250,7 @@ public class BindingProvider {
     private final boolean optional;
 
     private HashSetBinding(AccessibleObject accessibleObject, int argNo, Type elementType, Set<AnnotationDescriptor> qualifiers, boolean optional) {
-      super(accessibleObject, argNo, Set.class);
+      super(accessibleObject, argNo, new Key(TypeUtils.parameterize(Set.class, elementType), Set.of()));
 
       this.qualifiers = qualifiers;
       this.elementType = elementType;
@@ -265,8 +265,18 @@ public class BindingProvider {
     }
 
     @Override
-    public Key getRequiredKey() {
-      return null;
+    public boolean isOptional() {
+      return true;
+    }
+
+    @Override
+    public boolean isCollection() {
+      return true;
+    }
+
+    @Override
+    public boolean isDirect() {
+      return true;
     }
 
     @Override
@@ -281,7 +291,7 @@ public class BindingProvider {
     private final boolean optional;
 
     private ArrayListBinding(AccessibleObject accessibleObject, int argNo, Type elementType, Set<AnnotationDescriptor> qualifiers, boolean optional) {
-      super(accessibleObject, argNo, List.class);
+      super(accessibleObject, argNo, new Key(TypeUtils.parameterize(List.class, elementType), Set.of()));
 
       this.elementType = elementType;
       this.qualifiers = qualifiers;
@@ -296,8 +306,18 @@ public class BindingProvider {
     }
 
     @Override
-    public Key getRequiredKey() {
-      return null;
+    public boolean isOptional() {
+      return true;
+    }
+
+    @Override
+    public boolean isCollection() {
+      return true;
+    }
+
+    @Override
+    public boolean isDirect() {
+      return true;
     }
 
     @Override
@@ -310,7 +330,7 @@ public class BindingProvider {
     private final Binding binding;
 
     private ProviderBinding(AccessibleObject accessibleObject, int argNo, Binding binding) {
-      super(accessibleObject, argNo, binding.getType());
+      super(accessibleObject, argNo, binding.getKey());
 
       this.binding = binding;
     }
@@ -351,8 +371,18 @@ public class BindingProvider {
     }
 
     @Override
-    public Key getRequiredKey() {
-      return null;  // nothing required, as providers are used to break cyclical dependencies
+    public boolean isOptional() {
+      return true;
+    }
+
+    @Override
+    public boolean isCollection() {
+      return false;
+    }
+
+    @Override
+    public boolean isDirect() {
+      return false;
     }
 
     @Override
@@ -367,7 +397,7 @@ public class BindingProvider {
     private final boolean isParameter;
 
     private DirectBinding(AccessibleObject accessibleObject, int argNo, Key requiredKey, boolean optional, boolean isParameter) {
-      super(accessibleObject, argNo, requiredKey.getType());
+      super(accessibleObject, argNo, requiredKey);
 
       this.key = requiredKey;
       this.optional = optional;
@@ -384,8 +414,18 @@ public class BindingProvider {
     }
 
     @Override
-    public Key getRequiredKey() {
-      return optional || isParameter ? null : key;
+    public boolean isOptional() {
+      return optional;
+    }
+
+    @Override
+    public boolean isCollection() {
+      return false;
+    }
+
+    @Override
+    public boolean isDirect() {
+      return true;
     }
 
     @Override

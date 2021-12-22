@@ -1,17 +1,33 @@
-package hs.ddif.core;
+package hs.ddif.core.inject.consistency;
 
-import hs.ddif.core.inject.consistency.CyclicDependencyException;
+import hs.ddif.core.Injector;
+import hs.ddif.core.Injectors;
+import hs.ddif.core.inject.instantiator.Binding;
+import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
+import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.Key;
+import hs.ddif.core.inject.instantiator.MultipleInstances;
+import hs.ddif.core.inject.instantiator.NoSuchInstance;
+import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.scope.OutOfScopeException;
+import hs.ddif.core.scope.SingletonScopeResolver;
+import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Nullable;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,16 +35,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class InjectorStressTest {
-  static List<Type> actual = new ArrayList<>();
+import io.leangen.geantyref.AnnotationFormatException;
+import io.leangen.geantyref.TypeFactory;
 
-  Random rnd = new Random(4);
+public class InjectorStoreConsistencyPolicyStressTest {
+  private final Random rnd = new Random(4);
 
   @Test
   void shouldSurviveStressTest() {
     Injector injector = Injectors.manual();
-    actual.clear();
 
+    List<Type> actual = new ArrayList<>();
     List<Type> classes = new ArrayList<>(List.of(A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class, K.class));
     Set<Type> classesNeverRegistered = new HashSet<>(classes);
     int total = 20000;
@@ -114,6 +131,85 @@ class InjectorStressTest {
     assertEquals(Set.of(D.class), classesNeverRegistered, "All classes except D must be registered at some point, but weren't: " + classesNeverRegistered);
   }
 
+  @Test
+  void largeGraphTest() throws AnnotationFormatException {
+    InjectorStoreConsistencyPolicy<ResolvableInjectable> policy = new InjectorStoreConsistencyPolicy<>(new SingletonScopeResolver());
+    InjectableStore<ResolvableInjectable> store = new InjectableStore<>(policy);
+    List<ResolvableInjectable> knownInjectables = new ArrayList<>();
+    List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
+
+    Singleton annotation = TypeFactory.annotation(Singleton.class, Map.of());
+
+    for(int i = 0; i < 10000; i++) {
+      policy.checkInvariants();
+
+      int randomBindings = Math.min(rnd.nextInt(4), knownInjectables.size());
+      List<Binding> bindings = new ArrayList<>();
+
+      for(int j = 0; j < randomBindings; j++) {
+        ResolvableInjectable target = knownInjectables.get(rnd.nextInt(knownInjectables.size()));
+
+        bindings.add(new SimpleBinding(new Key(target.getType(), target.getQualifiers())));
+      }
+
+      ResolvableInjectable injectable = new ResolvableInjectable(
+        classes.get(rnd.nextInt(classes.size())),
+        Set.of(AnnotationDescriptor.named("instance-" + i)),
+        bindings,
+        annotation,
+        null,
+        (a, b) -> null
+      );
+
+      store.put(injectable);
+
+      knownInjectables.add(injectable);
+    }
+  }
+
+  private static class SimpleBinding implements Binding {
+    private final Key key;
+
+    public SimpleBinding(Key key) {
+      this.key = key;
+    }
+
+    @Override
+    public Key getKey() {
+      return key;
+    }
+
+    @Override
+    public AccessibleObject getAccessibleObject() {
+      return null;
+    }
+
+    @Override
+    public boolean isCollection() {
+      return false;
+    }
+
+    @Override
+    public boolean isDirect() {
+      return true;
+    }
+
+    @Override
+    public boolean isOptional() {
+      return false;
+    }
+
+    @Override
+    public boolean isParameter() {
+      return false;
+    }
+
+    @Override
+    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance, OutOfScopeException {
+      return null;
+    }
+  }
+
   interface Z {
   }
 
@@ -139,6 +235,7 @@ class InjectorStressTest {
   public static class F {
     @Inject B b;
     @Inject C c;
+    @Inject @Nullable Z z;
   }
 
   public static class G {
