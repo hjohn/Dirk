@@ -6,24 +6,17 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 
 /**
- * Bindings represent points where values can be injected into a new object. This
- * can be a field or one of the parameters of a method or constructor. When a
- * binding is required, for example for a field that must be injected, the binding
- * will have a required key. Required Bindings play an important role when ensuring
- * that all dependencies an injectable has can be resolved at runtime.
+ * Bindings represent targets where values can be injected into an instance. This
+ * can be a field or one of the parameters of a method or constructor.
  */
 public interface Binding {
 
   /**
-   * Returns a {@link Key} this binding requires; the key refers to an injectable
-   * which must be available for injection. When the binding can always supply a
-   * valid value, this returns <code>null</code>. This is the case for example for
-   * bindings that create a collection of matching injectables as the collection
-   * can be empty if there were no matches.
+   * Returns the {@link Key} of this binding.
    *
-   * @return a {@link Key} this binding requires to resolve properly, or <code>null</code> when none are required
+   * @return the {@link Key} of this binding, never null
    */
-  Key getRequiredKey();
+  Key getKey();
 
   /**
    * Returns the target {@link AccessibleObject} for the binding.
@@ -37,7 +30,35 @@ public interface Binding {
    *
    * @return the {@link Type} of the binding, never null
    */
-  Type getType();
+  default Type getType() {
+    return getKey().getType();
+  }
+
+  /**
+   * Returns {@code true} when the target for this binding is a collection type. The {@link Key}
+   * represents the type of the elements in the collection.
+   *
+   * @return {@code true} when the target for this binding is a collection type, otherwise {@code false}
+   */
+  boolean isCollection();
+
+  /**
+   * Returns {@code true} when the target for this binding is to be immediately resolved to a target.
+   * When a binding is not direct, resolution is delayed until the target is accessed, for example, using
+   * a {@code Provider}.
+   *
+   * @return {@code true} when the target for this binding is to be immediately resolved to a target, otherwise {@code false}
+   */
+  boolean isDirect();
+
+  /**
+   * Returns {@code true} when the target for this binding also allows leaving it unbound. For fields this
+   * means the default value will be left unaltered, while for methods and constructors {@code null} will
+   * be supplied if no source is available to satisfy the binding.
+   *
+   * @return {@code true} when the target for this binding also allows leaving it unbound, otherwise {@code false}
+   */
+  boolean isOptional();
 
   /**
    * Returns <code>true</code> if the binding is to be supplied as parameter, otherwise <code>false</code>

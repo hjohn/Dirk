@@ -495,6 +495,7 @@ public class InjectorProviderTest {
     }
   }
 
+  @Singleton
   public static class C implements Provider<Z> {
     @Override
     @Big

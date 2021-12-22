@@ -198,6 +198,40 @@ public class InjectorTest {
     assertEquals(new HashSet<>(Arrays.asList("new")), instance.stringSet);
     assertEquals(Arrays.asList("new"), instance.nonOptionalStringList);
     assertEquals(new HashSet<>(Arrays.asList("new")), instance.nonOptionalStringSet);
+
+    // adding another string would mean the optional string injection point would become ambiguous
+    assertThatThrownBy(() -> injector.registerInstance("another-string"))
+      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .hasMessage("[class java.lang.String] would be provided again by: class java.lang.String")
+      .hasNoCause();
+
+    injector.removeInstance("new");
+
+    instance = injector.getInstance(OptionalDependent.class);  // get again (it is not a singleton, so will be constructed again)
+
+    assertNotNull(instance);
+
+    // Leave default values on Nullable fields:
+    assertEquals("default", instance.string);
+    assertEquals(Arrays.asList("A", "B", "C"), instance.stringList);
+    assertEquals(new HashSet<>(Arrays.asList("A", "B", "C")), instance.stringSet);
+
+    // Overwrite defaults on required fields:
+    assertEquals(Collections.emptyList(), instance.nonOptionalStringList);
+    assertEquals(Collections.emptySet(), instance.nonOptionalStringSet);
+
+    injector.registerInstance("another-string");
+
+    instance = injector.getInstance(OptionalDependent.class);  // get again (it is not a singleton, so will be constructed again)
+
+    assertNotNull(instance);
+
+    // Overwrite all fields as a suitable dependency is available:
+    assertEquals("another-string", instance.string);
+    assertEquals(Arrays.asList("another-string"), instance.stringList);
+    assertEquals(new HashSet<>(Arrays.asList("another-string")), instance.stringSet);
+    assertEquals(Arrays.asList("another-string"), instance.nonOptionalStringList);
+    assertEquals(new HashSet<>(Arrays.asList("another-string")), instance.nonOptionalStringSet);
   }
 
   @Test

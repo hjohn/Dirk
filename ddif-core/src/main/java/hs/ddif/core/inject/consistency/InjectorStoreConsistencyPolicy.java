@@ -4,10 +4,10 @@ import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.Resolver;
 import hs.ddif.core.store.StoreConsistencyPolicy;
 import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Singleton;
@@ -32,10 +33,12 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> implements StoreConsistencyPolicy<T> {
 
   /**
-   * Map containing the number of times a specific Key (a reference to a specific class
-   * with qualifiers) is referenced.
+   * Structure keeping track of {@link Key} used in direct bindings that must be available
+   * for the binding to be satisfied. When the direct binding is required, then exactly
+   * one source must be available to supply that binding. If the binding is optional, then
+   * zero or one sources must be available.
    */
-  private final Map<Key, Integer> referenceCounters = new HashMap<>();
+  private final Map<Class<?>, Map<Key, Node>> nodes = new HashMap<>();
 
   /**
    * Set containing known scope annotations.
@@ -51,19 +54,9 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
   @Override
   public void addAll(Resolver<T> resolver, Collection<T> injectables) {
 
-    /*
-     * This is called when the given resolver is able to resolve all the new injectables.  If an exception is
-     * thrown here, some clean up action may be needed at the caller.
-     */
-
     // Check if scopes are known:
     for(T injectable : injectables) {
       ensureScopeIsKnown(injectable);
-    }
-
-    // First see if any new injectables would cause existing dependencies to become invalid:
-    for(T injectable : injectables) {
-      ensureSingularDependenciesHold(injectable, true);  // if this fails, just exit, no changes were made
     }
 
     // Check if the new injectables can have all their required dependencies resolved:
@@ -71,135 +64,73 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
       ensureRequiredBindingsAreAvailable(resolver, injectable);
     }
 
-    // Check if the new injectables have any circular references:
     ensureNoCyclicDependencies(resolver, injectables);
 
-    /*
-     * At this point, no modifications have been made to the policy data structures yet.  Below
-     * updates will be made to the reference counters.  As all possible errors situations have
-     * been checked, this should trigger no exceptions.
-     */
-
-    for(T injectable : injectables) {
-      add(injectable);
-    }
+    addInjectables(resolver, injectables).ifPresent(violation -> {
+      removeInjectables(injectables);
+      violation.doThrow();
+    });
   }
 
   @Override
   public void removeAll(Resolver<T> baseResolver, Collection<T> injectables) {
+    removeInjectables(injectables).ifPresent(violation -> {
+      addInjectables(baseResolver, injectables);
+      violation.doThrow();
+    });
+  }
 
-    // Remove all injectables:
+  private Optional<Violation> addInjectables(Resolver<T> resolver, Collection<T> injectables) {
     for(T injectable : injectables) {
-      remove(injectable);
-    }
+      for(Binding binding : injectable.getBindings()) {
+        if(!binding.isParameter() && !binding.isCollection()) {
+          Key key = binding.getKey();
 
-    /*
-     * The injectables that were removed are now checked to see if their reference
-     * counters are gone.  If any are not, all injectables are re-added and the
-     * removal is cancelled by throwing an exception.
-     */
-
-    try {
-      for(T injectable : injectables) {
-        ensureSingularDependenciesHold(injectable, false);
+          addTarget(resolver, key, binding.isOptional(), injectables);
+        }
       }
     }
-    catch(Exception e) {
-      // Given group of injectables was not valid to remove, re-add all and rethrow last exception:
-      for(T injectable : injectables) {
-        add(injectable);
-      }
 
-      throw e;
-    }
+    return addSources(injectables);
   }
 
-  private void add(T injectable) {
-    increaseReferenceCounters(injectable, referenceCounters);
-  }
+  private Optional<Violation> removeInjectables(Collection<T> injectables) {
+    for(T injectable : injectables) {
+      for(Binding binding : injectable.getBindings()) {
+        if(!binding.isParameter() && !binding.isCollection()) {
+          Key key = binding.getKey();
 
-  private void remove(T injectable) {
-    decreaseReferenceCounters(injectable, referenceCounters, false);
-  }
-
-  private static void increaseReferenceCounters(ResolvableInjectable injectable, Map<Key, Integer> referenceCounters) {
-    for(Binding binding : injectable.getBindings()) {
-      Key requiredKey = binding.getRequiredKey();
-
-      if(requiredKey != null) {
-        addReference(requiredKey, referenceCounters);
+          removeTarget(key, binding.isOptional());
+        }
       }
     }
+
+    return removeSources(injectables);
   }
 
-  private static void decreaseReferenceCounters(ResolvableInjectable injectable, Map<Key, Integer> referenceCounters, boolean allowNegativeReferenceCount) {
-    for(Binding binding : injectable.getBindings()) {
-      Key requiredKey = binding.getRequiredKey();
-
-      if(requiredKey != null) {
-        removeReference(requiredKey, referenceCounters, allowNegativeReferenceCount);
-      }
-    }
-  }
-
-  private static void addReference(Key key, Map<Key, Integer> referenceCounters) {
-    referenceCounters.merge(key, 1, Integer::sum);
-  }
-
-  private static void removeReference(Key key, Map<Key, Integer> referenceCounters, boolean allowNegativeReferenceCount) {
-    referenceCounters.merge(key, -1, (a, b) -> a + b == 0 ? null : a + b);
-
-    if(referenceCounters.getOrDefault(key, 0) < 0 && !allowNegativeReferenceCount) {
-      throw new AssertionError("reference counter became negative: " + key);
-    }
-  }
-
-  /*
-   * Checks if adding (or removing) the given type with qualifiers would cause any direct bindings dependent
-   * on the type to become unresolvable.  The existence of the key in the referenceCounters map means there
-   * is exactly one of the given type with qualifiers available already (reference counter is never 0, the key
-   * is not present in that case).
-   *
-   * Therefore adding (or removing) a type which is assignable to one of the keys in the map (and has the
-   * same qualifiers) would cause some bindings to become unresolvable, either because the dependency would
-   * no longer be available, or because multiple options would become available.
-   */
-  // Note: loops through all bindings made, quite expensive when there are many keys due to generic assignment check
-  private void ensureSingularDependenciesHold(Injectable injectable, boolean isAdd) {
-    Type type = injectable.getType();
-    Set<AnnotationDescriptor> qualifiers = injectable.getQualifiers();
-
-    for(Key key : referenceCounters.keySet()) {
-      if(TypeUtils.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
-        throw new ViolatesSingularDependencyException(type, key, isAdd);
-      }
-    }
-  }
-
-  private void ensureRequiredBindingsAreAvailable(Resolver<T> resolver, T injectable) {
+  private static <T extends ResolvableInjectable> void ensureRequiredBindingsAreAvailable(Resolver<T> resolver, T injectable) {
 
     /*
      * Check the created bindings for unresolved or ambiguous dependencies and scope problems:
      */
 
     for(Binding binding : injectable.getBindings()) {
-      Key requiredKey = binding.getRequiredKey();
+      if(!binding.isParameter() && !binding.isCollection()) {
+        Key key = binding.getKey();
+        Set<T> injectables = resolver.resolve(key.getType(), (Object[])key.getQualifiersAsArray());
 
-      if(requiredKey != null) {
-        Set<T> injectables = resolver.resolve(requiredKey.getType(), (Object[])requiredKey.getQualifiersAsArray());
+        // The binding is a single binding, if there are more than one matches it is ambiguous, and if there is no match then it must be optional
+        if(injectables.size() > 1 || (!binding.isOptional() && injectables.size() < 1)) {
+          throw new UnresolvableDependencyException(binding, injectables);
+        }
 
-        ensureBindingIsSingular(binding, injectables);
+        // Check scope only for direct bindings. Indirect ones that inject a Provider can be used anywhere.
+        if(binding.isDirect() && !injectables.isEmpty()) {
+          T dependency = injectables.iterator().next();  // Previous check ensures there is only a single element in the set
 
-        T dependency = injectables.iterator().next();  // Previous ensureBindingIsSingular check ensures there is only a single element in the set
-
-        ensureBindingScopeIsValid(injectable, dependency);
+          ensureBindingScopeIsValid(injectable, dependency);
+        }
       }
-    }
-  }
-
-  private void ensureBindingIsSingular(Binding binding, Set<T> injectables) {
-    if(injectables.size() != 1) {
-      throw new UnresolvableDependencyException(binding, injectables);
     }
   }
 
@@ -231,7 +162,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
     }
   }
 
-  private void ensureNoCyclicDependencies(Resolver<T> resolver, Collection<T> injectables) {
+  private static <T extends ResolvableInjectable> void ensureNoCyclicDependencies(Resolver<T> resolver, Collection<T> injectables) {
     class CycleDetector {
       Set<T> input = new HashSet<>(injectables);
       Set<T> visited = new HashSet<>();
@@ -251,9 +182,9 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
         visiting.add(injectable);
 
         for(Binding binding : injectable.getBindings()) {
-          Key key = binding.getRequiredKey();
+          if(!binding.isParameter() && !binding.isCollection() && binding.isDirect()) {
+            Key key = binding.getKey();
 
-          if(key != null) {
             for(T boundInjectable : resolver.resolve(key.getType(), (Object[])key.getQualifiersAsArray())) {
               if(visiting.contains(boundInjectable)) {
                 return true;
@@ -279,6 +210,16 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
     }
   }
 
+  void checkInvariants() {
+    for(Map<Key, Node> map : nodes.values()) {
+      for(Node node : map.values()) {
+        if(node.isInvalid()) {
+          throw new IllegalStateException(node.toString());
+        }
+      }
+    }
+  }
+
   private static boolean isNarrowerScope(Annotation scope, Annotation dependencyScope) {
     if(scope == null) {
       return false;
@@ -289,5 +230,185 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
     }
 
     return !dependencyScope.annotationType().equals(Singleton.class) && !scope.annotationType().equals(dependencyScope.annotationType());
+  }
+
+  /**
+   * Adds the given sources to this policy. If adding the given sources would cause
+   * any targets to become unresolvable a {@link Violation} will be returned.<p>
+   *
+   * Implementation note: this method modifies the data structures while detecting violations
+   * at the same time. The data structures are NOT rolled back when a violation is detected,
+   * but are left in a state where all changes have been applied. This means the change can
+   * be completely undone by calling {@link #removeSources(Collection)} with the same sources.
+   *
+   * @param sources a collection of sources to add, cannot be null
+   * @return an optional {@link Violation} if one was detected, never null
+   */
+  private Optional<Violation> addSources(Collection<T> sources) {
+    Violation violation = null;
+
+    for(T source : sources) {
+      Type type = source.getType();
+      Set<AnnotationDescriptor> qualifiers = source.getQualifiers();
+
+      for(Class<?> cls : Types.getSuperTypes(TypeUtils.getRawType(type, null))) {
+        Map<Key, Node> nodesByKeys = nodes.get(cls);
+
+        if(nodesByKeys != null) {
+          for(Key key : nodesByKeys.keySet()) {
+            if(TypeUtils.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
+              Node node = nodesByKeys.get(key);
+
+              node.increaseSources();
+
+              if(violation == null && node.isInvalid()) {
+                violation = new Violation(type, key, true);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return Optional.ofNullable(violation);
+  }
+
+  /**
+   * Removes the given sources from this policy. If removing the given sources would cause
+   * any targets to become unresolvable a {@link Violation} will be returned.<p>
+   *
+   * Implementation note: this method modifies the data structures while detecting violations
+   * at the same time. The data structures are NOT rolled back when a violation is detected,
+   * but are left in a state where all changes have been applied. This means the change can
+   * be completely undone by calling {@link #addSources(Collection)} with the same sources.
+   *
+   * @param sources a collection of sources to remove, cannot be null
+   * @return an optional {@link Violation} if one was detected, never null
+   */
+  private Optional<Violation> removeSources(Collection<T> sources) {
+    Violation violation = null;
+
+    for(T source : sources) {
+      Type type = source.getType();
+      Set<AnnotationDescriptor> qualifiers = source.getQualifiers();
+
+      for(Class<?> cls : Types.getSuperTypes(TypeUtils.getRawType(type, null))) {
+        Map<Key, Node> nodesByKeys = nodes.get(cls);
+
+        if(nodesByKeys != null) {
+          for(Key key : nodesByKeys.keySet()) {
+            if(TypeUtils.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
+              Node node = nodesByKeys.get(key);
+
+              node.decreaseSources();
+
+              if(violation == null && node.isInvalid()) {
+                violation = new Violation(type, key, false);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return Optional.ofNullable(violation);
+  }
+
+  private void addTarget(Resolver<T> resolver, Key key, boolean isOptional, Collection<T> sources) {
+    Class<?> cls = TypeUtils.getRawType(key.getType(), null);
+
+    nodes.computeIfAbsent(cls, k -> new HashMap<>())
+      .computeIfAbsent(key, k -> {
+        // when a new Key is added, initialise the Node with the current number of candidates that can satisfy it
+        Set<T> candidates = resolver.resolve(key.getType(), (Object[])key.getQualifiersAsArray());
+        Node node = new Node(candidates.size());
+
+        for(T source : sources) {
+          if(candidates.contains(source)) {
+            node.decreaseSources();  // exclude candidates that are new; they will get counted when calling #addSources
+          }
+        }
+
+        return node;
+      })
+      .increaseTargets(isOptional);
+  }
+
+  private void removeTarget(Key key, boolean isOptional) {
+    Class<?> cls = TypeUtils.getRawType(key.getType(), null);
+
+    nodes.computeIfPresent(
+      cls,
+      (c, m) -> m.computeIfPresent(key, (k, n) -> n.decreaseTargets(isOptional) ? null : n) == null ? null : m
+    );
+  }
+
+  static class Violation {
+    private final Type type;
+    private final Key key;
+    private final boolean isAdd;
+
+    Violation(Type type, Key key, boolean isAdd) {
+      this.type = type;
+      this.key = key;
+      this.isAdd = isAdd;
+    }
+
+    void doThrow() {
+      throw new ViolatesSingularDependencyException(type, key, isAdd);
+    }
+  }
+
+  static class Node {
+
+    /**
+     * The number of targets that require at least one source.
+     */
+    int greaterThanZeroReferences;
+
+    /**
+     * The number of targets that require at most one source.
+     */
+    int lessThanTwoReferences;
+
+    /**
+     * The number of sources available.
+     */
+    int sourceCount;
+
+    Node(int sourceCount) {
+      this.sourceCount = sourceCount;
+    }
+
+    boolean increaseTargets(boolean optional) {
+      greaterThanZeroReferences += optional ? 0 : 1;
+      lessThanTwoReferences++;
+
+      return greaterThanZeroReferences == 0 && lessThanTwoReferences == 0;
+    }
+
+    boolean decreaseTargets(boolean optional) {
+      greaterThanZeroReferences -= optional ? 0 : 1;
+      lessThanTwoReferences--;
+
+      return greaterThanZeroReferences == 0 && lessThanTwoReferences == 0;
+    }
+
+    void increaseSources() {
+      sourceCount++;
+    }
+
+    void decreaseSources() {
+      sourceCount--;
+    }
+
+    boolean isInvalid() {
+      return (greaterThanZeroReferences > 0 && sourceCount < 1) || (lessThanTwoReferences > 0 && sourceCount > 1);
+    }
+
+    @Override
+    public String toString() {
+      return "Node[>0 = " + greaterThanZeroReferences + "; <2 = " + lessThanTwoReferences + "; sourceCount = " + sourceCount + "]";
+    }
   }
 }
