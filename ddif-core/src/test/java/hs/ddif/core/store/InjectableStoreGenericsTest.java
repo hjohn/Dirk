@@ -118,6 +118,7 @@ public class InjectableStoreGenericsTest {
   }
 
   interface Converter<I, O> {
+    default O convert(I input) { throw new UnsupportedOperationException(input.toString()); }
   }
 
   class Fruit {
@@ -130,9 +131,11 @@ public class InjectableStoreGenericsTest {
   }
 
   class Juice<E> {
+    E e;
   }
 
   class Sliced<E> {
+    E e;
   }
 
   class OrangeJuice extends Juice<Orange> {
