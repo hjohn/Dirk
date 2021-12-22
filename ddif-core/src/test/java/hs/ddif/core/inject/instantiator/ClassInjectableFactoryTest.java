@@ -185,5 +185,6 @@ public class ClassInjectableFactoryTest {
   }
 
   public static class GenericClass<T> {
+    T t;
   }
 }
