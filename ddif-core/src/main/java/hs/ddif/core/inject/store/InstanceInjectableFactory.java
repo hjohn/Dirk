@@ -2,7 +2,7 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.util.AnnotationDescriptor;
-import hs.ddif.core.util.AnnotationUtils;
+import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -14,7 +14,7 @@ import javax.inject.Singleton;
  * Constructs {@link ResolvableInjectable}s for a given object instance.
  */
 public class InstanceInjectableFactory {
-  private static final Annotation SINGLETON = AnnotationUtils.of(Singleton.class);
+  private static final Annotation SINGLETON = Annotations.of(Singleton.class);
 
   private final ResolvableInjectableFactory factory;
 
