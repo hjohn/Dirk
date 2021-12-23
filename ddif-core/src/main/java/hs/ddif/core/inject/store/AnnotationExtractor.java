@@ -1,42 +1,33 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.core.util.AnnotationDescriptor;
-import hs.ddif.core.util.AnnotationUtils;
+import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Qualifier;
 import javax.inject.Scope;
 
-public class AnnotationExtractor {
+class AnnotationExtractor {
+  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
+  private static final Annotation SCOPE = Annotations.of(Scope.class);
 
-  public static Annotation findScopeAnnotation(AnnotatedElement element) {
-    List<Annotation> matchingAnnotations = AnnotationUtils.findAnnotations(element, Scope.class);
+  static Annotation findScopeAnnotation(AnnotatedElement element) {
+    Set<Annotation> matchingAnnotations = Annotations.findDirectlyMetaAnnotatedAnnotations(element, SCOPE);
 
     if(matchingAnnotations.size() > 1) {
       throw new BindingException("Multiple scope annotations found, but only one allowed: " + element + ", found: " + matchingAnnotations);
     }
 
-    return matchingAnnotations.isEmpty() ? null : matchingAnnotations.get(0);
+    return matchingAnnotations.isEmpty() ? null : matchingAnnotations.iterator().next();
   }
 
-  public static Set<AnnotationDescriptor> extractQualifiers(AnnotatedElement element) {
-    return extractQualifiers(element.getAnnotations());
-  }
-
-  private static Set<AnnotationDescriptor> extractQualifiers(Annotation[] annotations) {
-    Set<AnnotationDescriptor> qualifiers = new HashSet<>();
-
-    for(Annotation annotation : annotations) {
-      if(annotation.annotationType().getAnnotation(Qualifier.class) != null) {
-        qualifiers.add(new AnnotationDescriptor(annotation));
-      }
-    }
-
-    return qualifiers;
+  static Set<AnnotationDescriptor> extractQualifiers(AnnotatedElement element) {
+    return Annotations.findDirectlyMetaAnnotatedAnnotations(element, QUALIFIER).stream()
+      .map(AnnotationDescriptor::new)
+      .collect(Collectors.toSet());
   }
 }

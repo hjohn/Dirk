@@ -12,7 +12,7 @@ import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.qualifiers.Small;
 import hs.ddif.core.util.AnnotationDescriptor;
-import hs.ddif.core.util.AnnotationUtils;
+import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.TypeReference;
 import hs.ddif.core.util.Value;
 
@@ -154,7 +154,7 @@ public class InjectableStoreTest {
     assertEquals(2, store.resolve(Object.class, AnnotationDescriptor.describe(Red.class)).size());
 
     // All Red Objects (using annotation)
-    assertEquals(2, store.resolve(Object.class, AnnotationUtils.of(Red.class)).size());
+    assertEquals(2, store.resolve(Object.class, Annotations.of(Red.class)).size());
 
     // All Red Numbers
     assertEquals(1, store.resolve(Number.class, AnnotationDescriptor.describe(Red.class)).size());
