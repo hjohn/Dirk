@@ -11,10 +11,11 @@ import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.MultipleInstances;
 import hs.ddif.core.inject.instantiator.NoSuchInstance;
 import hs.ddif.core.scope.OutOfScopeException;
-import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
@@ -38,6 +39,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 import io.leangen.geantyref.GenericTypeReflector;
 
 public class BindingProvider {
+  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
 
   /**
    * Returns all bindings for the given class.  Bindings are grouped by {@link AccessibleObject}
@@ -57,7 +59,14 @@ public class BindingProvider {
         if(inject != null) {
           Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
 
-          bindings.put(field, List.of(createBinding(field, AbstractBinding.FIELD, type, isOptional(field.getAnnotations()), field.getAnnotation(Parameter.class) != null, extractQualifiers(field))));
+          bindings.put(field, List.of(createBinding(
+            field,
+            AbstractBinding.FIELD,
+            type,
+            isOptional(field),
+            field.getAnnotation(Parameter.class) != null,
+            Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER)
+          )));
         }
       }
 
@@ -101,14 +110,20 @@ public class BindingProvider {
    * @return an immutable list of bindings, never null and never contains nulls, but can be empty
    */
   public static List<Binding> ofExecutable(Executable executable, Type ownerType) {
-    Annotation[][] parameterAnnotations = executable.getParameterAnnotations();
     java.lang.reflect.Parameter[] parameters = executable.getParameters();
     Type[] genericParameterTypes = executable.getGenericParameterTypes();
     List<Binding> bindings = new ArrayList<>();
 
     for(int i = 0; i < genericParameterTypes.length; i++) {
       Type type = genericParameterTypes[i];
-      Binding binding = createBinding(executable, i, type, isOptional(parameterAnnotations[i]), parameters[i].getAnnotation(Parameter.class) != null, extractQualifiers(parameterAnnotations[i]));
+      Binding binding = createBinding(
+        executable,
+        i,
+        type,
+        isOptional(parameters[i]),
+        parameters[i].getAnnotation(Parameter.class) != null,
+        Annotations.findDirectlyMetaAnnotatedAnnotations(parameters[i], QUALIFIER)
+      );
 
       bindings.add(binding);
     }
@@ -138,11 +153,11 @@ public class BindingProvider {
     return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(new DirectBinding(field, AbstractBinding.DECLARING_CLASS, new Key(ownerType, Set.of()), false, false));
   }
 
-  private static Binding createBinding(AccessibleObject accessibleObject, int argNo, Type type, boolean optional, boolean isParameter, Set<AnnotationDescriptor> qualifiers) {
+  private static Binding createBinding(AccessibleObject accessibleObject, int argNo, Type type, boolean optional, boolean isParameter, Set<Annotation> qualifiers) {
     return createBinding(accessibleObject, argNo, false, type, optional, isParameter, qualifiers);
   }
 
-  private static Binding createBinding(AccessibleObject accessibleObject, int argNo, boolean isProviderAlready, Type type, boolean optional, boolean isParameter, Set<AnnotationDescriptor> qualifiers) {
+  private static Binding createBinding(AccessibleObject accessibleObject, int argNo, boolean isProviderAlready, Type type, boolean optional, boolean isParameter, Set<Annotation> qualifiers) {
     final Class<?> cls = TypeUtils.getRawType(type, null);
 
     if(!isParameter) {
@@ -166,24 +181,8 @@ public class BindingProvider {
     return TypeUtils.getTypeArguments(type, cls).get(cls.getTypeParameters()[0]);
   }
 
-  private static Set<AnnotationDescriptor> extractQualifiers(Field field) {
-    return extractQualifiers(field.getAnnotations());
-  }
-
-  private static Set<AnnotationDescriptor> extractQualifiers(Annotation[] annotations) {
-    Set<AnnotationDescriptor> qualifiers = new HashSet<>();
-
-    for(Annotation annotation : annotations) {
-      if(annotation.annotationType().getAnnotation(Qualifier.class) != null) {
-        qualifiers.add(new AnnotationDescriptor(annotation));
-      }
-    }
-
-    return Collections.unmodifiableSet(qualifiers);
-  }
-
-  private static boolean isOptional(Annotation[] annotations) {
-    for(Annotation annotation : annotations) {
+  private static boolean isOptional(AnnotatedElement element) {
+    for(Annotation annotation : element.getAnnotations()) {
       String simpleName = annotation.annotationType().getSimpleName();
 
       if(simpleName.equals("Nullable") || annotation.annotationType().equals(Opt.class)) {
@@ -245,11 +244,11 @@ public class BindingProvider {
   }
 
   private static final class HashSetBinding extends AbstractBinding {
-    private final Set<AnnotationDescriptor> qualifiers;
+    private final Set<Annotation> qualifiers;
     private final Type elementType;
     private final boolean optional;
 
-    private HashSetBinding(AccessibleObject accessibleObject, int argNo, Type elementType, Set<AnnotationDescriptor> qualifiers, boolean optional) {
+    private HashSetBinding(AccessibleObject accessibleObject, int argNo, Type elementType, Set<Annotation> qualifiers, boolean optional) {
       super(accessibleObject, argNo, new Key(TypeUtils.parameterize(Set.class, elementType), Set.of()));
 
       this.qualifiers = qualifiers;
@@ -287,10 +286,10 @@ public class BindingProvider {
 
   private static final class ArrayListBinding extends AbstractBinding {
     private final Type elementType;
-    private final Set<AnnotationDescriptor> qualifiers;
+    private final Set<Annotation> qualifiers;
     private final boolean optional;
 
-    private ArrayListBinding(AccessibleObject accessibleObject, int argNo, Type elementType, Set<AnnotationDescriptor> qualifiers, boolean optional) {
+    private ArrayListBinding(AccessibleObject accessibleObject, int argNo, Type elementType, Set<Annotation> qualifiers, boolean optional) {
       super(accessibleObject, argNo, new Key(TypeUtils.parameterize(List.class, elementType), Set.of()));
 
       this.elementType = elementType;

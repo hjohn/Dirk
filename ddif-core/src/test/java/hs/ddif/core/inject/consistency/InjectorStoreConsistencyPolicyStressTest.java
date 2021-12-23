@@ -12,7 +12,7 @@ import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.store.InjectableStore;
-import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
 
 import java.lang.reflect.AccessibleObject;
@@ -154,7 +154,7 @@ public class InjectorStoreConsistencyPolicyStressTest {
 
       ResolvableInjectable injectable = new ResolvableInjectable(
         classes.get(rnd.nextInt(classes.size())),
-        Set.of(AnnotationDescriptor.named("instance-" + i)),
+        Set.of(Annotations.named("instance-" + i)),
         bindings,
         annotation,
         null,

@@ -6,7 +6,9 @@ import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.util.Annotations;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.inject.Qualifier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -24,6 +27,8 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * owner {@link Type}.
  */
 public class MethodInjectableFactory {
+  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
+
   private final ResolvableInjectableFactory factory;
 
   /**
@@ -75,7 +80,7 @@ public class MethodInjectableFactory {
 
     return factory.create(
       returnType,
-      AnnotationExtractor.extractQualifiers(method),
+      Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
       bindings,
       AnnotationExtractor.findScopeAnnotation(method),
       method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type

@@ -1,7 +1,6 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.util.AnnotationDescriptor;
-
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Set;
 
@@ -25,9 +24,9 @@ public interface Injectable {
   Type getType();
 
   /**
-   * Returns the qualifiers associated with this Injectable.
+   * Returns the qualifier {@link Annotation}s associated with this Injectable.
    *
-   * @return the qualifiers associated with this Injectable, never null but can be empty
+   * @return the qualifier {@link Annotation}s associated with this Injectable, never null but can be empty
    */
-  Set<AnnotationDescriptor> getQualifiers();
+  Set<Annotation> getQualifiers();
 }

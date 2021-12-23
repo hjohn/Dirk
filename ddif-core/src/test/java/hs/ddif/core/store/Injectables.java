@@ -1,7 +1,6 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.util.AnnotationDescriptor;
-
+import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.Set;
 
@@ -16,7 +15,7 @@ public class Injectables {
       }
 
       @Override
-      public Set<AnnotationDescriptor> getQualifiers() {
+      public Set<Annotation> getQualifiers() {
         return Collections.emptySet();
       }
 

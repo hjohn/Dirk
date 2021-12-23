@@ -1,7 +1,7 @@
 package hs.ddif.core.store;
 
 import hs.ddif.core.api.Matcher;
-import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
@@ -30,10 +30,10 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   /**
-   * Map containing annotation descriptor mappings to sets of injectables which match one specific
+   * Map containing annotation mappings to sets of injectables which match one specific
    * type or qualifier class.<p>
    */
-  private final Map<Class<?>, Map<AnnotationDescriptor, Set<T>>> injectablesByDescriptorByType = new HashMap<>();
+  private final Map<Class<?>, Map<Annotation, Set<T>>> injectablesByAnnotationByType = new HashMap<>();
 
   private final StoreConsistencyPolicy<T> policy;
 
@@ -56,21 +56,21 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
   @Override
   public synchronized Set<T> resolve(Type type, Object... criteria) {
     Class<?> cls = TypeUtils.getRawType(type, null);
-    Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
+    Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(cls);
 
-    if(injectablesByDescriptor == null) {
+    if(injectablesByAnnotation == null) {
       return Collections.emptySet();
     }
 
-    Set<T> matches = new HashSet<>(injectablesByDescriptor.get(null));  // Make a copy as otherwise retainAll below will modify the map
+    Set<T> matches = new HashSet<>(injectablesByAnnotation.get(null));  // Make a copy as otherwise retainAll below will modify the map
 
     filterByGenericType(type, matches);
-    filterByCriteria(injectablesByDescriptor, matches, criteria);
+    filterByCriteria(injectablesByAnnotation, matches, criteria);
 
     return matches;
   }
 
-  private void filterByCriteria(Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor, Set<T> matches, Object... criteria) {
+  private void filterByCriteria(Map<Annotation, Set<T>> injectablesByAnnotation, Set<T> matches, Object... criteria) {
     for(Object criterion : criteria) {
       if(matches.isEmpty()) {
         break;
@@ -83,25 +83,22 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
       Set<T> qualifierMatches = null;
 
-      if(criterion instanceof Class && ((Class<?>)criterion).isAnnotation()) {  // If an annotation is passed in as a class, convert it to its descriptor
+      if(criterion instanceof Class && ((Class<?>)criterion).isAnnotation()) {  // If an annotation is passed in as a class, convert it to Annotation
         @SuppressWarnings("unchecked")
         Class<? extends Annotation> castedCriterion = (Class<? extends Annotation>)criterion;
 
-        criterion = AnnotationDescriptor.describe(castedCriterion);
+        criterion = Annotations.of(castedCriterion);
       }
 
       if(criterion instanceof Class) {
-        Map<AnnotationDescriptor, Set<T>> map = injectablesByDescriptorByType.get(criterion);
+        Map<Annotation, Set<T>> map = injectablesByAnnotationByType.get(criterion);
 
         if(map != null) {
           qualifierMatches = map.get(null);
         }
       }
       else if(criterion instanceof Annotation) {
-        qualifierMatches = injectablesByDescriptor.get(new AnnotationDescriptor((Annotation)criterion));
-      }
-      else if(criterion instanceof AnnotationDescriptor) {
-        qualifierMatches = injectablesByDescriptor.get(criterion);
+        qualifierMatches = injectablesByAnnotation.get(criterion);
       }
       else {
         throw new IllegalArgumentException("Unsupported criterion type, must be Class, Annotation or Matcher: " + criterion);
@@ -128,16 +125,16 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   public synchronized boolean contains(Type type, Object... criteria) {
     Class<?> cls = TypeUtils.getRawType(type, null);
-    Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(cls);
+    Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(cls);
 
-    if(injectablesByDescriptor == null) {
+    if(injectablesByAnnotation == null) {
       return false;
     }
 
-    Set<T> matches = new HashSet<>(injectablesByDescriptor.get(null));  // Make a copy as otherwise retainAll below will modify the map
+    Set<T> matches = new HashSet<>(injectablesByAnnotation.get(null));  // Make a copy as otherwise retainAll below will modify the map
 
     filterByGenericType(type, matches);
-    filterByCriteria(injectablesByDescriptor, matches, criteria);
+    filterByCriteria(injectablesByAnnotation, matches, criteria);
 
     return !matches.isEmpty();
   }
@@ -202,7 +199,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     for(T injectable : injectables) {
       ensureInjectableIsValid(injectable);
 
-      Map<AnnotationDescriptor, Set<T>> specificInjectables = injectablesByDescriptorByType.get(TypeUtils.getRawType(injectable.getType(), null));
+      Map<Annotation, Set<T>> specificInjectables = injectablesByAnnotationByType.get(TypeUtils.getRawType(injectable.getType(), null));
 
       if(specificInjectables == null || !specificInjectables.get(null).contains(injectable)) {
         throw new NoSuchInjectableException(injectable);
@@ -224,7 +221,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
    *   but can be empty
    */
   public synchronized Set<T> toSet() {
-    return injectablesByDescriptorByType.entrySet().stream()
+    return injectablesByAnnotationByType.entrySet().stream()
       .filter(e -> e.getKey().isInterface() || e.getKey() == Object.class)  // although everything could be scanned, duplicates can be elimated early here
       .map(Map.Entry::getValue)
       .map(Map::values)
@@ -238,7 +235,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
       for(Class<?> superType : getSuperClassesAndInterfaces(TypeUtils.getRawType(injectable.getType(), null))) {
         register(superType, null, injectable);
 
-        for(AnnotationDescriptor qualifier : injectable.getQualifiers()) {
+        for(Annotation qualifier : injectable.getQualifiers()) {
           register(superType, qualifier, injectable);
         }
       }
@@ -253,7 +250,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
       for(Class<?> type : getSuperClassesAndInterfaces(TypeUtils.getRawType(injectable.getType(), null))) {
         unregister(type, null, injectable);
 
-        for(AnnotationDescriptor qualifier : injectable.getQualifiers()) {
+        for(Annotation qualifier : injectable.getQualifiers()) {
           unregister(type, qualifier, injectable);
         }
       }
@@ -270,37 +267,37 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
   }
 
   private void ensureNotDuplicate(T injectable) {
-    Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(Object.class);
+    Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(Object.class);
 
-    if(injectablesByDescriptor != null && injectablesByDescriptor.get(null).contains(injectable)) {
+    if(injectablesByAnnotation != null && injectablesByAnnotation.get(null).contains(injectable)) {
       throw new DuplicateInjectableException(TypeUtils.getRawType(injectable.getType(), null), injectable);
     }
   }
 
-  private void register(Class<?> type, AnnotationDescriptor qualifier, T injectable) {
-    if(!injectablesByDescriptorByType.computeIfAbsent(type, k -> new HashMap<>()).computeIfAbsent(qualifier, k -> new HashSet<>()).add(injectable)) {
+  private void register(Class<?> type, Annotation qualifier, T injectable) {
+    if(!injectablesByAnnotationByType.computeIfAbsent(type, k -> new HashMap<>()).computeIfAbsent(qualifier, k -> new HashSet<>()).add(injectable)) {
       throw new AssertionError("Store should not contain duplicates: " + injectable);
     }
   }
 
-  private void unregister(Class<?> type, AnnotationDescriptor qualifier, Injectable injectable) {
-    Map<AnnotationDescriptor, Set<T>> injectablesByDescriptor = injectablesByDescriptorByType.get(type);
+  private void unregister(Class<?> type, Annotation qualifier, Injectable injectable) {
+    Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(type);
 
-    if(injectablesByDescriptor == null) {
+    if(injectablesByAnnotation == null) {
       throw new AssertionError("Store must contain: " + injectable + " for key: " + type);
     }
 
-    Set<T> injectables = injectablesByDescriptor.get(qualifier);
+    Set<T> injectables = injectablesByAnnotation.get(qualifier);
 
     if(injectables == null || !injectables.remove(injectable)) {
       throw new AssertionError("Store must contain: " + injectable + " for key: " + type + " -> " + qualifier + " injectables: " + injectables);
     }
 
     if(injectables.isEmpty()) {
-      injectablesByDescriptor.remove(qualifier);
+      injectablesByAnnotation.remove(qualifier);
 
-      if(injectablesByDescriptor.isEmpty()) {
-        injectablesByDescriptorByType.remove(type);
+      if(injectablesByAnnotation.isEmpty()) {
+        injectablesByAnnotationByType.remove(type);
       }
     }
   }
@@ -356,6 +353,6 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   @Override
   public String toString() {
-    return super.toString() + "[" + injectablesByDescriptorByType + "]";
+    return super.toString() + "[" + injectablesByAnnotationByType + "]";
   }
 }

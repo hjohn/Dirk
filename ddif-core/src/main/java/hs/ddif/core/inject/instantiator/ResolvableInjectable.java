@@ -1,7 +1,5 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.util.AnnotationDescriptor;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
@@ -17,7 +15,7 @@ import java.util.stream.Collectors;
  */
 public class ResolvableInjectable implements DependentInjectable {
   private final Type type;
-  private final Set<AnnotationDescriptor> qualifiers;
+  private final Set<Annotation> qualifiers;
   private final List<Binding> bindings;
   private final Annotation scope;
   private final Object discriminator;
@@ -27,13 +25,13 @@ public class ResolvableInjectable implements DependentInjectable {
    * Constructs a new instance.
    *
    * @param type a {@link Type}, cannot be null
-   * @param qualifiers a set of {@link AnnotationDescriptor}s, cannot be null or contain nulls, but can be empty
+   * @param qualifiers a set of qualifier {@link Annotation}s, cannot be null or contain nulls, but can be empty
    * @param bindings a list of {@link Binding}s, cannot be null or contain nulls, but can be empty
    * @param scope a scope {@link Annotation}, can be null
    * @param discriminator an object to serve as a discriminator for similar injectables, can be null
    * @param objectFactory an {@link ObjectFactory}, cannot be null
    */
-  public ResolvableInjectable(Type type, Set<AnnotationDescriptor> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) {
+  public ResolvableInjectable(Type type, Set<Annotation> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
@@ -70,7 +68,7 @@ public class ResolvableInjectable implements DependentInjectable {
   }
 
   @Override
-  public Set<AnnotationDescriptor> getQualifiers() {
+  public Set<Annotation> getQualifiers() {
     return qualifiers;
   }
 

@@ -1,7 +1,6 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -31,17 +30,17 @@ public class InstanceInjectableFactory {
    * Creates a new {@link ResolvableInjectable}.
    *
    * @param instance an instance, cannot be null
-   * @param descriptors an array of descriptors
+   * @param qualifiers an array of qualifier {@link Annotation}s
    * @return a new {@link ResolvableInjectable}, never null
    */
-  public ResolvableInjectable create(Object instance, AnnotationDescriptor... descriptors) {
+  public ResolvableInjectable create(Object instance, Annotation... qualifiers) {
     if(instance == null) {
       throw new IllegalArgumentException("instance cannot be null");
     }
 
     return factory.create(
       instance.getClass(),
-      Set.of(descriptors),
+      Set.of(qualifiers),
       List.of(),
       SINGLETON,
       instance,

@@ -7,7 +7,9 @@ import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.util.Annotations;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -23,6 +25,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import javax.inject.Qualifier;
+
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
@@ -30,6 +34,8 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * concrete classes.
  */
 public class ClassInjectableFactory {
+  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
+
   private final ResolvableInjectableFactory factory;
 
   /**
@@ -93,7 +99,7 @@ public class ClassInjectableFactory {
 
     return factory.create(
       type,
-      AnnotationExtractor.extractQualifiers(injectableClass),
+      Annotations.findDirectlyMetaAnnotatedAnnotations(injectableClass, QUALIFIER),
       bindingsMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList()),
       AnnotationExtractor.findScopeAnnotation(injectableClass),
       null,

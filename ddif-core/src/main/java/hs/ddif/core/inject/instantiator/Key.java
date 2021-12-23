@@ -1,7 +1,6 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.util.AnnotationDescriptor;
-
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,10 +8,10 @@ import java.util.Objects;
 import java.util.Set;
 
 public class Key {
-  private final Set<AnnotationDescriptor> qualifiers;
+  private final Set<Annotation> qualifiers;
   private final Type type;
 
-  public Key(Type type, Set<AnnotationDescriptor> qualifiers) {
+  public Key(Type type, Set<Annotation> qualifiers) {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
@@ -24,12 +23,12 @@ public class Key {
     this.qualifiers = Collections.unmodifiableSet(new HashSet<>(qualifiers));
   }
 
-  public Set<AnnotationDescriptor> getQualifiers() {
+  public Set<Annotation> getQualifiers() {
     return qualifiers;
   }
 
-  public AnnotationDescriptor[] getQualifiersAsArray() {
-    return qualifiers.toArray(new AnnotationDescriptor[qualifiers.size()]);
+  public Annotation[] getQualifiersAsArray() {
+    return qualifiers.toArray(new Annotation[qualifiers.size()]);
   }
 
   public Type getType() {
@@ -42,7 +41,7 @@ public class Key {
 
     builder.append("[");
 
-    for(AnnotationDescriptor qualifier : getQualifiersAsArray()) {
+    for(Annotation qualifier : getQualifiersAsArray()) {
       if(builder.length() > 1) {
         builder.append(" ");
       }

@@ -15,7 +15,6 @@ import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.inject.store.ResolvableInjectableFactory;
 import hs.ddif.core.scope.OutOfScopeException;
-import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -68,7 +67,7 @@ public class ProducerGathererExtension implements Extension {
     this.classInjectableFactory = new ClassInjectableFactory(this::create);
   }
 
-  private ResolvableInjectable create(Type type, Set<AnnotationDescriptor> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) {
+  private ResolvableInjectable create(Type type, Set<Annotation> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) {
     return factory.create(type, qualifiers, bindings, scope, discriminator, (instantiator, parameters) -> createInstance(objectFactory, instantiator, parameters));
   }
 
