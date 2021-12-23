@@ -6,7 +6,6 @@ import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Resolver;
 import hs.ddif.core.store.StoreConsistencyPolicy;
-import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
@@ -249,7 +248,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
 
     for(T source : sources) {
       Type type = source.getType();
-      Set<AnnotationDescriptor> qualifiers = source.getQualifiers();
+      Set<Annotation> qualifiers = source.getQualifiers();
 
       for(Class<?> cls : Types.getSuperTypes(TypeUtils.getRawType(type, null))) {
         Map<Key, Node> nodesByKeys = nodes.get(cls);
@@ -290,7 +289,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
 
     for(T source : sources) {
       Type type = source.getType();
-      Set<AnnotationDescriptor> qualifiers = source.getQualifiers();
+      Set<Annotation> qualifiers = source.getQualifiers();
 
       for(Class<?> cls : Types.getSuperTypes(TypeUtils.getRawType(type, null))) {
         Map<Key, Node> nodesByKeys = nodes.get(cls);

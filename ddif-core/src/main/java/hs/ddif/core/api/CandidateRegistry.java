@@ -1,7 +1,6 @@
 package hs.ddif.core.api;
 
-import hs.ddif.core.util.AnnotationDescriptor;
-
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -68,7 +67,7 @@ public interface CandidateRegistry {
    * @param instance the instance to register with the Injector
    * @param qualifiers optional list of qualifiers for this instance
    */
-  void registerInstance(Object instance, AnnotationDescriptor... qualifiers);
+  void registerInstance(Object instance, Annotation... qualifiers);
 
   /**
    * Removes the given {@link Type}, and all its derived candidates if any, if

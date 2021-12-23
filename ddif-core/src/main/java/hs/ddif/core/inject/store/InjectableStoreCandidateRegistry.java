@@ -4,8 +4,8 @@ import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.inject.instantiator.Gatherer;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.store.InjectableStore;
-import hs.ddif.core.util.AnnotationDescriptor;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,7 +50,7 @@ public class InjectableStoreCandidateRegistry implements CandidateRegistry {
   }
 
   @Override
-  public void registerInstance(Object instance, AnnotationDescriptor... qualifiers) {
+  public void registerInstance(Object instance, Annotation... qualifiers) {
     registerInternal(List.of(instanceInjectableFactory.create(instance, qualifiers)));
   }
 

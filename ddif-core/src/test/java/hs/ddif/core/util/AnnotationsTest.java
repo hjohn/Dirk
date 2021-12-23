@@ -5,6 +5,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Map;
 
+import javax.inject.Named;
+
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -50,6 +52,14 @@ public class AnnotationsTest {
         .isInstanceOf(AnnotationFormatException.class)
         .hasMessage("Missing value(s) for value")
         .hasNoCause();
+    }
+  }
+
+  @Nested
+  class When_named_IsCalled {
+    @Test
+    void shouldCreatedNamedAnnotation() throws NoSuchFieldException, SecurityException {
+      assertThat(Annotations.named("me")).isEqualTo(A.class.getDeclaredField("named").getAnnotation(Named.class));
     }
   }
 
@@ -200,5 +210,6 @@ public class AnnotationsTest {
   private static class A {
     @Deepest @Wet @Hot public String field1;
     @Deep public String field2;
+    @Named("me") public String named;
   }
 }

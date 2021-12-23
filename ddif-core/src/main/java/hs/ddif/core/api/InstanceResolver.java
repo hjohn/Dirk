@@ -1,5 +1,7 @@
 package hs.ddif.core.api;
 
+import hs.ddif.core.util.Annotations;
+
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -12,9 +14,9 @@ import java.util.List;
  * <li>A {@link Class} to match by implemented interface or {@link javax.inject.Qualifier}
  *     annotation, for example the interface <code>Comparable</code> or the annotation
  *     <code>Named</code></li>
- * <li>An {@link java.lang.annotation.Annotation} or {@link hs.ddif.core.util.AnnotationDescriptor}
- *     to match by annotation, including matching all of its values; {@code Annotation} instances can
- *     be difficult to obtain, using {@code AnnotationDescriptor} is recommended instead</li>
+ * <li>An {@link java.lang.annotation.Annotation} to match by annotation, including matching
+ *     all of its values; {@code Annotation} instances can be obtained using {@link Annotations}
+ *     helper class</li>
  * <li>A {@link Matcher} to match by custom criteria provided by a {@link Matcher}
  *     implementation</li>
  * </ul>

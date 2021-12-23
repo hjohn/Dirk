@@ -1,7 +1,5 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.util.AnnotationDescriptor;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Set;
@@ -20,15 +18,14 @@ public interface Resolver<T extends Injectable> {
    * <li>{@link Class} to match by implemented interface or by presence of an annotation, for
    *     example the interface <code>List.class</code> or the annotation
    *     <code>Singleton.class</code></li>
-   * <li>{@link Annotation} or {@link AnnotationDescriptor} to match by an annotation,
-   *     including matching all of its values</li>
+   * <li>{@link Annotation} to match by an annotation, including matching all of its values</li>
    * <li>{@link hs.ddif.core.api.Matcher} to match by custom criteria provided by a {@code Matcher}
    *     implementation</li>
    * </ul>
    *
    * @param type the {@link Type} of the {@link Injectable}s to look up, cannot be null
    * @param criteria zero or more additional criteria the {@link Injectable}s must match
-   * @return a set of {@link Injectable}s matching the given type and critera, never null but can be empty
+   * @return a set of {@link Injectable}s matching the given type and criteria, never null but can be empty
    */
   Set<T> resolve(Type type, Object... criteria);
 }

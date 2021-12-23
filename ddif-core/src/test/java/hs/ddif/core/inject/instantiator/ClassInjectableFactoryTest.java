@@ -6,7 +6,6 @@ import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.inject.store.InstanceInjectableFactory;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.test.qualifiers.Red;
-import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Nullable;
 
 import java.lang.reflect.Type;
@@ -52,7 +51,7 @@ public class ClassInjectableFactoryTest {
     injectable = classInjectableFactory.create(ClassWithDependencies.class);
 
     assertEquals(ClassWithDependencies.class, injectable.getType());
-    assertEquals(Collections.singleton(new AnnotationDescriptor(ClassWithDependencies.class.getAnnotation(Red.class))), injectable.getQualifiers());
+    assertEquals(Collections.singleton(ClassWithDependencies.class.getAnnotation(Red.class)), injectable.getQualifiers());
     assertNull(injectable.getScope());
     assertThat(injectable.getBindings()).hasSize(4);
 

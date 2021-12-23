@@ -5,7 +5,9 @@ import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.util.Annotations;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -14,6 +16,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.inject.Qualifier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -22,6 +25,8 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * owner {@link Type}.
  */
 public class FieldInjectableFactory {
+  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
+
   private final ResolvableInjectableFactory factory;
 
   /**
@@ -68,7 +73,7 @@ public class FieldInjectableFactory {
 
     return factory.create(
       type,
-      AnnotationExtractor.extractQualifiers(field),
+      Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER),
       BindingProvider.ofField(field, ownerType),
       AnnotationExtractor.findScopeAnnotation(field),
       field,  // for proper discrimination, the exact field should also be taken into account, next to its generic type

@@ -15,7 +15,7 @@ import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.scope.WeakSingletonScopeResolver;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.test.qualifiers.Red;
-import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -101,8 +101,8 @@ public class InstantiatorTest {
         store.put(classInjectableFactory.create(D.class));
         store.put(classInjectableFactory.create(F.class));
         store.put(classInjectableFactory.create(G.class));
-        store.put(instanceInjectableFactory.create("red", AnnotationDescriptor.describe(Red.class)));
-        store.put(instanceInjectableFactory.create("green", AnnotationDescriptor.named("green")));
+        store.put(instanceInjectableFactory.create("red", Annotations.of(Red.class)));
+        store.put(instanceInjectableFactory.create("green", Annotations.named("green")));
         store.put(methodInjectableFactory.create(B.class.getDeclaredMethod("createH"), B.class));
         store.put(methodInjectableFactory.create(B.class.getDeclaredMethod("createI"), B.class));
         store.put(classInjectableFactory.create(K.class));

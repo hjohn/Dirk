@@ -19,8 +19,8 @@ import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.scope.WeakSingletonScopeResolver;
 import hs.ddif.core.store.InjectableStore;
-import hs.ddif.core.util.AnnotationDescriptor;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.stream.Stream;
@@ -149,7 +149,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
   }
 
   @Override
-  public void registerInstance(Object instance, AnnotationDescriptor... qualifiers) {
+  public void registerInstance(Object instance, Annotation... qualifiers) {
     registry.registerInstance(instance, qualifiers);
   }
 

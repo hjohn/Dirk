@@ -3,7 +3,7 @@ package hs.ddif.core.inject.store;
 import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.test.qualifiers.Big;
-import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Annotations;
 
 import java.lang.reflect.AccessibleObject;
 import java.util.List;
@@ -61,7 +61,7 @@ public class BindingProviderTest {
     assertEquals(Integer.class, bindings.get(0).getKey().getType());
     assertEquals(Double.class, bindings.get(1).getKey().getType());
     assertEquals(Subclass.class, bindings.get(2).getKey().getType());
-    assertEquals(Set.of(AnnotationDescriptor.describe(Big.class)), bindings.get(0).getKey().getQualifiers());
+    assertEquals(Set.of(Annotations.of(Big.class)), bindings.get(0).getKey().getQualifiers());
     assertEquals(Set.of(), bindings.get(1).getKey().getQualifiers());
     assertEquals(Set.of(), bindings.get(2).getKey().getQualifiers());
   }

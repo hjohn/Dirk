@@ -47,9 +47,8 @@ import hs.ddif.core.test.injectables.SubclassOfBeanWithInjection;
 import hs.ddif.core.test.injectables.SubclassOfBeanWithInjectionWithSameNamedInjection;
 import hs.ddif.core.test.injectables.UnavailableBean;
 import hs.ddif.core.test.injectables.UnregisteredParentBean;
-import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
-import hs.ddif.core.util.Value;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -61,7 +60,6 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -356,8 +354,8 @@ public class InjectorTest {
 
   @Test
   public void shouldRegisterSameStringInstancesWithDifferentQualifiers() {
-    injector.registerInstance("a", AnnotationDescriptor.describe(Named.class, new Value("value", "name-1")));
-    injector.registerInstance("a", AnnotationDescriptor.describe(Named.class, new Value("value", "name-2")));
+    injector.registerInstance("a", Annotations.named("name-1"));
+    injector.registerInstance("a", Annotations.named("name-2"));
   }
 
   @Test

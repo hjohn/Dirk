@@ -3,7 +3,7 @@ package hs.ddif.plugins;
 import hs.ddif.core.Injector;
 import hs.ddif.core.Injectors;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
-import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Annotations;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableDependency;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableInjectAnnotatedDependency;
 import hs.ddif.plugins.test.project.TestClassWithSetterInjection;
@@ -22,14 +22,14 @@ public class PluginManagerRegistrationTest {
   public void shouldLoadWithAutoDiscovery() {
     Injector injector = Injectors.autoDiscovering();
 
-    injector.registerInstance("{jsonconfig}", AnnotationDescriptor.named("configuration"));
+    injector.registerInstance("{jsonconfig}", Annotations.named("configuration"));
 
     ComponentScanner.scan(injector.getCandidateRegistry(), "hs.ddif.plugins.test.project");
 
     assertNotNull(injector.getInstance(TestDatabase.class));
     assertNotNull(injector.getInstance(TestStatement.class));
     assertNotNull(injector.getInstance(TestAutoDiscoverableInjectAnnotatedDependency.class));
-    assertEquals("10.0.2", injector.getInstance(String.class, AnnotationDescriptor.named("version")));
+    assertEquals("10.0.2", injector.getInstance(String.class, Annotations.named("version")));
     assertNotNull(injector.getInstance(TestClassWithSetterInjection.class));
   }
 
@@ -37,7 +37,7 @@ public class PluginManagerRegistrationTest {
   public void shouldLoadWithoutAutoDiscovery() {
     Injector injector = Injectors.manual();
 
-    injector.registerInstance("{jsonconfig}", AnnotationDescriptor.named("configuration"));
+    injector.registerInstance("{jsonconfig}", Annotations.named("configuration"));
 
     assertThatThrownBy(() -> ComponentScanner.scan(injector.getCandidateRegistry(), "hs.ddif.plugins.test.project"))
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
@@ -50,7 +50,7 @@ public class PluginManagerRegistrationTest {
     assertNotNull(injector.getInstance(TestDatabase.class));
     assertNotNull(injector.getInstance(TestStatement.class));
     assertNotNull(injector.getInstance(TestAutoDiscoverableInjectAnnotatedDependency.class));
-    assertEquals("10.0.2", injector.getInstance(String.class, AnnotationDescriptor.named("version")));
+    assertEquals("10.0.2", injector.getInstance(String.class, Annotations.named("version")));
     assertNotNull(injector.getInstance(TestClassWithSetterInjection.class));
   }
 }

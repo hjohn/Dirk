@@ -11,10 +11,8 @@ import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.qualifiers.Small;
-import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.TypeReference;
-import hs.ddif.core.util.Value;
 
 import java.io.Serializable;
 import java.util.List;
@@ -22,7 +20,6 @@ import java.util.Random;
 import java.util.RandomAccess;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.junit.Before;
@@ -80,48 +77,48 @@ public class InjectableStoreTest {
 
   @Test
   public void shouldStoreWithQualifier() {
-    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
-    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
-    store.put(instanceInjectableFactory.create("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(instanceInjectableFactory.create("d", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
-    store.put(instanceInjectableFactory.create("f", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))));
+    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-a")));
+    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-b")));
+    store.put(instanceInjectableFactory.create("c", Annotations.named("parameter-c")));
+    store.put(instanceInjectableFactory.create("d", Annotations.named("parameter-c")));
+    store.put(instanceInjectableFactory.create("f", Annotations.named("parameter-e")));
 
     assertThat(store.resolve(String.class), hasSize(5));
-    assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))), hasSize(1));
-    assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))), hasSize(1));
-    assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))), hasSize(2));
-    assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-d"))), hasSize(0));
-    assertThat(store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-e"))), hasSize(1));
+    assertThat(store.resolve(String.class, Annotations.named("parameter-a")), hasSize(1));
+    assertThat(store.resolve(String.class, Annotations.named("parameter-b")), hasSize(1));
+    assertThat(store.resolve(String.class, Annotations.named("parameter-c")), hasSize(2));
+    assertThat(store.resolve(String.class, Annotations.named("parameter-d")), hasSize(0));
+    assertThat(store.resolve(String.class, Annotations.named("parameter-e")), hasSize(1));
   }
 
   @Test
   public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() {
-    store.put(instanceInjectableFactory.create(new String("a"), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
+    store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a")));
 
     thrown.expect(DuplicateInjectableException.class);
-    thrown.expectMessage(" already registered for: Injectable[@javax.inject.Named[value=parameter-a] java.lang.String]");
+    thrown.expectMessage(" already registered for: Injectable[@javax.inject.Named(value=parameter-a) java.lang.String]");
 
-    store.put(instanceInjectableFactory.create(new String("a"), AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
+    store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a")));
   }
 
   @Test
   public void shouldRemoveWithQualifier() {
-    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
-    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
-    store.put(instanceInjectableFactory.create("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-a")));
+    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-b")));
+    store.put(instanceInjectableFactory.create("c", Annotations.named("parameter-c")));
 
-    store.remove(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
-    store.remove(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))));
-    store.remove(instanceInjectableFactory.create("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.remove(instanceInjectableFactory.create("a", Annotations.named("parameter-a")));
+    store.remove(instanceInjectableFactory.create("a", Annotations.named("parameter-b")));
+    store.remove(instanceInjectableFactory.create("c", Annotations.named("parameter-c")));
   }
 
   private void setupStore() {
-    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-a"))));
-    store.put(instanceInjectableFactory.create("a", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b")), AnnotationDescriptor.describe(Red.class)));
-    store.put(instanceInjectableFactory.create("c", AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-c"))));
+    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-a")));
+    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-b"), Annotations.of(Red.class)));
+    store.put(instanceInjectableFactory.create("c", Annotations.named("parameter-c")));
     store.put(instanceInjectableFactory.create(4L));
     store.put(instanceInjectableFactory.create(2));
-    store.put(instanceInjectableFactory.create(6L, AnnotationDescriptor.describe(Red.class)));
+    store.put(instanceInjectableFactory.create(6L, Annotations.of(Red.class)));
     store.put(instanceInjectableFactory.create(8));
     store.put(instanceInjectableFactory.create(new Random()));
   }
@@ -134,7 +131,7 @@ public class InjectableStoreTest {
     assertEquals(3, store.resolve(String.class).size());
 
     // All Strings with a specific annotation
-    assertEquals(1, store.resolve(String.class, AnnotationDescriptor.describe(Named.class, new Value("value", "parameter-b"))).size());
+    assertEquals(1, store.resolve(String.class, Annotations.named("parameter-b")).size());
 
     // All Numbers
     assertEquals(4, store.resolve(Number.class).size());
@@ -151,13 +148,10 @@ public class InjectableStoreTest {
     }).size());
 
     // All Red Objects
-    assertEquals(2, store.resolve(Object.class, AnnotationDescriptor.describe(Red.class)).size());
-
-    // All Red Objects (using annotation)
     assertEquals(2, store.resolve(Object.class, Annotations.of(Red.class)).size());
 
     // All Red Numbers
-    assertEquals(1, store.resolve(Number.class, AnnotationDescriptor.describe(Red.class)).size());
+    assertEquals(1, store.resolve(Number.class, Annotations.of(Red.class)).size());
 
     // All Serializables
     assertEquals(8, store.resolve(Serializable.class).size());

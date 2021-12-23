@@ -9,7 +9,7 @@ import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.qualifiers.Small;
-import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.TypeReference;
 
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class InjectorProviderTest {
     };
 
     injector.registerInstance(anonymousProvider);
-    injector.registerInstance(Boolean.TRUE, AnnotationDescriptor.named("db.readonly"));
+    injector.registerInstance(Boolean.TRUE, Annotations.named("db.readonly"));
 
     for(int i = 0; i < 2; i++) {
       injector.register(DatabaseProvider.class);
