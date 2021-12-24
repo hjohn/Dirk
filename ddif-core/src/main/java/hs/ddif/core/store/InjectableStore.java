@@ -1,7 +1,6 @@
 package hs.ddif.core.store;
 
 import hs.ddif.core.api.Matcher;
-import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
@@ -9,11 +8,14 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,10 +30,11 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * @param <T> the type of {@link Injectable} this store holds
  */
 public class InjectableStore<T extends Injectable> implements Resolver<T> {
+  private final Comparator<Set<T>> comparatorConst = Comparator.comparingInt(Set::size);
 
   /**
    * Map containing annotation mappings to sets of injectables which match one specific
-   * type or qualifier class.<p>
+   * type or qualifier class.
    */
   private final Map<Class<?>, Map<Annotation, Set<T>>> injectablesByAnnotationByType = new HashMap<>();
 
@@ -54,66 +57,96 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
   }
 
   @Override
-  public synchronized Set<T> resolve(Type type, Object... criteria) {
-    Class<?> cls = TypeUtils.getRawType(type, null);
+  public synchronized Set<T> resolve(Key key) {
+    return resolve(key, List.of(), List.of());
+  }
+
+  public synchronized Set<T> resolve(Key key, Criteria criteria) {
+    return resolve(key, criteria.getInterfaces(), criteria.getMatchers());
+  }
+
+  public synchronized Set<T> resolve(Key key, Collection<Class<?>> interfaces, Collection<Matcher> matchers) {
+    Class<?> cls = TypeUtils.getRawType(key.getType(), null);
     Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(cls);
 
     if(injectablesByAnnotation == null) {
       return Collections.emptySet();
     }
 
-    Set<T> matches = new HashSet<>(injectablesByAnnotation.get(null));  // Make a copy as otherwise retainAll below will modify the map
+    /*
+     * The sets can be very large, and copying a large set is a waste. Therefore
+     * gather all sets sorted by size. Copy the smallest set and perform retainAll
+     * with the remaining sets.
+     */
 
-    filterByGenericType(type, matches);
-    filterByCriteria(injectablesByAnnotation, matches, criteria);
+    Queue<Set<T>> sets = new PriorityQueue<>(comparatorConst);
+
+    for(Annotation annotation : key.getQualifiers()) {
+      Set<T> set = injectablesByAnnotation.get(annotation);
+
+      if(set == null) {
+        return Collections.emptySet();
+      }
+
+      sets.add(set);
+    }
+
+    for(Class<?> iface : interfaces) {
+      Map<Annotation, Set<T>> map = injectablesByAnnotationByType.get(iface);
+
+      if(map == null) {
+        return Collections.emptySet();
+      }
+
+      Set<T> set = map.get(null);
+
+      if(set == null) {
+        return Collections.emptySet();
+      }
+
+      sets.add(set);
+    }
+
+    Set<T> matches = null;
+
+    for(Set<T> set : sets) {
+      if(matches == null) {
+        matches = new HashSet<>(set);  // copies smallest set
+      }
+      else {
+        matches.retainAll(set);  // retains on smallest set with next smallest set
+      }
+
+      if(matches.isEmpty()) {
+        return Collections.emptySet();
+      }
+    }
+
+    /*
+     * If at this point matches is still null, then there were no filters by qualifier or interface.
+     * A copy must be made then of the set containing all injectables for a class.
+     */
+
+    matches = matches == null ? new HashSet<>(injectablesByAnnotation.get(null)) : matches;
+
+    /*
+     * If necessary, further strip down the matches based on an exact generic type match:
+     */
+
+    filterByGenericType(key.getType(), matches);
+
+    /*
+     * Finally apply custom supplied matchers:
+     */
+
+    for(Matcher matcher : matchers) {
+      filterByMatcher(matches, matcher);
+    }
 
     return matches;
   }
 
-  private void filterByCriteria(Map<Annotation, Set<T>> injectablesByAnnotation, Set<T> matches, Object... criteria) {
-    for(Object criterion : criteria) {
-      if(matches.isEmpty()) {
-        break;
-      }
-
-      if(criterion instanceof Matcher) {
-        filterByMatcher(matches, (Matcher)criterion);
-        continue;  // Skip matches standard filtering
-      }
-
-      Set<T> qualifierMatches = null;
-
-      if(criterion instanceof Class && ((Class<?>)criterion).isAnnotation()) {  // If an annotation is passed in as a class, convert it to Annotation
-        @SuppressWarnings("unchecked")
-        Class<? extends Annotation> castedCriterion = (Class<? extends Annotation>)criterion;
-
-        criterion = Annotations.of(castedCriterion);
-      }
-
-      if(criterion instanceof Class) {
-        Map<Annotation, Set<T>> map = injectablesByAnnotationByType.get(criterion);
-
-        if(map != null) {
-          qualifierMatches = map.get(null);
-        }
-      }
-      else if(criterion instanceof Annotation) {
-        qualifierMatches = injectablesByAnnotation.get(criterion);
-      }
-      else {
-        throw new IllegalArgumentException("Unsupported criterion type, must be Class, Annotation or Matcher: " + criterion);
-      }
-
-      if(qualifierMatches != null) {
-        matches.retainAll(qualifierMatches);
-      }
-      else {
-        matches.clear();
-      }
-    }
-  }
-
-  private void filterByMatcher(Set<T> matches, Matcher matcher) {
+  private static <T extends Injectable> void filterByMatcher(Set<T> matches, Matcher matcher) {
     for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
       Injectable injectable = iterator.next();
 
@@ -123,20 +156,12 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
   }
 
-  public synchronized boolean contains(Type type, Object... criteria) {
-    Class<?> cls = TypeUtils.getRawType(type, null);
-    Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(cls);
+  public synchronized boolean contains(Key key, Criteria criteria) {
+    return !resolve(key, criteria).isEmpty();
+  }
 
-    if(injectablesByAnnotation == null) {
-      return false;
-    }
-
-    Set<T> matches = new HashSet<>(injectablesByAnnotation.get(null));  // Make a copy as otherwise retainAll below will modify the map
-
-    filterByGenericType(type, matches);
-    filterByCriteria(injectablesByAnnotation, matches, criteria);
-
-    return !matches.isEmpty();
+  public synchronized boolean contains(Key key) {
+    return contains(key, Criteria.EMPTY);
   }
 
   /**

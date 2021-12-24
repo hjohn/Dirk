@@ -1,6 +1,6 @@
 package hs.ddif.core.inject.instantiator;
 
-import java.util.Arrays;
+import hs.ddif.core.store.Criteria;
 
 /**
  * Base class for exceptions that can be thrown during instance resolution by
@@ -27,8 +27,8 @@ public abstract class InstanceResolutionFailure extends Exception {
     super(message);
   }
 
-  protected static String toCriteriaString(Object... criteria) {
-    return criteria.length > 0 ? " with criteria " + Arrays.toString(criteria) : "";
+  protected static String toCriteriaString(Criteria criteria) {
+    return criteria == null || criteria.equals(Criteria.EMPTY) ? "" : " with " + criteria;
   }
 
   /**

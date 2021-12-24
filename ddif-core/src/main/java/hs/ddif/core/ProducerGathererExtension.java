@@ -15,6 +15,7 @@ import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.inject.store.ResolvableInjectableFactory;
 import hs.ddif.core.scope.OutOfScopeException;
+import hs.ddif.core.store.Key;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -137,11 +138,11 @@ public class ProducerGathererExtension implements Extension {
    * {@code IllegalAccessException}.
    */
   public static class Interceptor {
-    private final Type type;
+    private final Key key;
     private final String[] names;
 
     Interceptor(Type type, String[] names) {
-      this.type = type;
+      this.key = new Key(type);
       this.names = names;
     }
 
@@ -153,7 +154,7 @@ public class ProducerGathererExtension implements Extension {
         namedParameters[i] = new NamedParameter(names[i], args[i]);
       }
 
-      return instantiator.getParameterizedInstance(type, namedParameters);
+      return instantiator.getInstance(key, namedParameters);
     }
   }
 

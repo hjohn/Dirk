@@ -3,9 +3,9 @@ package hs.ddif.core.inject.store;
 import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.DiscoveryFailure;
 import hs.ddif.core.inject.instantiator.Gatherer;
-import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.store.Key;
 import hs.ddif.core.store.Resolver;
 
 import java.lang.reflect.Type;
@@ -65,16 +65,22 @@ public class AutoDiscoveringGatherer implements Gatherer {
   }
 
   @Override
-  public Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Type type, Object... criteria) throws DiscoveryFailure {
-    if(!autoDiscovery || criteria.length != 0 || !resolver.resolve(type, criteria).isEmpty()) {
+  public Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Key key) throws DiscoveryFailure {
+    if(!autoDiscovery || !resolver.resolve(key).isEmpty()) {
       return Set.of();
     }
 
     try {
-      return new Executor(resolver, List.of(classInjectableFactory.create(type))).executor();
+      ResolvableInjectable injectable = classInjectableFactory.create(key.getType());
+
+      if(injectable.getQualifiers().containsAll(key.getQualifiers())) {
+        return new Executor(resolver, List.of(injectable)).executor();
+      }
+
+      return Set.of();
     }
     catch(Exception e) {
-      throw new DiscoveryFailure(type, "Exception during auto discovery", e);
+      throw new DiscoveryFailure(key, "Exception during auto discovery", e);
     }
   }
 
@@ -145,10 +151,10 @@ public class AutoDiscoveringGatherer implements Gatherer {
     }
 
     @Override
-    public Set<ResolvableInjectable> resolve(Type type, Object... criteria) {
-      Set<ResolvableInjectable> set = new HashSet<>(base.resolve(type, criteria));
+    public Set<ResolvableInjectable> resolve(Key key) {
+      Set<ResolvableInjectable> set = new HashSet<>(base.resolve(key));
 
-      set.addAll(include.resolve(type, criteria));
+      set.addAll(include.resolve(key));
 
       return set;
     }
@@ -184,20 +190,17 @@ public class AutoDiscoveringGatherer implements Gatherer {
    * fail if the type is abstract or if the key has any qualifiers as a class injectable
    * cannot have qualifiers.
    */
-  private ResolvableInjectable attemptCreateInjectable(Key requiredKey) {
-    Type type = requiredKey.getType();
-    Object[] qualifiersAsArray = requiredKey.getQualifiersAsArray();
+  private ResolvableInjectable attemptCreateInjectable(Key key) {
+    Type type = key.getType();
 
-    if(qualifiersAsArray.length == 0) {
+    if(key.getQualifiers().isEmpty()) {
       return classInjectableFactory.create(type);
     }
 
-    throw new BindingException("Auto discovered class cannot be required to have qualifiers: " + requiredKey);
+    throw new BindingException("Auto discovered class cannot be required to have qualifiers: " + key);
   }
 
-  private static boolean isResolvable(Resolver<ResolvableInjectable> resolver, Key requiredKey) {
-    Object[] qualifiersAsArray = requiredKey.getQualifiersAsArray();
-
-    return !resolver.resolve(requiredKey.getType(), qualifiersAsArray).isEmpty();
+  private static boolean isResolvable(Resolver<ResolvableInjectable> resolver, Key key) {
+    return !resolver.resolve(key).isEmpty();
   }
 }

@@ -1,7 +1,7 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.core.inject.instantiator.Binding;
-import hs.ddif.core.inject.instantiator.Key;
+import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.util.Annotations;
 
@@ -71,8 +71,8 @@ public class BindingProviderTest {
     assertThat(BindingProvider.ofExecutable(MethodHolder.class.getDeclaredMethod("create", Double.class), MethodHolder.class))
       .extracting(Binding::getKey)
       .containsExactly(
-        new Key(Double.class, Set.of()),
-        new Key(MethodHolder.class, Set.of())  // dependency on the declaring class as "create" is an instance method
+        new Key(Double.class),
+        new Key(MethodHolder.class)  // dependency on the declaring class as "create" is an instance method
       );
   }
 
@@ -81,7 +81,7 @@ public class BindingProviderTest {
     assertThat(BindingProvider.ofExecutable(MethodHolder.class.getDeclaredMethod("createStatic", Double.class), MethodHolder.class))
       .extracting(Binding::getKey)
       .containsExactly(
-        new Key(Double.class, Set.of())
+        new Key(Double.class)
       );
   }
 
@@ -90,7 +90,7 @@ public class BindingProviderTest {
     assertThat(BindingProvider.ofField(FieldHolder.class.getDeclaredField("b"), FieldHolder.class))
       .extracting(Binding::getKey)
       .containsExactly(
-        new Key(FieldHolder.class, Set.of())
+        new Key(FieldHolder.class)
       );
   }
 

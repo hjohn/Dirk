@@ -6,6 +6,7 @@ import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -84,18 +85,18 @@ public class MethodInjectableFactory {
       bindings,
       AnnotationExtractor.findScopeAnnotation(method),
       method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
-      new MethodObjectFactory(method, ownerType, bindings)
+      new MethodObjectFactory(method, new Key(ownerType), bindings)
     );
   }
 
   static class MethodObjectFactory implements ObjectFactory {
     private final Method method;
-    private final Type ownerType;
+    private final Key ownerKey;
     private final List<Binding> bindings;
 
-    MethodObjectFactory(Method method, Type ownerType, List<Binding> bindings) {
+    MethodObjectFactory(Method method, Key ownerKey, List<Binding> bindings) {
       this.method = method;
-      this.ownerType = ownerType;
+      this.ownerKey = ownerKey;
       this.bindings = bindings;
     }
 
@@ -111,7 +112,7 @@ public class MethodInjectableFactory {
     private Object constructInstance(Instantiator instantiator) throws InstanceCreationFailure {
       try {
         boolean isStatic = Modifier.isStatic(method.getModifiers());
-        Object obj = isStatic ? null : instantiator.getInstance(ownerType);
+        Object obj = isStatic ? null : instantiator.getInstance(ownerKey);
         Object[] values = new Object[bindings.size() - (isStatic ? 0 : 1)];  // Parameters for method
 
         for(int i = 0; i < values.length; i++) {

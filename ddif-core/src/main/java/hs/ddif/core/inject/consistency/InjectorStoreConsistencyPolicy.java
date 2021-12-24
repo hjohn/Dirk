@@ -1,9 +1,9 @@
 package hs.ddif.core.inject.consistency;
 
 import hs.ddif.core.inject.instantiator.Binding;
-import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.scope.ScopeResolver;
+import hs.ddif.core.store.Key;
 import hs.ddif.core.store.Resolver;
 import hs.ddif.core.store.StoreConsistencyPolicy;
 import hs.ddif.core.util.Types;
@@ -116,7 +116,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
     for(Binding binding : injectable.getBindings()) {
       if(!binding.isParameter() && !binding.isCollection()) {
         Key key = binding.getKey();
-        Set<T> injectables = resolver.resolve(key.getType(), (Object[])key.getQualifiersAsArray());
+        Set<T> injectables = resolver.resolve(key);
 
         // The binding is a single binding, if there are more than one matches it is ambiguous, and if there is no match then it must be optional
         if(injectables.size() > 1 || (!binding.isOptional() && injectables.size() < 1)) {
@@ -184,7 +184,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
           if(!binding.isParameter() && !binding.isCollection() && binding.isDirect()) {
             Key key = binding.getKey();
 
-            for(T boundInjectable : resolver.resolve(key.getType(), (Object[])key.getQualifiersAsArray())) {
+            for(T boundInjectable : resolver.resolve(key)) {
               if(visiting.contains(boundInjectable)) {
                 return true;
               }
@@ -319,7 +319,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
     nodes.computeIfAbsent(cls, k -> new HashMap<>())
       .computeIfAbsent(key, k -> {
         // when a new Key is added, initialise the Node with the current number of candidates that can satisfy it
-        Set<T> candidates = resolver.resolve(key.getType(), (Object[])key.getQualifiersAsArray());
+        Set<T> candidates = resolver.resolve(key);
         Node node = new Node(candidates.size());
 
         for(T source : sources) {

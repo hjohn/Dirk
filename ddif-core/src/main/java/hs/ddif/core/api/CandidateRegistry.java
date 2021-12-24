@@ -25,10 +25,10 @@ public interface CandidateRegistry {
    * otherwise <code>false</code>.
    *
    * @param type a type to check for, cannot be null
-   * @param criteria optional list of criteria, see {@link InstanceResolver}
+   * @param criterions optional list of criteria, see {@link InstanceResolver}
    * @return <code>true</code> when the given type with the given criteria is present, otherwise <code>false</code>
    */
-  boolean contains(Type type, Object... criteria);
+  boolean contains(Type type, Object... criterions);
 
   /**
    * Registers a {@link Type}, and all its derived candidates if any, if all

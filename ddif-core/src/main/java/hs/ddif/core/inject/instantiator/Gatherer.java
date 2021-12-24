@@ -1,5 +1,6 @@
 package hs.ddif.core.inject.instantiator;
 
+import hs.ddif.core.store.Key;
 import hs.ddif.core.store.Resolver;
 
 import java.lang.reflect.Type;
@@ -33,10 +34,9 @@ public interface Gatherer {
    * the type given is already resolvable then this method will return the empty set.
    *
    * @param resolver a {@link Resolver}, cannot be null
-   * @param type a {@link Type}, cannot be {@code null}
-   * @param criteria optional list of criteria, see {@link hs.ddif.core.api.InstanceResolver}
+   * @param key a {@link Key}, cannot be {@code null}
    * @return a fully expanded set of injectables, never {@code null} and never contains {@code null}, but can be empty
    * @throws DiscoveryFailure when the given type cannot be converted into a suitable injectable
    */
-  Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Type type, Object... criteria) throws DiscoveryFailure;
+  Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Key key) throws DiscoveryFailure;
 }

@@ -3,8 +3,8 @@ package hs.ddif.core.inject.instantiator;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.FieldInjectableFactory;
 import hs.ddif.core.scope.OutOfScopeException;
+import hs.ddif.core.store.Key;
 
-import java.lang.reflect.Type;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -77,7 +77,7 @@ public class FieldInjectableFactoryTest {
       "Declaring Class of [public java.lang.Object hs.ddif.core.inject.instantiator.FieldInjectableFactoryTest$B.b]"
     );
 
-    when(instantiator.getInstance((Type)C.class)).thenReturn(new C());
+    when(instantiator.getInstance(new Key(C.class))).thenReturn(new C());
 
     assertEquals("Bye", injectable.getObjectFactory().createInstance(instantiator));
   }

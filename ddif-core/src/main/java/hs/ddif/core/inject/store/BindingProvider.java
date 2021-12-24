@@ -7,10 +7,10 @@ import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.InstanceResolutionFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.MultipleInstances;
 import hs.ddif.core.inject.instantiator.NoSuchInstance;
 import hs.ddif.core.scope.OutOfScopeException;
+import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -130,7 +130,7 @@ public class BindingProvider {
 
     if(!Modifier.isStatic(executable.getModifiers()) && executable instanceof Method) {
       // For a non-static method, the class itself is also a required binding:
-      bindings.add(new DirectBinding(executable, AbstractBinding.DECLARING_CLASS, new Key(ownerType, Set.of()), false, false));
+      bindings.add(new DirectBinding(executable, AbstractBinding.DECLARING_CLASS, new Key(ownerType), false, false));
     }
 
     return Collections.unmodifiableList(bindings);
@@ -150,7 +150,7 @@ public class BindingProvider {
      * declaring class is required before the field can be accessed.
      */
 
-    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(new DirectBinding(field, AbstractBinding.DECLARING_CLASS, new Key(ownerType, Set.of()), false, false));
+    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(new DirectBinding(field, AbstractBinding.DECLARING_CLASS, new Key(ownerType), false, false));
   }
 
   private static Binding createBinding(AccessibleObject accessibleObject, int argNo, Type type, boolean optional, boolean isParameter, Set<Annotation> qualifiers) {
@@ -244,21 +244,19 @@ public class BindingProvider {
   }
 
   private static final class HashSetBinding extends AbstractBinding {
-    private final Set<Annotation> qualifiers;
-    private final Type elementType;
+    private final Key elementKey;
     private final boolean optional;
 
     private HashSetBinding(AccessibleObject accessibleObject, int argNo, Type elementType, Set<Annotation> qualifiers, boolean optional) {
-      super(accessibleObject, argNo, new Key(TypeUtils.parameterize(Set.class, elementType), Set.of()));
+      super(accessibleObject, argNo, new Key(TypeUtils.parameterize(Set.class, elementType)));
 
-      this.qualifiers = qualifiers;
-      this.elementType = elementType;
+      this.elementKey = new Key(elementType, qualifiers);
       this.optional = optional;
     }
 
     @Override
     public Object getValue(Instantiator instantiator) throws InstanceCreationFailure {
-      List<Object> instances = instantiator.getInstances(elementType, qualifiers.toArray());
+      List<Object> instances = instantiator.getInstances(elementKey);
 
       return instances.isEmpty() && optional ? null : new HashSet<>(instances);
     }
@@ -285,21 +283,19 @@ public class BindingProvider {
   }
 
   private static final class ArrayListBinding extends AbstractBinding {
-    private final Type elementType;
-    private final Set<Annotation> qualifiers;
+    private final Key elementKey;
     private final boolean optional;
 
     private ArrayListBinding(AccessibleObject accessibleObject, int argNo, Type elementType, Set<Annotation> qualifiers, boolean optional) {
-      super(accessibleObject, argNo, new Key(TypeUtils.parameterize(List.class, elementType), Set.of()));
+      super(accessibleObject, argNo, new Key(TypeUtils.parameterize(List.class, elementType)));
 
-      this.elementType = elementType;
-      this.qualifiers = qualifiers;
+      this.elementKey = new Key(elementType, qualifiers);
       this.optional = optional;
     }
 
     @Override
     public Object getValue(Instantiator instantiator) throws InstanceCreationFailure {
-      List<Object> instances = instantiator.getInstances(elementType, qualifiers.toArray());
+      List<Object> instances = instantiator.getInstances(elementKey);
 
       return instances.isEmpty() && optional ? null : instances;
     }
@@ -406,10 +402,10 @@ public class BindingProvider {
     @Override
     public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
       if(optional) {
-        return instantiator.findInstance(key.getType(), (Object[])key.getQualifiersAsArray());
+        return instantiator.findInstance(key);
       }
 
-      return instantiator.getInstance(key.getType(), (Object[])key.getQualifiersAsArray());
+      return instantiator.getInstance(key);
     }
 
     @Override

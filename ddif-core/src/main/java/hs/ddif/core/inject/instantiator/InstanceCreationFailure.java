@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.api.InstanceCreationException;
+import hs.ddif.core.store.Key;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
@@ -39,12 +40,12 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param type type involved, cannot be null
+   * @param key a {@link Key}, cannot be null
    * @param message a message
    * @param cause a {@link Throwable} to use as cause
    */
-  public InstanceCreationFailure(Type type, String message, Throwable cause) {
-    super(message + ": " + type, cause);
+  public InstanceCreationFailure(Key key, String message, Throwable cause) {
+    super(message + ": " + key, cause);
   }
 
   /**
