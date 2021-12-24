@@ -29,7 +29,9 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
   @Override
   public synchronized <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) {
     try {
-      return instantiator.getParameterizedInstance(type, parameters, criteria);
+      CriteriaParser parser = new CriteriaParser(type, criteria);
+
+      return instantiator.getInstance(parser.getKey(), parameters, parser.getCriteria());
     }
     catch(InstanceResolutionFailure f) {
       throw f.toRuntimeException();
@@ -52,7 +54,9 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
   @Override
   public synchronized <T> List<T> getInstances(Type type, Object... criteria) {
     try {
-      return instantiator.getInstances(type, criteria);
+      CriteriaParser parser = new CriteriaParser(type, criteria);
+
+      return instantiator.getInstances(parser.getKey(), parser.getCriteria());
     }
     catch(InstanceCreationFailure f) {
       throw f.toRuntimeException();

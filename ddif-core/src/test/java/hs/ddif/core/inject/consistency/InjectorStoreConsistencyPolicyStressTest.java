@@ -5,13 +5,13 @@ import hs.ddif.core.Injectors;
 import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.inject.instantiator.Key;
 import hs.ddif.core.inject.instantiator.MultipleInstances;
 import hs.ddif.core.inject.instantiator.NoSuchInstance;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
 

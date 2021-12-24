@@ -1,8 +1,8 @@
 package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.api.NoSuchInstanceException;
-
-import java.lang.reflect.Type;
+import hs.ddif.core.store.Criteria;
+import hs.ddif.core.store.Key;
 
 /**
  * Thrown when no matching instance was available or could be created.
@@ -12,22 +12,22 @@ public class NoSuchInstance extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param type a {@link Type}, cannot be null
-   * @param criteria an array of criteria
+   * @param key a {@link Key}, cannot be null
+   * @param criteria a {@link Criteria}, can be null
    * @param cause a {@link Throwable} cause, can be null
    */
-  public NoSuchInstance(Type type, Object[] criteria, Throwable cause) {
-    super("No such instance: " + type + toCriteriaString(criteria), cause);
+  public NoSuchInstance(Key key, Criteria criteria, Throwable cause) {
+    super("No such instance: " + key + toCriteriaString(criteria), cause);
   }
 
   /**
    * Constructs a new instance.
    *
-   * @param type a {@link Type}, cannot be null
-   * @param criteria an array of criteria
+   * @param key a {@link Key}, cannot be null
+   * @param criteria a {@link Criteria}, can be null
    */
-  public NoSuchInstance(Type type, Object[] criteria) {
-    this(type, criteria, null);
+  public NoSuchInstance(Key key, Criteria criteria) {
+    this(key, criteria, null);
   }
 
   @Override

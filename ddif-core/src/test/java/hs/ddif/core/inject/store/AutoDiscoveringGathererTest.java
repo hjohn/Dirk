@@ -5,7 +5,9 @@ import hs.ddif.core.ProducesGathererExtension;
 import hs.ddif.core.inject.instantiator.DiscoveryFailure;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.List;
@@ -56,14 +58,13 @@ public class AutoDiscoveringGathererTest {
     class And_gather_With_Type_IsCalled {
       @Test
       void shouldAlwaysReturnEmptySet() throws DiscoveryFailure {
-        assertThat(gatherer.gather(store, A.class)).isEmpty();
-        assertThat(gatherer.gather(store, A.class, Red.class)).isEmpty();
-        assertThat(gatherer.gather(store, I.class)).isEmpty();
-        assertThat(gatherer.gather(store, Bad_C.class)).isEmpty();
+        assertThat(gatherer.gather(store, new Key(A.class))).isEmpty();
+        assertThat(gatherer.gather(store, new Key(A.class, Set.of(Annotations.of(Red.class))))).isEmpty();
+        assertThat(gatherer.gather(store, new Key(I.class))).isEmpty();
+        assertThat(gatherer.gather(store, new Key(Bad_C.class))).isEmpty();
       }
     }
   }
-
 
   @Nested
   class When_autoDiscovery_isEnabled {
@@ -87,7 +88,7 @@ public class AutoDiscoveringGathererTest {
     class And_gather_With_Type_IsCalled {
       @Test
       void shouldDiscoverTypesAndFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(store, A.class)).containsExactlyInAnyOrder(
+        assertThat(gatherer.gather(store, new Key(A.class))).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           classInjectableFactory.create(D.class),
@@ -98,21 +99,21 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldReturnEmptySetWhenTypeUnsuitableForAutoDiscovery() throws DiscoveryFailure {
-        assertThat(gatherer.gather(store, A.class, Red.class)).isEmpty();
+        assertThat(gatherer.gather(store, new Key(A.class, Set.of(Annotations.of(Red.class))))).isEmpty();
       }
 
       @Test
       void shouldReturnEmptySetWhenTypeAlreadyResolvable() throws DiscoveryFailure {
         store.put(classInjectableFactory.create(A.class));
 
-        assertThat(gatherer.gather(store, A.class)).isEmpty();
+        assertThat(gatherer.gather(store, new Key(A.class))).isEmpty();
       }
 
       @Test
       void shouldRejectTypeThatIsAbstract() {
-        assertThatThrownBy(() -> gatherer.gather(store, I.class))
+        assertThatThrownBy(() -> gatherer.gather(store, new Key(I.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Exception during auto discovery: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
+          .hasMessage("Exception during auto discovery: [interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("Type cannot be abstract: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
@@ -121,9 +122,9 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldRejectTypeThatHasQualifiers() {
-        assertThatThrownBy(() -> gatherer.gather(store, Bad_C.class))
+        assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_C.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_C")
+          .hasMessage("Exception during auto discovery: [class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_C]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("Unable to inject: Field [hs.ddif.core.inject.store.AutoDiscoveringGathererTest$J hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_C.j] with: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$J]")
@@ -135,9 +136,9 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldRejectTypeWithUndiscoverableDependency() {
-        assertThatThrownBy(() -> gatherer.gather(store, Bad_A.class))
+        assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_A.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_A")
+          .hasMessage("Exception during auto discovery: [class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_A]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("Unable to inject: Field [hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_A.c] with: [class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C]")
@@ -150,9 +151,9 @@ public class AutoDiscoveringGathererTest {
 
       @Test
       void shouldRejectTypeWithMultipleUndiscoverableDependenciesAndUseSuppressedExceptionsForDetails() {
-        assertThatThrownBy(() -> gatherer.gather(store, Bad_B.class))
+        assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_B.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_B")
+          .hasMessage("Exception during auto discovery: [class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_B]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("Unable to resolve 2 binding(s) while processing extensions")

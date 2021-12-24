@@ -13,7 +13,9 @@ import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.scope.WeakSingletonScopeResolver;
+import hs.ddif.core.store.Criteria;
 import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
 
@@ -21,6 +23,7 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Scope;
 import javax.inject.Singleton;
@@ -67,24 +70,24 @@ public class InstantiatorTest {
 
     @Test
     void shouldThrowExceptionWhenGettingSingleInstance() {
-      assertThatThrownBy(() -> instantiator.getInstance(A.class))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class)))
         .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
 
-      assertThatThrownBy(() -> instantiator.getParameterizedInstance(A.class, new NamedParameter[] {new NamedParameter("param", 5)}))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class), new NamedParameter[] {new NamedParameter("param", 5)}))
         .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
     }
 
     @Test
     void shouldReturnNullWhenFindingSingleInstance() throws MultipleInstances, InstanceCreationFailure, OutOfScopeException {
-      assertNull(instantiator.findInstance(A.class));
-      assertNull(instantiator.findParameterizedInstance(A.class, new NamedParameter[] {new NamedParameter("param", 5)}));
+      assertNull(instantiator.findInstance(new Key(A.class)));
+      assertNull(instantiator.findInstance(new Key(A.class), new NamedParameter[] {new NamedParameter("param", 5)}, Criteria.EMPTY));
     }
 
     @Test
     void shouldReturnEmptySetWhenGettingMultipleInstances() throws InstanceCreationFailure {
-      assertThat(instantiator.getInstances(A.class)).isEmpty();
+      assertThat(instantiator.getInstances(new Key(A.class))).isEmpty();
     }
   }
 
@@ -114,51 +117,51 @@ public class InstantiatorTest {
 
     @Test
     void getInstanceShouldReturnInstancesOfKnownTypes() throws InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
-      assertNotNull(instantiator.getInstance(A.class));
-      assertNotNull(instantiator.getInstance(String.class, Red.class));
+      assertNotNull(instantiator.getInstance(new Key(A.class)));
+      assertNotNull(instantiator.getInstance(new Key(String.class, Set.of(Annotations.of(Red.class)))));
     }
 
     @Test
     void getInstancesShouldReturnInstancesOfKnownTypes() throws InstanceCreationFailure {
-      assertThat(instantiator.getInstances(String.class)).hasSize(2);
+      assertThat(instantiator.getInstances(new Key(String.class))).hasSize(2);
     }
 
     @Test
     void findInstanceShouldReturnInstancesOfKnownTypes() throws InstanceCreationFailure, MultipleInstances, OutOfScopeException {
-      assertNotNull(instantiator.findInstance(A.class));
-      assertNotNull(instantiator.findInstance(String.class, Red.class));
+      assertNotNull(instantiator.findInstance(new Key(A.class)));
+      assertNotNull(instantiator.findInstance(new Key(String.class, Set.of(Annotations.of(Red.class)))));
     }
 
     @Test
     void shouldFollowScopeRules() throws InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
-      assertFalse(instantiator.getInstance(A.class).equals(instantiator.getInstance(A.class)));
-      assertTrue(instantiator.getInstance(B.class).equals(instantiator.getInstance(B.class)));
-      assertTrue(instantiator.getInstance(C.class).equals(instantiator.getInstance(C.class)));
+      assertFalse(instantiator.getInstance(new Key(A.class)).equals(instantiator.getInstance(new Key(A.class))));
+      assertTrue(instantiator.getInstance(new Key(B.class)).equals(instantiator.getInstance(new Key(B.class))));
+      assertTrue(instantiator.getInstance(new Key(C.class)).equals(instantiator.getInstance(new Key(C.class))));
 
-      assertFalse(instantiator.findInstance(A.class).equals(instantiator.findInstance(A.class)));
-      assertTrue(instantiator.findInstance(B.class).equals(instantiator.findInstance(B.class)));
-      assertTrue(instantiator.findInstance(C.class).equals(instantiator.findInstance(C.class)));
+      assertFalse(instantiator.findInstance(new Key(A.class)).equals(instantiator.findInstance(new Key(A.class))));
+      assertTrue(instantiator.findInstance(new Key(B.class)).equals(instantiator.findInstance(new Key(B.class))));
+      assertTrue(instantiator.findInstance(new Key(C.class)).equals(instantiator.findInstance(new Key(C.class))));
     }
 
     @Test
     void weakSingletongsShouldBeGCd() throws InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
-      int hash1 = instantiator.getInstance(C.class).hashCode();
+      int hash1 = instantiator.getInstance(new Key(C.class)).hashCode();
 
       System.gc();
 
-      int hash2 = instantiator.getInstance(C.class).hashCode();
+      int hash2 = instantiator.getInstance(new Key(C.class)).hashCode();
 
       assertNotEquals(hash1, hash2);
     }
 
     @Test
     void shouldThrowOutOfScopeExceptionWhenScopeNotActive() {
-      assertThatThrownBy(() -> instantiator.getInstance(D.class))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(D.class)))
         .isExactlyInstanceOf(OutOfScopeException.class)
         .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.InstantiatorTest$TestScoped for key: Injectable[hs.ddif.core.inject.instantiator.InstantiatorTest$D]")
         .hasNoCause();
 
-      assertThatThrownBy(() -> instantiator.findInstance(D.class))
+      assertThatThrownBy(() -> instantiator.findInstance(new Key(D.class)))
         .isExactlyInstanceOf(OutOfScopeException.class)
         .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.InstantiatorTest$TestScoped for key: Injectable[hs.ddif.core.inject.instantiator.InstantiatorTest$D]")
         .hasNoCause();
@@ -166,27 +169,27 @@ public class InstantiatorTest {
 
     @Test
     void shouldThrowExceptionWhenNotSingular() {
-      assertThatThrownBy(() -> instantiator.getInstance(String.class))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(String.class)))
         .isExactlyInstanceOf(MultipleInstances.class)
         .hasNoCause();
 
-      assertThatThrownBy(() -> instantiator.findInstance(String.class))
+      assertThatThrownBy(() -> instantiator.findInstance(new Key(String.class)))
         .isExactlyInstanceOf(MultipleInstances.class)
         .hasNoCause();
     }
 
     @Test
     void getInstancesShouldRetrieveScopedInstancesOnlyWhenActive() throws InstanceCreationFailure {
-      assertThat(instantiator.getInstances(E.class)).hasSize(1);
+      assertThat(instantiator.getInstances(new Key(E.class))).hasSize(1);
 
       currentScope = "Active!";
 
-      assertThat(instantiator.getInstances(E.class)).hasSize(2);
+      assertThat(instantiator.getInstances(new Key(E.class))).hasSize(2);
     }
 
     @Test
     void getInstancesShouldThrowExceptionWhenInstantiationFails() {
-      assertThatThrownBy(() -> instantiator.getInstances(H.class))
+      assertThatThrownBy(() -> instantiator.getInstances(new Key(H.class)))
         .isExactlyInstanceOf(InstanceCreationFailure.class)
         .hasMessage("Exception while constructing instance via Producer: hs.ddif.core.inject.instantiator.InstantiatorTest$H hs.ddif.core.inject.instantiator.InstantiatorTest$B.createH()")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -199,32 +202,32 @@ public class InstantiatorTest {
 
     @Test
     void getInstancesShouldRetrieveSingletons() throws InstanceCreationFailure {
-      assertThat(instantiator.getInstances(B.class))
+      assertThat(instantiator.getInstances(new Key(B.class)))
         .hasSize(1)
-        .containsExactlyInAnyOrderElementsOf(instantiator.getInstances(B.class));
+        .containsExactlyInAnyOrderElementsOf(instantiator.getInstances(new Key(B.class)));
     }
 
     @Test
     void getInstancesShouldIgnoreNullInstancesFromProducers() throws InstanceCreationFailure {
-      assertThat(instantiator.getInstances(I.class)).isEmpty();
+      assertThat(instantiator.getInstances(new Key(I.class))).isEmpty();
     }
 
     @Test
     void getInstanceShouldRejectNullInstancesFromProducers() {
-      assertThatThrownBy(() -> instantiator.getInstance(I.class))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(I.class)))
         .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: class hs.ddif.core.inject.instantiator.InstantiatorTest$I")
+        .hasMessage("No such instance: [class hs.ddif.core.inject.instantiator.InstantiatorTest$I]")
         .hasNoCause();
     }
 
     @Test
     void findInstanceShouldReturnNullInstancesFromProducers() throws MultipleInstances, InstanceCreationFailure, OutOfScopeException {
-      assertNull(instantiator.findInstance(I.class));
+      assertNull(instantiator.findInstance(new Key(I.class)));
     }
 
     @Test
     void getInstanceShouldThrowExceptionWhenInstantiationFails() {
-      assertThatThrownBy(() -> instantiator.getInstance(H.class))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(H.class)))
         .isExactlyInstanceOf(InstanceCreationFailure.class)
         .hasMessage("Exception while constructing instance via Producer: hs.ddif.core.inject.instantiator.InstantiatorTest$H hs.ddif.core.inject.instantiator.InstantiatorTest$B.createH()")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -237,7 +240,7 @@ public class InstantiatorTest {
 
     @Test
     void shouldAllowCreatingInstancesForUnknownScopes() throws InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
-      assertNotNull(instantiator.getInstance(K.class));  // consistency policy can enforce valid scopes, but not instantiator
+      assertNotNull(instantiator.getInstance(new Key(K.class)));  // consistency policy can enforce valid scopes, but not instantiator
     }
   }
 
@@ -248,29 +251,29 @@ public class InstantiatorTest {
 
     @Test
     void getInstancesShouldNeverDiscoverTypes() throws InstanceCreationFailure {
-      assertThat(instantiator.getInstances(A.class)).isEmpty();
-      assertThat(instantiator.getInstances(B.class)).isEmpty();
-      assertThat(instantiator.getInstances(C.class)).isEmpty();
+      assertThat(instantiator.getInstances(new Key(A.class))).isEmpty();
+      assertThat(instantiator.getInstances(new Key(B.class))).isEmpty();
+      assertThat(instantiator.getInstances(new Key(C.class))).isEmpty();
     }
 
     @Test
     void getInstanceShouldDiscoverNewTypes() throws InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
-      assertNotNull(instantiator.getInstance(A.class));
+      assertNotNull(instantiator.getInstance(new Key(A.class)));
     }
 
     @Test
     void getInstanceShouldNotDiscoverTypesWithQualifiers() {
-      assertThatThrownBy(() -> instantiator.getInstance(A.class, Red.class))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class, Set.of(Annotations.of(Red.class)))))
         .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: class hs.ddif.core.inject.instantiator.InstantiatorTest$A with criteria [interface hs.ddif.core.test.qualifiers.Red]")
+        .hasMessage("No such instance: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.inject.instantiator.InstantiatorTest$A]")
         .hasNoCause();
     }
 
     @Test
     void getInstanceShouldThrowExceptionWhenDiscoveryFails() {
-      assertThatThrownBy(() -> instantiator.getInstance(J.class))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(J.class)))
         .isExactlyInstanceOf(DiscoveryFailure.class)
-        .hasMessage("Exception during auto discovery: class hs.ddif.core.inject.instantiator.InstantiatorTest$J")
+        .hasMessage("Exception during auto discovery: [class hs.ddif.core.inject.instantiator.InstantiatorTest$J]")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(BindingException.class)
         .hasMessage("Type cannot be abstract: class hs.ddif.core.inject.instantiator.InstantiatorTest$J")

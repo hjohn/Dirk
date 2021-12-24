@@ -1,6 +1,6 @@
 package hs.ddif.core.inject.consistency;
 
-import hs.ddif.core.inject.instantiator.Key;
+import hs.ddif.core.store.Key;
 
 import java.lang.reflect.Type;
 

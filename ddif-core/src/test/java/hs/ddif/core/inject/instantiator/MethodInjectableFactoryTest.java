@@ -4,8 +4,8 @@ import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.MethodInjectableFactory;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.Injectable;
+import hs.ddif.core.store.Key;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,7 +85,7 @@ public class MethodInjectableFactoryTest {
       "Declaring Class of [public java.lang.Object hs.ddif.core.inject.instantiator.MethodInjectableFactoryTest$B.b()]"
     );
 
-    when(instantiator.getInstance((Type)C.class)).thenReturn(new C());
+    when(instantiator.getInstance(new Key(C.class))).thenReturn(new C());
 
     assertEquals("Bye", injectable.getObjectFactory().createInstance(instantiator));
   }
@@ -99,7 +99,7 @@ public class MethodInjectableFactoryTest {
       "Parameter 0 of [public static java.lang.String hs.ddif.core.inject.instantiator.MethodInjectableFactoryTest$C.e(hs.ddif.core.inject.instantiator.MethodInjectableFactoryTest$D)]"
     );
 
-    when(instantiator.getInstance((Type)D.class)).thenReturn(new D());
+    when(instantiator.getInstance(new Key(D.class))).thenReturn(new D());
 
     assertEquals("Hello D", injectable.getObjectFactory().createInstance(instantiator));
   }

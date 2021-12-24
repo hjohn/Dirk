@@ -15,9 +15,11 @@ import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.TypeReference;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Random;
 import java.util.RandomAccess;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -28,8 +30,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -41,6 +41,9 @@ import io.leangen.geantyref.TypeFactory;
 public class InjectableStoreTest {
   @Rule @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
+
+  private static final Annotation RED = Annotations.of(Red.class);
+  private static final Annotation BIG = Annotations.of(Big.class);
 
   private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
   private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
@@ -58,19 +61,19 @@ public class InjectableStoreTest {
   public void shouldStore() {
     store.put(classInjectableFactory.create(BeanWithBigRedInjection.class));
 
-    assertThat(store.resolve(Object.class, Big.class, Red.class)).isEmpty();
+    assertThat(store.resolve(new Key(Object.class, Set.of(BIG, RED)))).isEmpty();
 
     store.put(classInjectableFactory.create(BigRedBean.class));
 
-    assertThat(store.resolve(Object.class, Big.class, Red.class)).hasSize(1);
+    assertThat(store.resolve(new Key(Object.class, Set.of(BIG, RED)))).hasSize(1);
   }
 
   @Test
   public void shouldNotAllowRemovingInjectablesThatWereNeverAdded() {
     store.put(classInjectableFactory.create(Y.class));
 
-    assertThat(store.resolve(Y.class)).isNotNull();
-    assertThat(store.resolve(X.class)).isNotNull();
+    assertThat(store.resolve(new Key(Y.class))).isNotNull();
+    assertThat(store.resolve(new Key(X.class))).isNotNull();
 
     assertThrows(NoSuchInjectableException.class, () -> store.remove(classInjectableFactory.create(X.class)));
   }
@@ -83,12 +86,12 @@ public class InjectableStoreTest {
     store.put(instanceInjectableFactory.create("d", Annotations.named("parameter-c")));
     store.put(instanceInjectableFactory.create("f", Annotations.named("parameter-e")));
 
-    assertThat(store.resolve(String.class), hasSize(5));
-    assertThat(store.resolve(String.class, Annotations.named("parameter-a")), hasSize(1));
-    assertThat(store.resolve(String.class, Annotations.named("parameter-b")), hasSize(1));
-    assertThat(store.resolve(String.class, Annotations.named("parameter-c")), hasSize(2));
-    assertThat(store.resolve(String.class, Annotations.named("parameter-d")), hasSize(0));
-    assertThat(store.resolve(String.class, Annotations.named("parameter-e")), hasSize(1));
+    assertThat(store.resolve(new Key(String.class))).hasSize(5);
+    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-a"))))).hasSize(1);
+    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-b"))))).hasSize(1);
+    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-c"))))).hasSize(2);
+    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-d"))))).hasSize(0);
+    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-e"))))).hasSize(1);
   }
 
   @Test
@@ -128,58 +131,52 @@ public class InjectableStoreTest {
     setupStore();
 
     // All Strings
-    assertEquals(3, store.resolve(String.class).size());
+    assertEquals(3, store.resolve(new Key(String.class)).size());
 
     // All Strings with a specific annotation
-    assertEquals(1, store.resolve(String.class, Annotations.named("parameter-b")).size());
+    assertEquals(1, store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-b")))).size());
 
     // All Numbers
-    assertEquals(4, store.resolve(Number.class).size());
+    assertEquals(4, store.resolve(new Key(Number.class)).size());
 
     // All Objects
-    assertEquals(8, store.resolve(Object.class).size());
+    assertEquals(8, store.resolve(new Key(Object.class)).size());
 
     // All Numbers (using Matcher)
-    assertEquals(4, store.resolve(Object.class, new Matcher() {
+    assertEquals(4, store.resolve(new Key(Object.class), new Criteria(Set.of(), Set.of(new Matcher() {
       @Override
       public boolean matches(Class<?> cls) {
         return Number.class.isAssignableFrom(cls);
       }
-    }).size());
+    }))).size());
 
     // All Red Objects
-    assertEquals(2, store.resolve(Object.class, Annotations.of(Red.class)).size());
+    assertEquals(2, store.resolve(new Key(Object.class, Set.of(RED))).size());
 
     // All Red Numbers
-    assertEquals(1, store.resolve(Number.class, Annotations.of(Red.class)).size());
+    assertEquals(1, store.resolve(new Key(Number.class, Set.of(RED))).size());
 
     // All Serializables
-    assertEquals(8, store.resolve(Serializable.class).size());
+    assertEquals(8, store.resolve(new Key(Serializable.class)).size());
 
     // All Comparable
-    assertEquals(7, store.resolve(Comparable.class).size());
+    assertEquals(7, store.resolve(new Key(Comparable.class)).size());
 
     // All Comparable<Long>
-    assertEquals(2, store.resolve(new TypeReference<Comparable<Long>>() {}.getType()).size());
+    assertEquals(2, store.resolve(new Key(new TypeReference<Comparable<Long>>() {}.getType())).size());
 
     // All Comparable<String> Serializables (unsupported for now)
     //    assertEquals(3, store.resolve(Serializable.class, new TypeReference<Comparable<String>>() {}.getType()).size());
 
     // All RandomAccess Serializables
-    assertEquals(0, store.resolve(Serializable.class, RandomAccess.class).size());
+    assertEquals(0, store.resolve(new Key(Serializable.class), new Criteria(Set.of(RandomAccess.class), Set.of())).size());
   }
 
   @Test
   public void resolveShouldFindInjectablesWhenCriteriaIsAnAnnotationClass() {  // Tests that Annotation classes are converted to a descriptor internally
     setupStore();
 
-    assertEquals(2, store.resolve(Object.class, Red.class).size());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void resolveShouldThrowExceptionWhenCriteriaIsUnsupported() {
-    setupStore();
-    store.resolve(Object.class, "Unsupported");
+    assertEquals(2, store.resolve(new Key(Object.class, Set.of(RED))).size());
   }
 
   @Test(expected = NullPointerException.class)
@@ -201,8 +198,8 @@ public class InjectableStoreTest {
     }
     catch(DuplicateInjectableException e) {
       // expected, check if store is intact:
-      assertTrue(store.contains(A.class));
-      assertEquals(1, store.resolve(A.class).size());
+      assertTrue(store.contains(new Key(A.class)));
+      assertEquals(1, store.resolve(new Key(A.class)).size());
     }
   }
 
@@ -214,7 +211,7 @@ public class InjectableStoreTest {
     }
     catch(DuplicateInjectableException e) {
       // expected, check if store is intact:
-      assertFalse(store.contains(A.class));
+      assertFalse(store.contains(new Key(A.class)));
     }
   }
 
@@ -227,9 +224,9 @@ public class InjectableStoreTest {
     }
     catch(DuplicateInjectableException e) {
       // expected, check if store is intact:
-      assertTrue(store.contains(A.class));
-      assertFalse(store.contains(B.class));
-      assertEquals(1, store.resolve(A.class).size());
+      assertTrue(store.contains(new Key(A.class)));
+      assertFalse(store.contains(new Key(B.class)));
+      assertEquals(1, store.resolve(new Key(A.class)).size());
     }
   }
 
@@ -237,17 +234,17 @@ public class InjectableStoreTest {
   public void containsShouldWork() {
     store.put(classInjectableFactory.create(A.class));
 
-    assertTrue(store.contains(A.class, Big.class));
-    assertTrue(store.contains(A.class, Red.class));
-    assertTrue(store.contains(A.class, Big.class, Red.class));
-    assertFalse(store.contains(B.class, Big.class, Red.class));
-    assertFalse(store.contains(A.class, Small.class, Red.class));
+    assertTrue(store.contains(new Key(A.class, Set.of(BIG))));
+    assertTrue(store.contains(new Key(A.class, Set.of(RED))));
+    assertTrue(store.contains(new Key(A.class, Set.of(BIG, RED))));
+    assertFalse(store.contains(new Key(B.class, Set.of(BIG, RED))));
+    assertFalse(store.contains(new Key(A.class, Set.of(Annotations.of(Small.class), RED))));
 
     store.put(classInjectableFactory.create(StringProvider.class));
 
-    assertTrue(store.contains(TypeFactory.parameterizedClass(Provider.class, String.class)));
-    assertTrue(store.contains(new TypeReference<Provider<String>>() {}.getType()));
-    assertFalse(store.contains(new TypeReference<Provider<Long>>() {}.getType()));
+    assertTrue(store.contains(new Key(TypeFactory.parameterizedClass(Provider.class, String.class))));
+    assertTrue(store.contains(new Key(new TypeReference<Provider<String>>() {}.getType())));
+    assertFalse(store.contains(new Key(new TypeReference<Provider<Long>>() {}.getType())));
   }
 
   @Test
@@ -258,7 +255,7 @@ public class InjectableStoreTest {
     store.put(methodInjectableFactory.create(P.class.getDeclaredMethod("a"), P.class));
     store.put(methodInjectableFactory.create(P.class.getDeclaredMethod("b"), P.class));
 
-    assertThat(store.resolve(A.class)).hasSize(4);
+    assertThat(store.resolve(new Key(A.class))).hasSize(4);
   }
 
   @Big @Red

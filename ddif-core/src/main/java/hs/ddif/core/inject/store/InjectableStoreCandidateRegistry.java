@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.core.api.CandidateRegistry;
+import hs.ddif.core.inject.instantiator.CriteriaParser;
 import hs.ddif.core.inject.instantiator.Gatherer;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.store.InjectableStore;
@@ -36,7 +37,9 @@ public class InjectableStoreCandidateRegistry implements CandidateRegistry {
 
   @Override
   public boolean contains(Type type, Object... criteria) {
-    return store.contains(type, criteria);
+    CriteriaParser parser = new CriteriaParser(type, criteria);
+
+    return store.contains(parser.getKey(), parser.getCriteria());
   }
 
   @Override

@@ -5,6 +5,7 @@ import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -77,17 +78,17 @@ public class FieldInjectableFactory {
       BindingProvider.ofField(field, ownerType),
       AnnotationExtractor.findScopeAnnotation(field),
       field,  // for proper discrimination, the exact field should also be taken into account, next to its generic type
-      new FieldObjectFactory(field, ownerType)
+      new FieldObjectFactory(field, new Key(ownerType))
     );
   }
 
   static class FieldObjectFactory implements ObjectFactory {
     private final Field field;
-    private final Type ownerType;
+    private final Key ownerKey;
 
-    FieldObjectFactory(Field field, Type ownerType) {
+    FieldObjectFactory(Field field, Key ownerKey) {
       this.field = field;
-      this.ownerType = ownerType;
+      this.ownerKey = ownerKey;
     }
 
     @Override
@@ -102,7 +103,7 @@ public class FieldInjectableFactory {
     private Object constructInstance(Instantiator instantiator) throws InstanceCreationFailure {
       try {
         boolean isStatic = Modifier.isStatic(field.getModifiers());
-        Object obj = isStatic ? null : instantiator.getInstance(ownerType);
+        Object obj = isStatic ? null : instantiator.getInstance(ownerKey);
 
         field.setAccessible(true);
 

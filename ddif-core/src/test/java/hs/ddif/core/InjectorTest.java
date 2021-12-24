@@ -266,7 +266,7 @@ public class InjectorTest {
 
     assertThatThrownBy(() -> instance.getUnavailableBeanProvider().get())
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasMessage("No such instance: class hs.ddif.core.test.injectables.UnavailableBean")
+      .hasMessage("No such instance: [class hs.ddif.core.test.injectables.UnavailableBean]")
       .hasNoCause();
   }
 

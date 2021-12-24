@@ -43,29 +43,29 @@ public class InjectableStoreGenericsTest {
     store.put(instanceInjectableFactory.create(Integer.MAX_VALUE));  // Integer extends Number implements Serializable, Comparable<Integer>
 
     // Resolvables
-    assertTrue(store.resolve(Object.class).size() == 2);
-    assertTrue(store.resolve(String.class).size() == 1);
-    assertTrue(store.resolve(Serializable.class).size() == 2);
-    assertTrue(store.resolve(CharSequence.class).size() == 1);
-    assertTrue(store.resolve(new TypeReference<Comparable<String>>() {}.getType()).size() == 1);
-    assertTrue(store.resolve(new TypeReference<Comparable<?>>() {}.getType()).size() == 2);
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends String>>() {}.getType()).size() == 1);
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends Object>>() {}.getType()).size() == 2);
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends Serializable>>() {}.getType()).size() == 2);
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends CharSequence>>() {}.getType()).size() == 1);
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends Comparable<String>>>() {}.getType()).size() == 1);
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends Comparable<? extends Comparable<String>>>>() {}.getType()).size() == 1);  // crazy!
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends Comparable<? extends Comparable<? extends String>>>>() {}.getType()).size() == 1);  // crazy!
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends Comparable<? extends Comparable<? super String>>>>() {}.getType()).size() == 1);  // crazy!
-    assertTrue(store.resolve(new TypeReference<Comparable<? super String>>() {}.getType()).size() == 1);
+    assertTrue(store.resolve(new Key(Object.class)).size() == 2);
+    assertTrue(store.resolve(new Key(String.class)).size() == 1);
+    assertTrue(store.resolve(new Key(Serializable.class)).size() == 2);
+    assertTrue(store.resolve(new Key(CharSequence.class)).size() == 1);
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<String>>() {}.getType())).size() == 1);
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<?>>() {}.getType())).size() == 2);
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends String>>() {}.getType())).size() == 1);
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends Object>>() {}.getType())).size() == 2);
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends Serializable>>() {}.getType())).size() == 2);
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends CharSequence>>() {}.getType())).size() == 1);
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends Comparable<String>>>() {}.getType())).size() == 1);
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends Comparable<? extends Comparable<String>>>>() {}.getType())).size() == 1);  // crazy!
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends Comparable<? extends Comparable<? extends String>>>>() {}.getType())).size() == 1);  // crazy!
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends Comparable<? extends Comparable<? super String>>>>() {}.getType())).size() == 1);  // crazy!
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? super String>>() {}.getType())).size() == 1);
 
     // Unresolvables
-    assertTrue(store.resolve(Long.class).isEmpty());
-    assertTrue(store.resolve(new TypeReference<Comparable<Object>>() {}.getType()).isEmpty());
-    assertTrue(store.resolve(new TypeReference<Comparable<Long>>() {}.getType()).isEmpty());
-    assertTrue(store.resolve(new TypeReference<Comparable<? super Object>>() {}.getType()).isEmpty());
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends Comparable<? extends Comparable<Object>>>>() {}.getType()).isEmpty());
-    assertTrue(store.resolve(new TypeReference<Comparable<? extends Comparable<? super Comparable<String>>>>() {}.getType()).isEmpty());
+    assertTrue(store.resolve(new Key(Long.class)).isEmpty());
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<Object>>() {}.getType())).isEmpty());
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<Long>>() {}.getType())).isEmpty());
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? super Object>>() {}.getType())).isEmpty());
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends Comparable<? extends Comparable<Object>>>>() {}.getType())).isEmpty());
+    assertTrue(store.resolve(new Key(new TypeReference<Comparable<? extends Comparable<? super Comparable<String>>>>() {}.getType())).isEmpty());
   }
 
   @Test
@@ -82,13 +82,13 @@ public class InjectableStoreGenericsTest {
     store.put(classInjectableFactory.create(OrangeToOrangeJuiceConverter.class));
     store.put(classInjectableFactory.create(AppleToSlicedAppleConverter.class));
 
-    assertTrue(store.resolve(OrangeToOrangeJuiceConverter.class).size() == 1);
-    assertTrue(store.resolve(new TypeReference<Converter<? extends Fruit, ? extends Juice<?>>>() {}.getType()).size() == 1);
-    assertTrue(store.resolve(new TypeReference<Converter<?, ?>>() {}.getType()).size() == 2);
-    assertTrue(store.resolve(new TypeReference<Converter<?, OrangeJuice>>() {}.getType()).size() == 1);
-    assertTrue(store.resolve(new TypeReference<Converter<?, ? extends Juice<Orange>>>() {}.getType()).size() == 1);
-    assertTrue(store.resolve(new TypeReference<Converter<? extends Fruit, ?>>() {}.getType()).size() == 2);
-    assertTrue(store.resolve(new TypeReference<Converter<Apple, ?>>() {}.getType()).size() == 1);
+    assertTrue(store.resolve(new Key(OrangeToOrangeJuiceConverter.class)).size() == 1);
+    assertTrue(store.resolve(new Key(new TypeReference<Converter<? extends Fruit, ? extends Juice<?>>>() {}.getType())).size() == 1);
+    assertTrue(store.resolve(new Key(new TypeReference<Converter<?, ?>>() {}.getType())).size() == 2);
+    assertTrue(store.resolve(new Key(new TypeReference<Converter<?, OrangeJuice>>() {}.getType())).size() == 1);
+    assertTrue(store.resolve(new Key(new TypeReference<Converter<?, ? extends Juice<Orange>>>() {}.getType())).size() == 1);
+    assertTrue(store.resolve(new Key(new TypeReference<Converter<? extends Fruit, ?>>() {}.getType())).size() == 2);
+    assertTrue(store.resolve(new Key(new TypeReference<Converter<Apple, ?>>() {}.getType())).size() == 1);
   }
 
   @Test

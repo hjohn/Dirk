@@ -46,13 +46,13 @@ public interface InstanceResolver {
    * @param <T> the type of the instance
    * @param type the {@link Type} of the instance required, cannot be null
    * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
-   * @param criteria optional list of criteria, see {@link InstanceResolver}
+   * @param criterions optional list of criteria, see {@link InstanceResolver}
    * @return an instance of the given type matching the given criteria, never null
    * @throws NoSuchInstanceException when no matching instance was available or could be created
    * @throws MultipleInstancesException when multiple matching instances were available
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria);
+  <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criterions);
 
   /**
    * Returns an instance of the given {@link Type} matching the given criteria (if any) in
@@ -61,13 +61,13 @@ public interface InstanceResolver {
    *
    * @param <T> the type of the instance
    * @param type the type of the instance required, cannot be null
-   * @param criteria optional list of criteria, see {@link InstanceResolver}
+   * @param criterions optional list of criteria, see {@link InstanceResolver}
    * @return an instance of the given class matching the given criteria, never null
    * @throws NoSuchInstanceException when no matching instance was available or could be created
    * @throws MultipleInstancesException when multiple matching instances were available
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> T getInstance(Type type, Object... criteria);
+  <T> T getInstance(Type type, Object... criterions);
 
   /**
    * Returns an instance of the given class matching the given criteria (if any) in
@@ -76,13 +76,13 @@ public interface InstanceResolver {
    *
    * @param <T> the type of the instance
    * @param cls the class of the instance required, cannot be null
-   * @param criteria optional list of criteria, see {@link InstanceResolver}
+   * @param criterions optional list of criteria, see {@link InstanceResolver}
    * @return an instance of the given class matching the given criteria (if any)
    * @throws NoSuchInstanceException when no matching instance was available or could be created
    * @throws MultipleInstancesException when multiple matching instances were available
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> T getInstance(Class<T> cls, Object... criteria);  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
+  <T> T getInstance(Class<T> cls, Object... criterions);  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
 
   /**
    * Returns all instances of the given {@link Type} matching the given criteria (if any) in
@@ -92,11 +92,11 @@ public interface InstanceResolver {
    *
    * @param <T> the type of the instances
    * @param type the {@link Type} of the instances required, cannot be null
-   * @param criteria optional list of criteria, see {@link InstanceResolver}
+   * @param criterions optional list of criteria, see {@link InstanceResolver}
    * @return all instances of the given {@link Type} matching the given criteria (if any), never null, can be empty
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> List<T> getInstances(Type type, Object... criteria);
+  <T> List<T> getInstances(Type type, Object... criterions);
 
   /**
    * Returns all instances of the given class matching the given criteria (if any) in
