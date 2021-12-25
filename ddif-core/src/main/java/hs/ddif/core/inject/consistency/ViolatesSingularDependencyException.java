@@ -20,7 +20,7 @@ public class ViolatesSingularDependencyException extends InjectorStoreConsistenc
    *
    * @param type a {@link Type}, cannot be null
    * @param key a {@link Key}, cannot be null
-   * @param isRegistration {@code true} if this occured during registration, {@code false} if it occured during removal
+   * @param isRegistration {@code true} if this occurred during registration, {@code false} if it occured during removal
    */
   public ViolatesSingularDependencyException(Type type, Key key, boolean isRegistration) {
     // TODO would be great if the message could show which injectables use this singular dependency.
