@@ -1,6 +1,7 @@
 package hs.ddif.core.store;
 
 import hs.ddif.core.api.Matcher;
+import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
@@ -257,7 +258,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   private void putInternal(T injectable) {
     try {
-      for(Class<?> superType : getSuperClassesAndInterfaces(TypeUtils.getRawType(injectable.getType(), null))) {
+      for(Class<?> superType : Types.getSuperTypes(TypeUtils.getRawType(injectable.getType(), null))) {
         register(superType, null, injectable);
 
         for(Annotation qualifier : injectable.getQualifiers()) {
@@ -272,7 +273,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   private void removeInternal(T injectable) {
     try {
-      for(Class<?> type : getSuperClassesAndInterfaces(TypeUtils.getRawType(injectable.getType(), null))) {
+      for(Class<?> type : Types.getSuperTypes(TypeUtils.getRawType(injectable.getType(), null))) {
         unregister(type, null, injectable);
 
         for(Annotation qualifier : injectable.getQualifiers()) {
@@ -337,31 +338,6 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
         }
       }
     }
-  }
-
-  private static Set<Class<?>> getSuperClassesAndInterfaces(Class<?> cls) {
-    List<Type> toScan = new ArrayList<>();
-    Set<Class<?>> superClassesAndInterfaces = new HashSet<>();
-
-    toScan.add(cls);
-
-    while(!toScan.isEmpty()) {
-      Type scanClassType = toScan.remove(toScan.size() - 1);
-
-      Class<?> scanClass = TypeUtils.getRawType(scanClassType, null);
-
-      superClassesAndInterfaces.add(scanClass);
-
-      for(Type iface : scanClass.getGenericInterfaces()) {
-        toScan.add(iface);
-      }
-
-      if(scanClass.getSuperclass() != null) {
-        toScan.add(scanClass.getGenericSuperclass());
-      }
-    }
-
-    return superClassesAndInterfaces;
   }
 
   class NoStoreConsistencyPolicy implements StoreConsistencyPolicy<T> {
