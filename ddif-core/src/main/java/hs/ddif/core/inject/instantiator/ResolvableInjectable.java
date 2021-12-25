@@ -20,6 +20,7 @@ public class ResolvableInjectable implements DependentInjectable {
   private final Annotation scope;
   private final Object discriminator;
   private final ObjectFactory objectFactory;
+  private final int hashCode;
 
   /**
    * Constructs a new instance.
@@ -51,6 +52,7 @@ public class ResolvableInjectable implements DependentInjectable {
     this.scope = scope;
     this.discriminator = discriminator;
     this.objectFactory = objectFactory;
+    this.hashCode = Objects.hash(type, discriminator, getQualifiers());
   }
 
   /**
@@ -84,7 +86,7 @@ public class ResolvableInjectable implements DependentInjectable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, discriminator, getQualifiers());
+    return hashCode;
   }
 
   @Override
