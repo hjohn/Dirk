@@ -1,7 +1,9 @@
 package hs.ddif.core;
 
+import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
+import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.store.DuplicateInjectableException;
 import hs.ddif.core.test.injectables.BeanWithProvider;
 import hs.ddif.core.test.injectables.SimpleBean;
@@ -22,17 +24,15 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InjectorProviderTest {
   private Injector injector;
@@ -111,28 +111,24 @@ public class InjectorProviderTest {
       injector.registerInstance(provider);  // registers a Instance injectable but also a Provider injectable
       injector.register(BeanWithDatabase.class);
 
-      try {
-        injector.register(SimpleDatabaseProvider.class);
-        fail();
-      }
-      catch(DuplicateInjectableException e) {
-        // expected
-      }
+      assertThatThrownBy(() -> injector.register(SimpleDatabaseProvider.class))
+        .isExactlyInstanceOf(DuplicateInjectableException.class)
+        .hasMessage("class hs.ddif.core.InjectorProviderTest$Database already registered for: Injectable[hs.ddif.core.InjectorProviderTest$Database <- public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider.get()]")
+        .hasNoCause();
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
 
-      try {
-        injector.removeInstance(provider);
-        fail();
-      }
-      catch(ViolatesSingularDependencyException e) {
-      }
+      assertThatThrownBy(() -> injector.removeInstance(provider))
+        .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+        .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] is only provided by: class hs.ddif.core.InjectorProviderTest$Database")
+        .hasNoCause();
 
       injector.remove(BeanWithDatabase.class);
       injector.removeInstance(provider);
 
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
   }
@@ -144,13 +140,10 @@ public class InjectorProviderTest {
       injector.register(BeanWithDatabase.class);
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
-
-      try {
-        injector.remove(SimpleDatabaseProvider.class);
-        fail();
-      }
-      catch(ViolatesSingularDependencyException e) {
-      }
+      assertThatThrownBy(() -> injector.remove(SimpleDatabaseProvider.class))
+        .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+        .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] is only provided by: class hs.ddif.core.InjectorProviderTest$Database")
+        .hasNoCause();
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
 
@@ -159,6 +152,7 @@ public class InjectorProviderTest {
 
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
   }
@@ -187,17 +181,27 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void getInstanceShouldReturnInjectableFromNestedProviderInstance() {
-    injector.registerInstance(new NestedDatabaseProvider());
-
-    assertNotNull(injector.getInstance(Database.class));
+  public void nestedProvidersShouldNotBeAllowed() {
+    assertThatThrownBy(() -> injector.registerInstance(new NestedDatabaseProvider()))
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessage("Nested Provider not allowed in: public javax.inject.Provider hs.ddif.core.InjectorProviderTest$NestedDatabaseProvider.get()")
+      .hasNoCause();
   }
 
   @Test
-  public void getInstanceShouldReturnInjectableFromNestedProvider() {
-    injector.register(NestedDatabaseProvider.class);
+  public void producerFieldProducingProviderShouldNotBeAllowed() {
+    assertThatThrownBy(() -> injector.register(ProviderFieldProducer.class))
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessage("Nested Provider not allowed in: private static javax.inject.Provider hs.ddif.core.InjectorProviderTest$ProviderFieldProducer.product")
+      .hasNoCause();
+  }
 
-    assertNotNull(injector.getInstance(Database.class));
+  @Test
+  public void producerMethodProducingProviderShouldNotBeAllowed() {
+    assertThatThrownBy(() -> injector.register(ProviderMethodProducer.class))
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessage("Nested Provider not allowed in: private static javax.inject.Provider hs.ddif.core.InjectorProviderTest$ProviderMethodProducer.product()")
+      .hasNoCause();
   }
 
   @Test
@@ -205,15 +209,15 @@ public class InjectorProviderTest {
     injector.registerInstance(new Database("jdbc:localhost"));
     injector.register(BeanWithDatabase.class);
 
-    try {
-      injector.register(SimpleDatabaseProvider.class);  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
-      fail("Expected ViolatesSingularDependencyException");
-    }
-    catch(ViolatesSingularDependencyException e) {
-      assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .hasNoCause();
-    }
+    assertThatThrownBy(() -> injector.register(SimpleDatabaseProvider.class))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
+      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .hasNoCause();
+
+    assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
+      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
+      .hasNoCause();
   }
 
   @Test
@@ -223,6 +227,7 @@ public class InjectorProviderTest {
 
     assertThatThrownBy(() -> injector.registerInstance(new Database("jdbc:localhost")))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
       .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
       .hasNoCause();
   }
 
@@ -231,15 +236,15 @@ public class InjectorProviderTest {
     injector.registerInstance(new Database("jdbc:localhost"));
     injector.register(BeanWithDatabase.class);
 
-    try {
-      injector.registerInstance(new SimpleDatabaseProvider());  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
-      fail("Expected ViolatesSingularDependencyException");
-    }
-    catch(ViolatesSingularDependencyException e) {
-      assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .hasNoCause();
-    }
+    assertThatThrownBy(() -> injector.registerInstance(new SimpleDatabaseProvider()))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
+      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .hasNoCause();
+
+    assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
+      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
+      .hasNoCause();
   }
 
   @Test
@@ -249,32 +254,7 @@ public class InjectorProviderTest {
 
     assertThatThrownBy(() -> injector.registerInstance(new Database("jdbc:localhost")))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
       .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasNoCause();
-  }
-
-  @Test
-  public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndNestedProvided() {
-    injector.registerInstance(new Database("jdbc:localhost"));
-    injector.register(BeanWithDatabase.class);
-
-    try {
-      injector.registerInstance(new NestedDatabaseProvider());  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
-      fail("Expected ViolatesSingularDependencyException");
-    }
-    catch(ViolatesSingularDependencyException e) {
-      assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .hasNoCause();
-    }
-  }
-
-  @Test
-  public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndNestedProvided2() {
-    injector.registerInstance(new NestedDatabaseProvider());
-    injector.register(BeanWithDatabase.class);
-
-    assertThatThrownBy(() -> injector.registerInstance(new Database("jdbc:localhost")))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
       .hasNoCause();
   }
 
@@ -295,32 +275,6 @@ public class InjectorProviderTest {
       assertThrows(NoSuchInstanceException.class, () -> injector.getInstance(AppendableProvider.class));
       assertThrows(NoSuchInstanceException.class, () -> injector.getInstance(Appendable.class));
     }
-  }
-
-  @Test
-  @Disabled("Providers can be used to break cyclical dependencies, and thus can always be registered...")
-  public void registerShouldThrowExceptionWhenDatabaseIsProvidedAndNestedProvided() {
-    injector.registerInstance(new SimpleDatabaseProvider());
-    injector.register(BeanWithProvidedDatabase.class);
-
-    try {
-      injector.registerInstance(new NestedDatabaseProvider());  // Not allowed as BeanWithProvidedDatabase expects just one dependency to match, and now there are two sources for Provider<Database>
-      fail("Expected ViolatesSingularDependencyException");
-    }
-    catch(ViolatesSingularDependencyException e) {
-      assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .hasNoCause();
-    }
-  }
-
-  @Test
-  @Disabled("Providers can be used to break cyclical dependencies, and thus can always be registered...")
-  public void registerShouldThrowExceptionWhenDatabaseIsProvidedAndNestedProvided2() {
-    injector.registerInstance(new NestedDatabaseProvider());
-    injector.register(BeanWithProvidedDatabase.class);
-
-    injector.registerInstance(new SimpleDatabaseProvider());  // Not allowed as BeanWithProvidedDatabase expects just one dependency to match, and now there are two sources for Provider<Database>
   }
 
   public static class BeanWithDatabase {
@@ -365,6 +319,16 @@ public class InjectorProviderTest {
     @Override
     public Database get() {
       return new Database("jdbc:localhost");
+    }
+  }
+
+  public static class ProviderFieldProducer {
+    @Produces private static Provider<Database> product;
+  }
+
+  public static class ProviderMethodProducer {
+    @Produces private static Provider<Database> product() {
+      return null;
     }
   }
 

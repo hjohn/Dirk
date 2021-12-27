@@ -3,13 +3,17 @@ package hs.ddif.core;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
+import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.FieldInjectableFactory;
 import hs.ddif.core.inject.store.MethodInjectableFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Provider;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -40,10 +44,22 @@ public class ProducesGathererExtension implements AutoDiscoveringGatherer.Extens
     Class<?> injectableClass = TypeUtils.getRawType(injectable.getType(), null);
 
     for(Method method : MethodUtils.getMethodsListWithAnnotation(injectableClass, Produces.class, true, true)) {
+      Type providedType = method.getGenericReturnType();
+
+      if(TypeUtils.getRawType(providedType, null) == Provider.class) {
+        throw new BindingException("Nested Provider not allowed in: " + method);
+      }
+
       injectables.add(methodInjectableFactory.create(method, injectable.getType()));
     }
 
     for(Field field : FieldUtils.getFieldsListWithAnnotation(injectableClass, Produces.class)) {
+      Type providedType = field.getGenericType();
+
+      if(TypeUtils.getRawType(providedType, null) == Provider.class) {
+        throw new BindingException("Nested Provider not allowed in: " + field);
+      }
+
       injectables.add(fieldInjectableFactory.create(field, injectable.getType()));
     }
 

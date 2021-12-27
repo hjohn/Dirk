@@ -2,8 +2,11 @@ package hs.ddif.core;
 
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
+import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.MethodInjectableFactory;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.List;
 
 import javax.inject.Provider;
@@ -32,7 +35,14 @@ public class ProviderGathererExtension implements AutoDiscoveringGatherer.Extens
 
     if(Provider.class.isAssignableFrom(cls)) {
       try {
-        return List.of(methodInjectableFactory.create(cls.getMethod("get"), injectable.getType()));
+        Method method = cls.getMethod("get");
+        Type providedType = method.getGenericReturnType();
+
+        if(TypeUtils.getRawType(providedType, null) == Provider.class) {
+          throw new BindingException("Nested Provider not allowed in: " + method);
+        }
+
+        return List.of(methodInjectableFactory.create(method, injectable.getType()));
       }
       catch(NoSuchMethodException | SecurityException e) {
         throw new IllegalStateException(e);
