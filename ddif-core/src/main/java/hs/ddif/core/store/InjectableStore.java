@@ -20,6 +20,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.inject.Provider;
+
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
@@ -258,11 +260,13 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   private void putInternal(T injectable) {
     try {
-      for(Class<?> superType : Types.getSuperTypes(TypeUtils.getRawType(injectable.getType(), null))) {
-        register(superType, null, injectable);
+      for(Class<?> type : Types.getSuperTypes(TypeUtils.getRawType(injectable.getType(), null))) {
+        if(type != Provider.class) {
+          register(type, null, injectable);
 
-        for(Annotation qualifier : injectable.getQualifiers()) {
-          register(superType, qualifier, injectable);
+          for(Annotation qualifier : injectable.getQualifiers()) {
+            register(type, qualifier, injectable);
+          }
         }
       }
     }
@@ -274,10 +278,12 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
   private void removeInternal(T injectable) {
     try {
       for(Class<?> type : Types.getSuperTypes(TypeUtils.getRawType(injectable.getType(), null))) {
-        unregister(type, null, injectable);
+        if(type != Provider.class) {
+          unregister(type, null, injectable);
 
-        for(Annotation qualifier : injectable.getQualifiers()) {
-          unregister(type, qualifier, injectable);
+          for(Annotation qualifier : injectable.getQualifiers()) {
+            unregister(type, qualifier, injectable);
+          }
         }
       }
     }
