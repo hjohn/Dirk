@@ -76,11 +76,12 @@ public class InjectorProviderTest {
 
       assertEquals(DatabaseProvider.class, injector.getInstance(DatabaseProvider.class).getClass());
       assertEquals(Database.class, injector.getInstance(Database.class).getClass());
-      assertEquals(DatabaseProvider.class, injector.getInstance(new TypeReference<Provider<Database>>() {}.getType()).getClass());
-      assertEquals(anonymousProvider.getClass(), injector.getInstance(new TypeReference<Provider<Connection>>() {}.getType()).getClass());
-      assertEquals(2, injector.getInstances(Provider.class).size());
-      assertEquals(1, injector.getInstances(new TypeReference<Provider<Database>>() {}.getType()).size());
-      assertEquals(1, injector.getInstances(new TypeReference<Provider<Connection>>() {}.getType()).size());
+
+      // Ensure lookup by Provider interface is not possible:
+      assertThatThrownBy(() -> injector.getInstance(new TypeReference<Provider<Database>>() {}.getType()).getClass())
+        .isExactlyInstanceOf(NoSuchInstanceException.class);
+
+      assertThat(injector.getInstances(Provider.class)).isEmpty();
 
       injector.remove(DatabaseProvider.class);
 
@@ -91,8 +92,6 @@ public class InjectorProviderTest {
       assertThatThrownBy(() -> injector.getInstance(Database.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
         .hasNoCause();
-
-      assertEquals(anonymousProvider.getClass(), injector.getInstance(new TypeReference<Provider<Connection>>() {}.getType()).getClass());
     }
   }
 
@@ -404,12 +403,37 @@ public class InjectorProviderTest {
     injector.register(E.class);  // provides @Green Z("light green")
 
     assertThat(injector.getInstances(Z.class)).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
-    assertThat(injector.getInstances(new TypeReference<Provider<Z>>() {}.getType())).hasSize(2);
 
     injector.register(W.class);
     W w = injector.getInstance(W.class);
 
-    assertThat(List.of(w.providers.get(0).get().name, w.providers.get(1).get().name)).containsExactlyInAnyOrder("green", "light green");
+    assertThat(w.zs).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+    assertThat(w.zList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+
+    assertThat(w.zReds).isEmpty();
+    assertThat(w.zRedList.get()).isEmpty();
+
+    assertThat(w.zGreens).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+    assertThat(w.zGreenList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+  }
+
+  @Test
+  public void multipleProducersOfSameTypeShouldReturnMultipleInstances() {
+    injector.register(V.class);  // produces @Green Z("green") and @Green Z("light green")
+
+    assertThat(injector.getInstances(Z.class)).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+
+    injector.register(W.class);
+    W w = injector.getInstance(W.class);
+
+    assertThat(w.zs).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+    assertThat(w.zList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+
+    assertThat(w.zReds).isEmpty();
+    assertThat(w.zRedList.get()).isEmpty();
+
+    assertThat(w.zGreens).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+    assertThat(w.zGreenList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
   }
 
   @Test
@@ -499,8 +523,18 @@ public class InjectorProviderTest {
     @Inject @Green Z z;
   }
 
+  public static class V {
+    @Produces @Green Z z1 = new Z("green");
+    @Produces @Green Z z2 = new Z("light green");
+  }
+
   public static class W {
-    @Inject List<Provider<Z>> providers;
+    @Inject List<Z> zs;
+    @Inject Provider<List<Z>> zList;
+    @Inject @Green List<Z> zGreens;
+    @Inject @Green Provider<List<Z>> zGreenList;
+    @Inject @Red List<Z> zReds;
+    @Inject @Red Provider<List<Z>> zRedList;
   }
 
   public static class X {
