@@ -25,11 +25,10 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -39,9 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import io.leangen.geantyref.TypeFactory;
 
 public class InjectableStoreTest {
-  @Rule @SuppressWarnings("deprecation")
-  public ExpectedException thrown = ExpectedException.none();
-
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation BIG = Annotations.of(Big.class);
 
@@ -98,10 +94,10 @@ public class InjectableStoreTest {
   public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() {
     store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a")));
 
-    thrown.expect(DuplicateInjectableException.class);
-    thrown.expectMessage(" already registered for: Injectable[@javax.inject.Named(value=parameter-a) java.lang.String]");
-
-    store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a")));
+    assertThatThrownBy(() -> store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a"))))
+      .isExactlyInstanceOf(DuplicateInjectableException.class)
+      .hasMessage("class java.lang.String already registered for: Injectable[@javax.inject.Named(value=parameter-a) java.lang.String]")
+      .hasNoCause();
   }
 
   @Test
