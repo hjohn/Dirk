@@ -17,14 +17,14 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.inject.Qualifier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -69,54 +69,72 @@ public class ClassInjectableFactory {
       throw new BindingException("Unresolved type variables in " + type + " are not allowed: " + Arrays.toString(injectableClass.getTypeParameters()));
     }
 
-    Map<AccessibleObject, List<Binding>> bindingsMap = BindingProvider.ofClass(injectableClass);
+    List<Binding> bindings = BindingProvider.ofClass(injectableClass);
 
     /*
      * Check bindings to see if this injectable can be instantiated and injected.
      */
 
-    int constructorCount = 0;
+    bindings.stream()
+      .map(Binding::getAccessibleObject)
+      .filter(Field.class::isInstance)
+      .map(Field.class::cast)
+      .filter(f -> Modifier.isFinal(f.getModifiers()))
+      .findFirst()
+      .ifPresent(f -> {
+        throw new BindingException("Cannot inject final field: " + f + " in: " + injectableClass);
+      });
 
-    for(Map.Entry<AccessibleObject, List<Binding>> entry : bindingsMap.entrySet()) {
-      if(entry.getKey() instanceof Constructor) {
-        constructorCount++;
+    Set<Constructor<?>> constructors = bindings.stream()
+      .map(Binding::getAccessibleObject)
+      .filter(Constructor.class::isInstance)
+      .map(c -> (Constructor<?>)c)  // Constructor.class::cast works with ECJ but not JavaC
+      .collect(Collectors.toSet());
+
+    getPublicEmptyConstructor(injectableClass).ifPresent(c -> {
+      if(constructors.isEmpty() || c.isAnnotationPresent(Inject.class)) {
+        constructors.add(c);
       }
-      else if(entry.getKey() instanceof Field) {
-        Field field = (Field)entry.getKey();
+    });
 
-        if(Modifier.isFinal(field.getModifiers())) {
-          throw new BindingException("Cannot inject final field: " + field + " in: " + injectableClass);
-        }
-      }
-    }
-
-    if(constructorCount < 1) {
+    if(constructors.size() < 1) {
       throw new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: " + injectableClass);
     }
-    if(constructorCount > 1) {
+    if(constructors.size() > 1) {
       throw new BindingException("Multiple @Inject annotated constructors found, but only one allowed: " + injectableClass);
     }
 
     return factory.create(
       type,
       Annotations.findDirectlyMetaAnnotatedAnnotations(injectableClass, QUALIFIER),
-      bindingsMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList()),
+      bindings,
       AnnotationExtractor.findScopeAnnotation(injectableClass),
       null,
-      new ClassObjectFactory(type, bindingsMap)
+      new ClassObjectFactory(type, bindings, constructors.iterator().next())
     );
+  }
+
+  private static <T> Optional<Constructor<T>> getPublicEmptyConstructor(Class<T> cls) {
+    try {
+      return Optional.of(cls.getConstructor());
+    }
+    catch(NoSuchMethodException e) {
+      return Optional.empty();
+    }
   }
 
   static class ClassObjectFactory implements ObjectFactory {
     private static final Set<Object> UNDER_CONSTRUCTION = ConcurrentHashMap.newKeySet();
 
     private final Type type;
-    private final Map<AccessibleObject, List<Binding>> bindings;
+    private final List<Binding> bindings;
+    private final Constructor<?> constructor;
     private final PostConstructor postConstructor;
 
-    ClassObjectFactory(Type type, Map<AccessibleObject, List<Binding>> bindings) {
+    ClassObjectFactory(Type type, List<Binding> bindings, Constructor<?> constructor) {
       this.type = type;
       this.bindings = bindings;
+      this.constructor = constructor;
       this.postConstructor = new PostConstructor(TypeUtils.getRawType(type, null));
     }
 
@@ -149,27 +167,26 @@ public class ClassInjectableFactory {
     }
 
     private Object constructInstance(Instantiator instantiator, List<NamedParameter> namedParameters) throws InstanceCreationFailure {
-      Map.Entry<AccessibleObject, List<Binding>> constructorEntry = findConstructorEntry(bindings);
-      Constructor<?> constructor = (Constructor<?>)constructorEntry.getKey();
-
       try {
         java.lang.reflect.Parameter[] parameters = constructor.getParameters();
-        Object[] values = new Object[constructorEntry.getValue().size()];  // Parameters for constructor
+        Object[] values = new Object[constructor.getParameterCount()];  // Parameters for constructor
 
-        for(int i = 0; i < values.length; i++) {
-          Binding binding = constructorEntry.getValue().get(i);
+        for(Binding binding : bindings) {
+          if(binding.getAccessibleObject() == constructor) {
+            int i = binding.getIndex();
 
-          if(binding.isParameter()) {
-            String name = determineParameterName(parameters[i]);
+            if(binding.isParameter()) {
+              String name = determineParameterName(parameters[i]);
 
-            if(name == null) {
-              throw new IllegalArgumentException("Missing parameter name for: " + parameters[i] + "; specify one with @Parameter or compile classes with parameter name information");
+              if(name == null) {
+                throw new IllegalArgumentException("Missing parameter name for: " + parameters[i] + "; specify one with @Parameter or compile classes with parameter name information");
+              }
+
+              values[i] = findAndRemoveNamedParameterValue(name, namedParameters);
             }
-
-            values[i] = findAndRemoveNamedParameterValue(name, namedParameters);
-          }
-          else {
-            values[i] = binding.getValue(instantiator);
+            else {
+              values[i] = binding.getValue(instantiator);
+            }
           }
         }
 
@@ -181,14 +198,12 @@ public class ClassInjectableFactory {
     }
 
     private void injectInstance(Instantiator instantiator, Object instance, List<NamedParameter> namedParameters) throws InstanceCreationFailure {
-      for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
-        try {
-          AccessibleObject accessibleObject = entry.getKey();
+      for(Binding binding : bindings) {
+        AccessibleObject accessibleObject = binding.getAccessibleObject();
 
+        try {
           if(accessibleObject instanceof Field) {
             Field field = (Field)accessibleObject;
-            Binding binding = entry.getValue().get(0);
-
             Object valueToSet;
 
             if(binding.isParameter()) {
@@ -204,19 +219,9 @@ public class ClassInjectableFactory {
           }
         }
         catch(Exception e) {
-          throw new InstanceCreationFailure(entry.getKey(), "Exception while injecting", e);
+          throw new InstanceCreationFailure(accessibleObject, "Exception while injecting", e);
         }
       }
-    }
-
-    private static Map.Entry<AccessibleObject, List<Binding>> findConstructorEntry(Map<AccessibleObject, List<Binding>> bindings) {
-      for(Map.Entry<AccessibleObject, List<Binding>> entry : bindings.entrySet()) {
-        if(entry.getKey() instanceof Constructor) {
-          return entry;
-        }
-      }
-
-      throw new IllegalStateException("Bindings must always contain a constructor entry");
     }
 
     private static String determineParameterName(java.lang.reflect.Parameter parameter) {

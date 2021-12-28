@@ -208,6 +208,11 @@ public class InjectorStoreConsistencyPolicyStressTest {
     public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance, OutOfScopeException {
       return null;
     }
+
+    @Override
+    public int getIndex() {
+      return 0;
+    }
   }
 
   interface Z {
