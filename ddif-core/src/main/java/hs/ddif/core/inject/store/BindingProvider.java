@@ -48,58 +48,43 @@ public class BindingProvider {
    * @param injectableClass a {@link Class} to examine for bindings, cannot be null
    * @return an immutable map of bindings, never null and never contains nulls, but can be empty
    */
-  public static Map<AccessibleObject, List<Binding>> ofClass(Class<?> injectableClass) {
-    Map<AccessibleObject, List<Binding>> bindings = new HashMap<>();
+  public static List<Binding> ofClass(Class<?> injectableClass) {
+    List<Binding> bindings = new ArrayList<>();
     Class<?> currentInjectableClass = injectableClass;
 
     while(currentInjectableClass != null) {
       for(final Field field : currentInjectableClass.getDeclaredFields()) {
-        Inject inject = field.getAnnotation(Inject.class);
-
-        if(inject != null) {
+        if(field.isAnnotationPresent(Inject.class)) {
           Type type = GenericTypeReflector.getExactFieldType(field, injectableClass);
 
-          bindings.put(field, List.of(createBinding(
+          bindings.add(createBinding(
             field,
             AbstractBinding.FIELD,
             type,
             isOptional(field),
             field.getAnnotation(Parameter.class) != null,
             Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER)
-          )));
+          ));
         }
       }
 
       currentInjectableClass = currentInjectableClass.getSuperclass();
     }
 
-    Constructor<?> emptyConstructor = null;
     Constructor<?>[] constructors = injectableClass.getDeclaredConstructors();
-    boolean foundInjectableConstructor = false;
 
     // Finds empty public constructor or any annotated ones regardless of visibility
     for(Constructor<?> constructor : constructors) {
-      Inject inject = constructor.getAnnotation(Inject.class);
-
-      if(constructor.getParameterTypes().length == 0 && Modifier.isPublic(constructor.getModifiers())) {
-        emptyConstructor = constructor;
-      }
-
-      if(inject != null) {
-        foundInjectableConstructor = true;
-        bindings.put(constructor, ofExecutable(constructor, injectableClass));
+      if(constructor.isAnnotationPresent(Inject.class)) {
+        bindings.addAll(ofExecutable(constructor, injectableClass));
       }
     }
 
-    if(!foundInjectableConstructor && emptyConstructor != null) {
-      bindings.put(emptyConstructor, ofExecutable(emptyConstructor, injectableClass));
+    for(Binding binding : bindings) {
+      binding.getAccessibleObject().setAccessible(true);
     }
 
-    for(AccessibleObject accessibleObject : bindings.keySet()) {
-      accessibleObject.setAccessible(true);
-    }
-
-    return Collections.unmodifiableMap(bindings);
+    return bindings;
   }
 
   /**
@@ -228,6 +213,11 @@ public class BindingProvider {
     @Override
     public Key getKey() {
       return key;
+    }
+
+    @Override
+    public int getIndex() {
+      return argNo < 0 ? 0 : argNo;
     }
 
     @Override

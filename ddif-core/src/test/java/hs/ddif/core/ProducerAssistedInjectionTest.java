@@ -6,6 +6,7 @@ import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.inject.store.BindingException;
 
 import java.util.NoSuchElementException;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -55,10 +56,10 @@ public class ProducerAssistedInjectionTest {
 
     assertThatThrownBy(() -> injector.getInstance(TestAssistedAbstractSample.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Exception while injecting: public java.lang.Double hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedAbstractSample.factor")
+      .hasMessageMatching(Pattern.quote("Exception while injecting: public java.lang.") + "(Double|Integer)" + Pattern.quote(" hs.ddif.core.ProducerAssistedInjectionTest$TestAssistedAbstractSample.") + "(factor|interval)")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(NoSuchElementException.class)
-      .hasMessage("Parameter 'factor' was not supplied")
+      .hasMessageMatching("Parameter '(factor|interval)' was not supplied")
       .hasNoCause();
 
     TestAssistedAbstractSampleFactory factory = injector.getInstance(TestAssistedAbstractSampleFactory.class);

@@ -5,13 +5,12 @@ import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.util.Annotations;
 
-import java.lang.reflect.AccessibleObject;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.assertj.core.groups.Tuple;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,23 +33,12 @@ public class BindingProviderTest {
 
   @Test
   public void resolveForClassShouldBindToGenericFieldInSubclass() throws NoSuchFieldException, SecurityException {
-    Map<AccessibleObject, List<Binding>> map = BindingProvider.ofClass(Subclass.class);
+    List<Binding> bindings = BindingProvider.ofClass(Subclass.class);
 
-    assertEquals(2, map.size());
-
-    {
-      List<Binding> bindings = map.get(ClassWithGenericFields.class.getDeclaredField("fieldA"));
-
-      assertEquals(1, bindings.size());
-      assertEquals(String.class, bindings.get(0).getKey().getType());
-    }
-
-    {
-      List<Binding> bindings = map.get(ClassWithGenericFields.class.getDeclaredField("fieldB"));
-
-      assertEquals(1, bindings.size());
-      assertEquals(Integer.class, bindings.get(0).getKey().getType());
-    }
+    assertThat(bindings).extracting(Binding::getAccessibleObject, Binding::getKey).containsExactlyInAnyOrder(
+      Tuple.tuple(ClassWithGenericFields.class.getDeclaredField("fieldA"), new Key(String.class)),
+      Tuple.tuple(ClassWithGenericFields.class.getDeclaredField("fieldB"), new Key(Integer.class))
+    );
   }
 
   @Test

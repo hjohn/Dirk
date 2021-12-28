@@ -27,6 +27,14 @@ public interface Binding {
   AccessibleObject getAccessibleObject();
 
   /**
+   * Returns the index of a parameter when the {@link AccessibleObject} is a
+   * constructor or a method. Returns 0 for fields.
+   *
+   * @return a parameter index, never negative
+   */
+  int getIndex();
+
+  /**
    * Returns the {@link Type} of the binding.
    *
    * @return the {@link Type} of the binding, never null
