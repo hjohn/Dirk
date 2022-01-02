@@ -58,6 +58,9 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
     instancesByScope.computeIfAbsent(currentScope, k -> new WeakHashMap<>()).put(key, instance);
   }
 
+  /**
+   * Removes all instances from the resolver.
+   */
   protected void clear() {
     instancesByScope.clear();
   }

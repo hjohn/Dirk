@@ -15,6 +15,10 @@ import java.util.Set;
  * an {@link InjectableStore} to further filter the resulting {@link Injectable}s.
  */
 public class Criteria {
+
+  /**
+   * An empty {@link Criteria} instance.
+   */
   public static final Criteria EMPTY = new Criteria(Set.of(), Set.of());
 
   private final Set<Class<?>> interfaces;

@@ -44,6 +44,11 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
    */
   private final Set<Class<? extends Annotation>> knownScopeAnnotations = new HashSet<>();
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param scopeResolvers an array of {@link ScopeResolver}s, cannot be null
+   */
   public InjectorStoreConsistencyPolicy(ScopeResolver... scopeResolvers) {
     for(ScopeResolver scopeResolver : scopeResolvers) {
       knownScopeAnnotations.add(scopeResolver.getScopeAnnotationClass());

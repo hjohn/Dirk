@@ -64,11 +64,19 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     return resolve(key, List.of(), List.of());
   }
 
+  /**
+   * Look up injectables by {@link Key} and {@link Criteria}. The empty set is returned if
+   * there were no matches.
+   *
+   * @param key the {@link Key}, cannot be null
+   * @param criteria a {@link Criteria}, cannot be null
+   * @return a set of injectables, never null but can be empty
+   */
   public synchronized Set<T> resolve(Key key, Criteria criteria) {
     return resolve(key, criteria.getInterfaces(), criteria.getMatchers());
   }
 
-  public synchronized Set<T> resolve(Key key, Collection<Class<?>> interfaces, Collection<Matcher> matchers) {
+  private Set<T> resolve(Key key, Collection<Class<?>> interfaces, Collection<Matcher> matchers) {
     Class<?> cls = TypeUtils.getRawType(key.getType(), null);
     Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(cls);
 
@@ -159,10 +167,24 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
   }
 
+  /**
+   * Checks if there is an injectable in the store matching the given {@link Key}
+   * and {@link Criteria}.
+   *
+   * @param key the {@link Key}, cannot be null
+   * @param criteria a {@link Criteria}, cannot be null
+   * @return {@code true} if there was an injectable matching the key and criteria, otherwise {@code false}
+   */
   public synchronized boolean contains(Key key, Criteria criteria) {
     return !resolve(key, criteria).isEmpty();
   }
 
+  /**
+   * Checks if there is an injectable in the store matching the given {@link Key}.
+   *
+   * @param key the {@link Key}, cannot be null
+   * @return {@code true} if there was an injectable matching the key, otherwise {@code false}
+   */
   public synchronized boolean contains(Key key) {
     return contains(key, Criteria.EMPTY);
   }
@@ -187,6 +209,12 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     removeAll(List.of(injectable));
   }
 
+  /**
+   * Adds {@link Injectable}s to the store.
+   *
+   * @param injectables a collection of {@link Injectable}s, cannot be null or contain nulls but can be empty
+   * @throws NullPointerException when injectables was null or contained nulls
+   */
   public synchronized void putAll(Collection<T> injectables) {
     for(T injectable : injectables) {
       ensureInjectableIsValid(injectable);
@@ -222,6 +250,12 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
   }
 
+  /**
+   * Removes {@link Injectable}s from the store.
+   *
+   * @param injectables a collection of {@link Injectable}s, cannot be null or contain nulls but can be empty
+   * @throws NullPointerException when injectables was null or contained nulls
+   */
   public synchronized void removeAll(Collection<T> injectables) {
     // First check injectables for fatal issues, exception does not need to be caught:
     for(T injectable : injectables) {
