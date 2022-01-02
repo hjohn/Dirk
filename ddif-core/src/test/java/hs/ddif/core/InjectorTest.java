@@ -262,12 +262,11 @@ public class InjectorTest {
      * is very hard as searching the store for a Provider with qualifiers on its provided
      * type is not possible.  Also see InjectorProviderTest#providersShouldRespectQualifiers
      * comments.
+     *
+     * Furthermore, optional providers ARE allowed to return null.
      */
 
-    assertThatThrownBy(() -> instance.getUnavailableBeanProvider().get())
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasMessage("No such instance: [class hs.ddif.core.test.injectables.UnavailableBean]")
-      .hasNoCause();
+    assertThat(instance.getUnavailableBeanProvider().get()).isNull();
   }
 
   @Test

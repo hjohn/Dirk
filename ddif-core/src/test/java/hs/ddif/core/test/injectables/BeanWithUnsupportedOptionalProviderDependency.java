@@ -7,7 +7,7 @@ import javax.inject.Provider;
 
 public class BeanWithUnsupportedOptionalProviderDependency {
 
-  @Nullable @Inject  // @Nullable here has no impact on how a Provider works
+  @Nullable @Inject  // @Nullable/@Opt here means provider is allowed to return null (instead of throwing exception)
   private Provider<UnavailableBean> unavailableBeanProvider;
 
   public Provider<UnavailableBean> getUnavailableBeanProvider() {
