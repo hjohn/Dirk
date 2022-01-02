@@ -2,7 +2,6 @@ package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.FieldInjectableFactory;
-import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.Key;
 
 import java.util.List;
@@ -69,7 +68,7 @@ public class FieldInjectableFactoryTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForNonStaticField() throws NoSuchFieldException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
+  void shouldReturnCorrectInjectableForNonStaticField() throws Exception {
     ResolvableInjectable injectable = fieldInjectableFactory.create(C.class.getField("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
@@ -79,17 +78,17 @@ public class FieldInjectableFactoryTest {
 
     when(instantiator.getInstance(new Key(C.class))).thenReturn(new C());
 
-    assertEquals("Bye", injectable.getObjectFactory().createInstance(instantiator));
+    assertEquals("Bye", injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
   }
 
   @Test
-  void shouldReturnCorrectInjectableForStaticField() throws NoSuchFieldException, SecurityException, InstanceCreationFailure {
+  void shouldReturnCorrectInjectableForStaticField() throws Exception {
     ResolvableInjectable injectable = fieldInjectableFactory.create(C.class.getField("e"), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).isEmpty();
 
-    assertEquals("Hello", injectable.getObjectFactory().createInstance(instantiator));
+    assertEquals("Hello", injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
   }
 
   static class A {

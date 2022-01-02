@@ -52,7 +52,7 @@ public class InjectorDiscoveryTest {
       .hasMessage("Unable to inject: Field [public hs.ddif.core.test.injectables.SampleWithoutConstructorMatch hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch.sampleWithoutConstructorMatch] with: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
+      .hasMessage("No suitable constructor found; annotate a constructor or provide an empty public constructor: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
       .hasNoCause();
 
     assertFalse(injector.contains(SampleWithDependencyOnSampleWithoutConstructorMatch.class));
@@ -83,7 +83,7 @@ public class InjectorDiscoveryTest {
       .hasMessage("Exception during auto discovery: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
+      .hasMessage("No suitable constructor found; annotate a constructor or provide an empty public constructor: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
       .hasNoCause();
   }
 

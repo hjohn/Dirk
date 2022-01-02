@@ -3,7 +3,9 @@ package hs.ddif.core.inject.instantiator;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -47,8 +49,8 @@ public class ResolvableInjectable implements DependentInjectable {
     }
 
     this.type = type;
-    this.qualifiers = Collections.unmodifiableSet(qualifiers);
-    this.bindings = Collections.unmodifiableList(bindings);
+    this.qualifiers = Collections.unmodifiableSet(new HashSet<>(qualifiers));
+    this.bindings = Collections.unmodifiableList(new ArrayList<>(bindings));
     this.scope = scope;
     this.discriminator = discriminator;
     this.objectFactory = objectFactory;

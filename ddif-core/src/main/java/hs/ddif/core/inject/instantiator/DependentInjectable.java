@@ -13,7 +13,7 @@ public interface DependentInjectable extends Injectable {
   /**
    * Returns the {@link Binding}s detected.
    *
-   * @return a list {@link Binding}s, never null, can be empty if no bindings are detected.
+   * @return a list {@link Binding}s, never null, can be empty if no bindings are detected
    */
   List<Binding> getBindings();
 

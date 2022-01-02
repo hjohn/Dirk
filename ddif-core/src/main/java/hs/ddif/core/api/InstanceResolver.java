@@ -40,22 +40,6 @@ public interface InstanceResolver {
 
   /**
    * Returns an instance of the given {@link Type} matching the given criteria (if any) in
-   * which all dependencies and parameters are injected. The instance returned can either
-   * be an existing instance or newly created depending on its scope.
-   *
-   * @param <T> the type of the instance
-   * @param type the {@link Type} of the instance required, cannot be null
-   * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
-   * @param criterions optional list of criteria, see {@link InstanceResolver}
-   * @return an instance of the given type matching the given criteria, never null
-   * @throws NoSuchInstanceException when no matching instance was available or could be created
-   * @throws MultipleInstancesException when multiple matching instances were available
-   * @throws InstanceCreationException when an error occurred during creation of a matching instance
-   */
-  <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criterions);
-
-  /**
-   * Returns an instance of the given {@link Type} matching the given criteria (if any) in
    * which all dependencies are injected. The instance returned can either
    * be an existing instance or newly created depending on its scope.
    *

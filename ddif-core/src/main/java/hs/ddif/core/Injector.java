@@ -2,7 +2,6 @@ package hs.ddif.core;
 
 import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.api.InstanceResolver;
-import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.consistency.InjectorStoreConsistencyPolicy;
 import hs.ddif.core.inject.instantiator.Gatherer;
 import hs.ddif.core.inject.instantiator.Instantiator;
@@ -75,7 +74,6 @@ public class Injector implements InstanceResolver, CandidateRegistry {
 
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
     List<AutoDiscoveringGatherer.Extension> extensions = List.of(
-      new ProducerGathererExtension(resolvableInjectableFactory),
       new ProviderGathererExtension(methodInjectableFactory),
       new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)
     );
@@ -106,11 +104,6 @@ public class Injector implements InstanceResolver, CandidateRegistry {
    */
   public CandidateRegistry getCandidateRegistry() {
     return registry;
-  }
-
-  @Override
-  public <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) {
-    return instanceResolver.getParameterizedInstance(type, parameters, criteria);
   }
 
   @Override

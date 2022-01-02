@@ -2,7 +2,6 @@ package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.annotations.WeakSingleton;
-import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
@@ -74,7 +73,7 @@ public class InstantiatorTest {
         .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
 
-      assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class), new NamedParameter[] {new NamedParameter("param", 5)}))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class), Criteria.EMPTY))
         .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
     }
@@ -82,7 +81,7 @@ public class InstantiatorTest {
     @Test
     void shouldReturnNullWhenFindingSingleInstance() throws MultipleInstances, InstanceCreationFailure, OutOfScopeException {
       assertNull(instantiator.findInstance(new Key(A.class)));
-      assertNull(instantiator.findInstance(new Key(A.class), new NamedParameter[] {new NamedParameter("param", 5)}, Criteria.EMPTY));
+      assertNull(instantiator.findInstance(new Key(A.class), Criteria.EMPTY));
     }
 
     @Test
@@ -276,7 +275,7 @@ public class InstantiatorTest {
         .hasMessage("Exception during auto discovery: [class hs.ddif.core.inject.instantiator.InstantiatorTest$J]")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(BindingException.class)
-        .hasMessage("Type cannot be abstract: class hs.ddif.core.inject.instantiator.InstantiatorTest$J")
+        .hasMessageStartingWith("Type cannot be injected: class hs.ddif.core.inject.instantiator.InstantiatorTest$J")
         .hasNoCause();
     }
   }

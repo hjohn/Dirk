@@ -82,7 +82,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
   private Optional<Violation> addInjectables(Resolver<T> resolver, Collection<T> injectables) {
     for(T injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        if(!binding.isParameter() && !binding.isCollection()) {
+        if(!binding.isCollection()) {
           Key key = binding.getKey();
 
           addTarget(resolver, key, binding.isOptional(), injectables);
@@ -96,7 +96,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
   private Optional<Violation> removeInjectables(Collection<T> injectables) {
     for(T injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        if(!binding.isParameter() && !binding.isCollection()) {
+        if(!binding.isCollection()) {
           Key key = binding.getKey();
 
           removeTarget(key, binding.isOptional());
@@ -114,7 +114,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
      */
 
     for(Binding binding : injectable.getBindings()) {
-      if(!binding.isParameter() && !binding.isCollection()) {
+      if(!binding.isCollection()) {
         Key key = binding.getKey();
         Set<T> injectables = resolver.resolve(key);
 
@@ -181,7 +181,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
         visiting.add(injectable);
 
         for(Binding binding : injectable.getBindings()) {
-          if(!binding.isParameter() && !binding.isCollection() && binding.isDirect()) {
+          if(!binding.isCollection() && binding.isDirect()) {
             Key key = binding.getKey();
 
             for(T boundInjectable : resolver.resolve(key)) {

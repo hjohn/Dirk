@@ -53,6 +53,17 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
    *
    * @param type type involved, cannot be null
    * @param message a message
+   * @param cause a {@link Throwable} to use as cause
+   */
+  public InstanceCreationFailure(Type type, String message, Throwable cause) {
+    super(message + ": " + type, cause);
+  }
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param type type involved, cannot be null
+   * @param message a message
    */
   public InstanceCreationFailure(Type type, String message) {
     super(message + ": " + type);

@@ -1,6 +1,6 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.api.NamedParameter;
+import java.util.List;
 
 /**
  * Provides an object, potentially constructing it directly or indirectly and
@@ -11,10 +11,9 @@ public interface ObjectFactory {
   /**
    * Creates an instance.
    *
-   * @param instantiator the {@link Instantiator} to use to resolve dependencies, cannot be null
-   * @param parameters zero or more {@link NamedParameter} required for constructing the provided instance
+   * @param injections a list of {@link Injection} containing values to be injected, never null but can be empty
    * @return an instance, or <code>null</code> if it could not be provided
    * @throws InstanceCreationFailure when instantiation fails
    */
-  Object createInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure;
+  Object createInstance(List<Injection> injections) throws InstanceCreationFailure;
 }

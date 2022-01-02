@@ -44,7 +44,7 @@ public class InstanceInjectableFactory {
       List.of(),
       SINGLETON,
       instance,
-      (instantiator, parameters) -> instance
+      injections -> instance
     );
   }
 }
