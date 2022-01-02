@@ -81,7 +81,7 @@ public class MethodInjectableFactoryTest {
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
-      "Declaring Class of [public java.lang.Object hs.ddif.core.inject.instantiator.MethodInjectableFactoryTest$B.b()]"
+      "Owner Type [class hs.ddif.core.inject.instantiator.MethodInjectableFactoryTest$C]"
     );
 
     when(instantiator.getInstance(new Key(C.class))).thenReturn(new C());

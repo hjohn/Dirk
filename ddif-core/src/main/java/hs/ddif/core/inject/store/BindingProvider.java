@@ -23,6 +23,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -92,7 +93,6 @@ public class BindingProvider {
           try {
             bindings.add(createBinding(
               field,
-              AbstractBinding.FIELD,
               null,
               type,
               isOptional(field),
@@ -140,7 +140,7 @@ public class BindingProvider {
      * declaring class is required before the field can be accessed.
      */
 
-    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(new DirectBinding(field, AbstractBinding.DECLARING_CLASS, null, new Key(ownerType), false));
+    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(new OwnerBinding(ownerType));
   }
 
   /**
@@ -201,7 +201,6 @@ public class BindingProvider {
       try {
         Binding binding = createBinding(
           executable,
-          i,
           parameters[i],
           type,
           isOptional(parameters[i]),
@@ -217,32 +216,32 @@ public class BindingProvider {
 
     if(!Modifier.isStatic(executable.getModifiers()) && executable instanceof Method) {
       // For a non-static method, the class itself is also a required binding:
-      bindings.add(new DirectBinding(executable, AbstractBinding.DECLARING_CLASS, null, new Key(ownerType), false));
+      bindings.add(new OwnerBinding(ownerType));
     }
 
     return bindings;
   }
 
-  private static Binding createBinding(AccessibleObject accessibleObject, int argNo, Parameter parameter, Type type, boolean optional, Set<Annotation> qualifiers) {
-    return createBinding(accessibleObject, argNo, parameter, false, type, optional, qualifiers);
+  private static Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, Type type, boolean optional, Set<Annotation> qualifiers) {
+    return createBinding(accessibleObject, parameter, false, type, optional, qualifiers);
   }
 
-  private static Binding createBinding(AccessibleObject accessibleObject, int argNo, Parameter parameter, boolean isProviderAlready, Type type, boolean optional, Set<Annotation> qualifiers) {
+  private static Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, boolean isProviderAlready, Type type, boolean optional, Set<Annotation> qualifiers) {
     final Class<?> cls = TypeUtils.getRawType(type, null);
 
     if(Set.class.isAssignableFrom(cls)) {
-      return new HashSetBinding(accessibleObject, argNo, parameter, requireNotProvider(getFirstTypeParameter(type, Set.class)), qualifiers, optional);
+      return new HashSetBinding(accessibleObject, parameter, requireNotProvider(getFirstTypeParameter(type, Set.class)), qualifiers, optional);
     }
     if(List.class.isAssignableFrom(cls)) {
-      return new ArrayListBinding(accessibleObject, argNo, parameter, requireNotProvider(getFirstTypeParameter(type, List.class)), qualifiers, optional);
+      return new ArrayListBinding(accessibleObject, parameter, requireNotProvider(getFirstTypeParameter(type, List.class)), qualifiers, optional);
     }
     if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
-      return new ProviderBinding(accessibleObject, argNo, parameter, createBinding(accessibleObject, argNo, parameter, true, requireNotProvider(getFirstTypeParameter(type, Provider.class)), false, qualifiers));
+      return new ProviderBinding(accessibleObject, parameter, createBinding(accessibleObject, parameter, true, requireNotProvider(getFirstTypeParameter(type, Provider.class)), false, qualifiers));
     }
 
     Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
 
-    return new DirectBinding(accessibleObject, argNo, parameter, new Key(finalType, qualifiers), optional);
+    return new DirectBinding(accessibleObject, parameter, new Key(finalType, qualifiers), optional);
   }
 
   private static Type requireNotProvider(Type type) {
@@ -283,24 +282,19 @@ public class BindingProvider {
   }
 
   private static abstract class AbstractBinding implements Binding {
-    public static final int DECLARING_CLASS = -1;
-    public static final int FIELD = -2;
-
     private final AccessibleObject accessibleObject;
-    private final int argNo;
     private final Parameter parameter;
     private final Key key;
 
-    AbstractBinding(AccessibleObject accessibleObject, int argNo, Parameter parameter, Key key) {
+    AbstractBinding(AccessibleObject accessibleObject, Parameter parameter, Key key) {
       this.accessibleObject = accessibleObject;
-      this.argNo = argNo;
       this.parameter = parameter;
       this.key = key;
     }
 
     @Override
     public AccessibleObject getAccessibleObject() {
-      return argNo == DECLARING_CLASS ? null : accessibleObject;
+      return accessibleObject;
     }
 
     @Override
@@ -315,14 +309,11 @@ public class BindingProvider {
 
     @Override
     public String toString() {
-      if(argNo == DECLARING_CLASS) {
-        return "Declaring Class of [" + accessibleObject.toString() + "]";
-      }
       if(accessibleObject instanceof Executable) {
-        return "Parameter " + argNo + " of [" + accessibleObject.toString() + "]";
+        return "Parameter " + Arrays.asList(((Executable)accessibleObject).getParameters()).indexOf(parameter) + " of [" + accessibleObject + "]";
       }
 
-      return "Field [" + accessibleObject.toString() + "]";
+      return "Field [" + accessibleObject + "]";
     }
   }
 
@@ -330,8 +321,8 @@ public class BindingProvider {
     private final Key elementKey;
     private final boolean optional;
 
-    private HashSetBinding(AccessibleObject accessibleObject, int argNo, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
-      super(accessibleObject, argNo, parameter, new Key(TypeUtils.parameterize(Set.class, elementType), qualifiers));
+    private HashSetBinding(AccessibleObject accessibleObject, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
+      super(accessibleObject, parameter, new Key(TypeUtils.parameterize(Set.class, elementType), qualifiers));
 
       this.elementKey = new Key(elementType, qualifiers);
       this.optional = optional;
@@ -364,8 +355,8 @@ public class BindingProvider {
     private final Key elementKey;
     private final boolean optional;
 
-    private ArrayListBinding(AccessibleObject accessibleObject, int argNo, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
-      super(accessibleObject, argNo, parameter, new Key(TypeUtils.parameterize(List.class, elementType), qualifiers));
+    private ArrayListBinding(AccessibleObject accessibleObject, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
+      super(accessibleObject, parameter, new Key(TypeUtils.parameterize(List.class, elementType), qualifiers));
 
       this.elementKey = new Key(elementType, qualifiers);
       this.optional = optional;
@@ -397,8 +388,8 @@ public class BindingProvider {
   private static final class ProviderBinding extends AbstractBinding {
     private final Binding binding;
 
-    private ProviderBinding(AccessibleObject accessibleObject, int argNo, Parameter parameter, Binding binding) {
-      super(accessibleObject, argNo, parameter, binding.getKey());
+    private ProviderBinding(AccessibleObject accessibleObject, Parameter parameter, Binding binding) {
+      super(accessibleObject, parameter, binding.getKey());
 
       this.binding = binding;
     }
@@ -458,8 +449,8 @@ public class BindingProvider {
     private final Key key;
     private final boolean optional;
 
-    private DirectBinding(AccessibleObject accessibleObject, int argNo, Parameter parameter, Key requiredKey, boolean optional) {
-      super(accessibleObject, argNo, parameter, requiredKey);
+    private DirectBinding(AccessibleObject accessibleObject, Parameter parameter, Key requiredKey, boolean optional) {
+      super(accessibleObject, parameter, requiredKey);
 
       this.key = requiredKey;
       this.optional = optional;
@@ -487,6 +478,56 @@ public class BindingProvider {
     @Override
     public boolean isDirect() {
       return true;
+    }
+  }
+
+  private static final class OwnerBinding implements Binding {
+    private final Key key;
+    private final Type ownerType;
+
+    private OwnerBinding(Type ownerType) {
+      this.key = new Key(ownerType);
+      this.ownerType = ownerType;
+    }
+
+    @Override
+    public Key getKey() {
+      return key;
+    }
+
+    @Override
+    public AccessibleObject getAccessibleObject() {
+      return null;
+    }
+
+    @Override
+    public Parameter getParameter() {
+      return null;
+    }
+
+    @Override
+    public boolean isCollection() {
+      return false;
+    }
+
+    @Override
+    public boolean isDirect() {
+      return true;
+    }
+
+    @Override
+    public boolean isOptional() {
+      return false;
+    }
+
+    @Override
+    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance, OutOfScopeException {
+      return instantiator.getInstance(key);
+    }
+
+    @Override
+    public String toString() {
+      return "Owner Type [" + ownerType + "]";
     }
   }
 }
