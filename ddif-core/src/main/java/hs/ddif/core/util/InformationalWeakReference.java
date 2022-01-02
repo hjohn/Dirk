@@ -12,6 +12,12 @@ import java.lang.ref.WeakReference;
 public class InformationalWeakReference<T> extends WeakReference<T> {
   private final String info;
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param referent a referent
+   * @param queue a {@link ReferenceQueue}
+   */
   public InformationalWeakReference(T referent, ReferenceQueue<T> queue) {
     super(referent, queue);
 

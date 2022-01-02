@@ -27,6 +27,12 @@ public abstract class InstanceResolutionFailure extends Exception {
     super(message);
   }
 
+  /**
+   * Generates a description for a {@link Criteria} instance.
+   *
+   * @param criteria a {@link Criteria}, can be null
+   * @return a descriptive string, never null
+   */
   protected static String toCriteriaString(Criteria criteria) {
     return criteria == null || criteria.equals(Criteria.EMPTY) ? "" : " with " + criteria;
   }

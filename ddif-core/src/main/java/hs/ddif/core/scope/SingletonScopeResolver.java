@@ -8,6 +8,9 @@ import java.util.WeakHashMap;
 
 import javax.inject.Singleton;
 
+/**
+ * Scope resolver for the {@link Singleton} scope.
+ */
 public class SingletonScopeResolver implements ScopeResolver {
   private final Map<Injectable, Object> singletons = new WeakHashMap<>();
 

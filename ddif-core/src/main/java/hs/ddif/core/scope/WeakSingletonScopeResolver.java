@@ -8,6 +8,9 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+/**
+ * Scope resolver for the {@link WeakSingleton} scope.
+ */
 public class WeakSingletonScopeResolver implements ScopeResolver {
   private static final WeakReferenceCleanupLogger cleanupLogger = new WeakReferenceCleanupLogger();
 
