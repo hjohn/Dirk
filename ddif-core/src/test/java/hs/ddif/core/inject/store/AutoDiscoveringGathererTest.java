@@ -116,7 +116,7 @@ public class AutoDiscoveringGathererTest {
           .hasMessage("Exception during auto discovery: [interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("Type cannot be abstract: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
+          .hasMessageStartingWith("Type cannot be injected: interface hs.ddif.core.inject.store.AutoDiscoveringGathererTest$I")
           .hasNoCause();
       }
 
@@ -144,7 +144,7 @@ public class AutoDiscoveringGathererTest {
           .hasMessage("Unable to inject: Field [hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C hs.ddif.core.inject.store.AutoDiscoveringGathererTest$Bad_A.c] with: [class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C")
+          .hasMessage("No suitable constructor found; annotate a constructor or provide an empty public constructor: class hs.ddif.core.inject.store.AutoDiscoveringGathererTest$C")
           .hasNoSuppressedExceptions()
           .hasNoCause();
       }

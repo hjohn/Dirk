@@ -16,6 +16,7 @@ import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -158,7 +159,7 @@ public class InjectorStoreConsistencyPolicyStressTest {
         bindings,
         annotation,
         null,
-        (a, b) -> null
+        injections -> null
       );
 
       store.put(injectable);
@@ -200,18 +201,13 @@ public class InjectorStoreConsistencyPolicyStressTest {
     }
 
     @Override
-    public boolean isParameter() {
-      return false;
-    }
-
-    @Override
     public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance, OutOfScopeException {
       return null;
     }
 
     @Override
-    public int getIndex() {
-      return 0;
+    public Parameter getParameter() {
+      return null;
     }
   }
 

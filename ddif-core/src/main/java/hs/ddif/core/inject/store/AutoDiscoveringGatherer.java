@@ -164,7 +164,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
     List<Supplier<ResolvableInjectable>> suppliers = new ArrayList<>();
 
     for(Binding binding : injectable.getBindings()) {
-      if(!binding.isParameter() && !binding.isCollection() && !binding.isOptional() && binding.isDirect()) {
+      if(!binding.isCollection() && !binding.isOptional() && binding.isDirect()) {
         Key key = binding.getKey();
 
         suppliers.add(() -> {

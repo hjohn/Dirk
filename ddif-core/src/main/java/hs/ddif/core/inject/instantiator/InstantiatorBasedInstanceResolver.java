@@ -1,7 +1,6 @@
 package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.api.InstanceResolver;
-import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.scope.OutOfScopeException;
 
@@ -13,8 +12,6 @@ import java.util.List;
  * and converting its checked exceptions to runtime ones.
  */
 public class InstantiatorBasedInstanceResolver implements InstanceResolver {
-  private static final NamedParameter[] NO_PARAMETERS = new NamedParameter[] {};
-
   private final Instantiator instantiator;
 
   /**
@@ -27,11 +24,11 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> T getParameterizedInstance(Type type, NamedParameter[] parameters, Object... criteria) {
+  public synchronized <T> T getInstance(Type type, Object... criteria) {
     try {
       CriteriaParser parser = new CriteriaParser(type, criteria);
 
-      return instantiator.getInstance(parser.getKey(), parameters, parser.getCriteria());
+      return instantiator.getInstance(parser.getKey(), parser.getCriteria());
     }
     catch(InstanceResolutionFailure f) {
       throw f.toRuntimeException();
@@ -42,13 +39,8 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> T getInstance(Type type, Object... criteria) {
-    return getParameterizedInstance(type, NO_PARAMETERS, criteria);
-  }
-
-  @Override
   public synchronized <T> T getInstance(Class<T> cls, Object... criteria) {
-    return getParameterizedInstance((Type)cls, NO_PARAMETERS, criteria);
+    return getInstance((Type)cls, criteria);
   }
 
   @Override

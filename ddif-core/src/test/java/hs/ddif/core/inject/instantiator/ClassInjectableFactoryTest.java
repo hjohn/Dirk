@@ -39,14 +39,14 @@ public class ClassInjectableFactoryTest {
   }
 
   @Test
-  public void constructorShouldAcceptValidParameters() throws InstanceCreationFailure {
+  public void constructorShouldAcceptValidParameters() throws Exception {
     ResolvableInjectable injectable = classInjectableFactory.create(SimpleClass.class);
 
     assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
     assertEquals(SimpleClass.class.getAnnotation(Singleton.class), injectable.getScope());
     assertThat(injectable.getBindings()).hasSize(0);
-    assertTrue(injectable.getObjectFactory().createInstance(instantiator) instanceof SimpleClass);
+    assertTrue(injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings())) instanceof SimpleClass);
 
     injectable = classInjectableFactory.create(ClassWithDependencies.class);
 
@@ -55,7 +55,7 @@ public class ClassInjectableFactoryTest {
     assertNull(injectable.getScope());
     assertThat(injectable.getBindings()).hasSize(4);
 
-    ClassWithDependencies instance = (ClassWithDependencies)injectable.getObjectFactory().createInstance(instantiator);
+    ClassWithDependencies instance = (ClassWithDependencies)injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings()));
 
     assertEquals("a string", instance.s);
     assertEquals(2, instance.a);
@@ -64,7 +64,7 @@ public class ClassInjectableFactoryTest {
 
     store.put(instanceInjectableFactory.create(new BigDecimal(5)));
 
-    instance = (ClassWithDependencies)injectable.getObjectFactory().createInstance(instantiator);
+    instance = (ClassWithDependencies)injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings()));
 
     assertEquals(new BigDecimal(5), instance.bd);
   }
@@ -81,7 +81,7 @@ public class ClassInjectableFactoryTest {
   public void constructorShouldRejectInterfaceAsInjectableClass() {
     assertThatThrownBy(() -> classInjectableFactory.create(SimpleInterface.class))
       .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Type cannot be abstract: interface hs.ddif.core.inject.instantiator.ClassInjectableFactoryTest$SimpleInterface")
+      .hasMessageStartingWith("Type cannot be injected: interface hs.ddif.core.inject.instantiator.ClassInjectableFactoryTest$SimpleInterface")
       .hasNoCause();
   }
 
@@ -89,7 +89,7 @@ public class ClassInjectableFactoryTest {
   public void constructorShouldRejectAbstractClassAsInjectableClass() {
     assertThatThrownBy(() -> classInjectableFactory.create(SimpleAbstractClass.class))
       .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Type cannot be abstract: class hs.ddif.core.inject.instantiator.ClassInjectableFactoryTest$SimpleAbstractClass")
+      .hasMessageStartingWith("Type cannot be injected: class hs.ddif.core.inject.instantiator.ClassInjectableFactoryTest$SimpleAbstractClass")
       .hasNoCause();
   }
 
@@ -97,7 +97,7 @@ public class ClassInjectableFactoryTest {
   public void constructorShouldRejectInjectableClassWithoutConstructors() {
     assertThatThrownBy(() -> classInjectableFactory.create(ClassWithoutPublicConstructors.class))
       .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.inject.instantiator.ClassInjectableFactoryTest$ClassWithoutPublicConstructors")
+      .hasMessage("No suitable constructor found; annotate a constructor or provide an empty public constructor: class hs.ddif.core.inject.instantiator.ClassInjectableFactoryTest$ClassWithoutPublicConstructors")
       .hasNoCause();
   }
 

@@ -1,6 +1,5 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.api.NamedParameter;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Criteria;
@@ -19,8 +18,6 @@ import java.util.Set;
  * Injector).  The instances are returned from cache or created as needed.
  */
 public class Instantiator {
-  private static final NamedParameter[] NO_PARAMETERS = new NamedParameter[] {};
-
   private final InjectableStore<ResolvableInjectable> store;
   private final Gatherer gatherer;
 
@@ -47,11 +44,10 @@ public class Instantiator {
 
   /**
    * Returns an instance matching the given {@link Key} and {@link Criteria} (if any) in
-   * which all dependencies and parameters are injected.
+   * which all dependencies are injected.
    *
    * @param <T> the type of the instance
    * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
    * @param criteria a {@link Criteria} instance, cannot be null
    * @return an instance of the given class matching the given criteria, never null
    * @throws NoSuchInstance when no matching instance could be found or created
@@ -59,8 +55,8 @@ public class Instantiator {
    * @throws MultipleInstances when multiple matching instances were found or could be created
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> T getInstance(Key key, NamedParameter[] parameters, Criteria criteria) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
-    T object = findInstance(key, parameters, criteria);
+  public synchronized <T> T getInstance(Key key, Criteria criteria) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
+    T object = findInstance(key, criteria);
 
     if(object == null) {
       throw new NoSuchInstance(key, criteria);
@@ -71,36 +67,34 @@ public class Instantiator {
 
   /**
    * Returns an instance matching the given {@link Key} (if any) in
-   * which all dependencies and parameters are injected.
+   * which all dependencies are injected.
    *
    * @param <T> the type of the instance
    * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
    * @return an instance matching the given {@link Key}, never null
    * @throws NoSuchInstance when no matching instance could be found or created
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> T getInstance(Key key, NamedParameter[] parameters) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
-    return getInstance(key, parameters, Criteria.EMPTY);
+  public synchronized <T> T getInstance(Key key) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
+    return getInstance(key, Criteria.EMPTY);
   }
 
   /**
    * Finds an instance matching the given {@link Key} and {@link Criteria} (if any) in
-   * which all dependencies and parameters are injected. If not found, {@code null}
+   * which all dependencies are injected. If not found, {@code null}
    * is returned.
    *
    * @param <T> the type of the instance
    * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param parameters an array of {@link NamedParameter}'s required for creating the given type, cannot be null
    * @param criteria a {@link Criteria} instance, cannot be null
    * @return an instance of the given class matching the given criteria, or {@code null} when no instance was found
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> T findInstance(Key key, NamedParameter[] parameters, Criteria criteria) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
+  public synchronized <T> T findInstance(Key key, Criteria criteria) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
     Set<ResolvableInjectable> injectables = discover(key, criteria);
 
     if(injectables.isEmpty()) {
@@ -112,40 +106,7 @@ public class Instantiator {
 
     ResolvableInjectable injectable = injectables.iterator().next();
 
-    return getInstance(injectable, parameters, findScopeResolver(injectable));
-  }
-
-  /**
-   * Returns an instance matching the given {@link Key} and {@link Criteria} (if any) in
-   * which all dependencies are injected.
-   *
-   * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param criteria a {@link Criteria} instance, cannot be null
-   * @return an instance of the given class matching the given criteria, never null
-   * @throws OutOfScopeException when out of scope
-   * @throws NoSuchInstance when no matching instance could be found or created
-   * @throws MultipleInstances when multiple matching instances were found or could be created
-   * @throws InstanceCreationFailure when instantiation of an instance failed
-   */
-  public synchronized <T> T getInstance(Key key, Criteria criteria) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
-    return getInstance(key, NO_PARAMETERS, criteria);
-  }
-
-  /**
-   * Returns an instance matching the given {@link Key} (if any) in
-   * which all dependencies are injected.
-   *
-   * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @return an instance matching the given {@link Key}, never null
-   * @throws OutOfScopeException when out of scope
-   * @throws NoSuchInstance when no matching instance could be found or created
-   * @throws MultipleInstances when multiple matching instances were found or could be created
-   * @throws InstanceCreationFailure when instantiation of an instance failed
-   */
-  public synchronized <T> T getInstance(Key key) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
-    return getInstance(key, NO_PARAMETERS);
+    return getInstance(injectable, findScopeResolver(injectable));
   }
 
   /**
@@ -161,7 +122,7 @@ public class Instantiator {
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
   public synchronized <T> T findInstance(Key key) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
-    return findInstance(key, NO_PARAMETERS, Criteria.EMPTY);
+    return findInstance(key, Criteria.EMPTY);
   }
 
   /**
@@ -182,7 +143,7 @@ public class Instantiator {
 
       if(scopeResolver == null || scopeResolver.isScopeActive(injectable)) {
         try {
-          T instance = getInstance(injectable, NO_PARAMETERS, scopeResolver);
+          T instance = getInstance(injectable, scopeResolver);
 
           if(instance != null) {  // Providers are allowed to return null for optional dependencies, don't include those in set.
             instances.add(instance);
@@ -242,7 +203,7 @@ public class Instantiator {
     }
   }
 
-  private <T> T getInstance(ResolvableInjectable injectable, NamedParameter[] namedParameters, ScopeResolver scopeResolver) throws InstanceCreationFailure, OutOfScopeException {
+  private <T> T getInstance(ResolvableInjectable injectable, ScopeResolver scopeResolver) throws InstanceCreationFailure, OutOfScopeException {
     if(scopeResolver != null) {
       T instance = scopeResolver.get(injectable);
 
@@ -251,19 +212,33 @@ public class Instantiator {
       }
     }
 
-    @SuppressWarnings("unchecked")
-    T instance = (T)injectable.getObjectFactory().createInstance(this, namedParameters);
+    try {
+      List<Injection> injections = new ArrayList<>();
 
-    if(instance != null && scopeResolver != null) {
+      for(Binding binding : injectable.getBindings()) {
+        injections.add(new Injection(binding.getAccessibleObject(), binding.getValue(this)));
+      }
 
-      /*
-       * Store the result if scoped.
-       */
+      @SuppressWarnings("unchecked")
+      T instance = (T)injectable.getObjectFactory().createInstance(injections);
 
-      scopeResolver.put(injectable, instance);
+      if(instance != null && scopeResolver != null) {
+
+        /*
+         * Store the result if scoped.
+         */
+
+        scopeResolver.put(injectable, instance);
+      }
+
+      return instance;
     }
-
-    return instance;
+    catch(InstanceCreationFailure e) {
+      throw e;
+    }
+    catch(Exception e) {
+      throw new InstanceCreationFailure(injectable.getType(), "Exception while creating instance", e);
+    }
   }
 
   private ScopeResolver findScopeResolver(ResolvableInjectable injectable) {

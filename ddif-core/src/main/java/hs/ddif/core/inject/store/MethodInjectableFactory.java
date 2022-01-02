@@ -1,12 +1,9 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.api.NamedParameter;
-import hs.ddif.core.inject.instantiator.Binding;
+import hs.ddif.core.inject.instantiator.Injection;
 import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
-import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -14,7 +11,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -77,51 +73,43 @@ public class MethodInjectableFactory {
       throw new BindingException("Method cannot be annotated with Inject: " + method);
     }
 
-    List<Binding> bindings = BindingProvider.ofExecutable(method, ownerType);
-
     return factory.create(
       returnType,
       Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
-      bindings,
+      BindingProvider.ofMethod(method, ownerType),
       AnnotationExtractor.findScopeAnnotation(method),
       method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
-      new MethodObjectFactory(method, new Key(ownerType), bindings)
+      new MethodObjectFactory(method)
     );
   }
 
   static class MethodObjectFactory implements ObjectFactory {
     private final Method method;
-    private final Key ownerKey;
-    private final List<Binding> bindings;
 
-    MethodObjectFactory(Method method, Key ownerKey, List<Binding> bindings) {
+    MethodObjectFactory(Method method) {
       this.method = method;
-      this.ownerKey = ownerKey;
-      this.bindings = bindings;
     }
 
     @Override
-    public Object createInstance(Instantiator instantiator, NamedParameter... parameters) throws InstanceCreationFailure {
-      if(parameters.length > 0) {
-        throw new InstanceCreationFailure(method, "Superflous parameters supplied, none expected for producer method but got: " + Arrays.toString(parameters));
-      }
-
-      return constructInstance(instantiator);
-    }
-
-    private Object constructInstance(Instantiator instantiator) throws InstanceCreationFailure {
+    public Object createInstance(List<Injection> injections) throws InstanceCreationFailure {
       try {
         boolean isStatic = Modifier.isStatic(method.getModifiers());
-        Object obj = isStatic ? null : instantiator.getInstance(ownerKey);
-        Object[] values = new Object[bindings.size() - (isStatic ? 0 : 1)];  // Parameters for method
+        Object[] values = new Object[injections.size() - (isStatic ? 0 : 1)];  // Parameters for method
+        Object instance = null;
+        int parameterIndex = 0;
 
-        for(int i = 0; i < values.length; i++) {
-          values[i] = bindings.get(i).getValue(instantiator);
+        for(Injection binding : injections) {
+          if(binding.getTarget() instanceof Method) {
+            values[parameterIndex++] = binding.getValue();
+          }
+          else {
+            instance = binding.getValue();
+          }
         }
 
         method.setAccessible(true);
 
-        return method.invoke(obj, values);
+        return method.invoke(instance, values);
       }
       catch(Exception e) {
         throw new InstanceCreationFailure(method, "Exception while constructing instance via Producer", e);

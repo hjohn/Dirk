@@ -8,19 +8,19 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Indicates a field or method parameter is a required parameter to be provided
+ * Indicates a field or method argument is a required argument to be provided
  * at runtime via a factory used for assisted injection.
  */
 @Retention(RUNTIME)
 @Target({FIELD, PARAMETER})
-public @interface Parameter {
+public @interface Argument {
 
   /**
-   * Name for factory parameters, which must match the name at the injection site.  Optional
+   * Name for factory arguments, which must match the name at the injection site.  Optional
    * if source is compiled with parameter names (compile with debug info or with -parameters
    * switch).
    *
-   * @return the name of the factory parameter, or empty if parameter name should be determined via reflection
+   * @return the name of the factory argument, or empty if name should be determined via reflection
    */
   String value() default "";
 }

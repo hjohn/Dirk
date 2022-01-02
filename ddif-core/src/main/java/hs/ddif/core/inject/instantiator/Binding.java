@@ -4,6 +4,7 @@ import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.Key;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 
 /**
@@ -20,19 +21,21 @@ public interface Binding {
   Key getKey();
 
   /**
-   * Returns the target {@link AccessibleObject} for the binding.
+   * Returns the target {@link AccessibleObject} for the binding. This is null
+   * when the binding refers to the declaring class which is required to access a
+   * non-static field or method.
    *
-   * @return the target @link AccessibleObject} for the binding, never null
+   * @return the target @link AccessibleObject} for the binding, can be null
    */
   AccessibleObject getAccessibleObject();
 
   /**
-   * Returns the index of a parameter when the {@link AccessibleObject} is a
-   * constructor or a method. Returns 0 for fields.
+   * Returns the {@link Parameter} when the {@link AccessibleObject} is a
+   * constructor or a method. Returns @{code null} for fields.
    *
-   * @return a parameter index, never negative
+   * @return a {@link Parameter}, can be null
    */
-  int getIndex();
+  Parameter getParameter();
 
   /**
    * Returns the {@link Type} of the binding.
@@ -68,13 +71,6 @@ public interface Binding {
    * @return {@code true} when the target for this binding also allows leaving it unbound, otherwise {@code false}
    */
   boolean isOptional();
-
-  /**
-   * Returns <code>true</code> if the binding is to be supplied as parameter, otherwise <code>false</code>
-   *
-   * @return <code>true</code> if the binding is to be supplied as parameter, otherwise <code>false</code>
-   */
-  boolean isParameter();
 
   /**
    * Returns the current value of this binding.<p>

@@ -2,7 +2,6 @@ package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.MethodInjectableFactory;
-import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.Key;
 
@@ -77,7 +76,7 @@ public class MethodInjectableFactoryTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForNonStaticMethod() throws NoSuchMethodException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
+  void shouldReturnCorrectInjectableForNonStaticMethod() throws Exception {
     ResolvableInjectable injectable = methodInjectableFactory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
@@ -87,11 +86,11 @@ public class MethodInjectableFactoryTest {
 
     when(instantiator.getInstance(new Key(C.class))).thenReturn(new C());
 
-    assertEquals("Bye", injectable.getObjectFactory().createInstance(instantiator));
+    assertEquals("Bye", injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
   }
 
   @Test
-  void shouldReturnCorrectInjectableForStaticMethod() throws NoSuchMethodException, SecurityException, InstanceCreationFailure, InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
+  void shouldReturnCorrectInjectableForStaticMethod() throws Exception {
     ResolvableInjectable injectable = methodInjectableFactory.create(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());
@@ -101,7 +100,7 @@ public class MethodInjectableFactoryTest {
 
     when(instantiator.getInstance(new Key(D.class))).thenReturn(new D());
 
-    assertEquals("Hello D", injectable.getObjectFactory().createInstance(instantiator));
+    assertEquals("Hello D", injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
   }
 
   static class A {
