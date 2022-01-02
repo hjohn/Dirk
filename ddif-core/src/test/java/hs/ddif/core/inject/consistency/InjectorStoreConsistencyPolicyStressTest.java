@@ -1,5 +1,6 @@
 package hs.ddif.core.inject.consistency;
 
+import hs.ddif.annotations.Opt;
 import hs.ddif.core.Injector;
 import hs.ddif.core.Injectors;
 import hs.ddif.core.inject.instantiator.Binding;
@@ -226,7 +227,7 @@ public class InjectorStoreConsistencyPolicyStressTest {
 
   public static class C {
     @Inject B b;
-    @Inject Provider<D> d;  // not a circular dependency
+    @Inject @Opt Provider<D> d;  // not a circular dependency, and not required
   }
 
   public static class D implements Z {

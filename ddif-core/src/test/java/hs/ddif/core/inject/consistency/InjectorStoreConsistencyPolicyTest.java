@@ -1,5 +1,6 @@
 package hs.ddif.core.inject.consistency;
 
+import hs.ddif.annotations.Opt;
 import hs.ddif.core.TestScope;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
@@ -38,6 +39,9 @@ public class InjectorStoreConsistencyPolicyTest {
   private ResolvableInjectable i = classInjectableFactory.create(I.class);
   private ResolvableInjectable j = classInjectableFactory.create(J.class);
   private ResolvableInjectable l = classInjectableFactory.create(L.class);
+  private ResolvableInjectable m = classInjectableFactory.create(M.class);
+  private ResolvableInjectable n = classInjectableFactory.create(N.class);
+  private ResolvableInjectable o = classInjectableFactory.create(O.class);
 
   private InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
 
@@ -235,6 +239,32 @@ public class InjectorStoreConsistencyPolicyTest {
     }
   }
 
+  @Nested
+  class WhenClassesMAndNAndOAreAdded {
+    {
+      store.putAll(List.of(m, n, o));
+      policy.addAll(store, List.of(m, n, o));
+    }
+
+    @Test
+    void removeMShouldFailAsRequiredByN() {
+      store.remove(m);
+      assertThrows(ViolatesSingularDependencyException.class, () -> policy.removeAll(store, List.of(m)));
+    }
+
+    @Test
+    void removeNShouldFailAsRequiredByM() {
+      store.remove(n);
+      assertThrows(ViolatesSingularDependencyException.class, () -> policy.removeAll(store, List.of(n)));
+    }
+
+    @Test
+    void removeOShouldWorkAsMOnlyDependsOnItOptionally() {
+      store.remove(o);
+      policy.removeAll(store, List.of(o));
+    }
+  }
+
   interface Z {
   }
 
@@ -251,7 +281,7 @@ public class InjectorStoreConsistencyPolicyTest {
 
   public static class C {
     @Inject B b;
-    @Inject Provider<D> d;  // not a circular dependency
+    @Inject @Opt Provider<D> d;  // not a circular dependency, and not required
   }
 
   public static class D {
@@ -284,5 +314,18 @@ public class InjectorStoreConsistencyPolicyTest {
 
   public static class L {
     @Inject @Nullable Z z;
+  }
+
+  public static class M {
+    @Inject Provider<N> n;
+    @Inject @Opt Provider<O> o;
+  }
+
+  public static class N {
+    @Inject M m;
+  }
+
+  public static class O {
+    @Inject M m;
   }
 }

@@ -236,7 +236,7 @@ public class BindingProvider {
       return new ArrayListBinding(accessibleObject, parameter, requireNotProvider(getFirstTypeParameter(type, List.class)), qualifiers, optional);
     }
     if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
-      return new ProviderBinding(accessibleObject, parameter, createBinding(accessibleObject, parameter, true, requireNotProvider(getFirstTypeParameter(type, Provider.class)), false, qualifiers));
+      return new ProviderBinding(accessibleObject, parameter, createBinding(accessibleObject, parameter, true, requireNotProvider(getFirstTypeParameter(type, Provider.class)), optional, qualifiers));
     }
 
     Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
@@ -431,7 +431,7 @@ public class BindingProvider {
 
     @Override
     public boolean isOptional() {
-      return true;
+      return binding.isOptional();
     }
 
     @Override

@@ -2,9 +2,11 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.NoSuchInstanceException;
+import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.store.DuplicateInjectableException;
+import hs.ddif.core.test.injectables.BeanWithOptionalProvider;
 import hs.ddif.core.test.injectables.BeanWithProvider;
 import hs.ddif.core.test.injectables.SimpleBean;
 import hs.ddif.core.test.qualifiers.Big;
@@ -43,18 +45,31 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void providerShouldBreakCircularDependencyAndFailWhenUsedAndWorkWhenDependencyBecomesAvailable() {
+  public void optionalProvidersShouldBreakCircularDependenciesAndAllowDelayedRegistration() {  // Only optional Providers can be used to delay registration of the provisioned class.
     // allowed:
-    injector.register(BeanWithProvider.class);
+    injector.register(BeanWithOptionalProvider.class);
 
-    BeanWithProvider instance = injector.getInstance(BeanWithProvider.class);
+    BeanWithOptionalProvider instance = injector.getInstance(BeanWithOptionalProvider.class);
 
-    assertThatThrownBy(() -> instance.getSimpleBean())
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasNoCause();
+    assertThat(instance.getSimpleBean()).isNull();
 
     // works when SimpleBean registered:
     injector.register(SimpleBean.class);
+
+    assertEquals(SimpleBean.class, instance.getSimpleBean().getClass());
+  }
+
+  @Test
+  public void providersShouldBreakCircularDependenciesOnly() {  // Required Providers cannot be used to delay registration of the provisioned class.  
+    assertThatThrownBy(() -> injector.register(BeanWithProvider.class))
+      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .hasMessage("Missing dependency of type [class hs.ddif.core.test.injectables.SimpleBean] required for Field [private javax.inject.Provider hs.ddif.core.test.injectables.BeanWithProvider.simpleBeanProvider]")
+      .hasNoCause();
+
+    injector.register(SimpleBean.class);
+    injector.register(BeanWithProvider.class);
+
+    BeanWithProvider instance = injector.getInstance(BeanWithProvider.class);
 
     assertEquals(SimpleBean.class, instance.getSimpleBean().getClass());
   }

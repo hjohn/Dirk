@@ -1,8 +1,11 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.instantiator.NoSuchInstance;
+import hs.ddif.core.store.Criteria;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
@@ -25,7 +28,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.groups.Tuple.tuple;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import io.leangen.geantyref.TypeFactory;
@@ -157,18 +162,20 @@ public class BindingProviderTest {
     List<Binding> bindings = BindingProvider.ofConstructorAndMembers(ClassA.class.getDeclaredConstructor(ClassB.class), ClassA.class);
 
     assertThat(bindings)
-      .extracting(Binding::getKey)
+      .extracting(Binding::getKey, Binding::isOptional)
       .containsExactly(
-        new Key(ClassB.class),
-        new Key(String.class),
-        new Key(Integer.class),
-        new Key(TypeFactory.parameterizedClass(List.class, Double.class)),
-        new Key(TypeFactory.parameterizedClass(Set.class, String.class)),
-        new Key(TypeFactory.parameterizedClass(List.class, Double.class), List.of(RED)),
-        new Key(TypeFactory.parameterizedClass(Set.class, String.class), List.of(RED)),
-        new Key(TypeFactory.parameterizedClass(List.class, Double.class), List.of(GREEN)),
-        new Key(TypeFactory.parameterizedClass(Set.class, String.class), List.of(GREEN)),
-        new Key(Long.class)
+        tuple(new Key(ClassB.class), false),
+        tuple(new Key(String.class), false),
+        tuple(new Key(Integer.class), false),
+        tuple(new Key(TypeFactory.parameterizedClass(List.class, Double.class)), true),
+        tuple(new Key(TypeFactory.parameterizedClass(Set.class, String.class)), true),
+        tuple(new Key(TypeFactory.parameterizedClass(List.class, Double.class), List.of(RED)), true),
+        tuple(new Key(TypeFactory.parameterizedClass(Set.class, String.class), List.of(RED)), true),
+        tuple(new Key(TypeFactory.parameterizedClass(List.class, Double.class), List.of(GREEN)), true),
+        tuple(new Key(TypeFactory.parameterizedClass(Set.class, String.class), List.of(GREEN)), true),
+        tuple(new Key(Long.class), true),
+        tuple(new Key(Short.class), false),
+        tuple(new Key(Short.class), true)
       );
 
     ClassB classB = new ClassB();
@@ -196,6 +203,32 @@ public class BindingProviderTest {
     assertThat(bindings.get(7).getValue(instantiator)).isEqualTo(List.of());
     assertThat(bindings.get(8).getValue(instantiator)).isEqualTo(Set.of());
     assertThat(bindings.get(9).getValue(instantiator)).isNull();
+
+    /*
+     * Test optional provider functionality:
+     */
+
+    when(instantiator.findInstance(new Key(Short.class))).thenReturn(null);
+    when(instantiator.getInstance(new Key(Short.class))).thenThrow(new NoSuchInstance(new Key(Short.class), Criteria.EMPTY));
+
+    assertThat(bindings.get(10).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
+      assertThatThrownBy(() -> p.get())
+        .isExactlyInstanceOf(NoSuchInstanceException.class);
+    });
+    assertThat(bindings.get(11).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
+      assertThat(p.get()).isNull();
+    });
+
+    reset(instantiator);
+    when(instantiator.findInstance(new Key(Short.class))).thenReturn((short)2);
+    when(instantiator.getInstance(new Key(Short.class))).thenReturn((short)3);
+
+    assertThat(bindings.get(10).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
+      assertThat(p.get()).isEqualTo((short)3);
+    });
+    assertThat(bindings.get(11).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
+      assertThat(p.get()).isEqualTo((short)2);
+    });
   }
 
   @SuppressWarnings("unused")
@@ -239,6 +272,8 @@ public class BindingProviderTest {
     @Inject @Green List<Double> emptyGreenDoubles;
     @Inject @Green Set<String> emptyGreenStrings;
     @Inject @Opt long z = 15;
+    @Inject Provider<Short> p;
+    @Inject @Opt Provider<Short> q;
 
     @Inject
     ClassA(ClassB classB) {

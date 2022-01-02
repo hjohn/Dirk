@@ -276,7 +276,6 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  @Disabled("Need to enable this once provide supplied dependencies are mandatory")
   public void dependenciesOfProductShouldBeCheckedToBeInStore() {
     // Registering TestAssistedSampleFactory should fail because the product TestAssistedSample
     // requires TestService which was not registered yet.
