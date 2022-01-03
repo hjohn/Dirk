@@ -60,7 +60,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void providersShouldBreakCircularDependenciesOnly() {  // Required Providers cannot be used to delay registration of the provisioned class.  
+  public void providersShouldBreakCircularDependenciesOnly() {  // Required Providers cannot be used to delay registration of the provisioned class.
     assertThatThrownBy(() -> injector.register(BeanWithProvider.class))
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
       .hasMessage("Missing dependency of type [class hs.ddif.core.test.injectables.SimpleBean] required for Field [private javax.inject.Provider hs.ddif.core.test.injectables.BeanWithProvider.simpleBeanProvider]")
@@ -84,7 +84,7 @@ public class InjectorProviderTest {
     };
 
     injector.registerInstance(anonymousProvider);
-    injector.registerInstance(Boolean.TRUE, Annotations.named("db.readonly"));
+    injector.registerInstance(true, Annotations.named("db.readonly"));
 
     for(int i = 0; i < 2; i++) {
       injector.register(DatabaseProvider.class);

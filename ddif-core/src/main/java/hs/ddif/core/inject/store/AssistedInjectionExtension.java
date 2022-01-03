@@ -8,6 +8,7 @@ import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectableFactory.Extension;
 import hs.ddif.core.util.Annotations;
+import hs.ddif.core.util.Primitives;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
@@ -324,8 +325,10 @@ public class AssistedInjectionExtension implements Extension {
         throw new BindingException("Factory method is missing required argument: [" + factoryMethod + "] is missing required argument with name: " + name);
       }
 
-      if(!argumentBindings.get(name).getType().equals(genericParameterTypes[i])) {
-        throw new BindingException("Factory method has argument of wrong type: [" + factoryMethod + "] has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + genericParameterTypes[i]);
+      Type factoryArgumentType = Primitives.toBoxed(genericParameterTypes[i]);
+
+      if(!argumentBindings.get(name).getType().equals(factoryArgumentType)) {
+        throw new BindingException("Factory method has argument of wrong type: [" + factoryMethod + "] has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
       }
 
       names.add(name);
