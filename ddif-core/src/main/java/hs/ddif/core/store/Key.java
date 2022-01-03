@@ -1,5 +1,7 @@
 package hs.ddif.core.store;
 
+import hs.ddif.core.util.Primitives;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -34,7 +36,7 @@ public class Key {
       throw new IllegalArgumentException("qualifiers must all be annotations annotated with @Qualifier: " + qualifiers);
     }
 
-    this.type = type;
+    this.type = Primitives.toBoxed(type);
     this.qualifiers = Collections.unmodifiableSet(new HashSet<>(qualifiers));
   }
 

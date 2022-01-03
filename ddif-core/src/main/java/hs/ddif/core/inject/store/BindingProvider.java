@@ -24,10 +24,8 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -239,9 +237,7 @@ public class BindingProvider {
       return new ProviderBinding(accessibleObject, parameter, createBinding(accessibleObject, parameter, true, requireNotProvider(getFirstTypeParameter(type, Provider.class)), optional, qualifiers));
     }
 
-    Type finalType = type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;
-
-    return new DirectBinding(accessibleObject, parameter, new Key(finalType, qualifiers), optional);
+    return new DirectBinding(accessibleObject, parameter, new Key(type, qualifiers), optional);
   }
 
   private static Type requireNotProvider(Type type) {
@@ -266,19 +262,6 @@ public class BindingProvider {
     }
 
     return false;
-  }
-
-  private static final Map<Class<?>, Class<?>> WRAPPER_CLASS_BY_PRIMITIVE_CLASS = new HashMap<>();
-
-  static {
-    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(boolean.class, Boolean.class);
-    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(byte.class, Byte.class);
-    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(short.class, Short.class);
-    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(char.class, Character.class);
-    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(int.class, Integer.class);
-    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(long.class, Long.class);
-    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(float.class, Float.class);
-    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(double.class, Double.class);
   }
 
   private static abstract class AbstractBinding implements Binding {

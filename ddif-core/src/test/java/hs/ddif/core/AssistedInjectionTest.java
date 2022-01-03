@@ -65,7 +65,7 @@ public class AssistedInjectionTest {
 
     TestAssistedAbstractSample sample = factory.create(2, 3);
 
-    assertEquals(44 * 2 + 3, (int)sample.interval);
+    assertEquals(44 * 2 + 3, sample.interval);
     assertEquals(TestService.class, sample.testService.getClass());
   }
 
@@ -85,7 +85,7 @@ public class AssistedInjectionTest {
 
     TestAssistedAbstractSample sample = factory.create(2, 3);
 
-    assertEquals(44 * 2 + 3, (int)sample.interval);
+    assertEquals(44 * 2 + 3, sample.interval);
     assertEquals(TestService.class, sample.testService.getClass());
   }
 
@@ -328,7 +328,7 @@ public class AssistedInjectionTest {
 
   public static class TestAssistedAbstractSample {
     @Inject public TestService testService;
-    @Inject @Argument public Integer interval;
+    @Inject @Argument public int interval;
     @Inject @Argument public Double factor;
 
     @Inject
@@ -346,7 +346,7 @@ public class AssistedInjectionTest {
       return create(valueSupplier.get() * a + b, 3.0);
     }
 
-    public abstract TestAssistedAbstractSample create(@Argument("interval") Integer interval, @Argument("factor") Double factor);
+    public abstract TestAssistedAbstractSample create(@Argument("interval") int interval, @Argument("factor") Double factor);
   }
 
   public static abstract class TestAssistedAbstractSampleFactoryWithConstructor {
@@ -361,7 +361,7 @@ public class AssistedInjectionTest {
       return create(valueSupplier.get() * a + b, 3.0);
     }
 
-    public abstract TestAssistedAbstractSample create(@Argument("interval") Integer interval, @Argument("factor") Double factor);
+    public abstract TestAssistedAbstractSample create(@Argument("interval") Integer interval, @Argument("factor") double factor);
   }
 
   public static class TestService {
@@ -390,6 +390,6 @@ public class AssistedInjectionTest {
   }
 
   interface ComplicatedProductFactory {
-    ComplicatedProduct create(Integer offset);  // TODO make it possible to use primitive type
+    ComplicatedProduct create(int offset);
   }
 }
