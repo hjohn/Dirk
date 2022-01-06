@@ -22,10 +22,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -33,8 +35,6 @@ import javax.inject.Provider;
 import javax.inject.Qualifier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
-
-import io.leangen.geantyref.GenericTypeReflector;
 
 /**
  * Provides {@link Binding}s for constructors, methods and fields.
@@ -78,6 +78,7 @@ public class BindingProvider {
   public static List<Binding> ofMembers(Class<?> cls) {
     List<Binding> bindings = new ArrayList<>();
     Class<?> currentInjectableClass = cls;
+    Map<TypeVariable<?>, Type> typeArguments = null;
 
     while(currentInjectableClass != null) {
       for(final Field field : currentInjectableClass.getDeclaredFields()) {
@@ -86,7 +87,15 @@ public class BindingProvider {
             throw new BindingException("Cannot inject final field: " + field + " in: " + cls);
           }
 
-          Type type = GenericTypeReflector.getExactFieldType(field, cls);
+          if(typeArguments == null) {
+            typeArguments = TypeUtils.getTypeArguments(cls, currentInjectableClass);  // pretty sure that you can re-use these even for when are examining fields of a super class later
+
+            if(typeArguments == null) {
+              throw new IllegalArgumentException("ownerType must be assignable to field's declaring class: " + cls + "; declaring class: " + currentInjectableClass);
+            }
+          }
+
+          Type type = TypeUtils.unrollVariables(typeArguments, field.getGenericType());
 
           try {
             bindings.add(createBinding(
@@ -190,11 +199,10 @@ public class BindingProvider {
 
   private static List<Binding> ofExecutable(Executable executable, Type ownerType) {
     Parameter[] parameters = executable.getParameters();
-    Type[] genericParameterTypes = executable.getGenericParameterTypes();
     List<Binding> bindings = new ArrayList<>();
 
-    for(int i = 0; i < genericParameterTypes.length; i++) {
-      Type type = genericParameterTypes[i];
+    for(int i = 0; i < parameters.length; i++) {
+      Type type = parameters[i].getParameterizedType();
 
       try {
         Binding binding = createBinding(
@@ -254,9 +262,10 @@ public class BindingProvider {
 
   private static boolean isOptional(AnnotatedElement element) {
     for(Annotation annotation : element.getAnnotations()) {
-      String simpleName = annotation.annotationType().getSimpleName();
+      Class<? extends Annotation> annotationType = annotation.annotationType();
+      String simpleName = annotationType.getName();
 
-      if(simpleName.equals("Nullable") || annotation.annotationType().equals(Opt.class)) {
+      if(simpleName.endsWith(".Nullable") || annotationType.equals(Opt.class)) {
         return true;
       }
     }
