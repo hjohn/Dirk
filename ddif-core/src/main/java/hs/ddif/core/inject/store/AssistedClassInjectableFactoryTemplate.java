@@ -87,7 +87,7 @@ import net.bytebuddy.matcher.ElementMatchers;
  * <p>Factories can have qualifiers at the type level. These will be taken into
  * account when injecting the factory at a target site. Products never have any
  * qualifiers.
- */ // FIXME rename
+ */
 public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFactoryTemplate<AssistedClassInjectableFactoryTemplate.Context> {
   private static final Map<Type, ResolvableInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
