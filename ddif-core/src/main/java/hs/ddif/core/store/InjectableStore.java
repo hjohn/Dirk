@@ -6,6 +6,7 @@ import hs.ddif.core.util.Types;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,7 +17,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -61,27 +61,51 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   @Override
   public synchronized Set<T> resolve(Key key) {
-    return resolve(key, List.of(), List.of());
+    return resolve(key, List.of());
   }
 
   /**
-   * Look up injectables by {@link Key} and {@link Criteria}. The empty set is returned if
+   * Look up injectables by {@link Key} and a list of {@link Matcher}s. The empty set is returned if
    * there were no matches.
    *
    * @param key the {@link Key}, cannot be null
-   * @param criteria a {@link Criteria}, cannot be null
+   * @param matchers a list of {@link Matcher}s, cannot be null
    * @return a set of injectables, never null but can be empty
    */
-  public synchronized Set<T> resolve(Key key, Criteria criteria) {
-    return resolve(key, criteria.getInterfaces(), criteria.getMatchers());
-  }
+  public synchronized Set<T> resolve(Key key, Collection<Matcher> matchers) {
+    Type type = key.getType();
+    Collection<Set<T>> sets;
+    Set<Type> upperBounds;
 
-  private Set<T> resolve(Key key, Collection<Class<?>> interfaces, Collection<Matcher> matchers) {
-    Class<?> cls = TypeUtils.getRawType(key.getType(), null);
-    Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(cls);
+    if(type instanceof WildcardType) {
+      sets = new PriorityQueue<>(comparatorConst);
+      upperBounds = Set.of(TypeUtils.getImplicitUpperBounds((WildcardType)type));
 
-    if(injectablesByAnnotation == null) {
-      return Collections.emptySet();
+      for(Type upperBound : upperBounds) {
+        if(addUpperBound(key, sets, Types.raw(upperBound))) {
+          return Collections.emptySet();
+        }
+      }
+    }
+    else {
+      Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(Types.raw(type));
+
+      if(injectablesByAnnotation == null) {
+        return Collections.emptySet();
+      }
+
+      if(key.getQualifiers().isEmpty()) {
+        sets = Set.of(injectablesByAnnotation.get(null));
+      }
+      else {
+        sets = new PriorityQueue<>(comparatorConst);
+
+        if(addQualifierBounds(key, sets, injectablesByAnnotation)) {
+          return Collections.emptySet();
+        }
+      }
+
+      upperBounds = Set.of(type);
     }
 
     /*
@@ -89,34 +113,6 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
      * gather all sets sorted by size. Copy the smallest set and perform retainAll
      * with the remaining sets.
      */
-
-    Queue<Set<T>> sets = new PriorityQueue<>(comparatorConst);
-
-    for(Annotation annotation : key.getQualifiers()) {
-      Set<T> set = injectablesByAnnotation.get(annotation);
-
-      if(set == null) {
-        return Collections.emptySet();
-      }
-
-      sets.add(set);
-    }
-
-    for(Class<?> iface : interfaces) {
-      Map<Annotation, Set<T>> map = injectablesByAnnotationByType.get(iface);
-
-      if(map == null) {
-        return Collections.emptySet();
-      }
-
-      Set<T> set = map.get(null);
-
-      if(set == null) {
-        return Collections.emptySet();
-      }
-
-      sets.add(set);
-    }
 
     Set<T> matches = null;
 
@@ -134,17 +130,12 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
 
     /*
-     * If at this point matches is still null, then there were no filters by qualifier or interface.
-     * A copy must be made then of the set containing all injectables for a class.
-     */
-
-    matches = matches == null ? new HashSet<>(injectablesByAnnotation.get(null)) : matches;
-
-    /*
      * If necessary, further strip down the matches based on an exact generic type match:
      */
 
-    filterByGenericType(key.getType(), matches);
+    for(Type upperBound : upperBounds) {
+      filterByGenericType(upperBound, matches);
+    }
 
     /*
      * Finally apply custom supplied matchers:
@@ -155,6 +146,36 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     }
 
     return matches;
+  }
+
+  private boolean addUpperBound(Key key, Collection<Set<T>> sets, Class<?> upperBound) {
+    Map<Annotation, Set<T>> injectablesByAnnotation = injectablesByAnnotationByType.get(upperBound);
+
+    if(injectablesByAnnotation == null) {
+      return true;
+    }
+
+    if(!key.getQualifiers().isEmpty()) {
+      return addQualifierBounds(key, sets, injectablesByAnnotation);
+    }
+
+    sets.add(injectablesByAnnotation.get(null));
+
+    return false;
+  }
+
+  private boolean addQualifierBounds(Key key, Collection<Set<T>> sets, Map<Annotation, Set<T>> injectablesByAnnotation) {
+    for(Annotation annotation : key.getQualifiers()) {
+      Set<T> set = injectablesByAnnotation.get(annotation);
+
+      if(set == null) {
+        return true;
+      }
+
+      sets.add(set);
+    }
+
+    return false;
   }
 
   private static <T extends Injectable> void filterByMatcher(Set<T> matches, Matcher matcher) {
@@ -169,14 +190,14 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   /**
    * Checks if there is an injectable in the store matching the given {@link Key}
-   * and {@link Criteria}.
+   * and a list of {@link Matcher}s.
    *
    * @param key the {@link Key}, cannot be null
-   * @param criteria a {@link Criteria}, cannot be null
+   * @param matchers a list of {@link Matcher}s, cannot be null
    * @return {@code true} if there was an injectable matching the key and criteria, otherwise {@code false}
    */
-  public synchronized boolean contains(Key key, Criteria criteria) {
-    return !resolve(key, criteria).isEmpty();
+  public synchronized boolean contains(Key key, List<Matcher> matchers) {
+    return !resolve(key, matchers).isEmpty();
   }
 
   /**
@@ -186,7 +207,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
    * @return {@code true} if there was an injectable matching the key, otherwise {@code false}
    */
   public synchronized boolean contains(Key key) {
-    return contains(key, Criteria.EMPTY);
+    return contains(key, List.of());
   }
 
   /**

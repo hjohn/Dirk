@@ -412,6 +412,7 @@ public class InjectorProviderTest {
     assertThat(x.green.get().name).isEqualTo("green");
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void multipleProvidersOfSameTypeShouldReturnMultipleInstances() {
     injector.register(B.class);  // provides @Green Z("green")
@@ -425,13 +426,18 @@ public class InjectorProviderTest {
     assertThat(w.zs).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
     assertThat(w.zList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
 
+    assertThat(w.reds).isEmpty();
     assertThat(w.zReds).isEmpty();
+    assertThat(w.redList.get()).isEmpty();
     assertThat(w.zRedList.get()).isEmpty();
 
+    assertThat((List<Z>)w.greens).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
     assertThat(w.zGreens).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+    assertThat((List<Z>)w.greenList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
     assertThat(w.zGreenList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void multipleProducersOfSameTypeShouldReturnMultipleInstances() {
     injector.register(V.class);  // produces @Green Z("green") and @Green Z("light green")
@@ -444,10 +450,14 @@ public class InjectorProviderTest {
     assertThat(w.zs).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
     assertThat(w.zList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
 
+    assertThat(w.reds).isEmpty();
     assertThat(w.zReds).isEmpty();
+    assertThat(w.redList.get()).isEmpty();
     assertThat(w.zRedList.get()).isEmpty();
 
+    assertThat((List<Z>)w.greens).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
     assertThat(w.zGreens).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
+    assertThat((List<Z>)w.greenList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
     assertThat(w.zGreenList.get()).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
   }
 
@@ -546,9 +556,13 @@ public class InjectorProviderTest {
   public static class W {
     @Inject List<Z> zs;
     @Inject Provider<List<Z>> zList;
+    @Inject @Green List<?> greens;
     @Inject @Green List<Z> zGreens;
+    @Inject @Green Provider<List<?>> greenList;
     @Inject @Green Provider<List<Z>> zGreenList;
+    @Inject @Red List<?> reds;
     @Inject @Red List<Z> zReds;
+    @Inject @Red Provider<List<?>> redList;
     @Inject @Red Provider<List<Z>> zRedList;
   }
 

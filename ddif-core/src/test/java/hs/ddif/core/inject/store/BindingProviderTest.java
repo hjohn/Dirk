@@ -5,7 +5,6 @@ import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.NoSuchInstance;
-import hs.ddif.core.store.Criteria;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
@@ -208,7 +207,7 @@ public class BindingProviderTest {
      */
 
     when(instantiator.findInstance(new Key(Short.class))).thenReturn(null);
-    when(instantiator.getInstance(new Key(Short.class))).thenThrow(new NoSuchInstance(new Key(Short.class), Criteria.EMPTY));
+    when(instantiator.getInstance(new Key(Short.class))).thenThrow(new NoSuchInstance(new Key(Short.class), List.of()));
 
     assertThat(bindings.get(10).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
       assertThatThrownBy(() -> p.get())

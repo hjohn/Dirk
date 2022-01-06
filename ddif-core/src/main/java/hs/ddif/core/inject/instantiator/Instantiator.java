@@ -1,8 +1,8 @@
 package hs.ddif.core.inject.instantiator;
 
+import hs.ddif.core.api.Matcher;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.Criteria;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.Key;
 
@@ -43,23 +43,23 @@ public class Instantiator {
   }
 
   /**
-   * Returns an instance matching the given {@link Key} and {@link Criteria} (if any) in
+   * Returns an instance matching the given {@link Key} and a list of {@link Matcher}s (if any) in
    * which all dependencies are injected.
    *
    * @param <T> the type of the instance
    * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param criteria a {@link Criteria} instance, cannot be null
-   * @return an instance of the given class matching the given criteria, never null
+   * @param matchers a list of {@link Matcher}s, cannot be null
+   * @return an instance of the given class matching the given matchers, never null
    * @throws NoSuchInstance when no matching instance could be found or created
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> T getInstance(Key key, Criteria criteria) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
-    T object = findInstance(key, criteria);
+  public synchronized <T> T getInstance(Key key, List<Matcher> matchers) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
+    T object = findInstance(key, matchers);
 
     if(object == null) {
-      throw new NoSuchInstance(key, criteria);
+      throw new NoSuchInstance(key, matchers);
     }
 
     return object;
@@ -78,30 +78,30 @@ public class Instantiator {
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
   public synchronized <T> T getInstance(Key key) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
-    return getInstance(key, Criteria.EMPTY);
+    return getInstance(key, List.of());
   }
 
   /**
-   * Finds an instance matching the given {@link Key} and {@link Criteria} (if any) in
+   * Finds an instance matching the given {@link Key} and a list of {@link Matcher}s (if any) in
    * which all dependencies are injected. If not found, {@code null}
    * is returned.
    *
    * @param <T> the type of the instance
    * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param criteria a {@link Criteria} instance, cannot be null
-   * @return an instance of the given class matching the given criteria, or {@code null} when no instance was found
+   * @param matchers a list of {@link Matcher}s, cannot be null
+   * @return an instance of the given class matching the given matchers, or {@code null} when no instance was found
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> T findInstance(Key key, Criteria criteria) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
-    Set<ResolvableInjectable> injectables = discover(key, criteria);
+  public synchronized <T> T findInstance(Key key, List<Matcher> matchers) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
+    Set<ResolvableInjectable> injectables = discover(key, matchers);
 
     if(injectables.isEmpty()) {
       return null;
     }
     if(injectables.size() > 1) {
-      throw new MultipleInstances(key, criteria, injectables);
+      throw new MultipleInstances(key, matchers, injectables);
     }
 
     ResolvableInjectable injectable = injectables.iterator().next();
@@ -122,23 +122,23 @@ public class Instantiator {
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
   public synchronized <T> T findInstance(Key key) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
-    return findInstance(key, Criteria.EMPTY);
+    return findInstance(key, List.of());
   }
 
   /**
-   * Returns all instances matching the given {@link Key} and {@link Criteria} (if any) and, if scoped,
+   * Returns all instances matching the given {@link Key} and a list of {@link Matcher}s (if any) and, if scoped,
    * which are active in the current scope.  When there are no matches, an empty set is returned.
    *
    * @param <T> the type of the instance
    * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param criteria a {@link Criteria} instance, cannot be null
-   * @return all instances of the given class matching the given criteria (if any)
+   * @param matchers a list of {@link Matcher}s, cannot be null
+   * @return all instances of the given class matching the given matchers (if any)
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
-  public synchronized <T> List<T> getInstances(Key key, Criteria criteria) throws InstanceCreationFailure {
+  public synchronized <T> List<T> getInstances(Key key, List<Matcher> matchers) throws InstanceCreationFailure {
     List<T> instances = new ArrayList<>();
 
-    for(ResolvableInjectable injectable : store.resolve(key, criteria)) {
+    for(ResolvableInjectable injectable : store.resolve(key, matchers)) {
       ScopeResolver scopeResolver = findScopeResolver(injectable);
 
       if(scopeResolver == null || scopeResolver.isScopeActive(injectable)) {
@@ -169,21 +169,21 @@ public class Instantiator {
    *
    * @param <T> the type of the instance
    * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @return all instances of the given class matching the given criteria (if any)
+   * @return all instances of the given class matching the given matchers (if any)
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
   public synchronized <T> List<T> getInstances(Key key) throws InstanceCreationFailure {
-    return getInstances(key, Criteria.EMPTY);
+    return getInstances(key, List.of());
   }
 
-  private Set<ResolvableInjectable> discover(Key key, Criteria criteria) throws DiscoveryFailure {
-    Set<ResolvableInjectable> injectables = store.resolve(key, criteria);
+  private Set<ResolvableInjectable> discover(Key key, List<Matcher> matchers) throws DiscoveryFailure {
+    Set<ResolvableInjectable> injectables = store.resolve(key, matchers);
 
     if(!injectables.isEmpty()) {
       return injectables;
     }
 
-    if(!criteria.getInterfaces().isEmpty() || !criteria.getMatchers().isEmpty()) {
+    if(!matchers.isEmpty()) {
       return Set.of();
     }
 

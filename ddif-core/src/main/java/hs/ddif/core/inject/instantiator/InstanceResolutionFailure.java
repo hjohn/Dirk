@@ -1,6 +1,8 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.store.Criteria;
+import hs.ddif.core.api.Matcher;
+
+import java.util.List;
 
 /**
  * Base class for exceptions that can be thrown during instance resolution by
@@ -28,13 +30,13 @@ public abstract class InstanceResolutionFailure extends Exception {
   }
 
   /**
-   * Generates a description for a {@link Criteria} instance.
+   * Generates a description for a list of {@link Matcher}s.
    *
-   * @param criteria a {@link Criteria}, can be null
+   * @param matchers a list of {@link Matcher}s, cannot be null
    * @return a descriptive string, never null
    */
-  protected static String toCriteriaString(Criteria criteria) {
-    return criteria == null || criteria.equals(Criteria.EMPTY) ? "" : " with " + criteria;
+  protected static String toCriteriaString(List<Matcher> matchers) {
+    return matchers.isEmpty() ? "" : " with " + matchers;
   }
 
   /**
