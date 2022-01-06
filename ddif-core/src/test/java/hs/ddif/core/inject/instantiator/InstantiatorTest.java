@@ -13,7 +13,6 @@ import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.scope.WeakSingletonScopeResolver;
-import hs.ddif.core.store.Criteria;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Red;
@@ -74,7 +73,7 @@ public class InstantiatorTest {
         .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
 
-      assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class), Criteria.EMPTY))
+      assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class), List.of()))
         .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
     }
@@ -82,7 +81,7 @@ public class InstantiatorTest {
     @Test
     void shouldReturnNullWhenFindingSingleInstance() throws MultipleInstances, InstanceCreationFailure, OutOfScopeException {
       assertNull(instantiator.findInstance(new Key(A.class)));
-      assertNull(instantiator.findInstance(new Key(A.class), Criteria.EMPTY));
+      assertNull(instantiator.findInstance(new Key(A.class), List.of()));
     }
 
     @Test

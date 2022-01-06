@@ -28,7 +28,7 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
     try {
       CriteriaParser parser = new CriteriaParser(type, criteria);
 
-      return instantiator.getInstance(parser.getKey(), parser.getCriteria());
+      return instantiator.getInstance(parser.getKey(), parser.getMatchers());
     }
     catch(InstanceResolutionFailure f) {
       throw f.toRuntimeException();
@@ -48,7 +48,7 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
     try {
       CriteriaParser parser = new CriteriaParser(type, criteria);
 
-      return instantiator.getInstances(parser.getKey(), parser.getCriteria());
+      return instantiator.getInstances(parser.getKey(), List.of());
     }
     catch(InstanceCreationFailure f) {
       throw f.toRuntimeException();

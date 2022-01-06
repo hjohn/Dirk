@@ -1,13 +1,13 @@
 package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.api.Matcher;
-import hs.ddif.core.store.Criteria;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Qualifier;
@@ -17,7 +17,7 @@ import javax.inject.Qualifier;
  */
 public class CriteriaParser {
   private final Key key;
-  private final Criteria criteria;
+  private final List<Matcher> matchers;
 
   /**
    * Constructs a new instance. This takes an optional array of criterions which
@@ -32,36 +32,34 @@ public class CriteriaParser {
    */
   public CriteriaParser(Type type, Object... criterions) {
     List<Annotation> qualifiers = new ArrayList<>();
-    List<Class<?>> interfaces = new ArrayList<>();
     List<Matcher> matchers = new ArrayList<>();
 
     for(Object criterion : criterions) {
       if(criterion instanceof Matcher) {
         matchers.add((Matcher)criterion);
       }
-      else if(criterion instanceof Class) {
-        Class<?> cls = (Class<?>)criterion;
-
-        if(cls.isAnnotation()) {
-          @SuppressWarnings("unchecked")
-          Class<? extends Annotation> annotationClass = (Class<? extends Annotation>)cls;
-
-          qualifiers.add(requireQualifier(Annotations.of(annotationClass)));
-        }
-        else {
-          interfaces.add((Class<?>)criterion);
-        }
-      }
       else if(criterion instanceof Annotation) {
         qualifiers.add(requireQualifier((Annotation)criterion));
       }
       else {
+        if(criterion instanceof Class) {
+          Class<?> cls = (Class<?>)criterion;
+
+          if(cls.isAnnotation()) {
+            @SuppressWarnings("unchecked")
+            Class<? extends Annotation> annotationClass = (Class<? extends Annotation>)cls;
+
+            qualifiers.add(requireQualifier(Annotations.of(annotationClass)));
+            continue;
+          }
+        }
+
         throw new IllegalArgumentException("Unsupported criterion type, must be Class, Annotation or Matcher: " + criterion);
       }
     }
 
     this.key = new Key(type, qualifiers);
-    this.criteria = interfaces.isEmpty() && matchers.isEmpty() ? Criteria.EMPTY : new Criteria(interfaces, matchers);
+    this.matchers = Collections.unmodifiableList(matchers);
   }
 
   /**
@@ -74,12 +72,12 @@ public class CriteriaParser {
   }
 
   /**
-   * Gets the {@link Criteria} which were parsed.
+   * Returns an immutable list of {@link Matcher}.
    *
-   * @return a {@link Criteria}, never null
+   * @return an immutable list of {@link Matcher}, never {@code null} or contains {@code null}s but can be empty
    */
-  public Criteria getCriteria() {
-    return criteria;
+  public List<Matcher> getMatchers() {
+    return matchers;
   }
 
   private static Annotation requireQualifier(Annotation annotation) {
