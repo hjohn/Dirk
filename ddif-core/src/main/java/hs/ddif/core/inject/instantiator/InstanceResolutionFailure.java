@@ -1,8 +1,8 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.api.Matcher;
-
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Base class for exceptions that can be thrown during instance resolution by
@@ -30,12 +30,12 @@ public abstract class InstanceResolutionFailure extends Exception {
   }
 
   /**
-   * Generates a description for a list of {@link Matcher}s.
+   * Generates a description for a list of {@link Predicate}s.
    *
-   * @param matchers a list of {@link Matcher}s, cannot be null
+   * @param matchers a list of {@link Predicate}s, cannot be null
    * @return a descriptive string, never null
    */
-  protected static String toCriteriaString(List<Matcher> matchers) {
+  protected static String toCriteriaString(List<Predicate<Type>> matchers) {
     return matchers.isEmpty() ? "" : " with " + matchers;
   }
 

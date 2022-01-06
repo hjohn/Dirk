@@ -17,7 +17,7 @@ import java.util.List;
  * <li>An {@link java.lang.annotation.Annotation} to match by annotation, including matching
  *     all of its values; {@code Annotation} instances can be obtained using {@link Annotations}
  *     helper class</li>
- * <li>A {@link Matcher} to match by custom criteria provided by a {@link Matcher}
+ * <li>A {@link java.util.function.Predicate} to match by custom criteria provided by a {@link java.util.function.Predicate}
  *     implementation</li>
  * </ul>
  *
