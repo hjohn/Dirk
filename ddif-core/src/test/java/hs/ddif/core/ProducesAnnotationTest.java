@@ -21,6 +21,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
@@ -36,8 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import io.leangen.geantyref.TypeFactory;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class ProducesAnnotationTest {
@@ -117,9 +116,9 @@ public class ProducesAnnotationTest {
   @Test
   void shouldSupportGenericProducerMethod() {
     injector.register(StringMethodFactory.class);
-    injector.register(TypeFactory.parameterizedClass(GenericFactory1.class, Long.class));
+    injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class));
 
-    assertThrows(DuplicateInjectableException.class, () -> injector.register(TypeFactory.parameterizedClass(GenericFactory1.class, Long.class)));
+    assertThrows(DuplicateInjectableException.class, () -> injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class)));
 
     List<String> x1 = injector.getInstance(new TypeReference<List<String>>() {}.getType());
     List<Long> y1 = injector.getInstance(new TypeReference<List<Long>>() {}.getType());
@@ -133,7 +132,7 @@ public class ProducesAnnotationTest {
     assertTrue(injector.contains(Object.class));
 
     injector.remove(StringMethodFactory.class);
-    injector.remove(TypeFactory.parameterizedClass(GenericFactory1.class, Long.class));
+    injector.remove(TypeUtils.parameterize(GenericFactory1.class, Long.class));
 
     assertFalse(injector.contains(Object.class));
   }

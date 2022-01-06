@@ -19,6 +19,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
@@ -32,8 +33,6 @@ import static org.assertj.core.groups.Tuple.tuple;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
-
-import io.leangen.geantyref.TypeFactory;
 
 @ExtendWith(MockitoExtension.class)
 public class BindingProviderTest {
@@ -167,12 +166,12 @@ public class BindingProviderTest {
         tuple(new Key(ClassB.class), false),
         tuple(new Key(String.class), false),
         tuple(new Key(Integer.class), false),
-        tuple(new Key(TypeFactory.parameterizedClass(List.class, Double.class)), true),
-        tuple(new Key(TypeFactory.parameterizedClass(Set.class, String.class)), true),
-        tuple(new Key(TypeFactory.parameterizedClass(List.class, Double.class), List.of(RED)), true),
-        tuple(new Key(TypeFactory.parameterizedClass(Set.class, String.class), List.of(RED)), true),
-        tuple(new Key(TypeFactory.parameterizedClass(List.class, Double.class), List.of(GREEN)), true),
-        tuple(new Key(TypeFactory.parameterizedClass(Set.class, String.class), List.of(GREEN)), true),
+        tuple(new Key(TypeUtils.parameterize(List.class, Double.class)), true),
+        tuple(new Key(TypeUtils.parameterize(Set.class, String.class)), true),
+        tuple(new Key(TypeUtils.parameterize(List.class, Double.class), List.of(RED)), true),
+        tuple(new Key(TypeUtils.parameterize(Set.class, String.class), List.of(RED)), true),
+        tuple(new Key(TypeUtils.parameterize(List.class, Double.class), List.of(GREEN)), true),
+        tuple(new Key(TypeUtils.parameterize(Set.class, String.class), List.of(GREEN)), true),
         tuple(new Key(Long.class), true),
         tuple(new Key(Short.class), false),
         tuple(new Key(Short.class), true)

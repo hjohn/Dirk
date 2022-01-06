@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -36,9 +35,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import io.leangen.geantyref.AnnotationFormatException;
-import io.leangen.geantyref.TypeFactory;
 
 public class InjectorStoreConsistencyPolicyStressTest {
   private final Random rnd = new Random(4);
@@ -134,13 +130,13 @@ public class InjectorStoreConsistencyPolicyStressTest {
   }
 
   @Test
-  void largeGraphTest() throws AnnotationFormatException {
+  void largeGraphTest() {
     InjectorStoreConsistencyPolicy<ResolvableInjectable> policy = new InjectorStoreConsistencyPolicy<>(new SingletonScopeResolver());
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>(policy);
     List<ResolvableInjectable> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
-    Singleton annotation = TypeFactory.annotation(Singleton.class, Map.of());
+    Singleton annotation = Annotations.of(Singleton.class);
 
     for(int i = 0; i < 10000; i++) {
       policy.checkInvariants();
