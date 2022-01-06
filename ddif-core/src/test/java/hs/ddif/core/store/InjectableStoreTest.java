@@ -1,7 +1,6 @@
 package hs.ddif.core.store;
 
 import hs.ddif.core.InjectableFactories;
-import hs.ddif.core.api.Matcher;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.inject.store.FieldInjectableFactory;
@@ -18,10 +17,12 @@ import hs.ddif.core.util.Types;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Random;
 import java.util.RandomAccess;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -149,10 +150,10 @@ public class InjectableStoreTest {
     assertEquals(10, store.resolve(new Key(Object.class)).size());
 
     // All Numbers (using Matcher)
-    assertEquals(4, store.resolve(new Key(Object.class), List.of(new Matcher() {
+    assertEquals(4, store.resolve(new Key(Object.class), List.of(new Predicate<Type>() {
       @Override
-      public boolean matches(Class<?> cls) {
-        return Number.class.isAssignableFrom(cls);
+      public boolean test(Type type) {
+        return Number.class.isAssignableFrom((Class<?>)type);
       }
     })).size());
 

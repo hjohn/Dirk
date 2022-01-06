@@ -1,6 +1,5 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.api.Matcher;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 
@@ -9,6 +8,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.inject.Qualifier;
 
@@ -17,26 +17,29 @@ import javax.inject.Qualifier;
  */
 public class CriteriaParser {
   private final Key key;
-  private final List<Matcher> matchers;
+  private final List<Predicate<Type>> matchers;
 
   /**
    * Constructs a new instance. This takes an optional array of criterions which
    * can represent qualifier {@link Annotation}s, extended or implemented {@link Class}es
-   * or a custom {@link Matcher}.<p>
+   * or a custom {@link Predicate}.<p>
    *
    * Annotations which are not meta-annotated with {@link Qualifier}s will be rejected,
    * as will any criterion type that is not supported.
    *
    * @param type a {@link Type}, cannot be null
-   * @param criterions an optional array of criterions, containing one or more of {@link Class}, {@link Annotation} or {@link Matcher}
+   * @param criterions an optional array of criterions, containing one or more of {@link Class}, {@link Annotation} or {@link Predicate}
    */
   public CriteriaParser(Type type, Object... criterions) {
     List<Annotation> qualifiers = new ArrayList<>();
-    List<Matcher> matchers = new ArrayList<>();
+    List<Predicate<Type>> matchers = new ArrayList<>();
 
     for(Object criterion : criterions) {
-      if(criterion instanceof Matcher) {
-        matchers.add((Matcher)criterion);
+      if(criterion instanceof Predicate) {
+        @SuppressWarnings("unchecked")
+        Predicate<Type> predicate = (Predicate<Type>)criterion;
+
+        matchers.add(predicate);
       }
       else if(criterion instanceof Annotation) {
         qualifiers.add(requireQualifier((Annotation)criterion));
@@ -72,11 +75,11 @@ public class CriteriaParser {
   }
 
   /**
-   * Returns an immutable list of {@link Matcher}.
+   * Returns an immutable list of {@link Predicate}s.
    *
-   * @return an immutable list of {@link Matcher}, never {@code null} or contains {@code null}s but can be empty
+   * @return an immutable list of {@link Predicate}s, never {@code null} or contains {@code null}s but can be empty
    */
-  public List<Matcher> getMatchers() {
+  public List<Predicate<Type>> getMatchers() {
     return matchers;
   }
 

@@ -1,6 +1,5 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.api.Matcher;
 import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
@@ -18,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.inject.Provider;
@@ -65,14 +65,14 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
   }
 
   /**
-   * Look up injectables by {@link Key} and a list of {@link Matcher}s. The empty set is returned if
+   * Look up injectables by {@link Key} and a list of {@link Predicate}s. The empty set is returned if
    * there were no matches.
    *
    * @param key the {@link Key}, cannot be null
-   * @param matchers a list of {@link Matcher}s, cannot be null
+   * @param matchers a list of {@link Predicate}s, cannot be null
    * @return a set of injectables, never null but can be empty
    */
-  public synchronized Set<T> resolve(Key key, Collection<Matcher> matchers) {
+  public synchronized Set<T> resolve(Key key, Collection<Predicate<Type>> matchers) {
     Type type = key.getType();
     Collection<Set<T>> sets;
     Set<Type> upperBounds;
@@ -141,7 +141,7 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
      * Finally apply custom supplied matchers:
      */
 
-    for(Matcher matcher : matchers) {
+    for(Predicate<Type> matcher : matchers) {
       filterByMatcher(matches, matcher);
     }
 
@@ -178,11 +178,11 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
     return false;
   }
 
-  private static <T extends Injectable> void filterByMatcher(Set<T> matches, Matcher matcher) {
+  private static <T extends Injectable> void filterByMatcher(Set<T> matches, Predicate<Type> matcher) {
     for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
       Injectable injectable = iterator.next();
 
-      if(!matcher.matches(TypeUtils.getRawType(injectable.getType(), null))) {
+      if(!matcher.test(injectable.getType())) {
         iterator.remove();
       }
     }
@@ -190,13 +190,13 @@ public class InjectableStore<T extends Injectable> implements Resolver<T> {
 
   /**
    * Checks if there is an injectable in the store matching the given {@link Key}
-   * and a list of {@link Matcher}s.
+   * and a list of {@link Predicate}s.
    *
    * @param key the {@link Key}, cannot be null
-   * @param matchers a list of {@link Matcher}s, cannot be null
+   * @param matchers a list of {@link Predicate}s, cannot be null
    * @return {@code true} if there was an injectable matching the key and criteria, otherwise {@code false}
    */
-  public synchronized boolean contains(Key key, List<Matcher> matchers) {
+  public synchronized boolean contains(Key key, List<Predicate<Type>> matchers) {
     return !resolve(key, matchers).isEmpty();
   }
 
