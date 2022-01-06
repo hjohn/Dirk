@@ -57,7 +57,7 @@ public class Annotations {
    * @param name a name for the {@link Named} annotation, cannot be null
    * @return a {@link Named} annotation, never null
    */
-  public static Named named(String name) {
+  public static Annotation named(String name) {
     return of(Named.class, Map.of("value", name));
   }
 
