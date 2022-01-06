@@ -1,7 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
@@ -27,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InjectorDiscoveryTest {
-  private Injector injector = new Injector(ResolvableInjectable::new, true);
+  private Injector injector = Injectors.autoDiscovering();
 
   @Test
   public void shouldDiscoverNewTypes() {

@@ -1,5 +1,6 @@
 package hs.ddif.core.inject.instantiator;
 
+import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.TestScope;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
@@ -25,7 +26,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ClassInjectableFactoryTest {
-  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
+  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
 
   private InjectableStore<ResolvableInjectable> store = new InjectableStore<>();

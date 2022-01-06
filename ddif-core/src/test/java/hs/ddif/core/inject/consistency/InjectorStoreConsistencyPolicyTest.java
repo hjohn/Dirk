@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.consistency;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.TestScope;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
@@ -24,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class InjectorStoreConsistencyPolicyTest {
-  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
+  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
 
   private InjectorStoreConsistencyPolicy<ResolvableInjectable> policy = new InjectorStoreConsistencyPolicy<>();
 

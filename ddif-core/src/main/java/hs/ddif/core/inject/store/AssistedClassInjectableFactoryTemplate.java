@@ -6,7 +6,6 @@ import hs.ddif.core.inject.instantiator.Injection;
 import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.inject.store.ClassInjectableFactory.Extension;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Primitives;
 
@@ -47,7 +46,8 @@ import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.matcher.ElementMatchers;
 
 /**
- * Extension which provides support for assisted injection.
+ * Template to construct {@link ResolvableInjectable}s from abstract types to
+ * provide support for assisted injection.
  *
  * <p>Assisted injection automatically creates a Factory which produces a Product.
  *
@@ -87,8 +87,8 @@ import net.bytebuddy.matcher.ElementMatchers;
  * <p>Factories can have qualifiers at the type level. These will be taken into
  * account when injecting the factory at a target site. Products never have any
  * qualifiers.
- */
-public class AssistedInjectionExtension implements Extension {
+ */ // FIXME rename
+public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFactoryTemplate<AssistedClassInjectableFactoryTemplate.Context> {
   private static final Map<Type, ResolvableInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
   private static final Annotation INJECT = Annotations.of(Inject.class);
@@ -100,51 +100,68 @@ public class AssistedInjectionExtension implements Extension {
    *
    * @param factory a {@link ResolvableInjectableFactory}, cannot be null
    */
-  public AssistedInjectionExtension(ResolvableInjectableFactory factory) {
+  public AssistedClassInjectableFactoryTemplate(ResolvableInjectableFactory factory) {
     this.factory = factory;
   }
 
   @Override
-  public String getPreconditionText() {
-    return "a type with a single abstract method which has a concrete class as return type";
+  public TypeAnalysis<Context> analyze(Type type) {
+    ResolvableInjectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
+
+    if(factoryInjectable != null) {
+      return TypeAnalysis.positive(new Context(type, null));
+    }
+
+    Class<?> factoryClass = TypeUtils.getRawType(type, null);
+    Method factoryMethod = findFactoryMethod(factoryClass);
+
+    if(factoryMethod == null) {
+      return TypeAnalysis.negative("Type must have a single abstract method to qualify for assisted injection: %1$s");
+    }
+    if(factoryMethod.getReturnType().isPrimitive()) {
+      return TypeAnalysis.negative("Factory method cannot return a primitive type: %2$s in: %1$s", factoryMethod);
+    }
+    if(Modifier.isAbstract(factoryMethod.getReturnType().getModifiers())) {
+      return TypeAnalysis.negative("Factory method cannot return an abstract type: %2$s in: %1$s", factoryMethod);
+    }
+
+    return TypeAnalysis.positive(new Context(type, factoryMethod));
   }
 
   @Override
-  public ResolvableInjectable create(Type type) {
+  public ResolvableInjectable create(TypeAnalysis<Context> analysis) {
+    Type type = analysis.getData().type;
     ResolvableInjectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
 
-    if(factoryInjectable == null) {
-      Class<?> factoryClass = TypeUtils.getRawType(type, null);
-      Method factoryMethod = findFactoryMethod(factoryClass);
-
-      if(factoryMethod == null || factoryMethod.getReturnType().isPrimitive() || Modifier.isAbstract(factoryMethod.getReturnType().getModifiers())) {
-        return null;
-      }
-
-      Class<?> productType = factoryMethod.getReturnType();
-      Constructor<?> productConstructor = BindingProvider.getAnnotatedConstructor(productType);
-      List<Binding> productBindings = BindingProvider.ofConstructorAndMembers(productConstructor, productType);
-
-      Interceptor interceptor = new Interceptor(productConstructor, factoryMethod, productBindings);
-      Type implementedFactoryType = generateFactoryType(type, factoryClass, productType, productBindings, interceptor);
-
-      Class<?> implementedFactoryClass = TypeUtils.getRawType(implementedFactoryType, null);
-      Constructor<?> factoryConstructor = BindingProvider.getConstructor(implementedFactoryClass);
-      List<Binding> factoryBindings = BindingProvider.ofConstructorAndMembers(factoryConstructor, implementedFactoryClass);
-
-      interceptor.setFields(createProviderFieldList(productBindings, implementedFactoryClass));
-
-      factoryInjectable = factory.create(
-        implementedFactoryType,
-        Annotations.findDirectlyMetaAnnotatedAnnotations(factoryClass, QUALIFIER),
-        factoryBindings,
-        Annotations.of(Singleton.class),
-        null,
-        new ClassObjectFactory(factoryConstructor)
-      );
-
-      PRODUCER_INJECTABLES.put(type, factoryInjectable);
+    if(factoryInjectable != null) {
+      return factoryInjectable;
     }
+
+    Method factoryMethod = analysis.getData().factoryMethod;
+    Class<?> factoryClass = TypeUtils.getRawType(type, null);
+    Class<?> productType = factoryMethod.getReturnType();
+    Constructor<?> productConstructor = BindingProvider.getAnnotatedConstructor(productType);
+    List<Binding> productBindings = BindingProvider.ofConstructorAndMembers(productConstructor, productType);
+
+    Interceptor interceptor = new Interceptor(productConstructor, factoryMethod, productBindings);
+    Type implementedFactoryType = generateFactoryType(type, factoryClass, productType, productBindings, interceptor);
+
+    Class<?> implementedFactoryClass = TypeUtils.getRawType(implementedFactoryType, null);
+    Constructor<?> factoryConstructor = BindingProvider.getConstructor(implementedFactoryClass);
+    List<Binding> factoryBindings = BindingProvider.ofConstructorAndMembers(factoryConstructor, implementedFactoryClass);
+
+    interceptor.setFields(createProviderFieldList(productBindings, implementedFactoryClass));
+
+    factoryInjectable = factory.create(
+      implementedFactoryType,
+      Annotations.findDirectlyMetaAnnotatedAnnotations(factoryClass, QUALIFIER),
+      factoryBindings,
+      Annotations.of(Singleton.class),
+      null,
+      new ClassObjectFactory(factoryConstructor)
+    );
+
+    PRODUCER_INJECTABLES.put(type, factoryInjectable);
 
     return factoryInjectable;
   }
@@ -375,5 +392,15 @@ public class AssistedInjectionExtension implements Extension {
     }
 
     return annotation != null && !annotation.value().isEmpty() ? annotation.value() : parameter.getName();
+  }
+
+  static class Context {
+    final Type type;
+    final Method factoryMethod;
+
+    Context(Type type, Method factoryMethod) {
+      this.type = type;
+      this.factoryMethod = factoryMethod;
+    }
   }
 }

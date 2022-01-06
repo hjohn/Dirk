@@ -93,7 +93,7 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithMultipleAbstractMethods() {
     assertThatThrownBy(() -> injector.register(ProducerWithMultipleAbtractMethods.class))
       .isExactlyInstanceOf(BindingException.class)
-      .hasMessageStartingWith("Type cannot be injected: class hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods; try supplying:")
+      .hasMessageStartingWith("Type cannot be injected: class hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods;")
       .hasNoCause();
   }
 

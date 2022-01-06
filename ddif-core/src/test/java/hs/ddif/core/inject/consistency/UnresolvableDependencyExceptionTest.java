@@ -1,7 +1,7 @@
 package hs.ddif.core.inject.consistency;
 
+import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.inject.instantiator.Binding;
-import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BindingProvider;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
 import hs.ddif.core.store.Injectables;
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class UnresolvableDependencyExceptionTest {
-  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
+  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
 
   @Test
   void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
