@@ -24,12 +24,13 @@ public class Annotations {
   /**
    * Creates an {@link Annotation} with parameters.
    *
+   * @param <A> the annotation type
    * @param annotationClass a {@link Class} which extends {@link Annotation}, cannot be null
    * @param values a map of values for the annotations parameters, cannot be null
    * @return an {@link Annotation}, never null
    * @throws IllegalArgumentException when the given parameters could not be converted to an annotation
    */
-  public static Annotation of(Class<? extends Annotation> annotationClass, Map<String, Object> values) {
+  public static <A extends Annotation> A of(Class<A> annotationClass, Map<String, Object> values) {
     try {
       return TypeFactory.annotation(annotationClass, values);
     }
@@ -41,11 +42,12 @@ public class Annotations {
   /**
    * Creates an {@link Annotation} without parameters.
    *
+   * @param <A> the annotation type
    * @param annotationClass a {@link Class} which extends {@link Annotation}, cannot be null
    * @return an {@link Annotation}, never null
    * @throws IllegalArgumentException when the given parameters could not be converted to an annotation
    */
-  public static Annotation of(Class<? extends Annotation> annotationClass) {
+  public static <A extends Annotation> A of(Class<A> annotationClass) {
     return of(annotationClass, Map.of());
   }
 
@@ -55,7 +57,7 @@ public class Annotations {
    * @param name a name for the {@link Named} annotation, cannot be null
    * @return a {@link Named} annotation, never null
    */
-  public static Annotation named(String name) {
+  public static Named named(String name) {
     return of(Named.class, Map.of("value", name));
   }
 
