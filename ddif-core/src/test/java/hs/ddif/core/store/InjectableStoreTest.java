@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,8 +36,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import io.leangen.geantyref.TypeFactory;
 
 public class InjectableStoreTest {
   private static final Annotation RED = Annotations.of(Red.class);
@@ -242,7 +241,7 @@ public class InjectableStoreTest {
     assertTrue(store.contains(new Key(StringProvider.class)));
 
     // Ensure lookup by Provider is not possible:
-    assertFalse(store.contains(new Key(TypeFactory.parameterizedClass(Provider.class, String.class))));
+    assertFalse(store.contains(new Key(TypeUtils.parameterize(Provider.class, String.class))));
     assertFalse(store.contains(new Key(new TypeReference<Provider<String>>() {}.getType())));
     assertFalse(store.contains(new Key(new TypeReference<Provider<Long>>() {}.getType())));
   }
