@@ -7,13 +7,9 @@ import hs.ddif.core.inject.instantiator.Gatherer;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.InstantiatorBasedInstanceResolver;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
-import hs.ddif.core.inject.store.FieldInjectableFactory;
 import hs.ddif.core.inject.store.InjectableStoreCandidateRegistry;
 import hs.ddif.core.inject.store.InstanceInjectableFactory;
-import hs.ddif.core.inject.store.MethodInjectableFactory;
-import hs.ddif.core.inject.store.ResolvableInjectableFactory;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.scope.WeakSingletonScopeResolver;
@@ -63,23 +59,19 @@ public class Injector implements InstanceResolver, CandidateRegistry {
   private final InstanceResolver instanceResolver;
   private final CandidateRegistry registry;
 
-  Injector(ResolvableInjectableFactory resolvableInjectableFactory, boolean autoDiscovery, ScopeResolver... scopeResolvers) {
-    ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(resolvableInjectableFactory);
-    MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(resolvableInjectableFactory);
-    FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(resolvableInjectableFactory);
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(resolvableInjectableFactory);
-
+  /**
+   * Constructs a new instance.
+   *
+   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be null
+   * @param instanceInjectableFactory a {@link InstanceInjectableFactory}, cannot be null
+   * @param gatherer a {@link Gatherer}, cannot be null
+   * @param scopeResolvers an array of {@link ScopeResolver}s, cannot be null or contain nulls but can be empty
+   */
+  Injector(ClassInjectableFactory classInjectableFactory, InstanceInjectableFactory instanceInjectableFactory, Gatherer gatherer, ScopeResolver... scopeResolvers) {
     ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
     ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
 
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
-    List<AutoDiscoveringGatherer.Extension> extensions = List.of(
-      new ProviderGathererExtension(methodInjectableFactory),
-      new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)
-    );
-
-    Gatherer gatherer = new AutoDiscoveringGatherer(autoDiscovery, extensions, classInjectableFactory);
-
     Instantiator instantiator = new Instantiator(store, gatherer, extendedScopeResolvers);
 
     this.registry = new InjectableStoreCandidateRegistry(store, gatherer, classInjectableFactory, instanceInjectableFactory);

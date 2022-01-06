@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Produces;
+import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.ProducesGathererExtension;
 import hs.ddif.core.inject.instantiator.DiscoveryFailure;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
@@ -26,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class AutoDiscoveringGathererTest {
   private final InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
-  private final ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(ResolvableInjectable::new);
+  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
   private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
 

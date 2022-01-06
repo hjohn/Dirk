@@ -2,12 +2,14 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.inject.store.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -16,24 +18,18 @@ import javax.inject.Singleton;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class ClassExtensionTest {
-  private ClassExtension extension = new ClassExtension(ResolvableInjectable::new);
-
-  @Test
-  void preconditionTextShouldDescribeRequirements() {
-    assertThat(extension.getPreconditionText()).isEqualTo("a concrete class");
-  }
+public class ConcreteClassInjectableFactoryTemplateTest {
+  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(ResolvableInjectable::new);
 
   @Test
   void shouldFailPreconditionWhenReturnTypeIsAbstract() {
-    assertNull(extension.create(BadFactoryA.class));
+    assertThat(extension.analyze(BadFactoryA.class).getUnsuitableReason(BadFactoryA.class)).isEqualTo("Type cannot be abstract: interface hs.ddif.core.inject.store.ConcreteClassInjectableFactoryTemplateTest$BadFactoryA");
   }
 
   @Test
   void shouldCreateInjectableForValidClass() {
-    ResolvableInjectable injectable = extension.create(B.class);
+    ResolvableInjectable injectable = create(B.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(new Key(String.class));
     assertThat(injectable.getScope()).isNull();
@@ -42,7 +38,7 @@ public class ClassExtensionTest {
 
   @Test
   void shouldCreateInjectableWithQualifiersAndScope() {
-    ResolvableInjectable injectable = extension.create(C.class);
+    ResolvableInjectable injectable = create(C.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
       new Key(String.class), new Key(Integer.class), new Key(Double.class, List.of(Annotations.of(Big.class)))
@@ -51,6 +47,16 @@ public class ClassExtensionTest {
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(
       Annotations.of(Red.class), Annotations.of(Green.class)
     );
+  }
+
+  private ResolvableInjectable create(Type type) {
+    TypeAnalysis<Type> analysis = extension.analyze(type);
+
+    if(analysis.isNegative()) {
+      throw new IllegalArgumentException(analysis.getUnsuitableReason(type));
+    }
+
+    return extension.create(analysis);
   }
 
   interface A {}

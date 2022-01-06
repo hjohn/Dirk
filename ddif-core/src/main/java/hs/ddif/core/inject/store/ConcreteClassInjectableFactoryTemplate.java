@@ -2,7 +2,6 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.inject.store.ClassInjectableFactory.Extension;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -16,7 +15,7 @@ import javax.inject.Qualifier;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Extension which will make concrete classes available in the injector.
+ * Template to construct {@link ResolvableInjectable}s for concrete classes.
  *
  * <p>For a class to qualify for injection:<ul>
  * <li>it must be a concrete (not abstract) class</li>
@@ -25,8 +24,9 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * <li>it cannot have any unresolved generic type parameters</li>
  * </ul>
  */
-public class ClassExtension implements Extension {
+public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFactoryTemplate<Type> {
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
+  private static final TypeAnalysis<Type> FAILURE_ABSTRACT = TypeAnalysis.negative("Type cannot be abstract: %1$s");
 
   private final ResolvableInjectableFactory factory;
 
@@ -35,23 +35,25 @@ public class ClassExtension implements Extension {
    *
    * @param factory a {@link ResolvableInjectableFactory}, cannot be null
    */
-  public ClassExtension(ResolvableInjectableFactory factory) {
+  public ConcreteClassInjectableFactoryTemplate(ResolvableInjectableFactory factory) {
     this.factory = factory;
   }
 
   @Override
-  public String getPreconditionText() {
-    return "a concrete class";
-  }
-
-  @Override
-  public ResolvableInjectable create(Type type) {
+  public TypeAnalysis<Type> analyze(Type type) {
     Class<?> cls = TypeUtils.getRawType(type, null);
 
     if(Modifier.isAbstract(cls.getModifiers())) {
-      return null;
+      return FAILURE_ABSTRACT;
     }
 
+    return TypeAnalysis.positive(type);
+  }
+
+  @Override
+  public ResolvableInjectable create(TypeAnalysis<Type> analysis) {
+    Type type = analysis.getData();
+    Class<?> cls = TypeUtils.getRawType(type, null);
     Constructor<?> constructor = BindingProvider.getConstructor(cls);
     List<Binding> bindings = BindingProvider.ofConstructorAndMembers(constructor, cls);
 

@@ -5,7 +5,6 @@ import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.consistency.CyclicDependencyException;
 import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
-import hs.ddif.core.inject.instantiator.ResolvableInjectable;
 import hs.ddif.core.inject.store.BindingException;
 import hs.ddif.core.store.DuplicateInjectableException;
 import hs.ddif.core.test.qualifiers.Big;
@@ -43,7 +42,7 @@ import io.leangen.geantyref.TypeFactory;
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class ProducesAnnotationTest {
   private Injector injector = Injectors.manual();
-  private Injector autoDiscoveryInjector = new Injector(ResolvableInjectable::new, true);
+  private Injector autoDiscoveryInjector = Injectors.autoDiscovering();
 
   @Test
   void registerShouldRejectFactoryWithUnresolvableProducerDependencies() {
