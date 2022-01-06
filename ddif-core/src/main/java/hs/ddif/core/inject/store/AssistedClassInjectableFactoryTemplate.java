@@ -33,7 +33,6 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
-import io.leangen.geantyref.TypeFactory;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType.Builder;
@@ -187,7 +186,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
         }
 
         builder = builder
-          .defineField("__binding" + i + "__", TypeFactory.parameterizedClass(Provider.class, binding.getType()), Visibility.PRIVATE)
+          .defineField("__binding" + i + "__", TypeUtils.parameterize(Provider.class, binding.getType()), Visibility.PRIVATE)
           .annotateField(annotations);
       }
     }
