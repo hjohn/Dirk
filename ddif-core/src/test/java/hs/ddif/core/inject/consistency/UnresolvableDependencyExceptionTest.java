@@ -4,6 +4,7 @@ import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.inject.instantiator.Binding;
 import hs.ddif.core.inject.store.BindingProvider;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.DefaultBinding;
 import hs.ddif.core.store.Injectables;
 
 import java.util.Collections;
@@ -19,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class UnresolvableDependencyExceptionTest {
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
+  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
 
   @Test
   void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
@@ -42,7 +44,7 @@ public class UnresolvableDependencyExceptionTest {
       .hasMessageEndingWith(": [Injectable(String.class), Injectable(String.class)]");
 
     e = new UnresolvableDependencyException(
-      BindingProvider.ofMethod(A.class.getDeclaredMethod("d", Long.class), A.class).get(0),
+      bindingProvider.ofMethod(A.class.getDeclaredMethod("d", Long.class), A.class).get(0),
       Collections.emptySet()
     );
 

@@ -5,7 +5,9 @@ import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.store.BindingProvider;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.DefaultBinding;
 import hs.ddif.core.inject.store.InstanceInjectableFactory;
 import hs.ddif.core.inject.store.MethodInjectableFactory;
 import hs.ddif.core.scope.AbstractScopeResolver;
@@ -56,8 +58,9 @@ public class InstantiatorTest {
 
   private final ScopeResolver[] scopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver(), scopeResolver};
 
+  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, ResolvableInjectable::new);
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
 
   private String currentScope;

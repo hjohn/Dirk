@@ -3,11 +3,7 @@ package hs.ddif.core.inject.store;
 import hs.ddif.annotations.Opt;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.instantiator.Binding;
-import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.InstanceResolutionFailure;
-import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.inject.instantiator.MultipleInstances;
-import hs.ddif.core.inject.instantiator.NoSuchInstance;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
@@ -24,7 +20,6 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +37,17 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 public class BindingProvider {
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
 
+  private final BindingFactory bindingFactory;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param bindingFactory a {@link BindingFactory}, cannot be {@code null}
+   */
+  public BindingProvider(BindingFactory bindingFactory) {
+    this.bindingFactory = bindingFactory;
+  }
+
   /**
    * Returns all bindings for the given {@link Constructor} and all member bindings
    * for the given class.
@@ -50,7 +56,7 @@ public class BindingProvider {
    * @param cls a {@link Class} to examine for bindings, cannot be null
    * @return a list of bindings, never null and never contains nulls, but can be empty
    */
-  public static List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) {
+  public List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) {
     List<Binding> bindings = ofConstructor(constructor);
 
     bindings.addAll(ofMembers(cls));
@@ -64,7 +70,7 @@ public class BindingProvider {
    * @param constructor a {@link Constructor} to examine for bindings, cannot be null
    * @return a list of bindings, never null and never contains nulls, but can be empty
    */
-  public static List<Binding> ofConstructor(Constructor<?> constructor) {
+  public List<Binding> ofConstructor(Constructor<?> constructor) {
     return ofExecutable(constructor, constructor.getDeclaringClass());
   }
 
@@ -75,7 +81,7 @@ public class BindingProvider {
    * @param cls a {@link Class} to examine for bindings, cannot be null
    * @return a list of bindings, never null and never contains nulls, but can be empty
    */
-  public static List<Binding> ofMembers(Class<?> cls) {
+  public List<Binding> ofMembers(Class<?> cls) {
     List<Binding> bindings = new ArrayList<>();
     Class<?> currentInjectableClass = cls;
     Map<TypeVariable<?>, Type> typeArguments = null;
@@ -129,7 +135,7 @@ public class BindingProvider {
    * @param ownerType a {@link Type} in which this method is declared, cannot be null
    * @return a list of bindings, never null and never contains nulls, but can be empty
    */
-  public static List<Binding> ofMethod(Method method, Type ownerType) {
+  public List<Binding> ofMethod(Method method, Type ownerType) {
     return ofExecutable(method, ownerType);
   }
 
@@ -140,14 +146,14 @@ public class BindingProvider {
    * @param ownerType a {@link Type} in which this executable is declared, cannot be null
    * @return an immutable list of bindings, never null and never contains nulls, but can be empty
    */
-  public static List<Binding> ofField(Field field, Type ownerType) {
+  public List<Binding> ofField(Field field, Type ownerType) {
 
     /*
      * Fields don't have any bindings, unless it is a non-static field in which case the
      * declaring class is required before the field can be accessed.
      */
 
-    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(new OwnerBinding(ownerType));
+    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(ownerBinding(ownerType));
   }
 
   /**
@@ -157,7 +163,7 @@ public class BindingProvider {
    * @return a {@link Constructor} suitable for injection, never null
    * @throws BindingException when no suitable constructor is found
    */
-  public static Constructor<?> getAnnotatedConstructor(Class<?> cls) {
+  public Constructor<?> getAnnotatedConstructor(Class<?> cls) {
     return getConstructor(cls, true);
   }
 
@@ -169,7 +175,7 @@ public class BindingProvider {
    * @return a {@link Constructor} suitable for injection, never null
    * @throws BindingException when no suitable constructor is found
    */
-  public static Constructor<?> getConstructor(Class<?> cls) {
+  public Constructor<?> getConstructor(Class<?> cls) {
     return getConstructor(cls, false);
   }
 
@@ -197,7 +203,7 @@ public class BindingProvider {
     return suitableConstructor == null ? defaultConstructor : suitableConstructor;
   }
 
-  private static List<Binding> ofExecutable(Executable executable, Type ownerType) {
+  private List<Binding> ofExecutable(Executable executable, Type ownerType) {
     Parameter[] parameters = executable.getParameters();
     List<Binding> bindings = new ArrayList<>();
 
@@ -222,30 +228,30 @@ public class BindingProvider {
 
     if(!Modifier.isStatic(executable.getModifiers()) && executable instanceof Method) {
       // For a non-static method, the class itself is also a required binding:
-      bindings.add(new OwnerBinding(ownerType));
+      bindings.add(ownerBinding(ownerType));
     }
 
     return bindings;
   }
 
-  private static Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, Type type, boolean optional, Set<Annotation> qualifiers) {
+  private Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, Type type, boolean optional, Set<Annotation> qualifiers) {
     return createBinding(accessibleObject, parameter, false, type, optional, qualifiers);
   }
 
-  private static Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, boolean isProviderAlready, Type type, boolean optional, Set<Annotation> qualifiers) {
+  private Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, boolean isProviderAlready, Type type, boolean optional, Set<Annotation> qualifiers) {
     final Class<?> cls = TypeUtils.getRawType(type, null);
 
     if(Set.class.isAssignableFrom(cls)) {
-      return new HashSetBinding(accessibleObject, parameter, requireNotProvider(getFirstTypeParameter(type, Set.class)), qualifiers, optional);
+      return hashSetBinding(accessibleObject, parameter, requireNotProvider(getFirstTypeParameter(type, Set.class)), qualifiers, optional);
     }
     if(List.class.isAssignableFrom(cls)) {
-      return new ArrayListBinding(accessibleObject, parameter, requireNotProvider(getFirstTypeParameter(type, List.class)), qualifiers, optional);
+      return arrayListBinding(accessibleObject, parameter, requireNotProvider(getFirstTypeParameter(type, List.class)), qualifiers, optional);
     }
     if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
-      return new ProviderBinding(accessibleObject, parameter, createBinding(accessibleObject, parameter, true, requireNotProvider(getFirstTypeParameter(type, Provider.class)), optional, qualifiers));
+      return providerBinding(accessibleObject, parameter, createBinding(accessibleObject, parameter, true, requireNotProvider(getFirstTypeParameter(type, Provider.class)), optional, qualifiers));
     }
 
-    return new DirectBinding(accessibleObject, parameter, new Key(type, qualifiers), optional);
+    return directBinding(accessibleObject, parameter, new Key(type, qualifiers), optional);
   }
 
   private static Type requireNotProvider(Type type) {
@@ -273,253 +279,115 @@ public class BindingProvider {
     return false;
   }
 
-  private static abstract class AbstractBinding implements Binding {
-    private final AccessibleObject accessibleObject;
-    private final Parameter parameter;
-    private final Key key;
+  private Binding hashSetBinding(AccessibleObject accessibleObject, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
+    Key elementKey = new Key(elementType, qualifiers);
 
-    AbstractBinding(AccessibleObject accessibleObject, Parameter parameter, Key key) {
-      this.accessibleObject = accessibleObject;
-      this.parameter = parameter;
-      this.key = key;
-    }
+    return bindingFactory.create(
+      new Key(TypeUtils.parameterize(Set.class, elementType), qualifiers),
+      accessibleObject,
+      parameter,
+      true,
+      true,
+      true,
+      instantiator -> {
+        List<Object> instances = instantiator.getInstances(elementKey);
 
-    @Override
-    public AccessibleObject getAccessibleObject() {
-      return accessibleObject;
-    }
-
-    @Override
-    public Key getKey() {
-      return key;
-    }
-
-    @Override
-    public Parameter getParameter() {
-      return parameter;
-    }
-
-    @Override
-    public String toString() {
-      if(accessibleObject instanceof Executable) {
-        return "Parameter " + Arrays.asList(((Executable)accessibleObject).getParameters()).indexOf(parameter) + " of [" + accessibleObject + "]";
+        return instances.isEmpty() && optional ? null : new HashSet<>(instances);
       }
-
-      return "Field [" + accessibleObject + "]";
-    }
+    );
   }
 
-  private static final class HashSetBinding extends AbstractBinding {
-    private final Key elementKey;
-    private final boolean optional;
+  private Binding arrayListBinding(AccessibleObject accessibleObject, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
+    Key elementKey = new Key(elementType, qualifiers);
 
-    private HashSetBinding(AccessibleObject accessibleObject, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
-      super(accessibleObject, parameter, new Key(TypeUtils.parameterize(Set.class, elementType), qualifiers));
+    return bindingFactory.create(
+      new Key(TypeUtils.parameterize(List.class, elementType), qualifiers),
+      accessibleObject,
+      parameter,
+      true,
+      true,
+      true,
+      instantiator -> {
+        List<Object> instances = instantiator.getInstances(elementKey);
 
-      this.elementKey = new Key(elementType, qualifiers);
-      this.optional = optional;
-    }
-
-    @Override
-    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure {
-      List<Object> instances = instantiator.getInstances(elementKey);
-
-      return instances.isEmpty() && optional ? null : new HashSet<>(instances);
-    }
-
-    @Override
-    public boolean isOptional() {
-      return true;
-    }
-
-    @Override
-    public boolean isCollection() {
-      return true;
-    }
-
-    @Override
-    public boolean isDirect() {
-      return true;
-    }
+        return instances.isEmpty() && optional ? null : instances;
+      }
+    );
   }
 
-  private static final class ArrayListBinding extends AbstractBinding {
-    private final Key elementKey;
-    private final boolean optional;
+  private Binding providerBinding(AccessibleObject accessibleObject, Parameter parameter, Binding binding) {
+    return bindingFactory.create(
+      binding.getKey(),
+      accessibleObject,
+      parameter,
+      false,
+      false,
+      binding.isOptional(),
+      instantiator -> {
 
-    private ArrayListBinding(AccessibleObject accessibleObject, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
-      super(accessibleObject, parameter, new Key(TypeUtils.parameterize(List.class, elementType), qualifiers));
+        /*
+         * Although it is possible to attempt to inject an external Provider that is known, it is currently hard
+         * to find the correct instance when qualifiers on the provided type are in play. The store does not
+         * allow searching for a Provider<@Qualifier X>, and searching for @Qualifier Provider<X> (which previous
+         * implementations did) is not at all the same thing.
+         *
+         * To allow for this kind of matching one could instead look for the provided type directly, then use a
+         * custom Matcher. The Matcher interface would need to expose more information (Injectable instead of just
+         * the Class), and Injectable would have to expose its owner type. In that case a Matcher could check the
+         * method (see if it is called "get") and the owner type (see if it is a Provider).
+         *
+         * However, injecting an externally supplied Provider has one disadvantage: a badly behaving provider (which
+         * returns null) can't be prevented. The wrapper approach (which is at the moment always used) can however
+         * check for nulls and throw an exception.
+         */
 
-      this.elementKey = new Key(elementType, qualifiers);
-      this.optional = optional;
-    }
-
-    @Override
-    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure {
-      List<Object> instances = instantiator.getInstances(elementKey);
-
-      return instances.isEmpty() && optional ? null : instances;
-    }
-
-    @Override
-    public boolean isOptional() {
-      return true;
-    }
-
-    @Override
-    public boolean isCollection() {
-      return true;
-    }
-
-    @Override
-    public boolean isDirect() {
-      return true;
-    }
+        return new Provider<>() {
+          @Override
+          public Object get() {
+            try {
+              return binding.getValue(instantiator);
+            }
+            catch(InstanceResolutionFailure f) {
+              throw f.toRuntimeException();
+            }
+            catch(OutOfScopeException e) {
+              throw new NoSuchInstanceException(e.getMessage(), e);
+            }
+          }
+        };
+      }
+    );
   }
 
-  private static final class ProviderBinding extends AbstractBinding {
-    private final Binding binding;
-
-    private ProviderBinding(AccessibleObject accessibleObject, Parameter parameter, Binding binding) {
-      super(accessibleObject, parameter, binding.getKey());
-
-      this.binding = binding;
-    }
-
-    @Override
-    public Object getValue(final Instantiator instantiator) throws MultipleInstances, InstanceCreationFailure, OutOfScopeException {
-
-      /*
-       * Although it is possible to attempt to inject an external Provider that is known, it is currently hard
-       * to find the correct instance when qualifiers on the provided type are in play. The store does not
-       * allow searching for a Provider<@Qualifier X>, and searching for @Qualifier Provider<X> (which previous
-       * implementations did) is not at all the same thing.
-       *
-       * To allow for this kind of matching one could instead look for the provided type directly, then use a
-       * custom Matcher. The Matcher interface would need to expose more information (Injectable instead of just
-       * the Class), and Injectable would have to expose its owner type. In that case a Matcher could check the
-       * method (see if it is called "get") and the owner type (see if it is a Provider).
-       *
-       * However, injecting an externally supplied Provider has one disadvantage: a badly behaving provider (which
-       * returns null) can't be prevented. The wrapper approach (which is at the moment always used) can however
-       * check for nulls and throw an exception.
-       */
-
-      return new Provider<>() {
-        @Override
-        public Object get() {
-          try {
-            return binding.getValue(instantiator);
-          }
-          catch(InstanceResolutionFailure f) {
-            throw f.toRuntimeException();
-          }
-          catch(OutOfScopeException e) {
-            throw new NoSuchInstanceException(e.getMessage(), e);
-          }
+  private Binding directBinding(AccessibleObject accessibleObject, Parameter parameter, Key key, boolean optional) {
+    return bindingFactory.create(
+      key,
+      accessibleObject,
+      parameter,
+      false,
+      true,
+      optional,
+      instantiator -> {
+        if(optional) {
+          return instantiator.findInstance(key);
         }
-      };
-    }
 
-    @Override
-    public boolean isOptional() {
-      return binding.isOptional();
-    }
-
-    @Override
-    public boolean isCollection() {
-      return false;
-    }
-
-    @Override
-    public boolean isDirect() {
-      return false;
-    }
-  }
-
-  private static final class DirectBinding extends AbstractBinding {
-    private final Key key;
-    private final boolean optional;
-
-    private DirectBinding(AccessibleObject accessibleObject, Parameter parameter, Key requiredKey, boolean optional) {
-      super(accessibleObject, parameter, requiredKey);
-
-      this.key = requiredKey;
-      this.optional = optional;
-    }
-
-    @Override
-    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, NoSuchInstance, MultipleInstances, OutOfScopeException {
-      if(optional) {
-        return instantiator.findInstance(key);
+        return instantiator.getInstance(key);
       }
-
-      return instantiator.getInstance(key);
-    }
-
-    @Override
-    public boolean isOptional() {
-      return optional;
-    }
-
-    @Override
-    public boolean isCollection() {
-      return false;
-    }
-
-    @Override
-    public boolean isDirect() {
-      return true;
-    }
+    );
   }
 
-  private static final class OwnerBinding implements Binding {
-    private final Key key;
-    private final Type ownerType;
+  private Binding ownerBinding(Type ownerType) {
+    Key key = new Key(ownerType);
 
-    private OwnerBinding(Type ownerType) {
-      this.key = new Key(ownerType);
-      this.ownerType = ownerType;
-    }
-
-    @Override
-    public Key getKey() {
-      return key;
-    }
-
-    @Override
-    public AccessibleObject getAccessibleObject() {
-      return null;
-    }
-
-    @Override
-    public Parameter getParameter() {
-      return null;
-    }
-
-    @Override
-    public boolean isCollection() {
-      return false;
-    }
-
-    @Override
-    public boolean isDirect() {
-      return true;
-    }
-
-    @Override
-    public boolean isOptional() {
-      return false;
-    }
-
-    @Override
-    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance, OutOfScopeException {
-      return instantiator.getInstance(key);
-    }
-
-    @Override
-    public String toString() {
-      return "Owner Type [" + ownerType + "]";
-    }
+    return bindingFactory.create(
+      key,
+      null,
+      null,
+      false,
+      true,
+      false,
+      instantiator -> instantiator.getInstance(key)
+    );
   }
 }

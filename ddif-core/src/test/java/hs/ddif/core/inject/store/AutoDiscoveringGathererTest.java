@@ -26,10 +26,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class AutoDiscoveringGathererTest {
+  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
   private final InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, ResolvableInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, ResolvableInjectable::new);
 
   /*
    * Note: the produced Sets by the gatherer in these tests could be incomplete or contain multiple

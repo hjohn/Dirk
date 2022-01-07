@@ -1,6 +1,8 @@
 package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.store.BindingProvider;
+import hs.ddif.core.inject.store.DefaultBinding;
 import hs.ddif.core.inject.store.FieldInjectableFactory;
 import hs.ddif.core.store.Key;
 
@@ -20,7 +22,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class FieldInjectableFactoryTest {
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
+  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, ResolvableInjectable::new);
 
   @Mock private Instantiator instantiator;
 

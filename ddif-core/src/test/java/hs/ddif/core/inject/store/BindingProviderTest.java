@@ -38,11 +38,13 @@ public class BindingProviderTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation GREEN = Annotations.of(Green.class);
 
+  private BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+
   @Mock private Instantiator instantiator;
 
   @Test
   public void ofMembersShouldBindToGenericFieldInSubclass() throws NoSuchFieldException, SecurityException {
-    List<Binding> bindings = BindingProvider.ofMembers(Subclass.class);
+    List<Binding> bindings = bindingProvider.ofMembers(Subclass.class);
 
     assertThat(bindings).extracting(Binding::getAccessibleObject, Binding::getKey).containsExactlyInAnyOrder(
       Tuple.tuple(ClassWithGenericFields.class.getDeclaredField("fieldA"), new Key(String.class)),
@@ -52,7 +54,7 @@ public class BindingProviderTest {
 
   @Test
   public void ofMethodShouldCreateCorrectBindings() throws NoSuchMethodException, SecurityException {
-    List<Binding> bindings = BindingProvider.ofMethod(Subclass.class.getDeclaredMethod("create", Integer.class, Double.class), Subclass.class);
+    List<Binding> bindings = bindingProvider.ofMethod(Subclass.class.getDeclaredMethod("create", Integer.class, Double.class), Subclass.class);
 
     assertEquals(3, bindings.size());
     assertEquals(Integer.class, bindings.get(0).getKey().getType());
@@ -65,7 +67,7 @@ public class BindingProviderTest {
 
   @Test
   public void ofMethodShouldTakeNonStaticIntoAccount() throws NoSuchMethodException, SecurityException {
-    assertThat(BindingProvider.ofMethod(MethodHolder.class.getDeclaredMethod("create", Double.class), MethodHolder.class))
+    assertThat(bindingProvider.ofMethod(MethodHolder.class.getDeclaredMethod("create", Double.class), MethodHolder.class))
       .extracting(Binding::getKey)
       .containsExactly(
         new Key(Double.class),
@@ -75,7 +77,7 @@ public class BindingProviderTest {
 
   @Test
   public void ofMethodShouldTakeStaticIntoAccount() throws NoSuchMethodException, SecurityException {
-    assertThat(BindingProvider.ofMethod(MethodHolder.class.getDeclaredMethod("createStatic", Double.class), MethodHolder.class))
+    assertThat(bindingProvider.ofMethod(MethodHolder.class.getDeclaredMethod("createStatic", Double.class), MethodHolder.class))
       .extracting(Binding::getKey)
       .containsExactly(
         new Key(Double.class)
@@ -84,7 +86,7 @@ public class BindingProviderTest {
 
   @Test
   public void ofFieldShouldTakeNonStaticIntoAccount() throws NoSuchFieldException, SecurityException {
-    assertThat(BindingProvider.ofField(FieldHolder.class.getDeclaredField("b"), FieldHolder.class))
+    assertThat(bindingProvider.ofField(FieldHolder.class.getDeclaredField("b"), FieldHolder.class))
       .extracting(Binding::getKey)
       .containsExactly(
         new Key(FieldHolder.class)
@@ -93,25 +95,25 @@ public class BindingProviderTest {
 
   @Test
   public void ofFieldShouldTakeStaticIntoAccount() throws NoSuchFieldException, SecurityException {
-    assertThat(BindingProvider.ofField(FieldHolder.class.getDeclaredField("a"), FieldHolder.class))
+    assertThat(bindingProvider.ofField(FieldHolder.class.getDeclaredField("a"), FieldHolder.class))
       .isEmpty();
   }
 
   @Test
   public void getConstructorShouldFindInjectAnnotatedConstructor() throws NoSuchMethodException, SecurityException {
-    assertThat(BindingProvider.getConstructor(ClassA.class))
+    assertThat(bindingProvider.getConstructor(ClassA.class))
       .isEqualTo(ClassA.class.getDeclaredConstructor(ClassB.class));
   }
 
   @Test
   public void getConstructorShouldFindDefaultConstructor() throws NoSuchMethodException, SecurityException {
-    assertThat(BindingProvider.getConstructor(ClassB.class))
+    assertThat(bindingProvider.getConstructor(ClassB.class))
       .isEqualTo(ClassB.class.getConstructor());
   }
 
   @Test
   public void getConstructorShouldRejectClassWithoutPublicDefaultConstructor() {
-    assertThatThrownBy(() -> BindingProvider.getConstructor(ClassC.class))
+    assertThatThrownBy(() -> bindingProvider.getConstructor(ClassC.class))
       .isExactlyInstanceOf(BindingException.class)
       .hasMessage("No suitable constructor found; annotate a constructor or provide an empty public constructor: class hs.ddif.core.inject.store.BindingProviderTest$ClassC")
       .hasNoCause();
@@ -119,7 +121,7 @@ public class BindingProviderTest {
 
   @Test
   public void getConstructorShouldRejectClassWithMultipleAnnotatedConstructors() {
-    assertThatThrownBy(() -> BindingProvider.getConstructor(ClassD.class))
+    assertThatThrownBy(() -> bindingProvider.getConstructor(ClassD.class))
       .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Multiple @Inject annotated constructors found, but only one allowed: class hs.ddif.core.inject.store.BindingProviderTest$ClassD")
       .hasNoCause();
@@ -127,7 +129,7 @@ public class BindingProviderTest {
 
   @Test
   public void ofConstructorShouldRejectNestedProvider() {
-    assertThatThrownBy(() -> BindingProvider.ofConstructor(ClassE.class.getDeclaredConstructors()[0]))
+    assertThatThrownBy(() -> bindingProvider.ofConstructor(ClassE.class.getDeclaredConstructors()[0]))
       .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Unable to create binding for Parameter 0 [javax.inject.Provider<javax.inject.Provider<java.lang.String>> provider] of: hs.ddif.core.inject.store.BindingProviderTest$ClassE(javax.inject.Provider) in: class hs.ddif.core.inject.store.BindingProviderTest$ClassE")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -138,7 +140,7 @@ public class BindingProviderTest {
 
   @Test
   public void ofMembersShouldRejectNestedProvider() {
-    assertThatThrownBy(() -> BindingProvider.ofMembers(ClassE.class))
+    assertThatThrownBy(() -> bindingProvider.ofMembers(ClassE.class))
       .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Unable to create binding for: javax.inject.Provider hs.ddif.core.inject.store.BindingProviderTest$ClassE.x in: class hs.ddif.core.inject.store.BindingProviderTest$ClassE")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -149,7 +151,7 @@ public class BindingProviderTest {
 
   @Test
   public void ofMembersShouldRejectFinalField() {
-    assertThatThrownBy(() -> BindingProvider.ofMembers(ClassF.class))
+    assertThatThrownBy(() -> bindingProvider.ofMembers(ClassF.class))
       .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Cannot inject final field: final java.lang.String hs.ddif.core.inject.store.BindingProviderTest$ClassF.x in: class hs.ddif.core.inject.store.BindingProviderTest$ClassF")
       .hasNoCause();
@@ -157,7 +159,7 @@ public class BindingProviderTest {
 
   @Test
   public void ofConstructorAndMembersShouldFindAllBindings() throws Exception {
-    List<Binding> bindings = BindingProvider.ofConstructorAndMembers(ClassA.class.getDeclaredConstructor(ClassB.class), ClassA.class);
+    List<Binding> bindings = bindingProvider.ofConstructorAndMembers(ClassA.class.getDeclaredConstructor(ClassB.class), ClassA.class);
 
     assertThat(bindings)
       .extracting(Binding::getKey, Binding::isOptional)
