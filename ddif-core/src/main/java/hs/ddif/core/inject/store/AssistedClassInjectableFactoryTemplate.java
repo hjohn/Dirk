@@ -159,8 +159,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   private Class<?> generateFactoryClass(Type type, Method factoryMethod) {
     Class<?> productType = factoryMethod.getReturnType();
     Constructor<?> productConstructor = BindingProvider.getAnnotatedConstructor(productType);
-    List<Binding> productBindings = BindingProvider.ofConstructorAndMembers(productConstructor, productType);
-    Interceptor interceptor = new Interceptor(productConstructor, factoryMethod, productBindings);
+    Interceptor interceptor = new Interceptor(productConstructor, factoryMethod);
 
     /*
      * Construct ByteBuddy builder:
@@ -175,13 +174,19 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
      * Add a field per binding to the builder:
      */
 
+    List<String> providerFieldNames = new ArrayList<>();
+    Map<String, Binding> parameterBindings = new HashMap<>();
+    List<Binding> productBindings = BindingProvider.ofConstructorAndMembers(productConstructor, productType);
+
     for(int i = 0; i < productBindings.size(); i++) {
       Binding binding = productBindings.get(i);
       Parameter parameter = binding.getParameter();
-      Argument annotation = parameter == null ? binding.getAccessibleObject().getAnnotation(Argument.class) : parameter.getAnnotation(Argument.class);
+      AccessibleObject accessibleObject = binding.getAccessibleObject();
+      Argument annotation = parameter == null ? accessibleObject.getAnnotation(Argument.class) : parameter.getAnnotation(Argument.class);
 
       if(annotation == null) {
-        List<Annotation> annotations = Arrays.asList(parameter == null ? binding.getAccessibleObject().getAnnotations() : parameter.getAnnotations());
+        List<Annotation> annotations = Arrays.asList(parameter == null ? accessibleObject.getAnnotations() : parameter.getAnnotations());
+        String fieldName = "__binding" + i + "__";
 
         if(parameter != null) {
           annotations = new ArrayList<>(annotations);
@@ -189,9 +194,20 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
           annotations.add(INJECT);
         }
 
+        providerFieldNames.add(fieldName);
         builder = builder
-          .defineField("__binding" + i + "__", TypeUtils.parameterize(Provider.class, binding.getType()), Visibility.PRIVATE)
+          .defineField(fieldName, TypeUtils.parameterize(Provider.class, binding.getType()), Visibility.PRIVATE)
           .annotateField(annotations);
+      }
+      else {
+        String name = parameter == null ? determineArgumentName(annotation, (Field)accessibleObject) : determineArgumentName(parameter);
+
+        if(name == null) {
+          throw new BindingException("Missing argument name. Name cannot be determined for [" + accessibleObject + "] parameter [" + parameter + "]; specify one with @Argument or compile classes with parameter name information");
+        }
+
+        parameterBindings.put(name, binding);
+        providerFieldNames.add(null);
       }
     }
 
@@ -216,28 +232,30 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
      * Set the field list on the factory:
      */
 
+    List<Field> providerFields = createProviderFields(cls, providerFieldNames);
+
+    interceptor.initialize(parameterBindings, productBindings, providerFields);
+
+    return cls;
+  }
+
+  private static List<Field> createProviderFields(Class<?> cls, List<String> providerFieldNames) {
     try {
       List<Field> providerFields = new ArrayList<>();
 
-      for(int i = 0; i < productBindings.size(); i++) {
-        Binding binding = productBindings.get(i);
-        Parameter parameter = binding.getParameter();
-        Argument annotation = parameter == null ? binding.getAccessibleObject().getAnnotation(Argument.class) : parameter.getAnnotation(Argument.class);
-
-        if(annotation == null) {
-          Field field = cls.getDeclaredField("__binding" + i + "__");
+      for(String fieldName : providerFieldNames) {
+        if(fieldName == null) {
+          providerFields.add(null);
+        }
+        else {
+          Field field = cls.getDeclaredField(fieldName);
 
           field.setAccessible(true);
           providerFields.add(field);
         }
-        else {
-          providerFields.add(null);
-        }
       }
 
-      interceptor.setFields(providerFields);
-
-      return cls;
+      return providerFields;
     }
     catch(NoSuchFieldException | SecurityException e) {
       throw new IllegalStateException(e);
@@ -248,30 +266,27 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
    * Interceptor for generated subclass of assisted injection factories.
    */
   public static class Interceptor {
-    private final Type type;
     private final ObjectFactory objectFactory;
-    private final List<Binding> bindings;
-    private final List<String> factoryParameterNames;
-    private final List<String> bindingParameterNames = new ArrayList<>();  // has null gaps where dependencies are
+    private final List<InjectionTemplate> templates = new ArrayList<>();
+    private final Method factoryMethod;
 
-    private List<Field> fields;  // has null gaps where parameters are
+    private List<String> factoryParameterNames;
 
-    Interceptor(Constructor<?> productConstructor, Method factoryMethod, List<Binding> bindings) {
-      Map<String, Binding> productArgumentTypes = createBindingNameMap(bindings);
-      Map<Binding, String> bindingNames = productArgumentTypes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
-
-      this.type = factoryMethod.getReturnType();
+    Interceptor(Constructor<?> productConstructor, Method factoryMethod) {
+      this.factoryMethod = factoryMethod;
       this.objectFactory = new ClassObjectFactory(productConstructor);
-      this.bindings = bindings;
-      this.factoryParameterNames = validateProducerAndReturnArgumentNames(factoryMethod, productArgumentTypes);
-
-      for(Binding binding : bindings) {
-        bindingParameterNames.add(bindingNames.get(binding));
-      }
     }
 
-    void setFields(List<Field> fields) {
-      this.fields = fields;
+    void initialize(Map<String, Binding> productArgumentTypes, List<Binding> bindings, List<Field> fields) {
+      Map<Binding, String> bindingNames = productArgumentTypes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+
+      this.factoryParameterNames = validateProducerAndReturnArgumentNames(factoryMethod, productArgumentTypes);
+
+      for(int i = 0; i < bindings.size(); i++) {
+        Binding binding = bindings.get(i);
+
+        templates.add(new InjectionTemplate(fields.get(i), binding.getAccessibleObject(), bindingNames.get(binding), binding.isDirect()));
+      }
     }
 
     /**
@@ -294,26 +309,37 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
         return objectFactory.createInstance(createInjections(factoryInstance, parameters));
       }
       catch(Exception e) {
-        throw new InstanceCreationFailure(type, "Exception while creating instance", e);
+        throw new InstanceCreationFailure(factoryMethod.getReturnType(), "Exception while creating instance", e);
       }
     }
 
     private List<Injection> createInjections(Object factoryInstance, Map<String, Object> parameters) throws IllegalAccessException {
       List<Injection> injections = new ArrayList<>();
 
-      for(int i = 0; i < bindings.size(); i++) {
-        Binding binding = bindings.get(i);
-        String name = bindingParameterNames.get(i);
-
+      for(InjectionTemplate template : templates) {
         @SuppressWarnings("unchecked")
-        Object value = name != null ? parameters.get(name)
-               : binding.isDirect() ? ((Provider<Object>)fields.get(i).get(factoryInstance)).get()
-                                    : fields.get(i).get(factoryInstance);
+        Object value = template.field == null ? parameters.get(template.parameterName)
+                          : template.isDirect ? ((Provider<Object>)template.field.get(factoryInstance)).get()
+                                              : template.field.get(factoryInstance);
 
-        injections.add(new Injection(binding.getAccessibleObject(), value));
+        injections.add(new Injection(template.accessibleObject, value));
       }
 
       return injections;
+    }
+
+    static class InjectionTemplate {
+      final Field field;  // null when it's a parameter
+      final AccessibleObject accessibleObject;
+      final String parameterName;  // null when it's not a parameter
+      final boolean isDirect;
+
+      InjectionTemplate(Field field, AccessibleObject accessibleObject, String parameterName, boolean isDirect) {
+        this.field = field;
+        this.accessibleObject = accessibleObject;
+        this.parameterName = parameterName;
+        this.isDirect = isDirect;
+      }
     }
   }
 
@@ -366,28 +392,6 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     }
 
     return names;
-  }
-
-  private static Map<String, Binding> createBindingNameMap(List<Binding> bindings) {
-    Map<String, Binding> parameterBindings = new HashMap<>();
-
-    for(Binding binding : bindings) {
-      AccessibleObject accessibleObject = binding.getAccessibleObject();
-      Parameter parameter = binding.getParameter();
-      Argument annotation = parameter == null ? accessibleObject.getAnnotation(Argument.class) : parameter.getAnnotation(Argument.class);
-
-      if(annotation != null) {
-        String name = parameter == null ? determineArgumentName(annotation, (Field)accessibleObject) : determineArgumentName(parameter);
-
-        if(name == null) {
-          throw new BindingException("Missing argument name. Name cannot be determined for [" + accessibleObject + "] parameter [" + parameter + "]; specify one with @Argument or compile classes with parameter name information");
-        }
-
-        parameterBindings.put(name, binding);
-      }
-    }
-
-    return parameterBindings;
   }
 
   private static String determineArgumentName(Argument annotation, Field field) {
