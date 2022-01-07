@@ -31,7 +31,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AssistedClassInjectableFactoryTemplateTest {
-  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(ResolvableInjectable::new);
+  private BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, ResolvableInjectable::new);
 
   @Test
   void shouldConstructSimpleFactory() {

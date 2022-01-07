@@ -2,7 +2,9 @@ package hs.ddif.core.store;
 
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.inject.store.BindingProvider;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.DefaultBinding;
 import hs.ddif.core.inject.store.FieldInjectableFactory;
 import hs.ddif.core.inject.store.InstanceInjectableFactory;
 import hs.ddif.core.inject.store.MethodInjectableFactory;
@@ -43,9 +45,10 @@ public class InjectableStoreTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation BIG = Annotations.of(Big.class);
 
+  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, ResolvableInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, ResolvableInjectable::new);
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
 
   private InjectableStore<Injectable> store;

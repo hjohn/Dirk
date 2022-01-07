@@ -1,6 +1,8 @@
 package hs.ddif.core.inject.instantiator;
 
 import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.store.BindingProvider;
+import hs.ddif.core.inject.store.DefaultBinding;
 import hs.ddif.core.inject.store.MethodInjectableFactory;
 import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.Key;
@@ -22,7 +24,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class MethodInjectableFactoryTest {
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
+  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, ResolvableInjectable::new);
 
   @Mock private Instantiator instantiator;
 

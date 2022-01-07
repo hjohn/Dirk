@@ -20,7 +20,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConcreteClassInjectableFactoryTemplateTest {
-  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(ResolvableInjectable::new);
+  private BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, ResolvableInjectable::new);
 
   @Test
   void shouldFailPreconditionWhenReturnTypeIsAbstract() {

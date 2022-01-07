@@ -26,15 +26,18 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 public class MethodInjectableFactory {
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
 
-  private final ResolvableInjectableFactory factory;
+  private final BindingProvider bindingProvider;
+  private final ResolvableInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
-   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
+   * @param bindingProvider a {@link BindingProvider}, cannot be null
+   * @param injectableFactory a {@link ResolvableInjectableFactory}, cannot be null
    */
-  public MethodInjectableFactory(ResolvableInjectableFactory factory) {
-    this.factory = factory;
+  public MethodInjectableFactory(BindingProvider bindingProvider, ResolvableInjectableFactory injectableFactory) {
+    this.bindingProvider = bindingProvider;
+    this.injectableFactory = injectableFactory;
   }
 
   /**
@@ -73,10 +76,10 @@ public class MethodInjectableFactory {
       throw new BindingException("Method cannot be annotated with Inject: " + method);
     }
 
-    return factory.create(
+    return injectableFactory.create(
       returnType,
       Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
-      BindingProvider.ofMethod(method, ownerType),
+      bindingProvider.ofMethod(method, ownerType),
       AnnotationExtractor.findScopeAnnotation(method),
       method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
       new MethodObjectFactory(method)

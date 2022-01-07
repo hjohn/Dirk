@@ -92,15 +92,18 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
   private static final Annotation INJECT = Annotations.of(Inject.class);
 
-  private final ResolvableInjectableFactory factory;
+  private final BindingProvider bindingProvider;
+  private final ResolvableInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
-   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
+   * @param bindingProvider a {@link BindingProvider}, cannot be null
+   * @param injectableFactory a {@link ResolvableInjectableFactory}, cannot be null
    */
-  public AssistedClassInjectableFactoryTemplate(ResolvableInjectableFactory factory) {
-    this.factory = factory;
+  public AssistedClassInjectableFactoryTemplate(BindingProvider bindingProvider, ResolvableInjectableFactory injectableFactory) {
+    this.bindingProvider = bindingProvider;
+    this.injectableFactory = injectableFactory;
   }
 
   @Override
@@ -139,10 +142,10 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     Method factoryMethod = analysis.getData().factoryMethod;
     Class<?> implementedFactoryClass = generateFactoryClass(type, factoryMethod);
 
-    Constructor<?> factoryConstructor = BindingProvider.getConstructor(implementedFactoryClass);
-    List<Binding> factoryBindings = BindingProvider.ofConstructorAndMembers(factoryConstructor, implementedFactoryClass);
+    Constructor<?> factoryConstructor = bindingProvider.getConstructor(implementedFactoryClass);
+    List<Binding> factoryBindings = bindingProvider.ofConstructorAndMembers(factoryConstructor, implementedFactoryClass);
 
-    factoryInjectable = factory.create(
+    factoryInjectable = injectableFactory.create(
       implementedFactoryClass,
       Annotations.findDirectlyMetaAnnotatedAnnotations(TypeUtils.getRawType(type, null), QUALIFIER),
       factoryBindings,
@@ -158,7 +161,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
 
   private Class<?> generateFactoryClass(Type type, Method factoryMethod) {
     Class<?> productType = factoryMethod.getReturnType();
-    Constructor<?> productConstructor = BindingProvider.getAnnotatedConstructor(productType);
+    Constructor<?> productConstructor = bindingProvider.getAnnotatedConstructor(productType);
     Interceptor interceptor = new Interceptor(productConstructor, factoryMethod);
 
     /*
@@ -176,7 +179,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
 
     List<String> providerFieldNames = new ArrayList<>();
     Map<String, Binding> parameterBindings = new HashMap<>();
-    List<Binding> productBindings = BindingProvider.ofConstructorAndMembers(productConstructor, productType);
+    List<Binding> productBindings = bindingProvider.ofConstructorAndMembers(productConstructor, productType);
 
     for(int i = 0; i < productBindings.size(); i++) {
       Binding binding = productBindings.get(i);

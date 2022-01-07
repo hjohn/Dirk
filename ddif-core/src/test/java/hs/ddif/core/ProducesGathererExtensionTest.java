@@ -2,7 +2,9 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
+import hs.ddif.core.inject.store.BindingProvider;
 import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.store.DefaultBinding;
 import hs.ddif.core.inject.store.FieldInjectableFactory;
 import hs.ddif.core.inject.store.MethodInjectableFactory;
 
@@ -13,9 +15,10 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProducesGathererExtensionTest {
+  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(ResolvableInjectable::new);
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(ResolvableInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, ResolvableInjectable::new);
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, ResolvableInjectable::new);
 
   private ProducesGathererExtension extension = new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory);
 

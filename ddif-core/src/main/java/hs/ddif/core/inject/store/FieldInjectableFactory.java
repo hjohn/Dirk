@@ -1,9 +1,9 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.core.inject.instantiator.Injection;
 import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.ObjectFactory;
 import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.inject.instantiator.Injection;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -25,15 +25,18 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 public class FieldInjectableFactory {
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
 
-  private final ResolvableInjectableFactory factory;
+  private final BindingProvider bindingProvider;
+  private final ResolvableInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
-   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
+   * @param bindingProvider a {@link BindingProvider}, cannot be null
+   * @param injectableFactory a {@link ResolvableInjectableFactory}, cannot be null
    */
-  public FieldInjectableFactory(ResolvableInjectableFactory factory) {
-    this.factory = factory;
+  public FieldInjectableFactory(BindingProvider bindingProvider, ResolvableInjectableFactory injectableFactory) {
+    this.bindingProvider = bindingProvider;
+    this.injectableFactory = injectableFactory;
   }
 
   /**
@@ -69,10 +72,10 @@ public class FieldInjectableFactory {
       throw new BindingException("Field cannot be annotated with Inject: " + field);
     }
 
-    return factory.create(
+    return injectableFactory.create(
       type,
       Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER),
-      BindingProvider.ofField(field, ownerType),
+      bindingProvider.ofField(field, ownerType),
       AnnotationExtractor.findScopeAnnotation(field),
       field,  // for proper discrimination, the exact field should also be taken into account, next to its generic type
       new FieldObjectFactory(field)

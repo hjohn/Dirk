@@ -28,15 +28,18 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
   private static final TypeAnalysis<Type> FAILURE_ABSTRACT = TypeAnalysis.negative("Type cannot be abstract: %1$s");
 
-  private final ResolvableInjectableFactory factory;
+  private final BindingProvider bindingProvider;
+  private final ResolvableInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
-   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
+   * @param bindingProvider a {@link BindingProvider}, cannot be null
+   * @param injectableFactory a {@link ResolvableInjectableFactory}, cannot be null
    */
-  public ConcreteClassInjectableFactoryTemplate(ResolvableInjectableFactory factory) {
-    this.factory = factory;
+  public ConcreteClassInjectableFactoryTemplate(BindingProvider bindingProvider, ResolvableInjectableFactory injectableFactory) {
+    this.bindingProvider = bindingProvider;
+    this.injectableFactory = injectableFactory;
   }
 
   @Override
@@ -54,10 +57,10 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   public ResolvableInjectable create(TypeAnalysis<Type> analysis) {
     Type type = analysis.getData();
     Class<?> cls = TypeUtils.getRawType(type, null);
-    Constructor<?> constructor = BindingProvider.getConstructor(cls);
-    List<Binding> bindings = BindingProvider.ofConstructorAndMembers(constructor, cls);
+    Constructor<?> constructor = bindingProvider.getConstructor(cls);
+    List<Binding> bindings = bindingProvider.ofConstructorAndMembers(constructor, cls);
 
-    return factory.create(
+    return injectableFactory.create(
       type,
       Annotations.findDirectlyMetaAnnotatedAnnotations(cls, QUALIFIER),
       bindings,
