@@ -3,6 +3,7 @@ package hs.ddif.core;
 import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.inject.consistency.InjectorStoreConsistencyPolicy;
+import hs.ddif.core.inject.instantiator.DefaultInstantiator;
 import hs.ddif.core.inject.instantiator.Gatherer;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.InstantiatorBasedInstanceResolver;
@@ -72,7 +73,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
     ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
 
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
-    Instantiator instantiator = new Instantiator(store, gatherer, extendedScopeResolvers);
+    Instantiator instantiator = new DefaultInstantiator(store, gatherer, extendedScopeResolvers);
 
     this.registry = new InjectableStoreCandidateRegistry(store, gatherer, classInjectableFactory, instanceInjectableFactory);
     this.instanceResolver = new InstantiatorBasedInstanceResolver(instantiator);

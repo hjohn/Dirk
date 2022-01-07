@@ -18,7 +18,7 @@ public class Instantiators {
 
     AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), FACTORY);
 
-    return new Instantiator(store, gatherer, scopeResolvers);
+    return new DefaultInstantiator(store, gatherer, scopeResolvers);
   }
 
   public static Instantiator create() {
