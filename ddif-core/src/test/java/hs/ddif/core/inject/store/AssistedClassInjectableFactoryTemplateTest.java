@@ -3,6 +3,7 @@ package hs.ddif.core.inject.store;
 import hs.ddif.annotations.Argument;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.inject.instantiator.Binding;
+import hs.ddif.core.inject.instantiator.DefaultInstantiator;
 import hs.ddif.core.inject.instantiator.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.instantiator.MultipleInstances;
@@ -114,7 +115,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   @Test
   void shouldInstantiateTypeViaFactory() throws NoSuchInstance, MultipleInstances, InstanceCreationFailure, OutOfScopeException {
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
-    Instantiator instantiator = new Instantiator(store, new AutoDiscoveringGatherer(false, List.of(), InjectableFactories.forClass()));
+    Instantiator instantiator = new DefaultInstantiator(store, new AutoDiscoveringGatherer(false, List.of(), InjectableFactories.forClass()));
 
     store.put(new InstanceInjectableFactory(ResolvableInjectable::new).create("Red", Annotations.of(Red.class)));
     store.put(new InstanceInjectableFactory(ResolvableInjectable::new).create("Green", Annotations.of(Green.class)));

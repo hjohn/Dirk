@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class InstantiatorTest {
+public class DefaultInstantiatorTest {
   private final InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
   private final AbstractScopeResolver<String> scopeResolver = new AbstractScopeResolver<>() {
     @Override
@@ -68,7 +68,7 @@ public class InstantiatorTest {
   @Nested
   class WhenStoreIsEmpty {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), classInjectableFactory);
-    private final Instantiator instantiator = new Instantiator(store, gatherer, scopeResolvers);
+    private final Instantiator instantiator = new DefaultInstantiator(store, gatherer, scopeResolvers);
 
     @Test
     void shouldThrowExceptionWhenGettingSingleInstance() {
@@ -96,7 +96,7 @@ public class InstantiatorTest {
   @Nested
   class WhenStoreNotEmpty {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), classInjectableFactory);
-    private final Instantiator instantiator = new Instantiator(store, gatherer, scopeResolvers);
+    private final Instantiator instantiator = new DefaultInstantiator(store, gatherer, scopeResolvers);
 
     {
       try {
@@ -160,12 +160,12 @@ public class InstantiatorTest {
     void shouldThrowOutOfScopeExceptionWhenScopeNotActive() {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(D.class)))
         .isExactlyInstanceOf(OutOfScopeException.class)
-        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.InstantiatorTest$TestScoped for key: Injectable[hs.ddif.core.inject.instantiator.InstantiatorTest$D]")
+        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$TestScoped for key: Injectable[hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$D]")
         .hasNoCause();
 
       assertThatThrownBy(() -> instantiator.findInstance(new Key(D.class)))
         .isExactlyInstanceOf(OutOfScopeException.class)
-        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.InstantiatorTest$TestScoped for key: Injectable[hs.ddif.core.inject.instantiator.InstantiatorTest$D]")
+        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$TestScoped for key: Injectable[hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$D]")
         .hasNoCause();
     }
 
@@ -193,7 +193,7 @@ public class InstantiatorTest {
     void getInstancesShouldThrowExceptionWhenInstantiationFails() {
       assertThatThrownBy(() -> instantiator.getInstances(new Key(H.class)))
         .isExactlyInstanceOf(InstanceCreationFailure.class)
-        .hasMessage("Exception while constructing instance via Producer: hs.ddif.core.inject.instantiator.InstantiatorTest$H hs.ddif.core.inject.instantiator.InstantiatorTest$B.createH()")
+        .hasMessage("Exception while constructing instance via Producer: hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$H hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$B.createH()")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(InvocationTargetException.class)
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -218,7 +218,7 @@ public class InstantiatorTest {
     void getInstanceShouldRejectNullInstancesFromProducers() {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(I.class)))
         .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: [class hs.ddif.core.inject.instantiator.InstantiatorTest$I]")
+        .hasMessage("No such instance: [class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$I]")
         .hasNoCause();
     }
 
@@ -231,7 +231,7 @@ public class InstantiatorTest {
     void getInstanceShouldThrowExceptionWhenInstantiationFails() {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(H.class)))
         .isExactlyInstanceOf(InstanceCreationFailure.class)
-        .hasMessage("Exception while constructing instance via Producer: hs.ddif.core.inject.instantiator.InstantiatorTest$H hs.ddif.core.inject.instantiator.InstantiatorTest$B.createH()")
+        .hasMessage("Exception while constructing instance via Producer: hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$H hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$B.createH()")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(InvocationTargetException.class)
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -249,7 +249,7 @@ public class InstantiatorTest {
   @Nested
   class WhenStoreEmptyAndAutoDiscoveryIsActive {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(true, List.of(), classInjectableFactory);
-    private final Instantiator instantiator = new Instantiator(store, gatherer, scopeResolvers);
+    private final Instantiator instantiator = new DefaultInstantiator(store, gatherer, scopeResolvers);
 
     @Test
     void getInstancesShouldNeverDiscoverTypes() throws InstanceCreationFailure {
@@ -267,7 +267,7 @@ public class InstantiatorTest {
     void getInstanceShouldNotDiscoverTypesWithQualifiers() {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class, Set.of(Annotations.of(Red.class)))))
         .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.inject.instantiator.InstantiatorTest$A]")
+        .hasMessage("No such instance: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$A]")
         .hasNoCause();
     }
 
@@ -275,10 +275,10 @@ public class InstantiatorTest {
     void getInstanceShouldThrowExceptionWhenDiscoveryFails() {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(J.class)))
         .isExactlyInstanceOf(DiscoveryFailure.class)
-        .hasMessage("Exception during auto discovery: [class hs.ddif.core.inject.instantiator.InstantiatorTest$J]")
+        .hasMessage("Exception during auto discovery: [class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$J]")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(BindingException.class)
-        .hasMessageStartingWith("Type cannot be injected: class hs.ddif.core.inject.instantiator.InstantiatorTest$J")
+        .hasMessageStartingWith("Type cannot be injected: class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$J")
         .hasNoCause();
     }
   }
