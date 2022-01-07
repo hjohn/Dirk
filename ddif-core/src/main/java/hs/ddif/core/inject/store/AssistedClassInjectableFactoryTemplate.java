@@ -137,23 +137,14 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     }
 
     Method factoryMethod = analysis.getData().factoryMethod;
-    Class<?> factoryClass = TypeUtils.getRawType(type, null);
-    Class<?> productType = factoryMethod.getReturnType();
-    Constructor<?> productConstructor = BindingProvider.getAnnotatedConstructor(productType);
-    List<Binding> productBindings = BindingProvider.ofConstructorAndMembers(productConstructor, productType);
+    Class<?> implementedFactoryClass = generateFactoryClass(type, factoryMethod);
 
-    Interceptor interceptor = new Interceptor(productConstructor, factoryMethod, productBindings);
-    Type implementedFactoryType = generateFactoryType(type, factoryClass, productType, productBindings, interceptor);
-
-    Class<?> implementedFactoryClass = TypeUtils.getRawType(implementedFactoryType, null);
     Constructor<?> factoryConstructor = BindingProvider.getConstructor(implementedFactoryClass);
     List<Binding> factoryBindings = BindingProvider.ofConstructorAndMembers(factoryConstructor, implementedFactoryClass);
 
-    interceptor.setFields(createProviderFieldList(productBindings, implementedFactoryClass));
-
     factoryInjectable = factory.create(
-      implementedFactoryType,
-      Annotations.findDirectlyMetaAnnotatedAnnotations(factoryClass, QUALIFIER),
+      implementedFactoryClass,
+      Annotations.findDirectlyMetaAnnotatedAnnotations(TypeUtils.getRawType(type, null), QUALIFIER),
       factoryBindings,
       Annotations.of(Singleton.class),
       null,
@@ -165,21 +156,34 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     return factoryInjectable;
   }
 
-  private Type generateFactoryType(Type type, Class<?> factoryClass, Class<?> productType, List<Binding> productBindings, Interceptor interceptor) {
+  private Class<?> generateFactoryClass(Type type, Method factoryMethod) {
+    Class<?> productType = factoryMethod.getReturnType();
+    Constructor<?> productConstructor = BindingProvider.getAnnotatedConstructor(productType);
+    List<Binding> productBindings = BindingProvider.ofConstructorAndMembers(productConstructor, productType);
+    Interceptor interceptor = new Interceptor(productConstructor, factoryMethod, productBindings);
+
+    /*
+     * Construct ByteBuddy builder:
+     */
+
     Builder<?> builder = new ByteBuddy()
       .subclass(type, ConstructorStrategy.Default.IMITATE_SUPER_CLASS.withInheritedAnnotations())
       .method(ElementMatchers.returns(productType).and(ElementMatchers.isAbstract()))
       .intercept(MethodDelegation.to(interceptor));
 
+    /*
+     * Add a field per binding to the builder:
+     */
+
     for(int i = 0; i < productBindings.size(); i++) {
       Binding binding = productBindings.get(i);
-
-      Argument annotation = binding.getParameter() == null ? binding.getAccessibleObject().getAnnotation(Argument.class) : binding.getParameter().getAnnotation(Argument.class);
+      Parameter parameter = binding.getParameter();
+      Argument annotation = parameter == null ? binding.getAccessibleObject().getAnnotation(Argument.class) : parameter.getAnnotation(Argument.class);
 
       if(annotation == null) {
-        List<Annotation> annotations = Arrays.asList(binding.getParameter() == null ? binding.getAccessibleObject().getAnnotations() : binding.getParameter().getAnnotations());
+        List<Annotation> annotations = Arrays.asList(parameter == null ? binding.getAccessibleObject().getAnnotations() : parameter.getAnnotations());
 
-        if(binding.getParameter() != null) {
+        if(parameter != null) {
           annotations = new ArrayList<>(annotations);
 
           annotations.add(INJECT);
@@ -191,7 +195,12 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
       }
     }
 
-    return builder
+    /*
+     * Generate the factory:
+     */
+
+    Class<?> factoryClass = TypeUtils.getRawType(type, null);
+    Class<?> cls = builder
       .make()
       .load(getClass().getClassLoader(), ClassLoadingStrategy.UsingLookup.withFallback(() -> {
         try {
@@ -202,18 +211,21 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
         }
       }))
       .getLoaded();
-  }
 
-  private static List<Field> createProviderFieldList(List<Binding> productBindings, Class<?> implementedFactoryClass) {
+    /*
+     * Set the field list on the factory:
+     */
+
     try {
       List<Field> providerFields = new ArrayList<>();
 
       for(int i = 0; i < productBindings.size(); i++) {
         Binding binding = productBindings.get(i);
-        Argument annotation = binding.getParameter() == null ? binding.getAccessibleObject().getAnnotation(Argument.class) : binding.getParameter().getAnnotation(Argument.class);
+        Parameter parameter = binding.getParameter();
+        Argument annotation = parameter == null ? binding.getAccessibleObject().getAnnotation(Argument.class) : parameter.getAnnotation(Argument.class);
 
         if(annotation == null) {
-          Field field = implementedFactoryClass.getDeclaredField("__binding" + i + "__");
+          Field field = cls.getDeclaredField("__binding" + i + "__");
 
           field.setAccessible(true);
           providerFields.add(field);
@@ -222,7 +234,10 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
           providerFields.add(null);
         }
       }
-      return providerFields;
+
+      interceptor.setFields(providerFields);
+
+      return cls;
     }
     catch(NoSuchFieldException | SecurityException e) {
       throw new IllegalStateException(e);
@@ -354,25 +369,21 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   private static Map<String, Binding> createBindingNameMap(List<Binding> bindings) {
-    Map<AccessibleObject, List<Binding>> map = bindings.stream().collect(Collectors.groupingBy(Binding::getAccessibleObject));
     Map<String, Binding> parameterBindings = new HashMap<>();
 
-    for(List<Binding> group : map.values()) {
-      for(int i = 0; i < group.size(); i++) {
-        Binding binding = group.get(i);
-        AccessibleObject accessibleObject = binding.getAccessibleObject();
-        Parameter parameter = binding.getParameter();
-        Argument annotation = parameter == null ? accessibleObject.getAnnotation(Argument.class) : parameter.getAnnotation(Argument.class);
+    for(Binding binding : bindings) {
+      AccessibleObject accessibleObject = binding.getAccessibleObject();
+      Parameter parameter = binding.getParameter();
+      Argument annotation = parameter == null ? accessibleObject.getAnnotation(Argument.class) : parameter.getAnnotation(Argument.class);
 
-        if(annotation != null) {
-          String name = parameter == null ? determineArgumentName(annotation, (Field)accessibleObject) : determineArgumentName(parameter);
+      if(annotation != null) {
+        String name = parameter == null ? determineArgumentName(annotation, (Field)accessibleObject) : determineArgumentName(parameter);
 
-          if(name == null) {
-            throw new BindingException("Missing argument name. Name cannot be determined for [" + accessibleObject + "] parameter [" + parameter + "]; specify one with @Argument or compile classes with parameter name information");
-          }
-
-          parameterBindings.put(name, binding);
+        if(name == null) {
+          throw new BindingException("Missing argument name. Name cannot be determined for [" + accessibleObject + "] parameter [" + parameter + "]; specify one with @Argument or compile classes with parameter name information");
         }
+
+        parameterBindings.put(name, binding);
       }
     }
 
