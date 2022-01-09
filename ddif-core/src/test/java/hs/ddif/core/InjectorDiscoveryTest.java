@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithEmptyAndAnnotatedConstructor;
