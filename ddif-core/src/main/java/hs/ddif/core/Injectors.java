@@ -7,13 +7,13 @@ import hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplate;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
 import hs.ddif.core.config.standard.ConcreteClassInjectableFactoryTemplate;
 import hs.ddif.core.config.standard.DefaultBinding;
+import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.config.standard.DelegatingClassInjectableFactory;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
 import hs.ddif.core.scope.ScopeResolver;
 
 import java.util.List;
@@ -33,9 +33,9 @@ public class Injectors {
   public static Injector autoDiscovering(ScopeResolver... scopeResolvers) {
     BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
     ClassInjectableFactory classInjectableFactory = createClassInjectableFactory(bindingProvider);
-    MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, ResolvableInjectable::new);
-    FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, ResolvableInjectable::new);
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
+    MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
+    FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
+    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
     return new Injector(
       classInjectableFactory,
@@ -55,9 +55,9 @@ public class Injectors {
   public static Injector manual(ScopeResolver... scopeResolvers) {
     BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
     ClassInjectableFactory classInjectableFactory = createClassInjectableFactory(bindingProvider);
-    MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, ResolvableInjectable::new);
-    FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, ResolvableInjectable::new);
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
+    MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
+    FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
+    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
     return new Injector(
       classInjectableFactory,
@@ -78,8 +78,8 @@ public class Injectors {
 
   private static ClassInjectableFactory createClassInjectableFactory(BindingProvider bindingProvider) {
     return new DelegatingClassInjectableFactory(List.of(
-      new AssistedClassInjectableFactoryTemplate(bindingProvider, ResolvableInjectable::new),
-      new ConcreteClassInjectableFactoryTemplate(bindingProvider, ResolvableInjectable::new)
+      new AssistedClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new),
+      new ConcreteClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new)
     ));
   }
 }

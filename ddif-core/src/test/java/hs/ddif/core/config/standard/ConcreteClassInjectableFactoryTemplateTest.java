@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConcreteClassInjectableFactoryTemplateTest {
   private BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
-  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, ResolvableInjectable::new);
+  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new);
 
   @Test
   void shouldFailPreconditionWhenReturnTypeIsAbstract() {

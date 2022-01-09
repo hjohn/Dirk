@@ -6,7 +6,6 @@ import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.config.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
 import hs.ddif.core.store.DuplicateInjectableException;
 import hs.ddif.core.store.NoSuchInjectableException;
 import hs.ddif.core.test.injectables.AbstractBean;

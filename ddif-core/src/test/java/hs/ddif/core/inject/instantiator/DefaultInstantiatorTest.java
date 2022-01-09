@@ -5,6 +5,7 @@ import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
 import hs.ddif.core.config.standard.DefaultBinding;
+import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.config.standard.DefaultInstantiator;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
@@ -67,8 +68,8 @@ public class DefaultInstantiatorTest {
 
   private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, ResolvableInjectable::new);
-  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
   private String currentScope;
 

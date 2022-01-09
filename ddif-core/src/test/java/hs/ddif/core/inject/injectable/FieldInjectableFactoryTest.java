@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.injectable;
 
 import hs.ddif.core.config.standard.DefaultBinding;
+import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.instantiation.Instantiator;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class FieldInjectableFactoryTest {
   private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, ResolvableInjectable::new);
+  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
 
   @Mock private Instantiator instantiator;
 
@@ -81,7 +82,7 @@ public class FieldInjectableFactoryTest {
 
     when(instantiator.getInstance(new Key(C.class))).thenReturn(new C());
 
-    assertEquals("Bye", injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
+    assertEquals("Bye", injectable.createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
   }
 
   @Test
@@ -91,7 +92,7 @@ public class FieldInjectableFactoryTest {
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).isEmpty();
 
-    assertEquals("Hello", injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
+    assertEquals("Hello", injectable.createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
   }
 
   static class A {

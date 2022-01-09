@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AssistedClassInjectableFactoryTemplateTest {
   private BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
-  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, ResolvableInjectable::new);
+  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new);
 
   @Test
   void shouldConstructSimpleFactory() {
@@ -119,8 +119,8 @@ public class AssistedClassInjectableFactoryTemplateTest {
     InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
     Instantiator instantiator = new DefaultInstantiator(store, new AutoDiscoveringGatherer(false, List.of(), InjectableFactories.forClass()));
 
-    store.put(new InstanceInjectableFactory(ResolvableInjectable::new).create("Red", Annotations.of(Red.class)));
-    store.put(new InstanceInjectableFactory(ResolvableInjectable::new).create("Green", Annotations.of(Green.class)));
+    store.put(new InstanceInjectableFactory(DefaultInjectable::new).create("Red", Annotations.of(Red.class)));
+    store.put(new InstanceInjectableFactory(DefaultInjectable::new).create("Green", Annotations.of(Green.class)));
     store.put(create(FactoryA.class));
 
     FactoryA instance = (FactoryA)instantiator.getInstance(new Key(FactoryA.class));
