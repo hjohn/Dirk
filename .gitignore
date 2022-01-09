@@ -1,7 +1,12 @@
-/target
-/settings.xml
-**/.flattened-pom.xml
+# Ignore everywhere
+
+target/
 .classpath
 .project
 .factorypath
+.flattened-pom.xml
 .settings/
+
+# Specific to root
+
+/settings.xml
