@@ -13,8 +13,8 @@ public abstract class InstanceResolutionFailure extends Exception {
   /**
    * Constructs a new instance.
    *
-   * @param message a message, can be null
-   * @param cause a {@link Throwable} cause, can be null
+   * @param message a message, can be {@code null}
+   * @param cause a {@link Throwable} cause, can be {@code null}
    */
   public InstanceResolutionFailure(String message, Throwable cause) {
     super(message, cause);
@@ -23,7 +23,7 @@ public abstract class InstanceResolutionFailure extends Exception {
   /**
    * Constructs a new instance.
    *
-   * @param message a message, can be null
+   * @param message a message, can be {@code null}
    */
   public InstanceResolutionFailure(String message) {
     super(message);
@@ -32,8 +32,8 @@ public abstract class InstanceResolutionFailure extends Exception {
   /**
    * Generates a description for a list of {@link Predicate}s.
    *
-   * @param matchers a list of {@link Predicate}s, cannot be null
-   * @return a descriptive string, never null
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
+   * @return a descriptive string, never {@code null}
    */
   protected static String toCriteriaString(List<Predicate<Type>> matchers) {
     return matchers.isEmpty() ? "" : " with " + matchers;
@@ -42,7 +42,7 @@ public abstract class InstanceResolutionFailure extends Exception {
   /**
    * Converts this exception to a {@link RuntimeException}.
    *
-   * @return a new {@link RuntimeException}, never null
+   * @return a new {@link RuntimeException}, never {@code null}
    */
   public abstract RuntimeException toRuntimeException();
 }

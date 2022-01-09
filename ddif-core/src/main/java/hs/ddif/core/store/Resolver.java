@@ -13,8 +13,8 @@ public interface Resolver<T extends QualifiedType> {
    * Look up {@link QualifiedType}s by {@link Key}. The empty set is returned if
    * there were no matches.
    *
-   * @param key the {@link Key}, cannot be null
-   * @return a set of {@link QualifiedType}s matching the given {@link Key}, never null but can be empty
+   * @param key the {@link Key}, cannot be {@code null}
+   * @return a set of {@link QualifiedType}s matching the given {@link Key}, never {@code null} but can be empty
    */
   Set<T> resolve(Key key);
 }

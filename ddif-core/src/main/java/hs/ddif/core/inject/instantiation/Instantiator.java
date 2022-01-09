@@ -17,9 +17,9 @@ public interface Instantiator {
    * which all dependencies are injected.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param matchers a list of {@link Predicate}s, cannot be null
-   * @return an instance of the given class matching the given matchers, never null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
+   * @return an instance of the given class matching the given matchers, never {@code null}
    * @throws NoSuchInstance when no matching instance could be found or created
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
@@ -32,8 +32,8 @@ public interface Instantiator {
    * which all dependencies are injected.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @return an instance matching the given {@link Key}, never null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
+   * @return an instance matching the given {@link Key}, never {@code null}
    * @throws NoSuchInstance when no matching instance could be found or created
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
@@ -47,8 +47,8 @@ public interface Instantiator {
    * is returned.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param matchers a list of {@link Predicate}s, cannot be null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
    * @return an instance of the given class matching the given matchers, or {@code null} when no instance was found
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
@@ -62,7 +62,7 @@ public interface Instantiator {
    * is returned.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
    * @return an instance matching the given {@link Key}, or {@code null} when no instance was found
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
@@ -75,8 +75,8 @@ public interface Instantiator {
    * which are active in the current scope.  When there are no matches, an empty set is returned.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param matchers a list of {@link Predicate}s, cannot be null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
    * @return all instances of the given class matching the given matchers (if any)
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
@@ -87,7 +87,7 @@ public interface Instantiator {
    * which are active in the current scope.  When there are no matches, an empty set is returned.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
    * @return all instances of the given class matching the given matchers (if any)
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */

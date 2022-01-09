@@ -17,8 +17,8 @@ public interface ClassInjectableFactoryTemplate<D> {
    * Analyzes the given {@link Type}, potentially doing some preliminary work towards
    * creating a {@link Injectable}.
    *
-   * @param type a {@link Type}, cannot be null
-   * @return a {@link TypeAnalysis}, never null
+   * @param type a {@link Type}, cannot be {@code null}
+   * @return a {@link TypeAnalysis}, never {@code null}
    */
   TypeAnalysis<D> analyze(Type type);
 
@@ -27,8 +27,8 @@ public interface ClassInjectableFactoryTemplate<D> {
    * further problems are encountered. Supplying a negative analysis will always result in
    * an exception to be thrown.
    *
-   * @param analysis a positive {@link TypeAnalysis}, never null
-   * @return a {@link Injectable}, never null
+   * @param analysis a positive {@link TypeAnalysis}, never {@code null}
+   * @return a {@link Injectable}, never {@code null}
    * @throws BindingException when problems are encountered not covered by the analysis
    */
   Injectable create(TypeAnalysis<D> analysis);
@@ -43,9 +43,9 @@ public interface ClassInjectableFactoryTemplate<D> {
      * Constructs an analysis with a negative result.
      *
      * @param <D> type of data contained in the analysis
-     * @param unsuitableReasonTemplate a format template where parameter 1 is the type, cannot be null
+     * @param unsuitableReasonTemplate a format template where parameter 1 is the type, cannot be {@code null}
      * @param parameters additional parameters (parameters 2 and further), can be empty
-     * @return a {@link TypeAnalysis}, never null
+     * @return a {@link TypeAnalysis}, never {@code null}
      */
     public static <D> TypeAnalysis<D> negative(String unsuitableReasonTemplate, Object... parameters) {
       return new TypeAnalysis<>(unsuitableReasonTemplate, parameters);
@@ -55,8 +55,8 @@ public interface ClassInjectableFactoryTemplate<D> {
      * Constructs an analysis with a positive result.
      *
      * @param <D> type of data contained in the analysis
-     * @param preliminaryData optional preliminary data to be used for the next phase, can be null
-     * @return a {@link TypeAnalysis}, never null
+     * @param preliminaryData optional preliminary data to be used for the next phase, can be {@code null}
+     * @return a {@link TypeAnalysis}, never {@code null}
      */
     public static <D> TypeAnalysis<D> positive(D preliminaryData) {
       return new TypeAnalysis<>(preliminaryData);
@@ -94,8 +94,8 @@ public interface ClassInjectableFactoryTemplate<D> {
     /**
      * If the analysis was negative, returns the reason the type is unsuitable.
      *
-     * @param type a {@link Type} to use to construct the message with, cannot be null
-     * @return a message describing why the type was deemed unsuitable, never null
+     * @param type a {@link Type} to use to construct the message with, cannot be {@code null}
+     * @return a message describing why the type was deemed unsuitable, never {@code null}
      */
     public String getUnsuitableReason(Type type) {
       return String.format(unsuitableReasonTemplate, ArrayUtils.insert(0, parameters, type));
@@ -104,7 +104,7 @@ public interface ClassInjectableFactoryTemplate<D> {
     /**
      * Returns the data associated with this analysis.
      *
-     * @return the data associated with this analysis, can be null
+     * @return the data associated with this analysis, can be {@code null}
      */
     public D getData() {
       return preliminaryData;

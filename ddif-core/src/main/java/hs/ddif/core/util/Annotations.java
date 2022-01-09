@@ -25,9 +25,9 @@ public class Annotations {
    * Creates an {@link Annotation} with parameters.
    *
    * @param <A> the annotation type
-   * @param annotationClass a {@link Class} which extends {@link Annotation}, cannot be null
-   * @param values a map of values for the annotations parameters, cannot be null
-   * @return an {@link Annotation}, never null
+   * @param annotationClass a {@link Class} which extends {@link Annotation}, cannot be {@code null}
+   * @param values a map of values for the annotations parameters, cannot be {@code null}
+   * @return an {@link Annotation}, never {@code null}
    * @throws IllegalArgumentException when the given parameters could not be converted to an annotation
    */
   public static <A extends Annotation> A of(Class<A> annotationClass, Map<String, Object> values) {
@@ -43,8 +43,8 @@ public class Annotations {
    * Creates an {@link Annotation} without parameters.
    *
    * @param <A> the annotation type
-   * @param annotationClass a {@link Class} which extends {@link Annotation}, cannot be null
-   * @return an {@link Annotation}, never null
+   * @param annotationClass a {@link Class} which extends {@link Annotation}, cannot be {@code null}
+   * @return an {@link Annotation}, never {@code null}
    * @throws IllegalArgumentException when the given parameters could not be converted to an annotation
    */
   public static <A extends Annotation> A of(Class<A> annotationClass) {
@@ -54,8 +54,8 @@ public class Annotations {
   /**
    * Convenience method for creating {@link Named} annotations.
    *
-   * @param name a name for the {@link Named} annotation, cannot be null
-   * @return a {@link Named} annotation, never null
+   * @param name a name for the {@link Named} annotation, cannot be {@code null}
+   * @return a {@link Named} annotation, never {@code null}
    */
   public static Annotation named(String name) {
     return of(Named.class, Map.of("value", name));
@@ -64,9 +64,9 @@ public class Annotations {
   /**
    * Finds all annotations of the given type recursively from the given {@link AnnotatedElement}.
    *
-   * @param element an {@link AnnotatedElement}, cannot be null
-   * @param annotationType a {@link Class} which extends {@link Annotation}, cannot be null
-   * @return a set of {@link Annotation}s that were found directly or indirectly on the given element, never null and never contains nulls
+   * @param element an {@link AnnotatedElement}, cannot be {@code null}
+   * @param annotationType a {@link Class} which extends {@link Annotation}, cannot be {@code null}
+   * @return a set of {@link Annotation}s that were found directly or indirectly on the given element, never {@code null} and never contains {@code null}s
    */
   public static Set<Annotation> findAnnotations(AnnotatedElement element, Class<? extends Annotation> annotationType) {
     Set<Annotation> matchingAnnotations = new HashSet<>();
@@ -99,9 +99,9 @@ public class Annotations {
    * annotations on the given element, but can be meta annotations which are annotated with the
    * given meta annotations.
    *
-   * @param element an {@link AnnotatedElement}, cannot be null
-   * @param metaAnnotation an {@link Annotation}, cannot be null
-   * @return a set of {@link Annotation}s directly annotated with the given meta annotation, never null and never contains nulls
+   * @param element an {@link AnnotatedElement}, cannot be {@code null}
+   * @param metaAnnotation an {@link Annotation}, cannot be {@code null}
+   * @return a set of {@link Annotation}s directly annotated with the given meta annotation, never {@code null} and never contains {@code null}s
    */
   public static Set<Annotation> findDirectlyMetaAnnotatedAnnotations(AnnotatedElement element, Annotation metaAnnotation) {
     Set<Annotation> matchingAnnotations = new HashSet<>();
@@ -131,10 +131,10 @@ public class Annotations {
    * Returns {@link Annotation}s on the given {@link AnnotatedElement} which are annotated with the given meta annotation
    * directly or indirectly.
    *
-   * @param element an {@link AnnotatedElement}, cannot be null
-   * @param metaAnnotation an {@link Annotation}, cannot be null
+   * @param element an {@link AnnotatedElement}, cannot be {@code null}
+   * @param metaAnnotation an {@link Annotation}, cannot be {@code null}
    * @return {@link Annotation}s on the given {@link AnnotatedElement} which are annotated with the given meta annotation
-   *   directly or indirectly, never null and never contains nulls
+   *   directly or indirectly, never {@code null} and never contains {@code null}s
    */
   public static List<Annotation> findMetaAnnotatedAnnotations(AnnotatedElement element, Annotation metaAnnotation) {
     return Stream.of(element.getAnnotations())
@@ -146,8 +146,8 @@ public class Annotations {
    * Returns {@code true} if the given {@link Annotation} is directly or indirectly meta
    * annotated with the given meta annotation.
    *
-   * @param annotation an {@link Annotation} to check, cannot be null
-   * @param metaAnnotation a meta {@link Annotation} to search for, cannot be null
+   * @param annotation an {@link Annotation} to check, cannot be {@code null}
+   * @param metaAnnotation a meta {@link Annotation} to search for, cannot be {@code null}
    * @return {@code true} if the given {@link Annotation} is directly or indirectly meta
    *   annotated with the given meta annotation, otherwise {@code false}
    */

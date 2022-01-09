@@ -16,13 +16,13 @@ public interface InjectableFactory {
   /**
    * Creates a new {@link Injectable}.
    *
-   * @param type a {@link Type}, cannot be null
-   * @param qualifiers a set of qualifier {@link Annotation}s, cannot be null or contain nulls, but can be empty
-   * @param bindings a list of {@link Binding}s, cannot be null or contain nulls, but can be empty
-   * @param scope a scope {@link Annotation}, can be null
-   * @param discriminator an object to serve as a discriminator for similar injectables, can be null
-   * @param objectFactory an {@link ObjectFactory}, cannot be null
-   * @return a {@link Injectable}, never null
+   * @param type a {@link Type}, cannot be {@code null}
+   * @param qualifiers a set of qualifier {@link Annotation}s, cannot be {@code null} or contain {@code null}s, but can be empty
+   * @param bindings a list of {@link Binding}s, cannot be {@code null} or contain {@code null}s, but can be empty
+   * @param scope a scope {@link Annotation}, can be {@code null}
+   * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
+   * @param objectFactory an {@link ObjectFactory}, cannot be {@code null}
+   * @return a {@link Injectable}, never {@code null}
    */
   Injectable create(Type type, Set<Annotation> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory);
 }

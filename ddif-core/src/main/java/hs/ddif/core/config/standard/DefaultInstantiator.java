@@ -43,8 +43,8 @@ public class DefaultInstantiator implements Instantiator {
   /**
    * Constructs a new instance.
    *
-   * @param store a {@link QualifiedTypeStore}, cannot be null
-   * @param gatherer a {@link Gatherer}, cannot be null
+   * @param store a {@link QualifiedTypeStore}, cannot be {@code null}
+   * @param gatherer a {@link Gatherer}, cannot be {@code null}
    * @param scopeResolvers an array of {@link ScopeResolver}s this instance should use
    */
   public DefaultInstantiator(QualifiedTypeStore<Injectable> store, Gatherer gatherer, ScopeResolver... scopeResolvers) {
@@ -61,9 +61,9 @@ public class DefaultInstantiator implements Instantiator {
    * which all dependencies are injected.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param matchers a list of {@link Predicate}s, cannot be null
-   * @return an instance of the given class matching the given matchers, never null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
+   * @return an instance of the given class matching the given matchers, never {@code null}
    * @throws NoSuchInstance when no matching instance could be found or created
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
@@ -85,8 +85,8 @@ public class DefaultInstantiator implements Instantiator {
    * which all dependencies are injected.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @return an instance matching the given {@link Key}, never null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
+   * @return an instance matching the given {@link Key}, never {@code null}
    * @throws NoSuchInstance when no matching instance could be found or created
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
@@ -103,8 +103,8 @@ public class DefaultInstantiator implements Instantiator {
    * is returned.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param matchers a list of {@link Predicate}s, cannot be null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
    * @return an instance of the given class matching the given matchers, or {@code null} when no instance was found
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
@@ -132,7 +132,7 @@ public class DefaultInstantiator implements Instantiator {
    * is returned.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
    * @return an instance matching the given {@link Key}, or {@code null} when no instance was found
    * @throws OutOfScopeException when out of scope
    * @throws MultipleInstances when multiple matching instances were found or could be created
@@ -148,8 +148,8 @@ public class DefaultInstantiator implements Instantiator {
    * which are active in the current scope.  When there are no matches, an empty set is returned.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
-   * @param matchers a list of {@link Predicate}s, cannot be null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
    * @return all instances of the given class matching the given matchers (if any)
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */
@@ -187,7 +187,7 @@ public class DefaultInstantiator implements Instantiator {
    * which are active in the current scope.  When there are no matches, an empty set is returned.
    *
    * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be null
+   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
    * @return all instances of the given class matching the given matchers (if any)
    * @throws InstanceCreationFailure when instantiation of an instance failed
    */

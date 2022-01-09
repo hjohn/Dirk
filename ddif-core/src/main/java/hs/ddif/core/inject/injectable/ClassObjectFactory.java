@@ -25,7 +25,7 @@ public class ClassObjectFactory implements ObjectFactory {
   /**
    * Constructs a new instance.
    *
-   * @param constructor a {@link Constructor} which produces the required class, cannot be null
+   * @param constructor a {@link Constructor} which produces the required class, cannot be {@code null}
    */
   public ClassObjectFactory(Constructor<?> constructor) {
     this.constructor = constructor;

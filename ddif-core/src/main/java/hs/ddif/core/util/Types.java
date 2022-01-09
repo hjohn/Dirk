@@ -18,8 +18,8 @@ public class Types {
    * Given a {@link Class}, returns a set of all classes and interfaces extended
    * or implemented.
    *
-   * @param cls a {@link Class}, cannot be null
-   * @return a set of all classes and interfaces extended or implemented, never null, never contains nulls and never empty
+   * @param cls a {@link Class}, cannot be {@code null}
+   * @return a set of all classes and interfaces extended or implemented, never {@code null}, never contains {@code null}s and never empty
    */
   public static Set<Class<?>> getSuperTypes(Class<?> cls) {
     Deque<Class<?>> toScan = new ArrayDeque<>();
@@ -52,7 +52,7 @@ public class Types {
    * two interfaces.
    *
    * @param upperBounds an array of {@link Type}s, cannot be {@code null} or contain {@code null}s
-   * @return a {@link WildcardType}, never null
+   * @return a {@link WildcardType}, never {@code null}
    */
   public static WildcardType wildcardExtends(Type... upperBounds) {
     return TypeUtils.wildcardType().withUpperBounds(upperBounds).build();
@@ -62,8 +62,8 @@ public class Types {
    * Gets the raw type of a Java {@link Type}. This works for classes and parameterized
    * types. Returns {@code null} if no raw type can be derived.
    *
-   * @param type a {@link Type}, cannot be null
-   * @return a {@link Class} representing the raw type of the given type, can be null
+   * @param type a {@link Type}, cannot be {@code null}
+   * @return a {@link Class} representing the raw type of the given type, can be {@code null}
    */
   public static Class<?> raw(Type type) {
     return TypeUtils.getRawType(type, null);

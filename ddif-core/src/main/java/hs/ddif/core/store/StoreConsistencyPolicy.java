@@ -13,8 +13,8 @@ public interface StoreConsistencyPolicy<T extends QualifiedType> {
    * Adds the given {@link QualifiedType}s to this policy.  If the policy would be violated, then an
    * exception should be thrown and the changes rolled back.
    *
-   * @param resolver a {@link Resolver}, cannot be null
-   * @param qualifiedTypes a collection of {@link QualifiedType}s to add, cannot be null
+   * @param resolver a {@link Resolver}, cannot be {@code null}
+   * @param qualifiedTypes a collection of {@link QualifiedType}s to add, cannot be {@code null}
    */
   void addAll(Resolver<T> resolver, Collection<T> qualifiedTypes);
 
@@ -22,8 +22,8 @@ public interface StoreConsistencyPolicy<T extends QualifiedType> {
    * Removes the given {@link QualifiedType}s from this policy.  If the policy would be violated, then an
    * exception should be thrown and the changes rolled back.
    *
-   * @param resolver a {@link Resolver}, cannot be null
-   * @param qualifiedTypes a collection of {@link QualifiedType}s to remove, cannot be null
+   * @param resolver a {@link Resolver}, cannot be {@code null}
+   * @param qualifiedTypes a collection of {@link QualifiedType}s to remove, cannot be {@code null}
    */
   void removeAll(Resolver<T> resolver, Collection<T> qualifiedTypes);
 }

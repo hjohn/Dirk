@@ -13,7 +13,7 @@ public class BindingException extends RuntimeException {
    * Constructs a new instance
    *
    * @param message a message
-   * @param cause a {@link Throwable} cause, can be null
+   * @param cause a {@link Throwable} cause, can be {@code null}
    */
   public BindingException(String message, Throwable cause) {
     super(message, cause);

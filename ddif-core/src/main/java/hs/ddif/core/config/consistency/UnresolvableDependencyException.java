@@ -17,8 +17,8 @@ public class UnresolvableDependencyException extends InjectorStoreConsistencyExc
   /**
    * Constructs a new instance.
    *
-   * @param binding a {@link Binding}, cannot be null
-   * @param candidates a set of {@link Injectable}s that were candidates, cannot be null or empty
+   * @param binding a {@link Binding}, cannot be {@code null}
+   * @param candidates a set of {@link Injectable}s that were candidates, cannot be {@code null} or empty
    */
   public UnresolvableDependencyException(Binding binding, Set<? extends Injectable> candidates) {
     super(formatMessage(binding, candidates));
@@ -37,7 +37,7 @@ public class UnresolvableDependencyException extends InjectorStoreConsistencyExc
   /**
    * Returns the {@link Binding} involved.
    *
-   * @return the {@link Binding} involved, never null
+   * @return the {@link Binding} involved, never {@code null}
    */
   public Binding getBinding() {
     return binding;
@@ -46,7 +46,7 @@ public class UnresolvableDependencyException extends InjectorStoreConsistencyExc
   /**
    * Returns the {@link Injectable}s that were candidates.
    *
-   * @return the {@link Injectable}s that were candidates, never null or empty
+   * @return the {@link Injectable}s that were candidates, never {@code null} or empty
    */
   public Set<? extends Injectable> getCandidates() {
     return candidates;

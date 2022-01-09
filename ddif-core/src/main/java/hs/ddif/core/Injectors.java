@@ -28,7 +28,7 @@ public class Injectors {
    * {@link ScopeResolver}s.
    *
    * @param scopeResolvers an optional array of {@link ScopeResolver}s
-   * @return an {@link Injector}, never null
+   * @return an {@link Injector}, never {@code null}
    */
   public static Injector autoDiscovering(ScopeResolver... scopeResolvers) {
     BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
@@ -50,7 +50,7 @@ public class Injectors {
    * {@link ScopeResolver}s.
    *
    * @param scopeResolvers an optional array of {@link ScopeResolver}s
-   * @return an {@link Injector}, never null
+   * @return an {@link Injector}, never {@code null}
    */
   public static Injector manual(ScopeResolver... scopeResolvers) {
     BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);

@@ -44,9 +44,9 @@ public interface InstanceResolver {
    * be an existing instance or newly created depending on its scope.
    *
    * @param <T> the type of the instance
-   * @param type the type of the instance required, cannot be null
+   * @param type the type of the instance required, cannot be {@code null}
    * @param criterions optional list of criteria, see {@link InstanceResolver}
-   * @return an instance of the given class matching the given criteria, never null
+   * @return an instance of the given class matching the given criteria, never {@code null}
    * @throws NoSuchInstanceException when no matching instance was available or could be created
    * @throws MultipleInstancesException when multiple matching instances were available
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
@@ -59,7 +59,7 @@ public interface InstanceResolver {
    * be an existing instance or newly created depending on its scope.
    *
    * @param <T> the type of the instance
-   * @param cls the class of the instance required, cannot be null
+   * @param cls the class of the instance required, cannot be {@code null}
    * @param criterions optional list of criteria, see {@link InstanceResolver}
    * @return an instance of the given class matching the given criteria (if any)
    * @throws NoSuchInstanceException when no matching instance was available or could be created
@@ -75,9 +75,9 @@ public interface InstanceResolver {
    * depending on their scope or a mix thereof.
    *
    * @param <T> the type of the instances
-   * @param type the {@link Type} of the instances required, cannot be null
+   * @param type the {@link Type} of the instances required, cannot be {@code null}
    * @param criterions optional list of criteria, see {@link InstanceResolver}
-   * @return all instances of the given {@link Type} matching the given criteria (if any), never null, can be empty
+   * @return all instances of the given {@link Type} matching the given criteria (if any), never {@code null}, can be empty
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
   <T> List<T> getInstances(Type type, Object... criterions);
@@ -89,9 +89,9 @@ public interface InstanceResolver {
    * depending on their scope or a mix thereof.
    *
    * @param <T> the type of the instances
-   * @param cls the class of the instances required, cannot be null
+   * @param cls the class of the instances required, cannot be {@code null}
    * @param criteria optional list of criteria, see {@link InstanceResolver}
-   * @return all instances of the given class matching the given criteria (if any), never null, can be empty
+   * @return all instances of the given class matching the given criteria (if any), never {@code null}, can be empty
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
   <T> List<T> getInstances(Class<T> cls, Object... criteria);

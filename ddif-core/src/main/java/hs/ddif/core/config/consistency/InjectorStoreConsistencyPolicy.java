@@ -47,7 +47,7 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
   /**
    * Constructs a new instance.
    *
-   * @param scopeResolvers an array of {@link ScopeResolver}s, cannot be null
+   * @param scopeResolvers an array of {@link ScopeResolver}s, cannot be {@code null}
    */
   public InjectorStoreConsistencyPolicy(ScopeResolver... scopeResolvers) {
     for(ScopeResolver scopeResolver : scopeResolvers) {
@@ -245,8 +245,8 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
    * but are left in a state where all changes have been applied. This means the change can
    * be completely undone by calling {@link #removeSources(Collection)} with the same sources.
    *
-   * @param sources a collection of sources to add, cannot be null
-   * @return an optional {@link Violation} if one was detected, never null
+   * @param sources a collection of sources to add, cannot be {@code null}
+   * @return an optional {@link Violation} if one was detected, never {@code null}
    */
   private Optional<Violation> addSources(Collection<T> sources) {
     Violation violation = null;
@@ -286,8 +286,8 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
    * but are left in a state where all changes have been applied. This means the change can
    * be completely undone by calling {@link #addSources(Collection)} with the same sources.
    *
-   * @param sources a collection of sources to remove, cannot be null
-   * @return an optional {@link Violation} if one was detected, never null
+   * @param sources a collection of sources to remove, cannot be {@code null}
+   * @return an optional {@link Violation} if one was detected, never {@code null}
    */
   private Optional<Violation> removeSources(Collection<T> sources) {
     Violation violation = null;

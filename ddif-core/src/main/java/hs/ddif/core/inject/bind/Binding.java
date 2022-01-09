@@ -33,6 +33,7 @@ import java.lang.reflect.Type;
  * A standard binding which supplies a dependency normally requires the dependency to be available exactly once. An optional binding allows for a
  * dependency to be unavailable or available exactly once. A collection binding has no restrictions.
  * <table border="1">
+ * <caption>Binding Matches</caption>
  * <tr><th>Collection?</th><th>Optional?</th><th>Allowed matches</th></tr>
  * <tr><td>{@code false}</td><td>{@code false}</td><td>1</td>
  * <tr><td>{@code false}</td><td>{@code true}</td><td>0..1</td>
@@ -44,16 +45,16 @@ public interface Binding {
   /**
    * Returns the {@link Key} of this binding.
    *
-   * @return the {@link Key} of this binding, never null
+   * @return the {@link Key} of this binding, never {@code null}
    */
   Key getKey();
 
   /**
-   * Returns the target {@link AccessibleObject} for the binding. This is null
+   * Returns the target {@link AccessibleObject} for the binding. This is {@code null}
    * when the binding refers to the declaring class which is required to access a
    * non-static field or method.
    *
-   * @return the target @link AccessibleObject} for the binding, can be null
+   * @return the target @link AccessibleObject} for the binding, can be {@code null}
    */
   AccessibleObject getAccessibleObject();
 
@@ -61,14 +62,14 @@ public interface Binding {
    * Returns the {@link Parameter} when the {@link AccessibleObject} is a
    * constructor or a method. Returns @{code null} for fields.
    *
-   * @return a {@link Parameter}, can be null
+   * @return a {@link Parameter}, can be {@code null}
    */
   Parameter getParameter();
 
   /**
    * Returns the {@link Type} of the binding.
    *
-   * @return the {@link Type} of the binding, never null
+   * @return the {@link Type} of the binding, never {@code null}
    */
   default Type getType() {
     return getKey().getType();
@@ -104,7 +105,7 @@ public interface Binding {
    * Returns the current value of this binding.<p>
    *
    * If <code>null</code> is returned, any default value should be left intact (only relevant
-   * for field injection).  Whether <code>null</code> can be returned (as opposed to a {@link InstanceCreationFailure})
+   * for field injection).  Whether {@code null} can be returned (as opposed to a {@link InstanceCreationFailure})
    * is determined by the presence of a <code>Nullable</code> annotation at the injection site.<p>
    *
    * Bindings determine how and when they return <code>null</code>.  For a List or Set binding for
@@ -132,7 +133,7 @@ public interface Binding {
    * </li>
    * </ul>
    *
-   * @param instantiator an {@link Instantiator} for creating further dependencies, cannot be null
+   * @param instantiator an {@link Instantiator} for creating further dependencies, cannot be {@code null}
    * @return the current value of this binding, or {@code null} when binding unavailable and its optional
    * @throws OutOfScopeException when out of scope
    * @throws NoSuchInstance when no matching instance could be found or created

@@ -24,7 +24,7 @@ public interface CandidateRegistry {
    * Returns <code>true</code> when the given type with the given criteria is present,
    * otherwise <code>false</code>.
    *
-   * @param type a type to check for, cannot be null
+   * @param type a type to check for, cannot be {@code null}
    * @param criterions optional list of criteria, see {@link InstanceResolver}
    * @return <code>true</code> when the given type with the given criteria is present, otherwise <code>false</code>
    */
@@ -39,7 +39,7 @@ public interface CandidateRegistry {
    * would result in ambiguous dependencies for previously registered
    * types, then this method will throw an exception.
    *
-   * @param concreteType the type to register, cannot be null
+   * @param concreteType the type to register, cannot be {@code null}
    */
   void register(Type concreteType);
 
@@ -52,7 +52,7 @@ public interface CandidateRegistry {
    * would result in ambiguous dependencies for previously registered
    * types, then this method will throw an exception.
    *
-   * @param concreteTypes a list of types to register, cannot be null or contain nulls
+   * @param concreteTypes a list of types to register, cannot be {@code null} or contain {@code null}s
    */
   void register(List<Type> concreteTypes);
 
@@ -77,7 +77,7 @@ public interface CandidateRegistry {
    * If there would be broken dependencies then the removal will fail
    * and an exception is thrown.
    *
-   * @param concreteType the type to remove, cannot be null
+   * @param concreteType the type to remove, cannot be {@code null}
    */
   void remove(Type concreteType);
 
@@ -89,7 +89,7 @@ public interface CandidateRegistry {
    * If there would be broken dependencies then the removal will fail
    * and an exception is thrown.
    *
-   * @param concreteTypes a list of types to remove, cannot be null or contain nulls
+   * @param concreteTypes a list of types to remove, cannot be {@code null} or contain {@code null}s
    */
   void remove(List<Type> concreteTypes);
 
@@ -100,7 +100,7 @@ public interface CandidateRegistry {
    * If there would be broken dependencies then the removal will fail
    * and an exception is thrown.
    *
-   * @param instance the instance to remove, cannot be null
+   * @param instance the instance to remove, cannot be {@code null}
    */
   void removeInstance(Object instance);
 }

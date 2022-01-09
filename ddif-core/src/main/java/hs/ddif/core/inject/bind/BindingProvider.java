@@ -53,9 +53,9 @@ public class BindingProvider {
    * Returns all bindings for the given {@link Constructor} and all member bindings
    * for the given class.
    *
-   * @param constructor a {@link Constructor} to examine for bindings, cannot be null
-   * @param cls a {@link Class} to examine for bindings, cannot be null
-   * @return a list of bindings, never null and never contains nulls, but can be empty
+   * @param constructor a {@link Constructor} to examine for bindings, cannot be {@code null}
+   * @param cls a {@link Class} to examine for bindings, cannot be {@code null}
+   * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
    */
   public List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) {
     List<Binding> bindings = ofConstructor(constructor);
@@ -68,8 +68,8 @@ public class BindingProvider {
   /**
    * Returns all bindings for the given {@link Constructor}.
    *
-   * @param constructor a {@link Constructor} to examine for bindings, cannot be null
-   * @return a list of bindings, never null and never contains nulls, but can be empty
+   * @param constructor a {@link Constructor} to examine for bindings, cannot be {@code null}
+   * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
    */
   public List<Binding> ofConstructor(Constructor<?> constructor) {
     return ofExecutable(constructor, constructor.getDeclaringClass());
@@ -79,8 +79,8 @@ public class BindingProvider {
    * Returns all member bindings for the given class. These are inject annotated
    * methods and fields, but not constructors.
    *
-   * @param cls a {@link Class} to examine for bindings, cannot be null
-   * @return a list of bindings, never null and never contains nulls, but can be empty
+   * @param cls a {@link Class} to examine for bindings, cannot be {@code null}
+   * @return a list of bindings, never {@code null} and never contains {@code null}, but can be empty
    */
   public List<Binding> ofMembers(Class<?> cls) {
     List<Binding> bindings = new ArrayList<>();
@@ -132,9 +132,9 @@ public class BindingProvider {
   /**
    * Returns all bindings for the given {@link Method}.
    *
-   * @param method a {@link Method} to examine for bindings, cannot be null
-   * @param ownerType a {@link Type} in which this method is declared, cannot be null
-   * @return a list of bindings, never null and never contains nulls, but can be empty
+   * @param method a {@link Method} to examine for bindings, cannot be {@code null}
+   * @param ownerType a {@link Type} in which this method is declared, cannot be {@code null}
+   * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
    */
   public List<Binding> ofMethod(Method method, Type ownerType) {
     return ofExecutable(method, ownerType);
@@ -143,9 +143,9 @@ public class BindingProvider {
   /**
    * Returns all bindings for the given {@link Field}.
    *
-   * @param field a {@link Field} to examine for bindings, cannot be null
-   * @param ownerType a {@link Type} in which this executable is declared, cannot be null
-   * @return an immutable list of bindings, never null and never contains nulls, but can be empty
+   * @param field a {@link Field} to examine for bindings, cannot be {@code null}
+   * @param ownerType a {@link Type} in which this executable is declared, cannot be {@code null}
+   * @return an immutable list of bindings, never {@code null} and never contains {@code null}s, but can be empty
    */
   public List<Binding> ofField(Field field, Type ownerType) {
 
@@ -160,8 +160,8 @@ public class BindingProvider {
   /**
    * Returns an annotated {@link Constructor} suitable for injection.
    *
-   * @param cls a {@link Class}, cannot be null
-   * @return a {@link Constructor} suitable for injection, never null
+   * @param cls a {@link Class}, cannot be {@code null}
+   * @return a {@link Constructor} suitable for injection, never {@code null}
    * @throws BindingException when no suitable constructor is found
    */
   public Constructor<?> getAnnotatedConstructor(Class<?> cls) {
@@ -172,8 +172,8 @@ public class BindingProvider {
    * Returns a {@link Constructor} suitable for injection. A public empty
    * constructor is considered suitable if no other constructors are annotated.
    *
-   * @param cls a {@link Class}, cannot be null
-   * @return a {@link Constructor} suitable for injection, never null
+   * @param cls a {@link Class}, cannot be {@code null}
+   * @return a {@link Constructor} suitable for injection, never {@code null}
    * @throws BindingException when no suitable constructor is found
    */
   public static Constructor<?> getConstructor(Class<?> cls) {
@@ -183,7 +183,7 @@ public class BindingProvider {
   /**
    * Finds a {@link Scope} annotation on the given {@link AnnotatedElement}.
    *
-   * @param element an {@link AnnotatedElement}, cannot be null
+   * @param element an {@link AnnotatedElement}, cannot be {@code null}
    * @return a {@link Scope} annotation, or {@code null} if not present
    */
   public static Annotation findScopeAnnotation(AnnotatedElement element) {

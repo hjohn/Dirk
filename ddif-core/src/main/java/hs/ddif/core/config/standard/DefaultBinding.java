@@ -35,7 +35,7 @@ public class DefaultBinding implements Binding {
    * @param isCollection {@code true} if this binding represents a collection, otherwise {@code false}
    * @param isDirect {@code true} if this binding represents a dependency without indirection (not wrapped in a provider), otherwise {@code false}
    * @param isOptional {@code true} if this binding is optional, otherwise {@code false}
-   * @param valueFactory a {@link ValueFactory}, cannot be null
+   * @param valueFactory a {@link ValueFactory}, cannot be {@code null}
    */
   public DefaultBinding(Key key, AccessibleObject accessibleObject, Parameter parameter, boolean isCollection, boolean isDirect, boolean isOptional, ValueFactory valueFactory) {
     if(key == null) {

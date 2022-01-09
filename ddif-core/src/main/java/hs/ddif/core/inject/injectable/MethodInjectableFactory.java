@@ -33,8 +33,8 @@ public class MethodInjectableFactory {
   /**
    * Constructs a new instance.
    *
-   * @param bindingProvider a {@link BindingProvider}, cannot be null
-   * @param injectableFactory a {@link InjectableFactory}, cannot be null
+   * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
+   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
    */
   public MethodInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
@@ -44,9 +44,9 @@ public class MethodInjectableFactory {
   /**
    * Creates a new {@link Injectable}.
    *
-   * @param method a {@link Method}, cannot be null
-   * @param ownerType the type of the owner of the method, cannot be null and must match with {@link Method#getDeclaringClass()}
-   * @return a new {@link Injectable}, never null
+   * @param method a {@link Method}, cannot be {@code null}
+   * @param ownerType the type of the owner of the method, cannot be {@code null} and must match with {@link Method#getDeclaringClass()}
+   * @return a new {@link Injectable}, never {@code null}
    */
   public Injectable create(Method method, Type ownerType) {
     if(method == null) {

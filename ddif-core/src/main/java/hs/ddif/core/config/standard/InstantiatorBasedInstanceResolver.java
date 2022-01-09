@@ -20,7 +20,7 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
   /**
    * Constructs a new instance.
    *
-   * @param instantiator an {@link Instantiator}, cannot be null
+   * @param instantiator an {@link Instantiator}, cannot be {@code null}
    */
   public InstantiatorBasedInstanceResolver(Instantiator instantiator) {
     this.instantiator = instantiator;

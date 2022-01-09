@@ -15,9 +15,9 @@ public class NoSuchInstance extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param key a {@link Key}, cannot be null
-   * @param matchers a list of {@link Predicate}s, cannot be null
-   * @param cause a {@link Throwable} cause, can be null
+   * @param key a {@link Key}, cannot be {@code null}
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
+   * @param cause a {@link Throwable} cause, can be {@code null}
    */
   public NoSuchInstance(Key key, List<Predicate<Type>> matchers, Throwable cause) {
     super("No such instance: " + key + toCriteriaString(matchers), cause);
@@ -26,8 +26,8 @@ public class NoSuchInstance extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param key a {@link Key}, cannot be null
-   * @param matchers a list of {@link Predicate}s, cannot be null
+   * @param key a {@link Key}, cannot be {@code null}
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
    */
   public NoSuchInstance(Key key, List<Predicate<Type>> matchers) {
     this(key, matchers, null);
