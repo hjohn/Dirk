@@ -3,27 +3,27 @@ package hs.ddif.core.store;
 import java.util.Collection;
 
 /**
- * Interface for applying consistency checks on an {@link InjectableStore}.
+ * Interface for applying consistency checks on an {@link QualifiedTypeStore}.
  *
- * @param <T> the type of {@link Injectable} the store holds
+ * @param <T> the type of {@link QualifiedType}s the store holds
  */
-public interface StoreConsistencyPolicy<T extends Injectable> {
+public interface StoreConsistencyPolicy<T extends QualifiedType> {
 
   /**
-   * Adds the given {@link Injectable}s to this policy.  If the policy would be violated, then an
+   * Adds the given {@link QualifiedType}s to this policy.  If the policy would be violated, then an
    * exception should be thrown and the changes rolled back.
    *
    * @param resolver a {@link Resolver}, cannot be null
-   * @param injectables a collection of injectables to add, cannot be null
+   * @param qualifiedTypes a collection of {@link QualifiedType}s to add, cannot be null
    */
-  void addAll(Resolver<T> resolver, Collection<T> injectables);
+  void addAll(Resolver<T> resolver, Collection<T> qualifiedTypes);
 
   /**
-   * Removes the given {@link Injectable}s from this policy.  If the policy would be violated, then an
+   * Removes the given {@link QualifiedType}s from this policy.  If the policy would be violated, then an
    * exception should be thrown and the changes rolled back.
    *
    * @param resolver a {@link Resolver}, cannot be null
-   * @param injectables a collection of injectables to remove, cannot be null
+   * @param qualifiedTypes a collection of {@link QualifiedType}s to remove, cannot be null
    */
-  void removeAll(Resolver<T> resolver, Collection<T> injectables);
+  void removeAll(Resolver<T> resolver, Collection<T> qualifiedTypes);
 }

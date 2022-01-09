@@ -3,15 +3,22 @@ package hs.ddif.core.inject.injectable;
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.injection.Injection;
 import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
-import hs.ddif.core.store.Injectable;
+import hs.ddif.core.store.QualifiedType;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
 
 /**
- * An {@link Injectable} with binding information.
+ * Represents a source for an injectable dependency.  Injectables can be
+ * provided in various ways, either by creating a new instance of a class,
+ * by using a known instance or by asking a provider for an instance.<p>
+ *
+ * Implementations of this interface must provide implementations of {@link Object#equals(Object)}
+ * and {@link Object#hashCode()}. Two injectables are considered equal when the
+ * full generic type is equal, their qualifiers are equal and they come from the
+ * exact same source (same class, same method, same field, etc.)
  */
-public interface ResolvableInjectable extends Injectable {
+public interface Injectable extends QualifiedType {
 
   /**
    * Returns the {@link Binding}s detected.

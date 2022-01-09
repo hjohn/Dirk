@@ -6,7 +6,7 @@ import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.CyclicDependencyException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.store.DuplicateInjectableException;
+import hs.ddif.core.store.DuplicateQualifiedTypeException;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
@@ -118,7 +118,7 @@ public class ProducesAnnotationTest {
     injector.register(StringMethodFactory.class);
     injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class));
 
-    assertThrows(DuplicateInjectableException.class, () -> injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class)));
+    assertThrows(DuplicateQualifiedTypeException.class, () -> injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class)));
 
     List<String> x1 = injector.getInstance(new TypeReference<List<String>>() {}.getType());
     List<Long> y1 = injector.getInstance(new TypeReference<List<Long>>() {}.getType());
@@ -297,7 +297,7 @@ public class ProducesAnnotationTest {
 
     @Test
     void registeringAFactoryTwiceShouldThrowException() {
-      assertThrows(DuplicateInjectableException.class, new Executable() {
+      assertThrows(DuplicateQualifiedTypeException.class, new Executable() {
         @Override
         public void execute() throws Throwable {
           injector.register(UnscopedFactory.class);

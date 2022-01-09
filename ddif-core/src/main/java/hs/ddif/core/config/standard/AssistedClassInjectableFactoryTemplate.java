@@ -6,8 +6,8 @@ import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate;
 import hs.ddif.core.inject.injectable.ClassObjectFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
-import hs.ddif.core.inject.injectable.ResolvableInjectableFactory;
+import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.inject.injectable.InjectableFactory;
 import hs.ddif.core.inject.injection.Injection;
 import hs.ddif.core.inject.injection.ObjectFactory;
 import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
@@ -50,7 +50,7 @@ import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.matcher.ElementMatchers;
 
 /**
- * Template to construct {@link ResolvableInjectable}s from abstract types to
+ * Template to construct {@link Injectable}s from abstract types to
  * provide support for assisted injection.
  *
  * <p>Assisted injection automatically creates a Factory which produces a Product.
@@ -93,27 +93,27 @@ import net.bytebuddy.matcher.ElementMatchers;
  * qualifiers.
  */
 public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFactoryTemplate<AssistedClassInjectableFactoryTemplate.Context> {
-  private static final Map<Type, ResolvableInjectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
+  private static final Map<Type, Injectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
   private static final Annotation INJECT = Annotations.of(Inject.class);
 
   private final BindingProvider bindingProvider;
-  private final ResolvableInjectableFactory injectableFactory;
+  private final InjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be null
-   * @param injectableFactory a {@link ResolvableInjectableFactory}, cannot be null
+   * @param injectableFactory a {@link InjectableFactory}, cannot be null
    */
-  public AssistedClassInjectableFactoryTemplate(BindingProvider bindingProvider, ResolvableInjectableFactory injectableFactory) {
+  public AssistedClassInjectableFactoryTemplate(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
 
   @Override
   public TypeAnalysis<Context> analyze(Type type) {
-    ResolvableInjectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
+    Injectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
 
     if(factoryInjectable != null) {
       return TypeAnalysis.positive(new Context(type, null));
@@ -136,9 +136,9 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public ResolvableInjectable create(TypeAnalysis<Context> analysis) {
+  public Injectable create(TypeAnalysis<Context> analysis) {
     Type type = analysis.getData().type;
-    ResolvableInjectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
+    Injectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
 
     if(factoryInjectable != null) {
       return factoryInjectable;

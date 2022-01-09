@@ -21,34 +21,34 @@ import javax.inject.Qualifier;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Constructs {@link ResolvableInjectable}s for {@link Method}s part of a specific
+ * Constructs {@link Injectable}s for {@link Method}s part of a specific
  * owner {@link Type}.
  */
 public class MethodInjectableFactory {
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
 
   private final BindingProvider bindingProvider;
-  private final ResolvableInjectableFactory injectableFactory;
+  private final InjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be null
-   * @param injectableFactory a {@link ResolvableInjectableFactory}, cannot be null
+   * @param injectableFactory a {@link InjectableFactory}, cannot be null
    */
-  public MethodInjectableFactory(BindingProvider bindingProvider, ResolvableInjectableFactory injectableFactory) {
+  public MethodInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
 
   /**
-   * Creates a new {@link ResolvableInjectable}.
+   * Creates a new {@link Injectable}.
    *
    * @param method a {@link Method}, cannot be null
    * @param ownerType the type of the owner of the method, cannot be null and must match with {@link Method#getDeclaringClass()}
-   * @return a new {@link ResolvableInjectable}, never null
+   * @return a new {@link Injectable}, never null
    */
-  public ResolvableInjectable create(Method method, Type ownerType) {
+  public Injectable create(Method method, Type ownerType) {
     if(method == null) {
       throw new IllegalArgumentException("method cannot be null");
     }

@@ -11,10 +11,10 @@ import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
 import hs.ddif.core.config.standard.InstantiatorBasedInstanceResolver;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.store.QualifiedTypeStore;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -72,7 +72,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
     ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
     ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
 
-    InjectableStore<ResolvableInjectable> store = new InjectableStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
+    QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
     Instantiator instantiator = new DefaultInstantiator(store, gatherer, extendedScopeResolvers);
 
     this.registry = new InjectableStoreCandidateRegistry(store, gatherer, classInjectableFactory, instanceInjectableFactory);

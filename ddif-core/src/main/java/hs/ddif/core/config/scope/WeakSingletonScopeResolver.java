@@ -2,12 +2,13 @@ package hs.ddif.core.config.scope;
 
 import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.Injectable;
+import hs.ddif.core.store.QualifiedType;
 import hs.ddif.core.util.InformationalWeakReference;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.Callable;
 
 /**
  * Scope resolver for the {@link WeakSingleton} scope.
@@ -15,30 +16,27 @@ import java.util.WeakHashMap;
 public class WeakSingletonScopeResolver implements ScopeResolver {
   private static final WeakReferenceCleanupLogger cleanupLogger = new WeakReferenceCleanupLogger();
 
-  private final Map<Injectable, InformationalWeakReference<Object>> singletons = new WeakHashMap<>();
+  private final Map<QualifiedType, InformationalWeakReference<Object>> singletons = new WeakHashMap<>();
 
   @Override
-  public boolean isScopeActive(Injectable key) {
+  public boolean isScopeActive(QualifiedType qualifiedType) {
     return true;
   }
 
   @Override
-  public <T> T get(Injectable key) {
-    InformationalWeakReference<Object> reference = singletons.get(key);
+  public <T> T get(QualifiedType qualifiedType, Callable<T> objectFactory) throws Exception {
+    InformationalWeakReference<Object> reference = singletons.get(qualifiedType);
 
-    if(reference != null) {
-      @SuppressWarnings("unchecked")
-      T instance = (T)reference.get();
+    @SuppressWarnings("unchecked")
+    T instance = reference == null ? null : (T)reference.get();
 
-      return instance;  // This may still return null
+    if(instance == null) {
+      instance = objectFactory.call();
+
+      singletons.put(qualifiedType, new InformationalWeakReference<>(instance, cleanupLogger.getReferenceQueue()));
     }
 
-    return null;
-  }
-
-  @Override
-  public <T> void put(Injectable key, T instance) {
-    singletons.put(key, new InformationalWeakReference<>(instance, cleanupLogger.getReferenceQueue()));
+    return instance;
   }
 
   @Override

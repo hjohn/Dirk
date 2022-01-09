@@ -1,6 +1,6 @@
 package hs.ddif.core.config.gather;
 
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.Resolver;
 
@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * Gathers fully expanded sets of {@link ResolvableInjectable}s based on a given
+ * Gathers fully expanded sets of {@link Injectable}s based on a given
  * input set or {@link Type}. Implementations of this interface can scan given
  * types (ie. for annotations) to derive further injectables that can be
  * supplied.
@@ -17,14 +17,14 @@ import java.util.Set;
 public interface Gatherer {
 
   /**
-   * Given a collection of {@link ResolvableInjectable}s, return a fully expanded
+   * Given a collection of {@link Injectable}s, return a fully expanded
    * set of required injectables which are not part of the given resolver yet.
    *
    * @param resolver a {@link Resolver}, cannot be null
-   * @param injectables a collection of {@link ResolvableInjectable}s, cannot be {@code null} or contain {@code null}
+   * @param injectables a collection of {@link Injectable}s, cannot be {@code null} or contain {@code null}
    * @return a fully expanded set of injectables, never {@code null} and never contains {@code null}
    */
-  Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Collection<ResolvableInjectable> injectables);
+  Set<Injectable> gather(Resolver<Injectable> resolver, Collection<Injectable> injectables);
 
   /**
    * Given a {@link Type} and a set of criteria, return a fully expanded set of
@@ -39,5 +39,5 @@ public interface Gatherer {
    * @return a fully expanded set of injectables, never {@code null} and never contains {@code null}, but can be empty
    * @throws DiscoveryFailure when the given type cannot be converted into a suitable injectable
    */
-  Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Key key) throws DiscoveryFailure;
+  Set<Injectable> gather(Resolver<Injectable> resolver, Key key) throws DiscoveryFailure;
 }

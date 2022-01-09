@@ -5,7 +5,6 @@ import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.instantiation.Instantiator;
-import hs.ddif.core.store.Injectable;
 import hs.ddif.core.store.Key;
 
 import java.util.ArrayList;
@@ -81,7 +80,7 @@ public class MethodInjectableFactoryTest {
 
   @Test
   void shouldReturnCorrectInjectableForNonStaticMethod() throws Exception {
-    ResolvableInjectable injectable = methodInjectableFactory.create(C.class.getMethod("b"), C.class);
+    Injectable injectable = methodInjectableFactory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
@@ -95,7 +94,7 @@ public class MethodInjectableFactoryTest {
 
   @Test
   void shouldReturnCorrectInjectableForStaticMethod() throws Exception {
-    ResolvableInjectable injectable = methodInjectableFactory.create(C.class.getMethod("e", D.class), C.class);
+    Injectable injectable = methodInjectableFactory.create(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(

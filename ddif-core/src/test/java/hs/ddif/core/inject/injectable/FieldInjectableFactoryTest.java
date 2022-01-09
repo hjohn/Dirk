@@ -66,14 +66,14 @@ public class FieldInjectableFactoryTest {
 
   @Test
   void constructorShouldAcceptValidParameters() throws NoSuchFieldException, SecurityException {
-    ResolvableInjectable injectable = fieldInjectableFactory.create(C.class.getField("b"), C.class);
+    Injectable injectable = fieldInjectableFactory.create(C.class.getField("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
   }
 
   @Test
   void shouldReturnCorrectInjectableForNonStaticField() throws Exception {
-    ResolvableInjectable injectable = fieldInjectableFactory.create(C.class.getField("b"), C.class);
+    Injectable injectable = fieldInjectableFactory.create(C.class.getField("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
@@ -87,7 +87,7 @@ public class FieldInjectableFactoryTest {
 
   @Test
   void shouldReturnCorrectInjectableForStaticField() throws Exception {
-    ResolvableInjectable injectable = fieldInjectableFactory.create(C.class.getField("e"), C.class);
+    Injectable injectable = fieldInjectableFactory.create(C.class.getField("e"), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).isEmpty();

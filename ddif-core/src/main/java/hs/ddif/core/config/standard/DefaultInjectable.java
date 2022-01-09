@@ -1,7 +1,7 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.core.inject.bind.Binding;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injection.Injection;
 import hs.ddif.core.inject.injection.ObjectFactory;
 import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
@@ -18,10 +18,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * An implementation of {@link ResolvableInjectable} which can be resolved to an
- * instance.
+ * An implementation of {@link Injectable}.
  */
-public class DefaultInjectable implements ResolvableInjectable {
+public class DefaultInjectable implements Injectable {
   private final Type type;
   private final Set<Annotation> qualifiers;
   private final List<Binding> bindings;

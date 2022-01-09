@@ -3,19 +3,20 @@ package hs.ddif.plugins;
 import hs.ddif.annotations.PluginScoped;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.Injectable;
+import hs.ddif.core.store.QualifiedType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * A {@link ScopeResolver} to support the {@link PluginScoped} scope.
  */
 public class PluginScopeResolver implements ScopeResolver {
-  private final Map<Plugin, Map<Injectable, Object>> instancesByScope = new HashMap<>();
+  private final Map<Plugin, Map<QualifiedType, Object>> instancesByScope = new HashMap<>();
   private final Map<Type, Plugin> typeToPlugin = new HashMap<>();
 
   @Override
@@ -24,33 +25,28 @@ public class PluginScopeResolver implements ScopeResolver {
   }
 
   @Override
-  public boolean isScopeActive(Injectable key) {
+  public boolean isScopeActive(QualifiedType key) {
     return getCurrentScope(key) != null;
   }
 
   @Override
-  public synchronized <T> T get(Injectable key) throws OutOfScopeException {
-    Plugin currentScope = getCurrentScope(key);
+  public synchronized <T> T get(QualifiedType qualifiedType, Callable<T> objectFactory) throws Exception {
+    Plugin currentScope = getCurrentScope(qualifiedType);
 
     if(currentScope == null) {
-      throw new OutOfScopeException(key, getScopeAnnotationClass());
+      throw new OutOfScopeException(qualifiedType, getScopeAnnotationClass());
     }
 
     @SuppressWarnings("unchecked")
-    T instance = (T)instancesByScope.getOrDefault(currentScope, Collections.emptyMap()).get(key);
+    T instance = (T)instancesByScope.getOrDefault(currentScope, Collections.emptyMap()).get(qualifiedType);
 
-    return instance;
-  }
+    if(instance == null) {
+      instance = objectFactory.call();
 
-  @Override
-  public synchronized <T> void put(Injectable key, T instance) throws OutOfScopeException {
-    Plugin currentScope = getCurrentScope(key);
-
-    if(currentScope == null) {
-      throw new OutOfScopeException(key, getScopeAnnotationClass());
+      instancesByScope.computeIfAbsent(currentScope, k -> new HashMap<>()).put(qualifiedType, instance);
     }
 
-    instancesByScope.computeIfAbsent(currentScope, k -> new HashMap<>()).put(key, instance);
+    return instance;
   }
 
   synchronized void register(Plugin plugin) {
@@ -86,7 +82,7 @@ public class PluginScopeResolver implements ScopeResolver {
     instancesByScope.remove(plugin);
   }
 
-  private Plugin getCurrentScope(Injectable key) {
-    return typeToPlugin.get(key.getType());
+  private Plugin getCurrentScope(QualifiedType qualifiedType) {
+    return typeToPlugin.get(qualifiedType.getType());
   }
 }

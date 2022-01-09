@@ -7,7 +7,7 @@ import java.lang.reflect.Type;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
- * Template for constructing {@link ResolvableInjectable}s.
+ * Template for constructing {@link Injectable}s.
  *
  * @param <D> type of data resulting from the analysis phase
  */
@@ -15,7 +15,7 @@ public interface ClassInjectableFactoryTemplate<D> {
 
   /**
    * Analyzes the given {@link Type}, potentially doing some preliminary work towards
-   * creating a {@link ResolvableInjectable}.
+   * creating a {@link Injectable}.
    *
    * @param type a {@link Type}, cannot be null
    * @return a {@link TypeAnalysis}, never null
@@ -23,15 +23,15 @@ public interface ClassInjectableFactoryTemplate<D> {
   TypeAnalysis<D> analyze(Type type);
 
   /**
-   * Creates a {@link ResolvableInjectable} based on a positive {@link TypeAnalysis} and no
+   * Creates a {@link Injectable} based on a positive {@link TypeAnalysis} and no
    * further problems are encountered. Supplying a negative analysis will always result in
    * an exception to be thrown.
    *
    * @param analysis a positive {@link TypeAnalysis}, never null
-   * @return a {@link ResolvableInjectable}, never null
+   * @return a {@link Injectable}, never null
    * @throws BindingException when problems are encountered not covered by the analysis
    */
-  ResolvableInjectable create(TypeAnalysis<D> analysis);
+  Injectable create(TypeAnalysis<D> analysis);
 
   /**
    * Result class for the analysis phase.

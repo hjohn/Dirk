@@ -3,7 +3,7 @@ package hs.ddif.core.config.standard;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysis;
 
 import java.lang.reflect.Type;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Constructs {@link ResolvableInjectable}s for {@link Type}s delegating to
+ * Constructs {@link Injectable}s for {@link Type}s delegating to
  * {@link ClassInjectableFactoryTemplate}s for the actual construction.
  */
 public class DelegatingClassInjectableFactory implements ClassInjectableFactory {
@@ -32,7 +32,7 @@ public class DelegatingClassInjectableFactory implements ClassInjectableFactory 
   }
 
   @Override
-  public ResolvableInjectable create(Type type) {
+  public Injectable create(Type type) {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }

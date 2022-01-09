@@ -5,7 +5,7 @@ import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -21,7 +21,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Extension which looks for members annotated with {@link Produces}, and if found creates
- * {@link ResolvableInjectable}s for them.
+ * {@link Injectable}s for them.
  */
 public class ProducesGathererExtension implements AutoDiscoveringGatherer.Extension {
   private final MethodInjectableFactory methodInjectableFactory;
@@ -39,8 +39,8 @@ public class ProducesGathererExtension implements AutoDiscoveringGatherer.Extens
   }
 
   @Override
-  public List<ResolvableInjectable> getDerived(ResolvableInjectable injectable) {
-    List<ResolvableInjectable> injectables = new ArrayList<>();
+  public List<Injectable> getDerived(Injectable injectable) {
+    List<Injectable> injectables = new ArrayList<>();
     Class<?> injectableClass = TypeUtils.getRawType(injectable.getType(), null);
 
     for(Method method : MethodUtils.getMethodsListWithAnnotation(injectableClass, Produces.class, true, true)) {

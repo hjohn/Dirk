@@ -3,8 +3,8 @@ package hs.ddif.core.config.consistency;
 import hs.ddif.annotations.Opt;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.InjectableFactories;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
-import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
@@ -27,24 +27,24 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class InjectorStoreConsistencyPolicyTest {
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
 
-  private InjectorStoreConsistencyPolicy<ResolvableInjectable> policy = new InjectorStoreConsistencyPolicy<>();
+  private InjectorStoreConsistencyPolicy<Injectable> policy = new InjectorStoreConsistencyPolicy<>();
 
-  private ResolvableInjectable a = classInjectableFactory.create(A.class);
-  private ResolvableInjectable b = classInjectableFactory.create(B.class);
-  private ResolvableInjectable c = classInjectableFactory.create(C.class);
-  private ResolvableInjectable d = classInjectableFactory.create(D.class);
-  private ResolvableInjectable e = classInjectableFactory.create(E.class);
-  private ResolvableInjectable f = classInjectableFactory.create(F.class);
-  private ResolvableInjectable g = classInjectableFactory.create(G.class);
-  private ResolvableInjectable h = classInjectableFactory.create(H.class);
-  private ResolvableInjectable i = classInjectableFactory.create(I.class);
-  private ResolvableInjectable j = classInjectableFactory.create(J.class);
-  private ResolvableInjectable l = classInjectableFactory.create(L.class);
-  private ResolvableInjectable m = classInjectableFactory.create(M.class);
-  private ResolvableInjectable n = classInjectableFactory.create(N.class);
-  private ResolvableInjectable o = classInjectableFactory.create(O.class);
+  private Injectable a = classInjectableFactory.create(A.class);
+  private Injectable b = classInjectableFactory.create(B.class);
+  private Injectable c = classInjectableFactory.create(C.class);
+  private Injectable d = classInjectableFactory.create(D.class);
+  private Injectable e = classInjectableFactory.create(E.class);
+  private Injectable f = classInjectableFactory.create(F.class);
+  private Injectable g = classInjectableFactory.create(G.class);
+  private Injectable h = classInjectableFactory.create(H.class);
+  private Injectable i = classInjectableFactory.create(I.class);
+  private Injectable j = classInjectableFactory.create(J.class);
+  private Injectable l = classInjectableFactory.create(L.class);
+  private Injectable m = classInjectableFactory.create(M.class);
+  private Injectable n = classInjectableFactory.create(N.class);
+  private Injectable o = classInjectableFactory.create(O.class);
 
-  private InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
+  private QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>();
 
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {
