@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 /**
- * Implementation of {@link Instantiator}, which supplies fully injected classes from the supplied store 
+ * Implementation of {@link Instantiator}, which supplies fully injected classes from the supplied store
  * (usually managed by an Injector).  The instances are returned from cache or created as needed.
  */
 public class DefaultInstantiator implements Instantiator {
@@ -236,7 +236,7 @@ public class DefaultInstantiator implements Instantiator {
       }
 
       @SuppressWarnings("unchecked")
-      T instance = (T)injectable.getObjectFactory().createInstance(injections);
+      T instance = (T)injectable.createInstance(injections);
 
       if(instance != null && scopeResolver != null) {
 

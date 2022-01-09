@@ -1,5 +1,6 @@
 package hs.ddif.core.inject.injectable;
 
+import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.inject.instantiator.Instantiators;
@@ -26,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ClassInjectableFactoryTest {
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(ResolvableInjectable::new);
+  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
   private InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
   private Instantiator instantiator = Instantiators.create(store);
@@ -46,7 +47,7 @@ public class ClassInjectableFactoryTest {
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
     assertEquals(SimpleClass.class.getAnnotation(Singleton.class), injectable.getScope());
     assertThat(injectable.getBindings()).hasSize(0);
-    assertTrue(injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings())) instanceof SimpleClass);
+    assertTrue(injectable.createInstance(Bindings.resolve(instantiator, injectable.getBindings())) instanceof SimpleClass);
 
     injectable = classInjectableFactory.create(ClassWithDependencies.class);
 
@@ -55,7 +56,7 @@ public class ClassInjectableFactoryTest {
     assertNull(injectable.getScope());
     assertThat(injectable.getBindings()).hasSize(4);
 
-    ClassWithDependencies instance = (ClassWithDependencies)injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings()));
+    ClassWithDependencies instance = (ClassWithDependencies)injectable.createInstance(Bindings.resolve(instantiator, injectable.getBindings()));
 
     assertEquals("a string", instance.s);
     assertEquals(2, instance.a);
@@ -64,7 +65,7 @@ public class ClassInjectableFactoryTest {
 
     store.put(instanceInjectableFactory.create(new BigDecimal(5)));
 
-    instance = (ClassWithDependencies)injectable.getObjectFactory().createInstance(Bindings.resolve(instantiator, injectable.getBindings()));
+    instance = (ClassWithDependencies)injectable.createInstance(Bindings.resolve(instantiator, injectable.getBindings()));
 
     assertEquals(new BigDecimal(5), instance.bd);
   }

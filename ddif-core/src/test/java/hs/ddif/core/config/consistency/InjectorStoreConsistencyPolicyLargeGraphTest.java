@@ -1,6 +1,7 @@
 package hs.ddif.core.config.consistency;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.injectable.ResolvableInjectable;
 import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
@@ -51,7 +52,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
         bindings.add(new SimpleBinding(new Key(target.getType(), target.getQualifiers())));
       }
 
-      ResolvableInjectable injectable = new ResolvableInjectable(
+      ResolvableInjectable injectable = new DefaultInjectable(
         classes.get(rnd.nextInt(classes.size())),
         Set.of(Annotations.named("instance-" + i)),
         bindings,
