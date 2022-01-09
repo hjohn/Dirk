@@ -1,13 +1,13 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.InjectableFactories;
-import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.inject.store.BindingProvider;
-import hs.ddif.core.inject.store.ClassInjectableFactory;
-import hs.ddif.core.inject.store.DefaultBinding;
-import hs.ddif.core.inject.store.FieldInjectableFactory;
-import hs.ddif.core.inject.store.InstanceInjectableFactory;
-import hs.ddif.core.inject.store.MethodInjectableFactory;
+import hs.ddif.core.config.standard.DefaultBinding;
+import hs.ddif.core.inject.bind.BindingProvider;
+import hs.ddif.core.inject.injectable.ClassInjectableFactory;
+import hs.ddif.core.inject.injectable.FieldInjectableFactory;
+import hs.ddif.core.inject.injectable.InjectableFactories;
+import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
+import hs.ddif.core.inject.injectable.MethodInjectableFactory;
+import hs.ddif.core.inject.injectable.ResolvableInjectable;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;

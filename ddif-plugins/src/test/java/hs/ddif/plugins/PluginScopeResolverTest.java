@@ -1,8 +1,8 @@
 package hs.ddif.plugins;
 
 import hs.ddif.annotations.PluginScoped;
-import hs.ddif.core.InjectableFactories;
-import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.inject.injectable.ClassInjectableFactory;
+import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.Injectable;
 

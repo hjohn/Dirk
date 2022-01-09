@@ -1,0 +1,30 @@
+package hs.ddif.core.inject.bind;
+
+import javax.inject.Inject;
+
+/**
+ * Thrown when a {@link Class} or instance which is being registered with an Injector
+ * is not setup correctly for injection.  This can occur for example when multiple constructors
+ * are annotated with {@link Inject} or final fields are annotated as such.
+ */
+public class BindingException extends RuntimeException {
+
+  /**
+   * Constructs a new instance
+   *
+   * @param message a message
+   * @param cause a {@link Throwable} cause, can be null
+   */
+  public BindingException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  /**
+   * Constructs a new instance
+   *
+   * @param message a message
+   */
+  public BindingException(String message) {
+    super(message);
+  }
+}

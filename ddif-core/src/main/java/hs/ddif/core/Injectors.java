@@ -1,17 +1,19 @@
 package hs.ddif.core;
 
-import hs.ddif.core.inject.instantiator.Gatherer;
-import hs.ddif.core.inject.instantiator.ResolvableInjectable;
-import hs.ddif.core.inject.store.AssistedClassInjectableFactoryTemplate;
-import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
-import hs.ddif.core.inject.store.BindingProvider;
-import hs.ddif.core.inject.store.ClassInjectableFactory;
-import hs.ddif.core.inject.store.ConcreteClassInjectableFactoryTemplate;
-import hs.ddif.core.inject.store.DefaultBinding;
-import hs.ddif.core.inject.store.DelegatingClassInjectableFactory;
-import hs.ddif.core.inject.store.FieldInjectableFactory;
-import hs.ddif.core.inject.store.InstanceInjectableFactory;
-import hs.ddif.core.inject.store.MethodInjectableFactory;
+import hs.ddif.core.config.ProducesGathererExtension;
+import hs.ddif.core.config.ProviderGathererExtension;
+import hs.ddif.core.config.gather.Gatherer;
+import hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplate;
+import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
+import hs.ddif.core.config.standard.ConcreteClassInjectableFactoryTemplate;
+import hs.ddif.core.config.standard.DefaultBinding;
+import hs.ddif.core.config.standard.DelegatingClassInjectableFactory;
+import hs.ddif.core.inject.bind.BindingProvider;
+import hs.ddif.core.inject.injectable.ClassInjectableFactory;
+import hs.ddif.core.inject.injectable.FieldInjectableFactory;
+import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
+import hs.ddif.core.inject.injectable.MethodInjectableFactory;
+import hs.ddif.core.inject.injectable.ResolvableInjectable;
 import hs.ddif.core.scope.ScopeResolver;
 
 import java.util.List;

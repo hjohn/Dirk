@@ -2,10 +2,11 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.inject.consistency.ScopeConflictException;
-import hs.ddif.core.inject.store.BindingException;
+import hs.ddif.core.config.consistency.ScopeConflictException;
+import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
+import hs.ddif.core.test.scope.TestScope;
 
 import java.lang.annotation.Annotation;
 

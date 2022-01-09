@@ -2,7 +2,7 @@ package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.Injectors;
-import hs.ddif.core.inject.consistency.UnresolvableDependencyException;
+import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableDependency;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableInjectAnnotatedDependency;

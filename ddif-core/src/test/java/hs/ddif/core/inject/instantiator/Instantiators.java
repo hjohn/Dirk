@@ -1,8 +1,11 @@
 package hs.ddif.core.inject.instantiator;
 
-import hs.ddif.core.InjectableFactories;
-import hs.ddif.core.inject.store.AutoDiscoveringGatherer;
-import hs.ddif.core.inject.store.ClassInjectableFactory;
+import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
+import hs.ddif.core.config.standard.DefaultInstantiator;
+import hs.ddif.core.inject.injectable.ClassInjectableFactory;
+import hs.ddif.core.inject.injectable.InjectableFactories;
+import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.scope.WeakSingletonScopeResolver;
