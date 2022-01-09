@@ -8,7 +8,7 @@ public class NoSuchQualifiedTypeException extends RuntimeException {
   /**
    * Constructs a new instance.
    *
-   * @param qualifiedType a {@link QualifiedType}, cannot be null
+   * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
    */
   public NoSuchQualifiedTypeException(QualifiedType qualifiedType) {
     super("No such qualified type: " + qualifiedType);

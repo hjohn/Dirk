@@ -8,8 +8,8 @@ public class NoSuchInstanceException extends InstanceResolutionException {
   /**
    * Constructs a new instance.
    *
-   * @param message a message, can be null
-   * @param cause a {@link Throwable} cause, can be null
+   * @param message a message, can be {@code null}
+   * @param cause a {@link Throwable} cause, can be {@code null}
    */
   public NoSuchInstanceException(String message, Throwable cause) {
     super(message, cause);

@@ -3,8 +3,8 @@ package hs.ddif.core.config.standard;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate;
-import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysis;
+import hs.ddif.core.inject.injectable.Injectable;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public class DelegatingClassInjectableFactory implements ClassInjectableFactory 
   /**
    * Constructs a new instance.
    *
-   * @param templates a list of {@link ClassInjectableFactoryTemplate}s, cannot be null or contain nulls but can be empty
+   * @param templates a list of {@link ClassInjectableFactoryTemplate}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
   @SuppressWarnings("unchecked")
   public DelegatingClassInjectableFactory(List<ClassInjectableFactoryTemplate<?>> templates) {

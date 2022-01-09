@@ -22,8 +22,8 @@ public class Key implements QualifiedType {
   /**
    * Constructs a new instance.
    *
-   * @param type a {@link Type}, cannot be null
-   * @param qualifiers a collection of qualifier {@link Annotation}s, cannot be null or contain nulls but can be empty
+   * @param type a {@link Type}, cannot be {@code null}
+   * @param qualifiers a collection of qualifier {@link Annotation}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
   public Key(Type type, Collection<Annotation> qualifiers) {
     if(type == null) {
@@ -43,7 +43,7 @@ public class Key implements QualifiedType {
   /**
    * Constructs a new instance.
    *
-   * @param type a {@link Type}, cannot be null
+   * @param type a {@link Type}, cannot be {@code null}
    */
   public Key(Type type) {
     this(type, Set.of());
@@ -52,7 +52,7 @@ public class Key implements QualifiedType {
   /**
    * Returns an unmodifiable set of qualifier {@link Annotation}s.
    *
-   * @return an unmodifiable set of qualifier {@link Annotation}s, never null and never contains nulls but can be empty
+   * @return an unmodifiable set of qualifier {@link Annotation}s, never {@code null} and never contains {@code null}s but can be empty
    */
   @Override
   public Set<Annotation> getQualifiers() {
@@ -62,7 +62,7 @@ public class Key implements QualifiedType {
   /**
    * Returns the {@link Type}.
    *
-   * @return the {@link Type}, never null
+   * @return the {@link Type}, never {@code null}
    */
   @Override
   public Type getType() {

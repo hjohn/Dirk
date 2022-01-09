@@ -25,8 +25,8 @@ public class Plugin {
    * Constructs a new instance.
    *
    * @param name a name for the plugin
-   * @param types a list of {@link Type}s part of the plugin, cannot be null or contain nulls
-   * @param classLoader a {@link ClassLoader}, cannot be null
+   * @param types a list of {@link Type}s part of the plugin, cannot be {@code null} or contains {@code null}s
+   * @param classLoader a {@link ClassLoader}, cannot be {@code null}
    */
   public Plugin(String name, List<Type> types, ClassLoader classLoader) {
     if(types == null) {
@@ -41,7 +41,7 @@ public class Plugin {
     this.types = Collections.unmodifiableList(new ArrayList<>(types));
 
     if(this.types.contains(null)) {
-      throw new IllegalArgumentException("types cannot contain nulls");
+      throw new IllegalArgumentException("types cannot contain null");
     }
 
     if(classLoader instanceof UnloadTrackingClassLoader) {

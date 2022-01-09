@@ -42,7 +42,7 @@ public class ComponentScanner {
    * Scans the given packages for annotated types and adds them to the given
    * {@link CandidateRegistry}.
    *
-   * @param registry a {@link CandidateRegistry} to add found types, cannot be null
+   * @param registry a {@link CandidateRegistry} to add found types, cannot be {@code null}
    * @param packageNamePrefixes zero or more package name prefixes to scan
    */
   public static void scan(CandidateRegistry registry, String... packageNamePrefixes) {

@@ -2,8 +2,8 @@ package hs.ddif.core.config;
 
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.inject.injectable.MethodInjectableFactory;
 import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.inject.injectable.MethodInjectableFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -23,7 +23,7 @@ public class ProviderGathererExtension implements AutoDiscoveringGatherer.Extens
   /**
    * Constructs a new instance.
    *
-   * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be null
+   * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
    */
   public ProviderGathererExtension(MethodInjectableFactory methodInjectableFactory) {
     this.methodInjectableFactory = methodInjectableFactory;

@@ -19,7 +19,7 @@ public class InstanceInjectableFactory {
   /**
    * Constructs a new instance.
    *
-   * @param factory a {@link InjectableFactory}, cannot be null
+   * @param factory a {@link InjectableFactory}, cannot be {@code null}
    */
   public InstanceInjectableFactory(InjectableFactory factory) {
     this.factory = factory;
@@ -28,9 +28,9 @@ public class InstanceInjectableFactory {
   /**
    * Creates a new {@link Injectable}.
    *
-   * @param instance an instance, cannot be null
+   * @param instance an instance, cannot be {@code null}
    * @param qualifiers an array of qualifier {@link Annotation}s
-   * @return a new {@link Injectable}, never null
+   * @return a new {@link Injectable}, never {@code null}
    */
   public Injectable create(Object instance, Annotation... qualifiers) {
     if(instance == null) {

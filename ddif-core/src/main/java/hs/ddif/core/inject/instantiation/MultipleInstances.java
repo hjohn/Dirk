@@ -16,9 +16,9 @@ public class MultipleInstances extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param key a {@link Key}, cannot be null
-   * @param matchers a list of {@link Predicate}s, cannot be null
-   * @param injectables a set of injectables, cannot be null
+   * @param key a {@link Key}, cannot be {@code null}
+   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
+   * @param injectables a set of injectables, cannot be {@code null}
    */
   public MultipleInstances(Key key, List<Predicate<Type>> matchers, Set<?> injectables) {
     super("Multiple matching instances: " + key + toCriteriaString(matchers) + ": " + injectables);

@@ -4,8 +4,8 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
-import hs.ddif.core.inject.injectable.MethodInjectableFactory;
 import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.inject.injectable.MethodInjectableFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -30,8 +30,8 @@ public class ProducesGathererExtension implements AutoDiscoveringGatherer.Extens
   /**
    * Constructs a new instance.
    *
-   * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be null
-   * @param fieldInjectableFactory a {@link FieldInjectableFactory}, cannot be null
+   * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
+   * @param fieldInjectableFactory a {@link FieldInjectableFactory}, cannot be {@code null}
    */
   public ProducesGathererExtension(MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
     this.methodInjectableFactory = methodInjectableFactory;

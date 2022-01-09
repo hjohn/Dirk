@@ -17,8 +17,8 @@ public class Injection {
   /**
    * Constructs a new instance.
    *
-   * @param target an {@link AccessibleObject} which will serve as the target, can be null
-   * @param value a value to inject, can be null
+   * @param target an {@link AccessibleObject} which will serve as the target, can be {@code null}
+   * @param value a value to inject, can be {@code null}
    */
   public Injection(AccessibleObject target, Object value) {
     this.target = target;
@@ -29,7 +29,7 @@ public class Injection {
    * Returns the target. If {@code null} the value represents the owner class of a
    * non-static field or method.
    *
-   * @return a target, can be null
+   * @return a target, can be {@code null}
    */
   public AccessibleObject getTarget() {
     return target;
@@ -38,7 +38,7 @@ public class Injection {
   /**
    * Returns the value.
    *
-   * @return a value, can be null
+   * @return a value, can be {@code null}
    */
   public Object getValue() {
     return value;

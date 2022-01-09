@@ -25,8 +25,8 @@ public class Primitives {
    * Converts a {@link Type} if it is primitive to its box, otherwise returns the
    * original type.
    *
-   * @param type a type to convert, cannot be null
-   * @return a boxed {@link Type} if it was a primitive type, otherwise returns the original type, never null
+   * @param type a type to convert, cannot be {@code null}
+   * @return a boxed {@link Type} if it was a primitive type, otherwise returns the original type, never {@code null}
    */
   public static Type toBoxed(Type type) {
     return type instanceof Class && ((Class<?>)type).isPrimitive() ? WRAPPER_CLASS_BY_PRIMITIVE_CLASS.get(type) : type;

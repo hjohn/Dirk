@@ -20,7 +20,7 @@ public interface Gatherer {
    * Given a collection of {@link Injectable}s, return a fully expanded
    * set of required injectables which are not part of the given resolver yet.
    *
-   * @param resolver a {@link Resolver}, cannot be null
+   * @param resolver a {@link Resolver}, cannot be {@code null}
    * @param injectables a collection of {@link Injectable}s, cannot be {@code null} or contain {@code null}
    * @return a fully expanded set of injectables, never {@code null} and never contains {@code null}
    */
@@ -34,7 +34,7 @@ public interface Gatherer {
    * injectables, or the given type is unsuitable for automatic discovery, or
    * the type given is already resolvable then this method will return the empty set.
    *
-   * @param resolver a {@link Resolver}, cannot be null
+   * @param resolver a {@link Resolver}, cannot be {@code null}
    * @param key a {@link Key}, cannot be {@code null}
    * @return a fully expanded set of injectables, never {@code null} and never contains {@code null}, but can be empty
    * @throws DiscoveryFailure when the given type cannot be converted into a suitable injectable

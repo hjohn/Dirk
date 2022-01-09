@@ -16,7 +16,7 @@ public interface Module {
   /**
    * Returns a list of {@link Type}s that should be loaded as part of this module.
    *
-   * @return a list of {@link Type}s that should be loaded as part of this module, never null and never contains nulls
+   * @return a list of {@link Type}s that should be loaded as part of this module, never {@code null} and never contains {@code null}s
    */
   List<Type> getTypes();
 }

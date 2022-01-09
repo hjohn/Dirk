@@ -12,8 +12,8 @@ public class OutOfScopeException extends Exception {
   /**
    * Constructs a new instance.
    *
-   * @param qualifiedType a {@link QualifiedType}, cannot be null
-   * @param scopeAnnotationClass the class of the scope annotation involved, cannot be null
+   * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
+   * @param scopeAnnotationClass the class of the scope annotation involved, cannot be {@code null}
    */
   public OutOfScopeException(QualifiedType qualifiedType, Class<? extends Annotation> scopeAnnotationClass) {
     super("Scope not active: " + scopeAnnotationClass + " for: " + qualifiedType);

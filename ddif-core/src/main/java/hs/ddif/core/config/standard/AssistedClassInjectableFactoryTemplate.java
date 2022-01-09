@@ -103,8 +103,8 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   /**
    * Constructs a new instance.
    *
-   * @param bindingProvider a {@link BindingProvider}, cannot be null
-   * @param injectableFactory a {@link InjectableFactory}, cannot be null
+   * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
+   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
    */
   public AssistedClassInjectableFactoryTemplate(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
@@ -300,9 +300,9 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     /**
      * Called when a factory method call is intercepted.
      *
-     * @param factoryInstance the factory instance, cannot be null
-     * @param args an array of all arguments passed to the factory method, never null
-     * @return the product of the factory, never null
+     * @param factoryInstance the factory instance, cannot be {@code null}
+     * @param args an array of all arguments passed to the factory method, never {@code null}
+     * @return the product of the factory, never {@code null}
      * @throws InstanceCreationFailure when the product could not be created
      */
     @RuntimeType

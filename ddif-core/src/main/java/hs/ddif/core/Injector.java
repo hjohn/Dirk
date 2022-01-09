@@ -10,8 +10,8 @@ import hs.ddif.core.config.standard.DefaultInstantiator;
 import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
 import hs.ddif.core.config.standard.InstantiatorBasedInstanceResolver;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
-import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.QualifiedTypeStore;
@@ -63,10 +63,10 @@ public class Injector implements InstanceResolver, CandidateRegistry {
   /**
    * Constructs a new instance.
    *
-   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be null
-   * @param instanceInjectableFactory a {@link InstanceInjectableFactory}, cannot be null
-   * @param gatherer a {@link Gatherer}, cannot be null
-   * @param scopeResolvers an array of {@link ScopeResolver}s, cannot be null or contain nulls but can be empty
+   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
+   * @param instanceInjectableFactory a {@link InstanceInjectableFactory}, cannot be {@code null}
+   * @param gatherer a {@link Gatherer}, cannot be {@code null}
+   * @param scopeResolvers an array of {@link ScopeResolver}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
   Injector(ClassInjectableFactory classInjectableFactory, InstanceInjectableFactory instanceInjectableFactory, Gatherer gatherer, ScopeResolver... scopeResolvers) {
     ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
@@ -83,7 +83,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
    * Returns an {@link InstanceResolver}, which can be shared instead of this class
    * to share only methods that can be used to instantiate objects.
    *
-   * @return an {@link InstanceResolver}, never null
+   * @return an {@link InstanceResolver}, never {@code null}
    */
   public InstanceResolver getInstanceResolver() {
     return instanceResolver;
@@ -93,7 +93,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
    * Returns a {@link CandidateRegistry}, which can be shared instead of this class
    * to share only methods that can be used to register and remove objects.
    *
-   * @return a {@link CandidateRegistry}, never null
+   * @return a {@link CandidateRegistry}, never {@code null}
    */
   public CandidateRegistry getCandidateRegistry() {
     return registry;

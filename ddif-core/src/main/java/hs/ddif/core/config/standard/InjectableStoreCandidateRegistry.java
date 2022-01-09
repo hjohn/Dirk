@@ -3,8 +3,8 @@ package hs.ddif.core.config.standard;
 import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.config.gather.Gatherer;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
-import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.store.QualifiedTypeStore;
 
 import java.lang.annotation.Annotation;
@@ -24,10 +24,10 @@ public class InjectableStoreCandidateRegistry implements CandidateRegistry {
   /**
    * Constructs a new instance.
    *
-   * @param store an {@link QualifiedTypeStore}, cannot be null
-   * @param gatherer a {@link Gatherer}, cannot be null
-   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be null
-   * @param instanceInjectableFactory an {@link InstanceInjectableFactory}, cannot be null
+   * @param store an {@link QualifiedTypeStore}, cannot be {@code null}
+   * @param gatherer a {@link Gatherer}, cannot be {@code null}
+   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
+   * @param instanceInjectableFactory an {@link InstanceInjectableFactory}, cannot be {@code null}
    */
   public InjectableStoreCandidateRegistry(QualifiedTypeStore<Injectable> store, Gatherer gatherer, ClassInjectableFactory classInjectableFactory, InstanceInjectableFactory instanceInjectableFactory) {
     this.store = store;

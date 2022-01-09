@@ -32,8 +32,8 @@ public class FieldInjectableFactory {
   /**
    * Constructs a new instance.
    *
-   * @param bindingProvider a {@link BindingProvider}, cannot be null
-   * @param injectableFactory a {@link InjectableFactory}, cannot be null
+   * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
+   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
    */
   public FieldInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
@@ -43,9 +43,9 @@ public class FieldInjectableFactory {
   /**
    * Creates a new {@link Injectable}.
    *
-   * @param field a {@link Field}, cannot be null
-   * @param ownerType the type of the owner of the field, cannot be null and must match with {@link Field#getDeclaringClass()}
-   * @return a new {@link Injectable}, never null
+   * @param field a {@link Field}, cannot be {@code null}
+   * @param ownerType the type of the owner of the field, cannot be {@code null} and must match with {@link Field#getDeclaringClass()}
+   * @return a new {@link Injectable}, never {@code null}
    */
   public Injectable create(Field field, Type ownerType) {
     if(field == null) {

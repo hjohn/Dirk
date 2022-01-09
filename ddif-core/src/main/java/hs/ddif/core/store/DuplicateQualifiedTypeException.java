@@ -8,7 +8,7 @@ public class DuplicateQualifiedTypeException extends RuntimeException {
   /**
    * Constructs a new instance.
    *
-   * @param qualifiedType a {@link QualifiedType}, cannot be null
+   * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
    */
   public DuplicateQualifiedTypeException(QualifiedType qualifiedType) {
     super("Duplicate qualified type: " + qualifiedType);

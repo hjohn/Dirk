@@ -34,8 +34,8 @@ public class PluginManager {
    * must be provided to support {@link hs.ddif.annotations.PluginScoped}, a scope which is specific
    * to a plugin (unlike singleton which if defined in a plugin could interfere with other plugins).
    *
-   * @param registry a {@link CandidateRegistry}, cannot be null
-   * @param pluginScopeResolver a {@link PluginScopeResolver}, cannot be null
+   * @param registry a {@link CandidateRegistry}, cannot be {@code null}
+   * @param pluginScopeResolver a {@link PluginScopeResolver}, cannot be {@code null}
    */
   public PluginManager(CandidateRegistry registry, PluginScopeResolver pluginScopeResolver) {
     if(registry == null) {
@@ -54,7 +54,7 @@ public class PluginManager {
    * during the scan.
    *
    * @param packageNamePrefixes a list of packages to scan
-   * @return a {@link Plugin}, never null
+   * @return a {@link Plugin}, never {@code null}
    */
   public Plugin loadPluginAndScan(String... packageNamePrefixes) {
     ClassLoader classLoader = this.getClass().getClassLoader();
@@ -69,7 +69,7 @@ public class PluginManager {
    * Loads jars at the given {@link URL}s, scans for annotated types and creates a {@link Plugin}.
    *
    * @param urls a list of {@link URL}s to load and scan
-   * @return a {@link Plugin}, never null
+   * @return a {@link Plugin}, never {@code null}
    */
   @SuppressWarnings("resource")
   public Plugin loadPluginAndScan(URL... urls) {
@@ -84,7 +84,7 @@ public class PluginManager {
    * Attempts to unload the given plugin. This may fail if not all types can be removed for the
    * underlying {@link CandidateRegistry}.
    *
-   * @param plugin a {@link Plugin} to unload, cannot be null
+   * @param plugin a {@link Plugin} to unload, cannot be {@code null}
    */
   public void unload(Plugin plugin) {
     baseRegistry.remove(plugin.getTypes());  // may fail
@@ -96,7 +96,7 @@ public class PluginManager {
    * Loads classes from a plugin defined by a Module.
    *
    * @param urls one or more jar files
-   * @return a {@link Plugin}, never null
+   * @return a {@link Plugin}, never {@code null}
    */
   @SuppressWarnings("resource")
   public Plugin loadPlugin(URL... urls) {

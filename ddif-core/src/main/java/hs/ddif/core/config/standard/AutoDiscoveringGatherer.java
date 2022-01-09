@@ -38,8 +38,8 @@ public class AutoDiscoveringGatherer implements Gatherer {
      * annotations which supply further injectables. These in turn could require
      * dependencies (as parameters) that may need to be auto discovered first.
      *
-     * @param injectable a {@link Injectable} use as base for derivation, never null
-     * @return a list of {@link Injectable}, never null and never contains nulls
+     * @param injectable a {@link Injectable} use as base for derivation, never {@code null}
+     * @return a list of {@link Injectable}, never {@code null} and never contains {@code null}s
      */
     List<Injectable> getDerived(Injectable injectable);
   }
@@ -51,9 +51,9 @@ public class AutoDiscoveringGatherer implements Gatherer {
   /**
    * Constructs a new instance.
    *
-   * @param extensions a list of {@link Extension}s, cannot be null or contain null but can be empty
+   * @param extensions a list of {@link Extension}s, cannot be {@code null} or contain {@code null}s but can be empty
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
-   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be null
+   * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
    */
   public AutoDiscoveringGatherer(boolean autoDiscovery, List<Extension> extensions, ClassInjectableFactory classInjectableFactory) {
     this.autoDiscovery = autoDiscovery;

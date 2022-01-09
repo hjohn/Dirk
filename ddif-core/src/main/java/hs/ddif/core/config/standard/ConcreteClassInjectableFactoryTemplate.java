@@ -38,8 +38,8 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   /**
    * Constructs a new instance.
    *
-   * @param bindingProvider a {@link BindingProvider}, cannot be null
-   * @param injectableFactory a {@link InjectableFactory}, cannot be null
+   * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
+   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
    */
   public ConcreteClassInjectableFactoryTemplate(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;

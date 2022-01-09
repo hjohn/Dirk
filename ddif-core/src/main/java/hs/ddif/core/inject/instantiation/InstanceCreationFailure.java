@@ -19,7 +19,7 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param accessibleObject the constructor, method or field involved, cannot be null
+   * @param accessibleObject the constructor, method or field involved, cannot be {@code null}
    * @param message a message
    * @param cause a {@link Throwable} to use as cause
    */
@@ -30,7 +30,7 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param accessibleObject the constructor, method or field involved, cannot be null
+   * @param accessibleObject the constructor, method or field involved, cannot be {@code null}
    * @param message a message
    */
   public InstanceCreationFailure(AccessibleObject accessibleObject, String message) {
@@ -40,7 +40,7 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param key a {@link Key}, cannot be null
+   * @param key a {@link Key}, cannot be {@code null}
    * @param message a message
    * @param cause a {@link Throwable} to use as cause
    */
@@ -51,7 +51,7 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param type type involved, cannot be null
+   * @param type type involved, cannot be {@code null}
    * @param message a message
    * @param cause a {@link Throwable} to use as cause
    */
@@ -62,7 +62,7 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param type type involved, cannot be null
+   * @param type type involved, cannot be {@code null}
    * @param message a message
    */
   public InstanceCreationFailure(Type type, String message) {

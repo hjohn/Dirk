@@ -27,7 +27,7 @@ public class CriteriaParser {
    * Annotations which are not meta-annotated with {@link Qualifier}s will be rejected,
    * as will any criterion type that is not supported.
    *
-   * @param type a {@link Type}, cannot be null
+   * @param type a {@link Type}, cannot be {@code null}
    * @param criterions an optional array of criterions, containing one or more of {@link Class}, {@link Annotation} or {@link Predicate}
    */
   public CriteriaParser(Type type, Object... criterions) {
@@ -68,7 +68,7 @@ public class CriteriaParser {
   /**
    * Gets the {@link Key} which was parsed.
    *
-   * @return a {@link Key}, never null
+   * @return a {@link Key}, never {@code null}
    */
   public Key getKey() {
     return key;
