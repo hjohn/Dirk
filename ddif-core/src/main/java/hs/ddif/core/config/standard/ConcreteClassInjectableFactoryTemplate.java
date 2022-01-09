@@ -4,8 +4,8 @@ import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate;
 import hs.ddif.core.inject.injectable.ClassObjectFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
-import hs.ddif.core.inject.injectable.ResolvableInjectableFactory;
+import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.inject.injectable.InjectableFactory;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -19,7 +19,7 @@ import javax.inject.Qualifier;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Template to construct {@link ResolvableInjectable}s for concrete classes.
+ * Template to construct {@link Injectable}s for concrete classes.
  *
  * <p>For a class to qualify for injection:<ul>
  * <li>it must be a concrete (not abstract) class</li>
@@ -33,15 +33,15 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   private static final TypeAnalysis<Type> FAILURE_ABSTRACT = TypeAnalysis.negative("Type cannot be abstract: %1$s");
 
   private final BindingProvider bindingProvider;
-  private final ResolvableInjectableFactory injectableFactory;
+  private final InjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be null
-   * @param injectableFactory a {@link ResolvableInjectableFactory}, cannot be null
+   * @param injectableFactory a {@link InjectableFactory}, cannot be null
    */
-  public ConcreteClassInjectableFactoryTemplate(BindingProvider bindingProvider, ResolvableInjectableFactory injectableFactory) {
+  public ConcreteClassInjectableFactoryTemplate(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
@@ -58,7 +58,7 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public ResolvableInjectable create(TypeAnalysis<Type> analysis) {
+  public Injectable create(TypeAnalysis<Type> analysis) {
     Type type = analysis.getData();
     Class<?> cls = TypeUtils.getRawType(type, null);
     Constructor<?> constructor = BindingProvider.getConstructor(cls);

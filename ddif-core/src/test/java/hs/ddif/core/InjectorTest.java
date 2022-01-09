@@ -6,8 +6,8 @@ import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.config.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.store.DuplicateInjectableException;
-import hs.ddif.core.store.NoSuchInjectableException;
+import hs.ddif.core.store.DuplicateQualifiedTypeException;
+import hs.ddif.core.store.NoSuchQualifiedTypeException;
 import hs.ddif.core.test.injectables.AbstractBean;
 import hs.ddif.core.test.injectables.BeanWithBigInjection;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
@@ -300,7 +300,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingUnregisteredBean() {
-    assertThrows(NoSuchInjectableException.class, () -> injector.remove(Exception.class));
+    assertThrows(NoSuchQualifiedTypeException.class, () -> injector.remove(Exception.class));
   }
 
   @Test
@@ -361,7 +361,7 @@ public class InjectorTest {
     injector.register(String.class);
 
     assertThatThrownBy(() -> injector.register(String.class))
-      .isExactlyInstanceOf(DuplicateInjectableException.class)
+      .isExactlyInstanceOf(DuplicateQualifiedTypeException.class)
       .hasNoCause();
   }
 
@@ -544,7 +544,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingUnregisteredSuperClass() {
-    assertThrows(NoSuchInjectableException.class, () -> injector.remove(UnregisteredParentBean.class));
+    assertThrows(NoSuchQualifiedTypeException.class, () -> injector.remove(UnregisteredParentBean.class));
   }
 
   /*
@@ -629,7 +629,7 @@ public class InjectorTest {
       }
     });
 
-    assertThrows(NoSuchInjectableException.class, () -> injector.removeInstance(new Provider<String>() {
+    assertThrows(NoSuchQualifiedTypeException.class, () -> injector.removeInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
@@ -646,7 +646,7 @@ public class InjectorTest {
       }
     });
 
-    assertThrows(NoSuchInjectableException.class, () -> injector.remove(String.class));
+    assertThrows(NoSuchQualifiedTypeException.class, () -> injector.remove(String.class));
   }
 
   @Test

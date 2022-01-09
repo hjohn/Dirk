@@ -3,7 +3,7 @@ package hs.ddif.core.config.standard;
 import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.config.gather.Gatherer;
 import hs.ddif.core.inject.bind.Binding;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injection.Injection;
 import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiation.Instantiator;
@@ -11,8 +11,9 @@ import hs.ddif.core.inject.instantiation.MultipleInstances;
 import hs.ddif.core.inject.instantiation.NoSuchInstance;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.Key;
+import hs.ddif.core.store.QualifiedType;
+import hs.ddif.core.store.QualifiedTypeStore;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 
 /**
@@ -28,27 +30,29 @@ import java.util.function.Predicate;
  * (usually managed by an Injector).  The instances are returned from cache or created as needed.
  */
 public class DefaultInstantiator implements Instantiator {
-  private final InjectableStore<ResolvableInjectable> store;
+  private static final ScopeResolver NULL_SCOPE_RESOLVER = new NullScopeResolver();
+
+  private final QualifiedTypeStore<Injectable> store;
   private final Gatherer gatherer;
 
   /**
    * Map containing {@link ScopeResolver}s this injector can use.
    */
-  private final Map<Class<? extends Annotation>, ScopeResolver> scopesResolversByAnnotation = new HashMap<>();
+  private final Map<Class<? extends Annotation>, ScopeResolver> scopeResolversByAnnotation = new HashMap<>();
 
   /**
    * Constructs a new instance.
    *
-   * @param store a {@link InjectableStore}, cannot be null
+   * @param store a {@link QualifiedTypeStore}, cannot be null
    * @param gatherer a {@link Gatherer}, cannot be null
    * @param scopeResolvers an array of {@link ScopeResolver}s this instance should use
    */
-  public DefaultInstantiator(InjectableStore<ResolvableInjectable> store, Gatherer gatherer, ScopeResolver... scopeResolvers) {
+  public DefaultInstantiator(QualifiedTypeStore<Injectable> store, Gatherer gatherer, ScopeResolver... scopeResolvers) {
     this.store = store;
     this.gatherer = gatherer;
 
     for(ScopeResolver scopeResolver : scopeResolvers) {
-      scopesResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
+      scopeResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
     }
   }
 
@@ -108,7 +112,7 @@ public class DefaultInstantiator implements Instantiator {
    */
   @Override
   public synchronized <T> T findInstance(Key key, List<Predicate<Type>> matchers) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
-    Set<ResolvableInjectable> injectables = discover(key, matchers);
+    Set<Injectable> injectables = discover(key, matchers);
 
     if(injectables.isEmpty()) {
       return null;
@@ -117,7 +121,7 @@ public class DefaultInstantiator implements Instantiator {
       throw new MultipleInstances(key, matchers, injectables);
     }
 
-    ResolvableInjectable injectable = injectables.iterator().next();
+    Injectable injectable = injectables.iterator().next();
 
     return getInstance(injectable, findScopeResolver(injectable));
   }
@@ -153,7 +157,7 @@ public class DefaultInstantiator implements Instantiator {
   public synchronized <T> List<T> getInstances(Key key, List<Predicate<Type>> matchers) throws InstanceCreationFailure {
     List<T> instances = new ArrayList<>();
 
-    for(ResolvableInjectable injectable : store.resolve(key, matchers)) {
+    for(Injectable injectable : store.resolve(key, matchers)) {
       ScopeResolver scopeResolver = findScopeResolver(injectable);
 
       if(scopeResolver == null || scopeResolver.isScopeActive(injectable)) {
@@ -192,8 +196,8 @@ public class DefaultInstantiator implements Instantiator {
     return getInstances(key, List.of());
   }
 
-  private Set<ResolvableInjectable> discover(Key key, List<Predicate<Type>> matchers) throws DiscoveryFailure {
-    Set<ResolvableInjectable> injectables = store.resolve(key, matchers);
+  private Set<Injectable> discover(Key key, List<Predicate<Type>> matchers) throws DiscoveryFailure {
+    Set<Injectable> injectables = store.resolve(key, matchers);
 
     if(!injectables.isEmpty()) {
       return injectables;
@@ -203,7 +207,7 @@ public class DefaultInstantiator implements Instantiator {
       return Set.of();
     }
 
-    Set<ResolvableInjectable> gatheredInjectables = gatherer.gather(store, key);
+    Set<Injectable> gatheredInjectables = gatherer.gather(store, key);
 
     if(gatheredInjectables.isEmpty()) {
       return Set.of();
@@ -219,51 +223,55 @@ public class DefaultInstantiator implements Instantiator {
     }
   }
 
-  private <T> T getInstance(ResolvableInjectable injectable, ScopeResolver scopeResolver) throws InstanceCreationFailure, OutOfScopeException {
-    if(scopeResolver != null) {
-      T instance = scopeResolver.get(injectable);
-
-      if(instance != null) {
-        return instance;
-      }
-    }
-
+  private <T> T getInstance(Injectable injectable, ScopeResolver scopeResolver) throws InstanceCreationFailure, OutOfScopeException {
     try {
-      List<Injection> injections = new ArrayList<>();
-
-      for(Binding binding : injectable.getBindings()) {
-        injections.add(new Injection(binding.getAccessibleObject(), binding.getValue(this)));
-      }
-
-      @SuppressWarnings("unchecked")
-      T instance = (T)injectable.createInstance(injections);
-
-      if(instance != null && scopeResolver != null) {
-
-        /*
-         * Store the result if scoped.
-         */
-
-        scopeResolver.put(injectable, instance);
-      }
-
-      return instance;
+      return scopeResolver.get(injectable, () -> createInstance(injectable));
     }
-    catch(InstanceCreationFailure e) {
+    catch(OutOfScopeException e) {
       throw e;
     }
     catch(Exception e) {
+      if(e instanceof InstanceCreationFailure) {
+        throw (InstanceCreationFailure)e;
+      }
+
       throw new InstanceCreationFailure(injectable.getType(), "Exception while creating instance", e);
     }
   }
 
-  private ScopeResolver findScopeResolver(ResolvableInjectable injectable) {
-    Annotation scope = injectable.getScope();
+  private <T> T createInstance(Injectable injectable) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance, OutOfScopeException {
+    List<Injection> injections = new ArrayList<>();
 
-    if(scope == null) {
-      return null;
+    for(Binding binding : injectable.getBindings()) {
+      injections.add(new Injection(binding.getAccessibleObject(), binding.getValue(this)));
     }
 
-    return scopesResolversByAnnotation.get(scope.annotationType());  // this may return null if scope is not known, a consistency policy should police this, not the instantiator
+    @SuppressWarnings("unchecked")
+    T instance = (T)injectable.createInstance(injections);
+
+    return instance;
+  }
+
+  private ScopeResolver findScopeResolver(Injectable injectable) {
+    Annotation scope = injectable.getScope();
+
+    return scopeResolversByAnnotation.getOrDefault(scope == null ? null : scope.annotationType(), NULL_SCOPE_RESOLVER);  // this may return NULL_SCOPE_RESOLVER if scope is not known, a consistency policy should police this, not the instantiator
+  }
+
+  private static class NullScopeResolver implements ScopeResolver {
+    @Override
+    public Class<? extends Annotation> getScopeAnnotationClass() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isScopeActive(QualifiedType qualifiedType) {
+      return true;
+    }
+
+    @Override
+    public <T> T get(QualifiedType qualifiedType, Callable<T> objectFactory) throws Exception {
+      return objectFactory.call();
+    }
   }
 }

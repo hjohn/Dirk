@@ -5,7 +5,7 @@ import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.config.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.store.DuplicateInjectableException;
+import hs.ddif.core.store.DuplicateQualifiedTypeException;
 import hs.ddif.core.test.injectables.BeanWithOptionalProvider;
 import hs.ddif.core.test.injectables.BeanWithProvider;
 import hs.ddif.core.test.injectables.SimpleBean;
@@ -126,8 +126,8 @@ public class InjectorProviderTest {
       injector.register(BeanWithDatabase.class);
 
       assertThatThrownBy(() -> injector.register(SimpleDatabaseProvider.class))
-        .isExactlyInstanceOf(DuplicateInjectableException.class)
-        .hasMessage("class hs.ddif.core.InjectorProviderTest$Database already registered for: Injectable[hs.ddif.core.InjectorProviderTest$Database <- public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider.get()]")
+        .isExactlyInstanceOf(DuplicateQualifiedTypeException.class)
+        .hasMessage("Duplicate qualified type: Injectable[hs.ddif.core.InjectorProviderTest$Database <- public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider.get()]")
         .hasNoCause();
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());

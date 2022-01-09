@@ -3,7 +3,7 @@ package hs.ddif.core.config.standard;
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysis;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
@@ -31,7 +31,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
 
   @Test
   void shouldCreateInjectableForValidClass() {
-    ResolvableInjectable injectable = create(B.class);
+    Injectable injectable = create(B.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(new Key(String.class));
     assertThat(injectable.getScope()).isNull();
@@ -40,7 +40,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
 
   @Test
   void shouldCreateInjectableWithQualifiersAndScope() {
-    ResolvableInjectable injectable = create(C.class);
+    Injectable injectable = create(C.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
       new Key(String.class), new Key(Integer.class), new Key(Double.class, List.of(Annotations.of(Big.class)))
@@ -51,7 +51,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
     );
   }
 
-  private ResolvableInjectable create(Type type) {
+  private Injectable create(Type type) {
     TypeAnalysis<Type> analysis = extension.analyze(type);
 
     if(analysis.isNegative()) {

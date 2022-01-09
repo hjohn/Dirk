@@ -4,7 +4,7 @@ import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.inject.instantiator.Instantiators;
-import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
@@ -29,7 +29,7 @@ public class ClassInjectableFactoryTest {
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
-  private InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
+  private QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>();
   private Instantiator instantiator = Instantiators.create(store);
 
   @BeforeEach
@@ -41,7 +41,7 @@ public class ClassInjectableFactoryTest {
 
   @Test
   public void constructorShouldAcceptValidParameters() throws Exception {
-    ResolvableInjectable injectable = classInjectableFactory.create(SimpleClass.class);
+    Injectable injectable = classInjectableFactory.create(SimpleClass.class);
 
     assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());

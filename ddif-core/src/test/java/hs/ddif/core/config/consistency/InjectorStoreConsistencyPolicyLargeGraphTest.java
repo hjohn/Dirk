@@ -4,14 +4,14 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.Binding;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.inject.instantiation.MultipleInstances;
 import hs.ddif.core.inject.instantiation.NoSuchInstance;
 import hs.ddif.core.scope.OutOfScopeException;
-import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.Key;
+import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
 
@@ -33,9 +33,9 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
   @Test
   void largeGraphTest() {
-    InjectorStoreConsistencyPolicy<ResolvableInjectable> policy = new InjectorStoreConsistencyPolicy<>(new SingletonScopeResolver());
-    InjectableStore<ResolvableInjectable> store = new InjectableStore<>(policy);
-    List<ResolvableInjectable> knownInjectables = new ArrayList<>();
+    InjectorStoreConsistencyPolicy<Injectable> policy = new InjectorStoreConsistencyPolicy<>(new SingletonScopeResolver());
+    QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(policy);
+    List<Injectable> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
     Singleton annotation = Annotations.of(Singleton.class);
@@ -47,12 +47,12 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
       List<Binding> bindings = new ArrayList<>();
 
       for(int j = 0; j < randomBindings; j++) {
-        ResolvableInjectable target = knownInjectables.get(rnd.nextInt(knownInjectables.size()));
+        Injectable target = knownInjectables.get(rnd.nextInt(knownInjectables.size()));
 
         bindings.add(new SimpleBinding(new Key(target.getType(), target.getQualifiers())));
       }
 
-      ResolvableInjectable injectable = new DefaultInjectable(
+      Injectable injectable = new DefaultInjectable(
         classes.get(rnd.nextInt(classes.size())),
         Set.of(Annotations.named("instance-" + i)),
         bindings,

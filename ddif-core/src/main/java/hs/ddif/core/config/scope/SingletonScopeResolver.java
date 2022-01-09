@@ -1,11 +1,12 @@
 package hs.ddif.core.config.scope;
 
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.Injectable;
+import hs.ddif.core.store.QualifiedType;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.Callable;
 
 import javax.inject.Singleton;
 
@@ -13,24 +14,25 @@ import javax.inject.Singleton;
  * Scope resolver for the {@link Singleton} scope.
  */
 public class SingletonScopeResolver implements ScopeResolver {
-  private final Map<Injectable, Object> singletons = new WeakHashMap<>();
+  private final Map<QualifiedType, Object> singletons = new WeakHashMap<>();
 
   @Override
-  public boolean isScopeActive(Injectable key) {
+  public boolean isScopeActive(QualifiedType qualifiedType) {
     return true;
   }
 
   @Override
-  public <T> T get(Injectable key) {
+  public <T> T get(QualifiedType qualifiedType, Callable<T> objectFactory) throws Exception {
     @SuppressWarnings("unchecked")
-    T singleton = (T)singletons.get(key);
+    T singleton = (T)singletons.get(qualifiedType);
+
+    if(singleton == null) {
+      singleton = objectFactory.call();
+
+      singletons.put(qualifiedType, singleton);
+    }
 
     return singleton;
-  }
-
-  @Override
-  public <T> void put(Injectable key, T instance) {
-    singletons.put(key, instance);
   }
 
   @Override

@@ -1,7 +1,7 @@
 package hs.ddif.core.config.consistency;
 
 import hs.ddif.core.inject.bind.Binding;
-import hs.ddif.core.store.Injectable;
+import hs.ddif.core.inject.injectable.Injectable;
 
 import java.util.Set;
 

@@ -1,7 +1,7 @@
 package hs.ddif.core.config.consistency;
 
 import hs.ddif.core.inject.bind.Binding;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.Resolver;
@@ -27,9 +27,9 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * Policy that makes sure the InjectableStore at all times contains
  * injectables that can be fully resolved.
  *
- * @param <T> the type of {@link ResolvableInjectable} the policy uses
+ * @param <T> the type of {@link Injectable} the policy uses
  */
-public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> implements StoreConsistencyPolicy<T> {
+public class InjectorStoreConsistencyPolicy<T extends Injectable> implements StoreConsistencyPolicy<T> {
 
   /**
    * Structure keeping track of {@link Key} used in direct bindings that must be available
@@ -112,7 +112,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
     return removeSources(injectables);
   }
 
-  private static <T extends ResolvableInjectable> void ensureRequiredBindingsAreAvailable(Resolver<T> resolver, T injectable) {
+  private static <T extends Injectable> void ensureRequiredBindingsAreAvailable(Resolver<T> resolver, T injectable) {
 
     /*
      * Check the created bindings for unresolved or ambiguous dependencies and scope problems:
@@ -138,7 +138,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
     }
   }
 
-  private static void ensureBindingScopeIsValid(ResolvableInjectable injectable, ResolvableInjectable dependentInjectable) {
+  private static void ensureBindingScopeIsValid(Injectable injectable, Injectable dependentInjectable) {
 
     /*
      * Perform scope check.  Having a dependency on a narrower scoped injectable would mean the injected
@@ -166,7 +166,7 @@ public class InjectorStoreConsistencyPolicy<T extends ResolvableInjectable> impl
     }
   }
 
-  private static <T extends ResolvableInjectable> void ensureNoCyclicDependencies(Resolver<T> resolver, Collection<T> injectables) {
+  private static <T extends Injectable> void ensureNoCyclicDependencies(Resolver<T> resolver, Collection<T> injectables) {
     class CycleDetector {
       Set<T> input = new HashSet<>(injectables);
       Set<T> visited = new HashSet<>();

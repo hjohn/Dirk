@@ -5,6 +5,7 @@ import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
@@ -51,11 +52,11 @@ public class InjectableStoreTest {
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
-  private InjectableStore<Injectable> store;
+  private QualifiedTypeStore<Injectable> store;
 
   @Before
   public void before() {
-    this.store = new InjectableStore<>();
+    this.store = new QualifiedTypeStore<>();
   }
 
   @Test
@@ -76,7 +77,7 @@ public class InjectableStoreTest {
     assertThat(store.resolve(new Key(Y.class))).isNotNull();
     assertThat(store.resolve(new Key(X.class))).isNotNull();
 
-    assertThrows(NoSuchInjectableException.class, () -> store.remove(classInjectableFactory.create(X.class)));
+    assertThrows(NoSuchQualifiedTypeException.class, () -> store.remove(classInjectableFactory.create(X.class)));
   }
 
   @Test
@@ -100,8 +101,8 @@ public class InjectableStoreTest {
     store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a")));
 
     assertThatThrownBy(() -> store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a"))))
-      .isExactlyInstanceOf(DuplicateInjectableException.class)
-      .hasMessage("class java.lang.String already registered for: Injectable[@javax.inject.Named(value=parameter-a) java.lang.String]")
+      .isExactlyInstanceOf(DuplicateQualifiedTypeException.class)
+      .hasMessage("Duplicate qualified type: Injectable[@javax.inject.Named(value=parameter-a) java.lang.String]")
       .hasNoCause();
   }
 
@@ -221,7 +222,7 @@ public class InjectableStoreTest {
       store.put(classInjectableFactory.create(A.class));
       fail();
     }
-    catch(DuplicateInjectableException e) {
+    catch(DuplicateQualifiedTypeException e) {
       // expected, check if store is intact:
       assertTrue(store.contains(new Key(A.class)));
       assertEquals(1, store.resolve(new Key(A.class)).size());
@@ -234,7 +235,7 @@ public class InjectableStoreTest {
       store.putAll(List.of(classInjectableFactory.create(A.class), classInjectableFactory.create(A.class)));
       fail();
     }
-    catch(DuplicateInjectableException e) {
+    catch(DuplicateQualifiedTypeException e) {
       // expected, check if store is intact:
       assertFalse(store.contains(new Key(A.class)));
     }
@@ -247,7 +248,7 @@ public class InjectableStoreTest {
       store.putAll(List.of(classInjectableFactory.create(B.class), classInjectableFactory.create(A.class)));
       fail();
     }
-    catch(DuplicateInjectableException e) {
+    catch(DuplicateQualifiedTypeException e) {
       // expected, check if store is intact:
       assertTrue(store.contains(new Key(A.class)));
       assertFalse(store.contains(new Key(B.class)));

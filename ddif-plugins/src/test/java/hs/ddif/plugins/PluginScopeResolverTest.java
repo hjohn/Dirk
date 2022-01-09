@@ -2,9 +2,9 @@ package hs.ddif.plugins;
 
 import hs.ddif.annotations.PluginScoped;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.scope.OutOfScopeException;
-import hs.ddif.core.store.Injectable;
 
 import java.util.List;
 
@@ -29,8 +29,7 @@ public class PluginScopeResolverTest {
 
   @Test
   void shouldThrowOutOfScopeExceptionWhenNoScopeActive() {
-    assertThrows(OutOfScopeException.class, () -> resolver.get(INJECTABLE));
-    assertThrows(OutOfScopeException.class, () -> resolver.put(INJECTABLE, "Hello"));
+    assertThrows(OutOfScopeException.class, () -> resolver.get(INJECTABLE, () -> "Hello"));
   }
 
   @Test
@@ -61,19 +60,11 @@ public class PluginScopeResolverTest {
     }
 
     @Nested
-    class AndAnInstanceWasPut {
-      {
-        try {
-          resolver.put(INJECTABLE, "Hello");
-        }
-        catch(OutOfScopeException e) {
-          throw new IllegalStateException(e);
-        }
-      }
+    class AndAnInstanceIsGet {
 
       @Test
-      void shouldReturnInstance() throws OutOfScopeException {
-        assertEquals("Hello", resolver.get(INJECTABLE));
+      void shouldReturnInstance() throws Exception {
+        assertEquals("Hello", resolver.get(INJECTABLE, () -> "Hello"));
       }
     }
   }

@@ -9,11 +9,11 @@ import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
-import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.Key;
+import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class AutoDiscoveringGathererTest {
   private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
-  private final InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
+  private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>();
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
   private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
@@ -51,7 +51,7 @@ public class AutoDiscoveringGathererTest {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)), classInjectableFactory);
 
     @Nested
-    class And_gather_With_ResolvableInjectable_IsCalled {
+    class And_gather_With_Injectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
         assertThat(gatherer.gather(store, Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(
@@ -80,7 +80,7 @@ public class AutoDiscoveringGathererTest {
     private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(true, List.of(new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)), classInjectableFactory);
 
     @Nested
-    class And_gather_With_ResolvableInjectable_IsCalled {
+    class And_gather_With_Injectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
         assertThat(gatherer.gather(store, Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(

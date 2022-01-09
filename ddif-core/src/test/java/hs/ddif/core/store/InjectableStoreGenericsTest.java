@@ -4,6 +4,7 @@ import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
@@ -27,14 +28,14 @@ public class InjectableStoreGenericsTest {
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
-  private InjectableStore<Injectable> store;
+  private QualifiedTypeStore<Injectable> store;
 
   @Rule @SuppressWarnings("deprecation")
   public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void before() {
-    this.store = new InjectableStore<>();
+    this.store = new QualifiedTypeStore<>();
   }
 
   /**

@@ -8,7 +8,7 @@ import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
 import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class ProducesGathererExtensionTest {
 
   @Test
   void shouldFindProducesAnnotatedMethods() throws NoSuchMethodException, SecurityException, NoSuchFieldException {
-    List<ResolvableInjectable> injectables = extension.getDerived(classInjectableFactory.create(A.class));
+    List<Injectable> injectables = extension.getDerived(classInjectableFactory.create(A.class));
 
     assertThat(injectables).containsExactlyInAnyOrder(
       methodInjectableFactory.create(A.class.getDeclaredMethod("createB"), A.class),

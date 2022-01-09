@@ -15,7 +15,7 @@ import javax.inject.Qualifier;
 /**
  * Represents a {@link Type} with a set of qualifier {@link Annotation}s.
  */
-public class Key {
+public class Key implements QualifiedType {
   private final Set<Annotation> qualifiers;
   private final Type type;
 
@@ -54,6 +54,7 @@ public class Key {
    *
    * @return an unmodifiable set of qualifier {@link Annotation}s, never null and never contains nulls but can be empty
    */
+  @Override
   public Set<Annotation> getQualifiers() {
     return qualifiers;
   }
@@ -63,6 +64,7 @@ public class Key {
    *
    * @return the {@link Type}, never null
    */
+  @Override
   public Type getType() {
     return type;
   }

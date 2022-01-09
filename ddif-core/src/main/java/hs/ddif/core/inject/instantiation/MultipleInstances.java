@@ -18,7 +18,7 @@ public class MultipleInstances extends InstanceResolutionFailure {
    *
    * @param key a {@link Key}, cannot be null
    * @param matchers a list of {@link Predicate}s, cannot be null
-   * @param injectables a set of {@link hs.ddif.core.store.Injectable}s, cannot be null
+   * @param injectables a set of injectables, cannot be null
    */
   public MultipleInstances(Key key, List<Predicate<Type>> matchers, Set<?> injectables) {
     super("Multiple matching instances: " + key + toCriteriaString(matchers) + ": " + injectables);

@@ -15,7 +15,7 @@ import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.inject.instantiation.MultipleInstances;
@@ -23,8 +23,8 @@ import hs.ddif.core.inject.instantiation.NoSuchInstance;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.Key;
+import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
 
@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DefaultInstantiatorTest {
-  private final InjectableStore<ResolvableInjectable> store = new InjectableStore<>();
+  private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>();
   private final AbstractScopeResolver<String> scopeResolver = new AbstractScopeResolver<>() {
     @Override
     public Class<? extends Annotation> getScopeAnnotationClass() {
@@ -168,12 +168,12 @@ public class DefaultInstantiatorTest {
     void shouldThrowOutOfScopeExceptionWhenScopeNotActive() {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(D.class)))
         .isExactlyInstanceOf(OutOfScopeException.class)
-        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$TestScoped for key: Injectable[hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$D]")
+        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$TestScoped for: Injectable[hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$D]")
         .hasNoCause();
 
       assertThatThrownBy(() -> instantiator.findInstance(new Key(D.class)))
         .isExactlyInstanceOf(OutOfScopeException.class)
-        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$TestScoped for key: Injectable[hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$D]")
+        .hasMessage("Scope not active: interface hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$TestScoped for: Injectable[hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$D]")
         .hasNoCause();
     }
 

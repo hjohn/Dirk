@@ -3,7 +3,7 @@ package hs.ddif.core.config;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
+import hs.ddif.core.inject.injectable.Injectable;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -30,7 +30,7 @@ public class ProviderGathererExtension implements AutoDiscoveringGatherer.Extens
   }
 
   @Override
-  public List<ResolvableInjectable> getDerived(ResolvableInjectable injectable) {
+  public List<Injectable> getDerived(Injectable injectable) {
     Class<?> cls = TypeUtils.getRawType(injectable.getType(), null);
 
     if(Provider.class.isAssignableFrom(cls)) {

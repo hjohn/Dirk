@@ -5,9 +5,9 @@ import hs.ddif.core.config.gather.Gatherer;
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
-import hs.ddif.core.inject.injectable.ResolvableInjectable;
-import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.store.Key;
+import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
 
 import java.lang.reflect.Type;
@@ -33,15 +33,15 @@ public class AutoDiscoveringGatherer implements Gatherer {
   public interface Extension {
 
     /**
-     * Returns zero or more {@link ResolvableInjectable}s which are derived from the
+     * Returns zero or more {@link Injectable}s which are derived from the
      * given injectable. For example, the given injectable could have special
      * annotations which supply further injectables. These in turn could require
      * dependencies (as parameters) that may need to be auto discovered first.
      *
-     * @param injectable a {@link ResolvableInjectable} use as base for derivation, never null
-     * @return a list of {@link ResolvableInjectable}, never null and never contains nulls
+     * @param injectable a {@link Injectable} use as base for derivation, never null
+     * @return a list of {@link Injectable}, never null and never contains nulls
      */
-    List<ResolvableInjectable> getDerived(ResolvableInjectable injectable);
+    List<Injectable> getDerived(Injectable injectable);
   }
 
   private final boolean autoDiscovery;
@@ -62,18 +62,18 @@ public class AutoDiscoveringGatherer implements Gatherer {
   }
 
   @Override
-  public Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Collection<ResolvableInjectable> inputInjectables) {
+  public Set<Injectable> gather(Resolver<Injectable> resolver, Collection<Injectable> inputInjectables) {
     return new Executor(resolver, inputInjectables).executor();
   }
 
   @Override
-  public Set<ResolvableInjectable> gather(Resolver<ResolvableInjectable> resolver, Key key) throws DiscoveryFailure {
+  public Set<Injectable> gather(Resolver<Injectable> resolver, Key key) throws DiscoveryFailure {
     if(!autoDiscovery || !resolver.resolve(key).isEmpty()) {
       return Set.of();
     }
 
     try {
-      ResolvableInjectable injectable = classInjectableFactory.create(key.getType());
+      Injectable injectable = classInjectableFactory.create(key.getType());
 
       if(injectable.getQualifiers().containsAll(key.getQualifiers())) {
         return new Executor(resolver, List.of(injectable)).executor();
@@ -87,21 +87,21 @@ public class AutoDiscoveringGatherer implements Gatherer {
   }
 
   class Executor {
-    private final InjectableStore<ResolvableInjectable> tempStore = new InjectableStore<>();
-    private final Deque<Supplier<ResolvableInjectable>> suppliers = new ArrayDeque<>();
+    private final QualifiedTypeStore<Injectable> tempStore = new QualifiedTypeStore<>();
+    private final Deque<Supplier<Injectable>> suppliers = new ArrayDeque<>();
     private final IncludingResolver includingResolver;
 
-    Executor(Resolver<ResolvableInjectable> resolver, Collection<ResolvableInjectable> inputInjectables) {
+    Executor(Resolver<Injectable> resolver, Collection<Injectable> inputInjectables) {
       this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
 
       inputInjectables.forEach(this::add);
     }
 
-    Set<ResolvableInjectable> executor() {
+    Set<Injectable> executor() {
       List<RuntimeException> surpressedExceptions = new ArrayList<>();
 
       while(surpressedExceptions.size() < suppliers.size()) {
-        Supplier<ResolvableInjectable> supplier = suppliers.removeFirst();
+        Supplier<Injectable> supplier = suppliers.removeFirst();
 
         try {
           add(supplier.get());
@@ -128,12 +128,12 @@ public class AutoDiscoveringGatherer implements Gatherer {
       throw bindingException;
     }
 
-    private void add(ResolvableInjectable injectable) {
+    private void add(Injectable injectable) {
       if(injectable != null) {
         tempStore.put(injectable);
 
         for(Extension extension : extensions) {
-          suppliers.addAll(extension.getDerived(injectable).stream().map(i -> (Supplier<ResolvableInjectable>)() -> i).collect(Collectors.toList()));
+          suppliers.addAll(extension.getDerived(injectable).stream().map(i -> (Supplier<Injectable>)() -> i).collect(Collectors.toList()));
         }
 
         if(autoDiscovery) {
@@ -143,18 +143,18 @@ public class AutoDiscoveringGatherer implements Gatherer {
     }
   }
 
-  private static class IncludingResolver implements Resolver<ResolvableInjectable> {
-    final Resolver<ResolvableInjectable> base;
-    final Resolver<ResolvableInjectable> include;
+  private static class IncludingResolver implements Resolver<Injectable> {
+    final Resolver<Injectable> base;
+    final Resolver<Injectable> include;
 
-    IncludingResolver(Resolver<ResolvableInjectable> base, Resolver<ResolvableInjectable> include) {
+    IncludingResolver(Resolver<Injectable> base, Resolver<Injectable> include) {
       this.base = base;
       this.include = include;
     }
 
     @Override
-    public Set<ResolvableInjectable> resolve(Key key) {
-      Set<ResolvableInjectable> set = new HashSet<>(base.resolve(key));
+    public Set<Injectable> resolve(Key key) {
+      Set<Injectable> set = new HashSet<>(base.resolve(key));
 
       set.addAll(include.resolve(key));
 
@@ -162,8 +162,8 @@ public class AutoDiscoveringGatherer implements Gatherer {
     }
   }
 
-  private List<Supplier<ResolvableInjectable>> autoDiscover(Resolver<ResolvableInjectable> resolver, ResolvableInjectable injectable) {
-    List<Supplier<ResolvableInjectable>> suppliers = new ArrayList<>();
+  private List<Supplier<Injectable>> autoDiscover(Resolver<Injectable> resolver, Injectable injectable) {
+    List<Supplier<Injectable>> suppliers = new ArrayList<>();
 
     for(Binding binding : injectable.getBindings()) {
       if(!binding.isCollection() && !binding.isOptional() && binding.isDirect()) {
@@ -192,7 +192,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
    * fail if the type is abstract or if the key has any qualifiers as a class injectable
    * cannot have qualifiers.
    */
-  private ResolvableInjectable attemptCreateInjectable(Key key) {
+  private Injectable attemptCreateInjectable(Key key) {
     Type type = key.getType();
 
     if(key.getQualifiers().isEmpty()) {
@@ -202,7 +202,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
     throw new BindingException("Auto discovered class cannot be required to have qualifiers: " + key);
   }
 
-  private static boolean isResolvable(Resolver<ResolvableInjectable> resolver, Key key) {
+  private static boolean isResolvable(Resolver<Injectable> resolver, Key key) {
     return !resolver.resolve(key).isEmpty();
   }
 }

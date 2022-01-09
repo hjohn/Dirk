@@ -20,34 +20,34 @@ import javax.inject.Qualifier;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Constructs {@link ResolvableInjectable}s for {@link Field} values of a specific
+ * Constructs {@link Injectable}s for {@link Field} values of a specific
  * owner {@link Type}.
  */
 public class FieldInjectableFactory {
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
 
   private final BindingProvider bindingProvider;
-  private final ResolvableInjectableFactory injectableFactory;
+  private final InjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be null
-   * @param injectableFactory a {@link ResolvableInjectableFactory}, cannot be null
+   * @param injectableFactory a {@link InjectableFactory}, cannot be null
    */
-  public FieldInjectableFactory(BindingProvider bindingProvider, ResolvableInjectableFactory injectableFactory) {
+  public FieldInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
 
   /**
-   * Creates a new {@link ResolvableInjectable}.
+   * Creates a new {@link Injectable}.
    *
    * @param field a {@link Field}, cannot be null
    * @param ownerType the type of the owner of the field, cannot be null and must match with {@link Field#getDeclaringClass()}
-   * @return a new {@link ResolvableInjectable}, never null
+   * @return a new {@link Injectable}, never null
    */
-  public ResolvableInjectable create(Field field, Type ownerType) {
+  public Injectable create(Field field, Type ownerType) {
     if(field == null) {
       throw new IllegalArgumentException("field cannot be null");
     }

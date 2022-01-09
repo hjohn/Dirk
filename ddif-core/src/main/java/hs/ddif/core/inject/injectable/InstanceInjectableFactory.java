@@ -9,30 +9,30 @@ import java.util.Set;
 import javax.inject.Singleton;
 
 /**
- * Constructs {@link ResolvableInjectable}s for a given object instance.
+ * Constructs {@link Injectable}s for a given object instance.
  */
 public class InstanceInjectableFactory {
   private static final Annotation SINGLETON = Annotations.of(Singleton.class);
 
-  private final ResolvableInjectableFactory factory;
+  private final InjectableFactory factory;
 
   /**
    * Constructs a new instance.
    *
-   * @param factory a {@link ResolvableInjectableFactory}, cannot be null
+   * @param factory a {@link InjectableFactory}, cannot be null
    */
-  public InstanceInjectableFactory(ResolvableInjectableFactory factory) {
+  public InstanceInjectableFactory(InjectableFactory factory) {
     this.factory = factory;
   }
 
   /**
-   * Creates a new {@link ResolvableInjectable}.
+   * Creates a new {@link Injectable}.
    *
    * @param instance an instance, cannot be null
    * @param qualifiers an array of qualifier {@link Annotation}s
-   * @return a new {@link ResolvableInjectable}, never null
+   * @return a new {@link Injectable}, never null
    */
-  public ResolvableInjectable create(Object instance, Annotation... qualifiers) {
+  public Injectable create(Object instance, Annotation... qualifiers) {
     if(instance == null) {
       throw new IllegalArgumentException("instance cannot be null");
     }
