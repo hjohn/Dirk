@@ -4,6 +4,8 @@ import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.config.consistency.InjectorStoreConsistencyPolicy;
 import hs.ddif.core.config.gather.Gatherer;
+import hs.ddif.core.config.scope.SingletonScopeResolver;
+import hs.ddif.core.config.scope.WeakSingletonScopeResolver;
 import hs.ddif.core.config.standard.DefaultInstantiator;
 import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
 import hs.ddif.core.config.standard.InstantiatorBasedInstanceResolver;
@@ -12,8 +14,6 @@ import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.injectable.ResolvableInjectable;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.scope.SingletonScopeResolver;
-import hs.ddif.core.scope.WeakSingletonScopeResolver;
 import hs.ddif.core.store.InjectableStore;
 
 import java.lang.annotation.Annotation;

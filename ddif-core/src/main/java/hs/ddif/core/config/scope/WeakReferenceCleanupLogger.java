@@ -1,4 +1,4 @@
-package hs.ddif.core.scope;
+package hs.ddif.core.config.scope;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;

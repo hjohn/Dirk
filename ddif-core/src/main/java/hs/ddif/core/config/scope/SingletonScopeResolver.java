@@ -1,5 +1,6 @@
-package hs.ddif.core.scope;
+package hs.ddif.core.config.scope;
 
+import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Injectable;
 
 import java.lang.annotation.Annotation;

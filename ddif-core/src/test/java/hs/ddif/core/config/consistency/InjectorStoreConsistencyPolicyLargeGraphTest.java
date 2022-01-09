@@ -1,6 +1,7 @@
 package hs.ddif.core.config.consistency;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.injectable.ResolvableInjectable;
@@ -9,7 +10,6 @@ import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.inject.instantiation.MultipleInstances;
 import hs.ddif.core.inject.instantiation.NoSuchInstance;
 import hs.ddif.core.scope.OutOfScopeException;
-import hs.ddif.core.scope.SingletonScopeResolver;
 import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
