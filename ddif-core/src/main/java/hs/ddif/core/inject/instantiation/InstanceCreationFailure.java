@@ -71,6 +71,12 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
 
   @Override
   public InstanceCreationException toRuntimeException() {
-    return new InstanceCreationException(getMessage(), getCause());
+    InstanceCreationException exception = new InstanceCreationException(getMessage(), getCause());
+
+    for(Throwable t : getSuppressed()) {
+      exception.addSuppressed(t);
+    }
+
+    return exception;
   }
 }

@@ -303,9 +303,9 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
   }
 
   /**
-   * Returns a set with all {@link QualifiedType}s that are part of this store.
+   * Returns a set with a copy of all {@link QualifiedType}s that are part of this store.
    *
-   * @return a set with all {@link QualifiedType}s that are part of this store, never {@code null}
+   * @return a set with a copy of all {@link QualifiedType}s that are part of this store, never {@code null}
    *   or contains {@code null}s but can be empty
    */
   public synchronized Set<T> toSet() {

@@ -11,8 +11,10 @@ import hs.ddif.core.store.Key;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * Default implementation {@link Binding}.
@@ -101,7 +103,7 @@ public class DefaultBinding implements Binding {
       return "Parameter " + Arrays.asList(((Executable)accessibleObject).getParameters()).indexOf(parameter) + " of [" + accessibleObject + "]";
     }
     else if(accessibleObject != null) {
-      return "Field [" + accessibleObject + "]";
+      return "Field [" + (getKey().getQualifiers().isEmpty() ? "" : getKey().getQualifiers().stream().map(Object::toString).collect(Collectors.joining(" ")) + " ") + ((Field)accessibleObject).toGenericString() + "]";
     }
 
     return "Owner Type [" + key.getType() + "]";

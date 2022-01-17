@@ -121,7 +121,7 @@ public class InjectorDiscoveryTest {
       .hasMessage("Exception during auto discovery: [class hs.ddif.core.InjectorDiscoveryTest$G]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BindingException.class)
-      .hasMessageMatching(Pattern.quote("Unable to inject: Field [hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a] with: [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") class hs.ddif.core.InjectorDiscoveryTest$A]"))
+      .hasMessageMatching(Pattern.quote("Unable to inject: Field [@javax.inject.Named(\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a] with: [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") class hs.ddif.core.InjectorDiscoveryTest$A]"))
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BindingException.class)
       .hasMessageMatching(Pattern.quote("Auto discovered class cannot be required to have qualifiers: [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") class hs.ddif.core.InjectorDiscoveryTest$A]"))
