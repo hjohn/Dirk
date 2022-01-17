@@ -7,9 +7,10 @@ import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysis;
+import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
-import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.inject.instantiation.MultipleInstances;
@@ -39,7 +40,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new);
 
   @Test
-  void shouldConstructSimpleFactory() {
+  void shouldConstructSimpleFactory() throws BindingException {
     Injectable injectable = create(FactoryA.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryA.class::isAssignableFrom);
@@ -51,7 +52,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldConstructFactoryWithQualifiers() {
+  void shouldConstructFactoryWithQualifiers() throws BindingException {
     Injectable injectable = create(FactoryB.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryB.class::isAssignableFrom);
@@ -63,7 +64,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldConstructFactoryWithDependencies() {
+  void shouldConstructFactoryWithDependencies() throws BindingException {
     Injectable injectable = create(FactoryC.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryC.class::isAssignableFrom);
@@ -94,29 +95,29 @@ public class AssistedClassInjectableFactoryTemplateTest {
   @Test
   void shouldRejectWhenFactoryAndProductHaveDifferentNumberOfArguments() {
     assertThatThrownBy(() -> create(ContradictingFactoryA.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Factory method has wrong number of arguments: [public abstract hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$Product hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$ContradictingFactoryA.create(java.lang.Integer)] should have 2 argument(s) of types: {x=class java.lang.Integer, y=class java.lang.Integer}")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public abstract hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$Product hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$ContradictingFactoryA.create(java.lang.Integer)] should have 2 argument(s) of types: {x=class java.lang.Integer, y=class java.lang.Integer}")
       .hasNoCause();
   }
 
   @Test
   void shouldRejectWhenFactoryIsMissingRequiredParameters() {
     assertThatThrownBy(() -> create(ContradictingFactoryB.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Factory method is missing required argument: [public abstract hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$Product hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$ContradictingFactoryB.create(java.lang.Integer,java.lang.Integer)] is missing required argument with name: z")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public abstract hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$Product hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$ContradictingFactoryB.create(java.lang.Integer,java.lang.Integer)] is missing required argument with name: z")
       .hasNoCause();
   }
 
   @Test
   void shouldRejectWhenFactoryParameterIsOfWrongType() {
     assertThatThrownBy(() -> create(ContradictingFactoryC.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Factory method has argument of wrong type: [public abstract hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$Product hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$ContradictingFactoryC.create(java.lang.Integer,java.lang.String)] has argument [java.lang.String y] with name 'y' that should be of type [class java.lang.Integer] but was: class java.lang.String")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public abstract hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$Product hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$ContradictingFactoryC.create(java.lang.Integer,java.lang.String)] has argument [java.lang.String y] with name 'y' that should be of type [class java.lang.Integer] but was: class java.lang.String")
       .hasNoCause();
   }
 
   @Test
-  void shouldInstantiateTypeViaFactory() throws NoSuchInstance, MultipleInstances, InstanceCreationFailure, OutOfScopeException {
+  void shouldInstantiateTypeViaFactory() throws NoSuchInstance, MultipleInstances, InstanceCreationFailure, OutOfScopeException, BindingException {
     QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>();
     Instantiator instantiator = new DefaultInstantiator(store, new AutoDiscoveringGatherer(false, List.of(), InjectableFactories.forClass()), new SingletonScopeResolver());
 
@@ -137,7 +138,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
     assertThat(product1).isNotEqualTo(product3);
   }
 
-  private Injectable create(Type type) {
+  private Injectable create(Type type) throws BindingException {
     TypeAnalysis<Context> analysis = extension.analyze(type);
 
     if(analysis.isNegative()) {

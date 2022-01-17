@@ -2,7 +2,6 @@ package hs.ddif.core.inject.injectable;
 
 import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
-import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.store.Key;
@@ -17,8 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,38 +29,50 @@ public class FieldInjectableFactoryTest {
 
   @Test
   void constructorShouldRejectNullField() {
-    assertThat(assertThrows(IllegalArgumentException.class, () -> fieldInjectableFactory.create(null, A.class)))
-      .hasMessage("field cannot be null");
+    assertThatThrownBy(() -> fieldInjectableFactory.create(null, A.class))
+      .isExactlyInstanceOf(IllegalArgumentException.class)
+      .hasMessage("field cannot be null")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectNullOwnerType() {
-    assertThat(assertThrows(IllegalArgumentException.class, () -> fieldInjectableFactory.create(A.class.getDeclaredField("a"), null)))
-      .hasMessage("ownerType cannot be null");
+    assertThatThrownBy(() -> fieldInjectableFactory.create(A.class.getDeclaredField("a"), null))
+      .isExactlyInstanceOf(IllegalArgumentException.class)
+      .hasMessage("ownerType cannot be null")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectIncompatibleOwnerType() {
-    assertThat(assertThrows(IllegalArgumentException.class, () -> fieldInjectableFactory.create(A.class.getDeclaredField("a"), B.class)))
-      .hasMessageStartingWith("ownerType must be assignable to field's declaring class:");
+    assertThatThrownBy(() -> fieldInjectableFactory.create(A.class.getDeclaredField("a"), B.class))
+      .isExactlyInstanceOf(IllegalArgumentException.class)
+      .hasMessage("ownerType must be assignable to field's declaring class: class hs.ddif.core.inject.injectable.FieldInjectableFactoryTest$B; declaring class: class hs.ddif.core.inject.injectable.FieldInjectableFactoryTest$A")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectFieldWithUnresolvableReturnType() {
-    assertThat(assertThrows(BindingException.class, () -> fieldInjectableFactory.create(B.class.getDeclaredField("b"), B.class)))
-      .hasMessageStartingWith("Field has unresolved type:");
+    assertThatThrownBy(() -> fieldInjectableFactory.create(B.class.getDeclaredField("b"), B.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Field [public java.lang.Object hs.ddif.core.inject.injectable.FieldInjectableFactoryTest$B.b] is of unresolvable type")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectFieldWithUnresolvableTypeVariables() {
-    assertThat(assertThrows(BindingException.class, () -> fieldInjectableFactory.create(B.class.getDeclaredField("d"), B.class)))
-      .hasMessageStartingWith("Field has unresolved type variables:");
+    assertThatThrownBy(() -> fieldInjectableFactory.create(B.class.getDeclaredField("d"), B.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Field [public java.util.List hs.ddif.core.inject.injectable.FieldInjectableFactoryTest$B.d] has unresolvable type variables")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectFieldAnnotatedWithInject() {
-    assertThat(assertThrows(BindingException.class, () -> fieldInjectableFactory.create(A.class.getDeclaredField("c"), A.class)))
-      .hasMessageStartingWith("Field cannot be annotated with Inject:");
+    assertThatThrownBy(() -> fieldInjectableFactory.create(A.class.getDeclaredField("c"), A.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Field [java.lang.String hs.ddif.core.inject.injectable.FieldInjectableFactoryTest$A.c] cannot be annotated with Inject")
+      .hasNoCause();
   }
 
   @Test

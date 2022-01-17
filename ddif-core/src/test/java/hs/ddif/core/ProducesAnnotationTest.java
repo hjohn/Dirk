@@ -5,7 +5,7 @@ import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.CyclicDependencyException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
-import hs.ddif.core.inject.bind.BindingException;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.store.DuplicateQualifiedTypeException;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
@@ -75,41 +75,51 @@ public class ProducesAnnotationTest {
 
   @Test
   void registerShouldRejectBadlyAnnotatedProducesField() {
-    BindingException e = assertThrows(BindingException.class, () -> injector.register(BadFactory1.class));
+    assertThatThrownBy(() -> injector.register(BadFactory1.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Field [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory1.size] cannot be annotated with Inject")
+      .hasNoCause();
 
-    assertThat(e).hasMessageStartingWith("Field cannot be annotated with Inject:");
     assertFalse(injector.contains(Object.class));
   }
 
   @Test
   void registerShouldRejectBadlyAnnotatedProducesMethod() {
-    BindingException e = assertThrows(BindingException.class, () -> injector.register(BadFactory2.class));
+    assertThatThrownBy(() -> injector.register(BadFactory2.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory2.create(java.lang.Double)] cannot be annotated with Inject")
+      .hasNoCause();
 
-    assertThat(e).hasMessageStartingWith("Method cannot be annotated with Inject:");
     assertFalse(injector.contains(Object.class));
   }
 
   @Test
   void registerShouldRejectVoidProducesMethod() {
-    BindingException e = assertThrows(BindingException.class, () -> injector.register(BadFactory3.class));
+    assertThatThrownBy(() -> injector.register(BadFactory3.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [void hs.ddif.core.ProducesAnnotationTest$BadFactory3.create()] has no return type")
+      .hasNoCause();
 
-    assertThat(e).hasMessageStartingWith("Method has no return type:");
     assertFalse(injector.contains(Object.class));
   }
 
   @Test
   void registerShouldRejectProducesMethodWithUnresolvedTypeVariables() {
-    BindingException e = assertThrows(BindingException.class, () -> injector.register(GenericProduces.class));  // GenericProduces has a Produces method with a type variable T which is not provided
+    assertThatThrownBy(() -> injector.register(GenericProduces.class))  // GenericProduces has a Produces method with a type variable T which is not provided
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericProduces.create()] has unresolvable type variables")
+      .hasNoCause();
 
-    assertThat(e).hasMessage("Method has unresolved type variables: public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericProduces.create()");
     assertFalse(injector.contains(Object.class));
   }
 
   @Test
   void registerShouldRejectClassWithUnresolvedTypeVariables() {
-    BindingException e = assertThrows(BindingException.class, () -> injector.register(GenericFactory1.class));  // GenericFactory1 has a type variable T which is not provided
+    assertThatThrownBy(() -> injector.register(GenericFactory1.class))  // GenericFactory1 has a type variable T which is not provided
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericFactory1.create()] has unresolvable type variables")
+      .hasNoCause();
 
-    assertThat(e).hasMessage("Unresolved type variables in class hs.ddif.core.ProducesAnnotationTest$GenericFactory1 are not allowed: [T]");
     assertFalse(injector.contains(Object.class));
   }
 

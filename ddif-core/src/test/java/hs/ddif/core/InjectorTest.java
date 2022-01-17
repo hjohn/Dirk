@@ -5,7 +5,7 @@ import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.config.consistency.ViolatesSingularDependencyException;
-import hs.ddif.core.inject.bind.BindingException;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.store.DuplicateQualifiedTypeException;
 import hs.ddif.core.store.NoSuchQualifiedTypeException;
 import hs.ddif.core.test.injectables.AbstractBean;
@@ -295,7 +295,19 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingInterface() {
-    assertThrows(BindingException.class, () -> injector.remove(SimpleInterface.class));
+    assertThatThrownBy(() -> injector.remove(SimpleInterface.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Path [interface hs.ddif.core.test.injectables.SimpleInterface]: [interface hs.ddif.core.test.injectables.SimpleInterface] cannot be injected; failures:\n"
+        + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.test.injectables.SimpleInterface\n"
+        + " - Type cannot be abstract: interface hs.ddif.core.test.injectables.SimpleInterface"
+      )
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[interface hs.ddif.core.test.injectables.SimpleInterface] cannot be injected; failures:\n"
+        + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.test.injectables.SimpleInterface\n"
+        + " - Type cannot be abstract: interface hs.ddif.core.test.injectables.SimpleInterface"
+      )
+      .hasNoCause();
   }
 
   @Test
@@ -367,7 +379,13 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRegisteringInterface() {
-    assertThrows(BindingException.class, () -> injector.register(List.class));
+    assertThatThrownBy(() -> injector.register(List.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Path [interface java.util.List]: [interface java.util.List] cannot have unresolvable type variables: [E]")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[interface java.util.List] cannot have unresolvable type variables: [E]")
+      .hasNoCause();
   }
 
   @Test
@@ -552,10 +570,13 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldThrowExceptionWhenFinalFieldAnnotatedWithInject() throws NoSuchFieldException, SecurityException {
+  public void shouldThrowExceptionWhenFinalFieldAnnotatedWithInject() throws SecurityException {
     assertThatThrownBy(() -> injector.register(FieldInjectionSampleWithAnnotatedFinalField.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Cannot inject final field: " + FieldInjectionSampleWithAnnotatedFinalField.class.getDeclaredField("injectedValue") + " in: " + FieldInjectionSampleWithAnnotatedFinalField.class)
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Path [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField]: Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
       .hasNoCause();
   }
 
@@ -576,8 +597,11 @@ public class InjectorTest {
   @Test
   public void shouldThrowExceptionWhenMultipleConstructorsAnnotatedWithInject() {
     assertThatThrownBy(() -> injector.register(ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Multiple @Inject annotated constructors found, but only one allowed: " + ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class)
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Path [class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors]: [class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .hasNoCause();
   }
 
@@ -707,7 +731,7 @@ public class InjectorTest {
 
     assertThatThrownBy(() -> injector.getInstance(BeanWithBadPostConstruct.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Exception in PostConstruct call: private void hs.ddif.core.InjectorTest$BeanWithBadPostConstruct.postConstruct()")
+      .hasMessage("Method [private void hs.ddif.core.InjectorTest$BeanWithBadPostConstruct.postConstruct()] call failed for PostConstruct")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InvocationTargetException.class)
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -876,12 +900,12 @@ public class InjectorTest {
 
     assertThatThrownBy(() -> injector.getInstance(BadPostConstruct.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Exception in PostConstruct call: void hs.ddif.core.InjectorTest$BadPostConstruct.postConstruct()")
+      .hasMessage("Method [void hs.ddif.core.InjectorTest$BadPostConstruct.postConstruct()] call failed for PostConstruct")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InvocationTargetException.class)
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Already under construction (dependency creation loop in @PostConstruct method!): class hs.ddif.core.InjectorTest$BadPostConstruct")
+      .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in @PostConstruct method!)")
       .hasNoCause();
   }
 }

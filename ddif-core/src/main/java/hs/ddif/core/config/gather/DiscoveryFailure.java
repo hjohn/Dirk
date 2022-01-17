@@ -19,4 +19,14 @@ public class DiscoveryFailure extends InstanceCreationFailure {
   public DiscoveryFailure(Key key, String message, Throwable cause) {
     super(key, message, cause);
   }
+
+  /**
+   * Creates a new instance.
+   *
+   * @param message a message describing the problem
+   * @param cause an optional cause, can be {@code null}
+   */
+  public DiscoveryFailure(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

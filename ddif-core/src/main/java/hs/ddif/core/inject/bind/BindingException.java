@@ -1,30 +1,30 @@
 package hs.ddif.core.inject.bind;
 
-import javax.inject.Inject;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 
 /**
  * Thrown when a {@link Class} or instance which is being registered with an Injector
  * is not setup correctly for injection.  This can occur for example when multiple constructors
- * are annotated with {@link Inject} or final fields are annotated as such.
+ * are annotated with {@link javax.inject.Inject} or final fields are annotated as such.
  */
-public class BindingException extends RuntimeException {
+public class BindingException extends Exception {
 
-  /**
-   * Constructs a new instance
-   *
-   * @param message a message
-   * @param cause a {@link Throwable} cause, can be {@code null}
-   */
-  public BindingException(String message, Throwable cause) {
-    super(message, cause);
+  BindingException(Type ancestor, Member member, String message, Throwable cause) {
+    super(describe(member) + " of [" + ancestor + "] " + message + (cause == null ? "" : ": " + cause.getMessage()), cause);
   }
 
-  /**
-   * Constructs a new instance
-   *
-   * @param message a message
-   */
-  public BindingException(String message) {
-    super(message);
+  BindingException(Type ancestor, Member member, String message) {
+    this(ancestor, member, message, null);
+  }
+
+  BindingException(Class<?> cls, String message) {
+    super("[" + cls + "] " + message);
+  }
+
+  private static String describe(Member member) {
+    return (member instanceof Method ? "Method" : member instanceof Field ? "Field" : "Constructor") + " [" + member + "]";
   }
 }

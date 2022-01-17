@@ -2,7 +2,7 @@ package hs.ddif.core.config;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
-import hs.ddif.core.inject.bind.BindingException;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
 import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
@@ -39,28 +39,28 @@ public class ProducesGathererExtension implements AutoDiscoveringGatherer.Extens
   }
 
   @Override
-  public List<Injectable> getDerived(Injectable injectable) {
+  public List<Injectable> getDerived(Type type) {
     List<Injectable> injectables = new ArrayList<>();
-    Class<?> injectableClass = TypeUtils.getRawType(injectable.getType(), null);
+    Class<?> injectableClass = TypeUtils.getRawType(type, null);
 
     for(Method method : MethodUtils.getMethodsListWithAnnotation(injectableClass, Produces.class, true, true)) {
       Type providedType = method.getGenericReturnType();
 
       if(TypeUtils.getRawType(providedType, null) == Provider.class) {
-        throw new BindingException("Nested Provider not allowed in: " + method);
+        throw new DefinitionException(method, "cannot have a return type with a nested Provider");
       }
 
-      injectables.add(methodInjectableFactory.create(method, injectable.getType()));
+      injectables.add(methodInjectableFactory.create(method, type));
     }
 
     for(Field field : FieldUtils.getFieldsListWithAnnotation(injectableClass, Produces.class)) {
       Type providedType = field.getGenericType();
 
       if(TypeUtils.getRawType(providedType, null) == Provider.class) {
-        throw new BindingException("Nested Provider not allowed in: " + field);
+        throw new DefinitionException(field, "cannot be of a type with a nested Provider");
       }
 
-      injectables.add(fieldInjectableFactory.create(field, injectable.getType()));
+      injectables.add(fieldInjectableFactory.create(field, type));
     }
 
     return injectables;

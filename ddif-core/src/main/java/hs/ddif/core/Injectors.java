@@ -38,7 +38,6 @@ public class Injectors {
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
     return new Injector(
-      classInjectableFactory,
       instanceInjectableFactory,
       createGatherer(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, true),
       scopeResolvers
@@ -60,7 +59,6 @@ public class Injectors {
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
     return new Injector(
-      classInjectableFactory,
       instanceInjectableFactory,
       createGatherer(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, false),
       scopeResolvers

@@ -1,6 +1,5 @@
 package hs.ddif.core.inject.injectable;
 
-import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injection.Injection;
 import hs.ddif.core.inject.injection.ObjectFactory;
@@ -64,20 +63,20 @@ public class FieldInjectableFactory {
     Type type = TypeUtils.unrollVariables(typeArguments, field.getGenericType());
 
     if(type == null) {
-      throw new BindingException("Field has unresolved type: " + field);
+      throw new DefinitionException(field, "is of unresolvable type");
     }
     if(TypeUtils.containsTypeVariables(type)) {
-      throw new BindingException("Field has unresolved type variables: " + field);
+      throw new DefinitionException(field, "has unresolvable type variables");
     }
     if(field.isAnnotationPresent(Inject.class)) {
-      throw new BindingException("Field cannot be annotated with Inject: " + field);
+      throw new DefinitionException(field, "cannot be annotated with Inject");
     }
 
     return injectableFactory.create(
       type,
       Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER),
       bindingProvider.ofField(field, ownerType),
-      BindingProvider.findScopeAnnotation(field),
+      ScopeAnnotations.find(field),
       field,  // for proper discrimination, the exact field should also be taken into account, next to its generic type
       new FieldObjectFactory(field)
     );
@@ -98,7 +97,7 @@ public class FieldInjectableFactory {
         return field.get(injections.isEmpty() ? null : injections.get(0).getValue());
       }
       catch(Exception e) {
-        throw new InstanceCreationFailure(field, "Exception while constructing instance via Producer", e);
+        throw new InstanceCreationFailure(field, "read failed", e);
       }
     }
   }

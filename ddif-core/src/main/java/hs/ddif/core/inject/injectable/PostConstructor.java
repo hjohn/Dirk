@@ -40,7 +40,7 @@ class PostConstructor {
         method.invoke(instance);
       }
       catch(Exception e) {
-        throw new InstanceCreationFailure(method, "Exception in PostConstruct call", e);
+        throw new InstanceCreationFailure(method, "call failed for PostConstruct", e);
       }
     }
   }

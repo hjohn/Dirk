@@ -2,6 +2,7 @@ package hs.ddif.core.config.consistency;
 
 import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.inject.bind.Binding;
+import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.InjectableFactories;
@@ -23,7 +24,7 @@ public class UnresolvableDependencyExceptionTest {
   private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
 
   @Test
-  void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
+  void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException, BindingException {
     List<Binding> bindings = classInjectableFactory.create(A.class).getBindings();
     UnresolvableDependencyException e;
 

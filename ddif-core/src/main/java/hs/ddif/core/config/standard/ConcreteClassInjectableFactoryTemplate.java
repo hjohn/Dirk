@@ -1,11 +1,13 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.core.inject.bind.Binding;
+import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate;
 import hs.ddif.core.inject.injectable.ClassObjectFactory;
 import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactory;
+import hs.ddif.core.inject.injectable.ScopeAnnotations;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -58,7 +60,7 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public Injectable create(TypeAnalysis<Type> analysis) {
+  public Injectable create(TypeAnalysis<Type> analysis) throws BindingException {
     Type type = analysis.getData();
     Class<?> cls = TypeUtils.getRawType(type, null);
     Constructor<?> constructor = BindingProvider.getConstructor(cls);
@@ -68,7 +70,7 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
       type,
       Annotations.findDirectlyMetaAnnotatedAnnotations(cls, QUALIFIER),
       bindings,
-      BindingProvider.findScopeAnnotation(cls),
+      ScopeAnnotations.find(cls),
       null,
       new ClassObjectFactory(constructor)
     );

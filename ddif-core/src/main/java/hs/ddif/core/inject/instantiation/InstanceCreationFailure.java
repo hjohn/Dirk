@@ -3,7 +3,9 @@ package hs.ddif.core.inject.instantiation;
 import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.store.Key;
 
-import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 import javax.annotation.PostConstruct;
@@ -19,22 +21,12 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
   /**
    * Constructs a new instance.
    *
-   * @param accessibleObject the constructor, method or field involved, cannot be {@code null}
+   * @param member the constructor, method or field involved, cannot be {@code null}
    * @param message a message
    * @param cause a {@link Throwable} to use as cause
    */
-  public InstanceCreationFailure(AccessibleObject accessibleObject, String message, Throwable cause) {
-    super(message + ": " + accessibleObject, cause);
-  }
-
-  /**
-   * Constructs a new instance.
-   *
-   * @param accessibleObject the constructor, method or field involved, cannot be {@code null}
-   * @param message a message
-   */
-  public InstanceCreationFailure(AccessibleObject accessibleObject, String message) {
-    super(message + ": " + accessibleObject);
+  public InstanceCreationFailure(Member member, String message, Throwable cause) {
+    super(describe(member) + " " + message, cause);
   }
 
   /**
@@ -45,7 +37,7 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
    * @param cause a {@link Throwable} to use as cause
    */
   public InstanceCreationFailure(Key key, String message, Throwable cause) {
-    super(message + ": " + key, cause);
+    super(key + " " + message, cause);
   }
 
   /**
@@ -56,7 +48,7 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
    * @param cause a {@link Throwable} to use as cause
    */
   public InstanceCreationFailure(Type type, String message, Throwable cause) {
-    super(message + ": " + type, cause);
+    super("[" + type + "] " + message, cause);
   }
 
   /**
@@ -66,7 +58,17 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
    * @param message a message
    */
   public InstanceCreationFailure(Type type, String message) {
-    super(message + ": " + type);
+    super("[" + type + "] " + message);
+  }
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param message a message
+   * @param cause a {@link Throwable} to use as cause
+   */
+  protected InstanceCreationFailure(String message, Throwable cause) {
+    super(message, cause);
   }
 
   @Override
@@ -78,5 +80,9 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
     }
 
     return exception;
+  }
+
+  private static String describe(Member member) {
+    return (member instanceof Method ? "Method" : member instanceof Field ? "Field" : "Constructor") + " [" + member + "]";
   }
 }

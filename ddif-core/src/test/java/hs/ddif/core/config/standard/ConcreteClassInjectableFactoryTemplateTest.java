@@ -1,6 +1,7 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.core.inject.bind.Binding;
+import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.inject.injectable.Injectable;
@@ -30,7 +31,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldCreateInjectableForValidClass() {
+  void shouldCreateInjectableForValidClass() throws BindingException {
     Injectable injectable = create(B.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(new Key(String.class));
@@ -39,7 +40,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldCreateInjectableWithQualifiersAndScope() {
+  void shouldCreateInjectableWithQualifiersAndScope() throws BindingException {
     Injectable injectable = create(C.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
@@ -51,7 +52,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
     );
   }
 
-  private Injectable create(Type type) {
+  private Injectable create(Type type) throws BindingException {
     TypeAnalysis<Type> analysis = extension.analyze(type);
 
     if(analysis.isNegative()) {
