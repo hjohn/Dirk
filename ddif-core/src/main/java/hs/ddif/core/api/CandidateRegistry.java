@@ -39,9 +39,9 @@ public interface CandidateRegistry {
    * would result in ambiguous dependencies for previously registered
    * types, then this method will throw an exception.
    *
-   * @param concreteType the type to register, cannot be {@code null}
+   * @param type the type to register, cannot be {@code null}
    */
-  void register(Type concreteType);
+  void register(Type type);
 
   /**
    * Registers the given {@link Type}s, and all their derived candidates if any, if all
@@ -52,9 +52,9 @@ public interface CandidateRegistry {
    * would result in ambiguous dependencies for previously registered
    * types, then this method will throw an exception.
    *
-   * @param concreteTypes a list of types to register, cannot be {@code null} or contain {@code null}s
+   * @param types a list of types to register, cannot be {@code null} or contain {@code null}s
    */
-  void register(List<Type> concreteTypes);
+  void register(List<Type> types);
 
   /**
    * Registers an instance, and all its derived candidates if any, as a
@@ -77,9 +77,9 @@ public interface CandidateRegistry {
    * If there would be broken dependencies then the removal will fail
    * and an exception is thrown.
    *
-   * @param concreteType the type to remove, cannot be {@code null}
+   * @param type the type to remove, cannot be {@code null}
    */
-  void remove(Type concreteType);
+  void remove(Type type);
 
   /**
    * Removes the given {@link Type}s, all their derived candidates if any, if
@@ -89,9 +89,9 @@ public interface CandidateRegistry {
    * If there would be broken dependencies then the removal will fail
    * and an exception is thrown.
    *
-   * @param concreteTypes a list of types to remove, cannot be {@code null} or contain {@code null}s
+   * @param types a list of types to remove, cannot be {@code null} or contain {@code null}s
    */
-  void remove(List<Type> concreteTypes);
+  void remove(List<Type> types);
 
   /**
    * Removes an instance, and all its derived candidates if any, if doing so

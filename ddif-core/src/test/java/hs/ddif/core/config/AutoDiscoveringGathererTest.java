@@ -136,7 +136,7 @@ public class AutoDiscoveringGathererTest {
           .hasMessage("Exception during auto discovery: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("Unable to inject: Field [hs.ddif.core.config.AutoDiscoveringGathererTest$J hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C.j] with: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$J]")
+          .hasMessage("Unable to inject: Field [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$J hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C.j] with: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$J]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("Auto discovered class cannot be required to have qualifiers: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$J]")
