@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.inject.bind.BindingException;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithEmptyAndAnnotatedConstructor;
@@ -45,13 +45,10 @@ public class InjectorDiscoveryTest {
   public void shouldNotDiscoverNewTypeWithoutAnyConstructorMatch() {
     assertThatThrownBy(() -> injector.getInstance(SampleWithDependencyOnSampleWithoutConstructorMatch.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Exception during auto discovery: [class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch]")
+      .hasMessage("Path [class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch] -> Field [public hs.ddif.core.test.injectables.SampleWithoutConstructorMatch hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch.sampleWithoutConstructorMatch]: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Unable to inject: Field [public hs.ddif.core.test.injectables.SampleWithoutConstructorMatch hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch.sampleWithoutConstructorMatch] with: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("No suitable constructor found; annotate a constructor or provide an empty public constructor: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .hasNoCause();
 
     assertFalse(injector.contains(SampleWithDependencyOnSampleWithoutConstructorMatch.class));
@@ -62,13 +59,10 @@ public class InjectorDiscoveryTest {
   public void shouldNotDiscoverNewTypeWithMultipleConstructorMatch() {
     assertThatThrownBy(() -> injector.getInstance(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Exception during auto discovery: [class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors]")
+      .hasMessage("Path [class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors] -> Field [public hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.sample]: [class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Unable to inject: Field [public hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.sample] with: [class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Multiple @Inject annotated constructors found, but only one allowed: class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .hasNoCause();
 
     assertFalse(injector.contains(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class));
@@ -79,10 +73,10 @@ public class InjectorDiscoveryTest {
   public void shouldThrowBindingExceptionWhenAddingClassWithoutConstructorMatch() {
     assertThatThrownBy(() -> injector.getInstance(SampleWithoutConstructorMatch.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Exception during auto discovery: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]")
+      .hasMessage("Path [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("No suitable constructor found; annotate a constructor or provide an empty public constructor: class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .hasNoCause();
   }
 
@@ -102,10 +96,27 @@ public class InjectorDiscoveryTest {
 
     assertThatThrownBy(() -> injector.getInstance(D.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Exception during auto discovery: [class hs.ddif.core.InjectorDiscoveryTest$D]")
+      .hasMessage("Path [class hs.ddif.core.InjectorDiscoveryTest$D] -> [class hs.ddif.core.InjectorDiscoveryTest$C] -> Field [hs.ddif.core.InjectorDiscoveryTest$E hs.ddif.core.InjectorDiscoveryTest$C.e]: [interface hs.ddif.core.InjectorDiscoveryTest$E] cannot be injected; failures:\n"
+        + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.InjectorDiscoveryTest$E\n"
+        + " - Type cannot be abstract: interface hs.ddif.core.InjectorDiscoveryTest$E"
+      )
+      .hasSuppressedException(new DefinitionException(
+        "Path [class hs.ddif.core.InjectorDiscoveryTest$D] -> [class hs.ddif.core.InjectorDiscoveryTest$C] -> Field [hs.ddif.core.InjectorDiscoveryTest$F hs.ddif.core.InjectorDiscoveryTest$C.f]: [interface hs.ddif.core.InjectorDiscoveryTest$F] cannot be injected; failures:\n"
+        + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.InjectorDiscoveryTest$F\n"
+        + " - Type cannot be abstract: interface hs.ddif.core.InjectorDiscoveryTest$F",
+        new DefinitionException(
+          "[interface hs.ddif.core.InjectorDiscoveryTest$F] cannot be injected; failures:\n"
+          + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.InjectorDiscoveryTest$F\n"
+          + " - Type cannot be abstract: interface hs.ddif.core.InjectorDiscoveryTest$F",
+          null
+        )
+      ))
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Unable to resolve 2 binding(s) while processing extensions")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[interface hs.ddif.core.InjectorDiscoveryTest$E] cannot be injected; failures:\n"
+        + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.InjectorDiscoveryTest$E\n"
+        + " - Type cannot be abstract: interface hs.ddif.core.InjectorDiscoveryTest$E"
+      )
       .hasNoCause();
 
     assertFalse(injector.contains(A.class));
@@ -118,13 +129,10 @@ public class InjectorDiscoveryTest {
   public void shouldThrowBindingExceptionWhenDiscoveredClassRequiresQualifiers() {
     assertThatThrownBy(() -> injector.getInstance(G.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Exception during auto discovery: [class hs.ddif.core.InjectorDiscoveryTest$G]")
+      .hasMessageMatching(Pattern.quote("Path [class hs.ddif.core.InjectorDiscoveryTest$G] -> Field [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a]: [class hs.ddif.core.InjectorDiscoveryTest$A] found during auto discovery is missing qualifiers required by: Field [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a]"))
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessageMatching(Pattern.quote("Unable to inject: Field [@javax.inject.Named(\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a] with: [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") class hs.ddif.core.InjectorDiscoveryTest$A]"))
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessageMatching(Pattern.quote("Auto discovered class cannot be required to have qualifiers: [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") class hs.ddif.core.InjectorDiscoveryTest$A]"))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessageMatching(Pattern.quote("[class hs.ddif.core.InjectorDiscoveryTest$A] found during auto discovery is missing qualifiers required by: Field [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a]"))
       .hasNoCause();
   }
 

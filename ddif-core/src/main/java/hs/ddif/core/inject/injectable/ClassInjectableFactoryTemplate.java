@@ -31,7 +31,7 @@ public interface ClassInjectableFactoryTemplate<D> {
    * @return a {@link Injectable}, never {@code null}
    * @throws BindingException when an exception occurred while creating a binding
    */
-  Injectable create(TypeAnalysis<D> analysis);
+  Injectable create(TypeAnalysis<D> analysis) throws BindingException;
 
   /**
    * Result class for the analysis phase.

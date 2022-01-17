@@ -4,11 +4,9 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingProvider;
-import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
-import hs.ddif.core.inject.injectable.InjectableFactories;
-import hs.ddif.core.inject.injectable.MethodInjectableFactory;
 import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.inject.injectable.MethodInjectableFactory;
 
 import java.util.List;
 
@@ -18,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProducesGathererExtensionTest {
   private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
-  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
   private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
 
@@ -26,7 +23,7 @@ public class ProducesGathererExtensionTest {
 
   @Test
   void shouldFindProducesAnnotatedMethods() throws NoSuchMethodException, SecurityException, NoSuchFieldException {
-    List<Injectable> injectables = extension.getDerived(classInjectableFactory.create(A.class));
+    List<Injectable> injectables = extension.getDerived(A.class);
 
     assertThat(injectables).containsExactlyInAnyOrder(
       methodInjectableFactory.create(A.class.getDeclaredMethod("createB"), A.class),

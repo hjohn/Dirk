@@ -1,7 +1,6 @@
 package hs.ddif.core.inject.injectable;
 
 import hs.ddif.core.config.standard.DefaultInjectable;
-import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.inject.instantiator.Instantiators;
 import hs.ddif.core.store.QualifiedTypeStore;
@@ -81,56 +80,60 @@ public class ClassInjectableFactoryTest {
   @Test
   public void constructorShouldRejectInterfaceAsInjectableClass() {
     assertThatThrownBy(() -> classInjectableFactory.create(SimpleInterface.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessageStartingWith("Type cannot be injected: interface hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$SimpleInterface")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[interface hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$SimpleInterface] cannot be injected; failures:\n"
+        + " - Type cannot be abstract: interface hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$SimpleInterface"
+      )
       .hasNoCause();
   }
 
   @Test
   public void constructorShouldRejectAbstractClassAsInjectableClass() {
     assertThatThrownBy(() -> classInjectableFactory.create(SimpleAbstractClass.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessageStartingWith("Type cannot be injected: class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$SimpleAbstractClass")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$SimpleAbstractClass] cannot be injected; failures:\n"
+        + " - Type cannot be abstract: class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$SimpleAbstractClass"
+      )
       .hasNoCause();
   }
 
   @Test
   public void constructorShouldRejectInjectableClassWithoutConstructors() {
     assertThatThrownBy(() -> classInjectableFactory.create(ClassWithoutPublicConstructors.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("No suitable constructor found; annotate a constructor or provide an empty public constructor: class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithoutPublicConstructors")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithoutPublicConstructors] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .hasNoCause();
   }
 
   @Test
   public void constructorShouldRejectInjectableClassWithMultipleAnnotatedConstructors() {
     assertThatThrownBy(() -> classInjectableFactory.create(ClassWithTooManyAnnotatedConstructors.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Multiple @Inject annotated constructors found, but only one allowed: class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithTooManyAnnotatedConstructors")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithTooManyAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .hasNoCause();
   }
 
   @Test
   public void constructorShouldRejectInjectableClassWithAnnotatedFinalFields() {
     assertThatThrownBy(() -> classInjectableFactory.create(ClassWithAnnotatedFinalField.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Cannot inject final field: private final java.lang.String hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithAnnotatedFinalField.a in: class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithAnnotatedFinalField")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Field [private final java.lang.String hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithAnnotatedFinalField.a] of [class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithAnnotatedFinalField] cannot be final")
       .hasNoCause();
   }
 
   @Test
   public void constructorShouldRejectInjectableClassWithMultipleScopes() {
     assertThatThrownBy(() -> classInjectableFactory.create(ClassWithMultipleScopes.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Multiple scope annotations found, but only one allowed: class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithMultipleScopes, found: [@hs.ddif.core.test.scope.TestScope(), @javax.inject.Singleton()]")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$ClassWithMultipleScopes] cannot have multiple scope annotations, but found: [@hs.ddif.core.test.scope.TestScope(), @javax.inject.Singleton()]")
       .hasNoCause();
   }
 
   @Test
   public void constructorShouldRejectInjectableClassWithTypeParameters() {
     assertThatThrownBy(() -> classInjectableFactory.create(GenericClass.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Unresolved type variables in class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$GenericClass are not allowed: [T]")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.inject.injectable.ClassInjectableFactoryTest$GenericClass] cannot have unresolvable type variables: [T]")
       .hasNoCause();
   }
 

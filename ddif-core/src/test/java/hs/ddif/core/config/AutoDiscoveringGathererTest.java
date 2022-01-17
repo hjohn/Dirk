@@ -5,9 +5,9 @@ import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
 import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
-import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
 import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactories;
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayNameGeneration;
@@ -54,23 +55,45 @@ public class AutoDiscoveringGathererTest {
     class And_gather_With_Injectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(store, Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(
+        assertThat(gatherer.gather(store, classInjectableFactory.create(A.class))).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
           fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class)
         );
       }
+
+      @Test
+      void shouldRejectNestedProvider() {
+        assertThatThrownBy(() -> gatherer.gather(store, classInjectableFactory.create(Bad_P.class)))
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("Method [javax.inject.Provider hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_P.oops()] cannot have a return type with a nested Provider")
+          .hasNoCause();
+      }
     }
 
     @Nested
-    class And_gather_With_Type_IsCalled {
+    class And_gather_With_Key_IsCalled {
       @Test
       void shouldAlwaysReturnEmptySet() throws DiscoveryFailure {
         assertThat(gatherer.gather(store, new Key(A.class))).isEmpty();
         assertThat(gatherer.gather(store, new Key(A.class, Set.of(Annotations.of(Red.class))))).isEmpty();
         assertThat(gatherer.gather(store, new Key(I.class))).isEmpty();
         assertThat(gatherer.gather(store, new Key(Bad_C.class))).isEmpty();
+      }
+    }
+
+    @Nested
+    class And_gather_With_Types_IsCalled {
+      @Test
+      void shouldFindProducedTypes() throws Exception {
+        assertThat(gatherer.gather(store, List.of(A.class, D.class))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(A.class),
+          fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
+          methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
+          fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class),
+          classInjectableFactory.create(D.class)
+        );
       }
     }
   }
@@ -83,7 +106,7 @@ public class AutoDiscoveringGathererTest {
     class And_gather_With_Injectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.gather(store, Set.of(classInjectableFactory.create(A.class)))).containsExactlyInAnyOrder(
+        assertThat(gatherer.gather(store, classInjectableFactory.create(A.class))).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           classInjectableFactory.create(D.class),
@@ -94,7 +117,7 @@ public class AutoDiscoveringGathererTest {
     }
 
     @Nested
-    class And_gather_With_Type_IsCalled {
+    class And_gather_With_Key_IsCalled {
       @Test
       void shouldDiscoverTypesAndFindProducedTypes() throws Exception {
         assertThat(gatherer.gather(store, new Key(A.class))).containsExactlyInAnyOrder(
@@ -107,8 +130,31 @@ public class AutoDiscoveringGathererTest {
       }
 
       @Test
-      void shouldReturnEmptySetWhenTypeUnsuitableForAutoDiscovery() throws DiscoveryFailure {
-        assertThat(gatherer.gather(store, new Key(A.class, Set.of(Annotations.of(Red.class))))).isEmpty();
+      void shouldDiscoverThroughBindingsOfProducerMethod() throws Exception {
+        assertThat(gatherer.gather(store, new Key(F.class))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(A.class),
+          classInjectableFactory.create(D.class),
+          classInjectableFactory.create(F.class),
+          fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
+          fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class),
+          methodInjectableFactory.create(F.class.getDeclaredMethod("takes", B.class, A.class), F.class),
+          methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class)
+        );
+      }
+
+      @Test
+      void shouldDiscoverClassWhichProducesItself() throws Exception {
+        assertThat(gatherer.gather(store, new Key(H.class))).containsExactlyInAnyOrder(
+          fieldInjectableFactory.create(H.class.getDeclaredField("h"), H.class)
+        );
+      }
+
+      @Test
+      void shouldDiscoverThroughBindingsClassesWhichProduceThemselves() throws Exception {
+        assertThat(gatherer.gather(store, new Key(K.class))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(K.class),
+          fieldInjectableFactory.create(H.class.getDeclaredField("h"), H.class)
+        );
       }
 
       @Test
@@ -119,13 +165,28 @@ public class AutoDiscoveringGathererTest {
       }
 
       @Test
+      void shouldRejectWhenDiscoveredTypeMissesRequiredQualifiers() {
+        assertThatThrownBy(() -> gatherer.gather(store, new Key(A.class, Set.of(Annotations.of(Red.class)))))
+          .isExactlyInstanceOf(DiscoveryFailure.class)
+          .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$A]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$A]")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$A]")
+          .hasNoCause();
+      }
+
+      @Test
       void shouldRejectTypeThatIsAbstract() {
         assertThatThrownBy(() -> gatherer.gather(store, new Key(I.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Exception during auto discovery: [interface hs.ddif.core.config.AutoDiscoveringGathererTest$I]")
+          .hasMessage("Path [interface hs.ddif.core.config.AutoDiscoveringGathererTest$I]: [interface hs.ddif.core.config.AutoDiscoveringGathererTest$I] cannot be injected; failures:\n"
+            + " - Type cannot be abstract: interface hs.ddif.core.config.AutoDiscoveringGathererTest$I"
+          )
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessageStartingWith("Type cannot be injected: interface hs.ddif.core.config.AutoDiscoveringGathererTest$I")
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[interface hs.ddif.core.config.AutoDiscoveringGathererTest$I] cannot be injected; failures:\n"
+            + " - Type cannot be abstract: interface hs.ddif.core.config.AutoDiscoveringGathererTest$I"
+          )
           .hasNoCause();
       }
 
@@ -133,13 +194,10 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeThatHasQualifiers() {
         assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_C.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Exception during auto discovery: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C]")
+          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C] -> Field [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$J hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C.j]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$J] found during auto discovery is missing qualifiers required by: Field [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$J hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C.j]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("Unable to inject: Field [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$J hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C.j] with: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$J]")
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("Auto discovered class cannot be required to have qualifiers: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$J]")
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$J] found during auto discovery is missing qualifiers required by: Field [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$J hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C.j]")
           .hasNoCause();
       }
 
@@ -147,14 +205,21 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeWithUndiscoverableDependency() {
         assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_A.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Exception during auto discovery: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A]")
+          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A] -> Field [hs.ddif.core.config.AutoDiscoveringGathererTest$C hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A.c]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("Unable to inject: Field [hs.ddif.core.config.AutoDiscoveringGathererTest$C hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A.c] with: [class hs.ddif.core.config.AutoDiscoveringGathererTest$C]")
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .hasNoCause();
+      }
+
+      @Test
+      void shouldRejectTypeWithUndiscoverableDependencyInDependency() {
+        assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_D.class)))
+          .isExactlyInstanceOf(DiscoveryFailure.class)
+          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_D] -> [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A] -> Field [hs.ddif.core.config.AutoDiscoveringGathererTest$C hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A.c]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("No suitable constructor found; annotate a constructor or provide an empty public constructor: class hs.ddif.core.config.AutoDiscoveringGathererTest$C")
-          .hasNoSuppressedExceptions()
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
           .hasNoCause();
       }
 
@@ -162,12 +227,73 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeWithMultipleUndiscoverableDependenciesAndUseSuppressedExceptionsForDetails() {
         assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_B.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Exception during auto discovery: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B]")
+          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B] -> Field [hs.ddif.core.config.AutoDiscoveringGathererTest$E hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B.e]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$E] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .hasSuppressedException(new DefinitionException("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B] -> Field [hs.ddif.core.config.AutoDiscoveringGathererTest$C hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B.c]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor", new DefinitionException("[class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor", null)))
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("Unable to resolve 2 binding(s) while processing extensions")
-          .hasSuppressedException(new BindingException("Unable to inject: Field [hs.ddif.core.config.AutoDiscoveringGathererTest$E hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B.e] with: [class hs.ddif.core.config.AutoDiscoveringGathererTest$E]", new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.config.AutoDiscoveringGathererTest$E")))
-          .hasSuppressedException(new BindingException("Unable to inject: Field [hs.ddif.core.config.AutoDiscoveringGathererTest$C hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B.c] with: [class hs.ddif.core.config.AutoDiscoveringGathererTest$C]", new BindingException("No suitable constructor found; provide an empty constructor or annotate one with @Inject: class hs.ddif.core.config.AutoDiscoveringGathererTest$C")))
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$E] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .hasNoCause();
+      }
+
+      @Test
+      void shouldRejectTypeWhichCanBeDerivedOrConstructedInMultipleWays() {
+        assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_H.class)))
+          .isExactlyInstanceOf(DiscoveryFailure.class)
+          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_H]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_H] creation is ambiguous, there are multiple ways to create it")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_H] creation is ambiguous, there are multiple ways to create it")
+          .hasNoCause();
+      }
+    }
+
+    @Nested
+    class And_gather_With_Types_IsCalled {
+      @Test
+      void shouldFindProducedTypes() throws Exception {
+        assertThat(gatherer.gather(store, List.of(Y.class))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(Y.class),
+          fieldInjectableFactory.create(W.class.getDeclaredField("w"), W.class),
+          fieldInjectableFactory.create(W.class.getDeclaredField("x"), W.class),
+          fieldInjectableFactory.create(W.class.getDeclaredField("z"), W.class)
+        );
+      }
+
+      @Test
+      void shouldRejectTypesThatCannotBeCreatedWithoutBindingDiscovery() throws Exception {
+
+        /*
+         * This is a complicated case. If auto discovery is on, the following happens:
+         *
+         *  - X, Y and Z need to be created
+         *  - No producers are found initially
+         *  - Injectable discovery takes place, X and Z fail as they have no suitable constructor
+         *  - Y however is created
+         *
+         * Now through Y a binding to W can be found which will locate producers for X and Z,
+         * however, even though this would indeed result in injectables for X and Z, this is not
+         * what was intended when a call is made to register X, Y and Z -- it is expected that
+         * simple directly constructable injectables should result for all inputs. If only
+         * registering Y then this is acceptable as X and Z could then be considered "derived"
+         * from Y.
+         */
+
+        assertThatThrownBy(() -> gatherer.gather(store, List.of(X.class, Y.class, Z.class)))
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$X]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .hasSuppressedException(new DefinitionException("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Z]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Z] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor", null))
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .hasNoCause();
+
+        assertThatThrownBy(() -> gatherer.gather(store, List.of(X.class, Y.class)))
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$X]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .hasNoSuppressedExceptions()
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
           .hasNoCause();
       }
     }
@@ -209,17 +335,97 @@ public class AutoDiscoveringGathererTest {
     }
   }
 
+  public static class F {
+    @SuppressWarnings("unused")
+    @Produces G takes(B b, A a) {
+      return null;
+    }
+  }
+
+  public static class G {
+  }
+
+  public static class H {
+    @Produces static H h = new H(2);
+
+    int i;
+
+    private H(int i) {
+      this.i = i;
+    }
+  }
+
+  public static class K {
+    @Inject H h;
+  }
+
+  public static class W {
+    @Produces static W w = new W(2);
+    @Produces X x = new X("hello");
+    @Produces Z z = new Z("world");
+
+    private W(@SuppressWarnings("unused") int i) {
+    }
+  }
+
+  public static class X {
+    public X(@SuppressWarnings("unused") String important) {
+    }
+  }
+
+  public static class Y {
+    @Inject W w;
+  }
+
+  public static class Z {
+    public Z(@SuppressWarnings("unused") String important) {
+    }
+  }
+
+  /**
+   * Bad because C cannot be discovered (C has no suitable constructor).
+   */
   public static class Bad_A {
     @Inject C c;
   }
 
+  /**
+   * Bad because neither C or E can be discovered (no suitable constructors).
+   */
   public static class Bad_B {
     @Inject E e;
     @Inject C c;
   }
 
+  /**
+   * Bad because J, although constructable, does not have the Red qualifier.
+   */
   public static class Bad_C {
     @Inject @Red J j;  // auto discovery a class J with qualifier Red is not possible
+  }
+
+  /**
+   * Bad because Bad_A, although discoverable, has problems of its own.
+   */
+  public static class Bad_D {
+    @Inject Bad_A a;
+  }
+
+  /**
+   * Bad because there are two ways available to construct it, through the static
+   * producer and through its constructor.
+   */
+  public static class Bad_H {
+    @Produces static Bad_H h = new Bad_H();
+  }
+
+  /**
+   * Bad because it uses a nested Provider.
+   */
+  public static class Bad_P {
+    @Produces Provider<Provider<String>> oops() {
+      return null;
+    }
   }
 
   interface I {

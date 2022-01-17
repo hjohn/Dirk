@@ -9,13 +9,13 @@ import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
 import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.config.standard.DefaultInstantiator;
-import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
+import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
-import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.inject.instantiation.MultipleInstances;
@@ -201,7 +201,7 @@ public class DefaultInstantiatorTest {
     void getInstancesShouldThrowExceptionWhenInstantiationFails() {
       assertThatThrownBy(() -> instantiator.getInstances(new Key(H.class)))
         .isExactlyInstanceOf(InstanceCreationFailure.class)
-        .hasMessage("Exception while constructing instance via Producer: hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$H hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$B.createH()")
+        .hasMessage("Method [hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$H hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$B.createH()] call failed")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(InvocationTargetException.class)
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -239,7 +239,7 @@ public class DefaultInstantiatorTest {
     void getInstanceShouldThrowExceptionWhenInstantiationFails() {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(H.class)))
         .isExactlyInstanceOf(InstanceCreationFailure.class)
-        .hasMessage("Exception while constructing instance via Producer: hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$H hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$B.createH()")
+        .hasMessage("Method [hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$H hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$B.createH()] call failed")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(InvocationTargetException.class)
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -274,8 +274,11 @@ public class DefaultInstantiatorTest {
     @Test
     void getInstanceShouldNotDiscoverTypesWithQualifiers() {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class, Set.of(Annotations.of(Red.class)))))
-        .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$A]")
+        .isExactlyInstanceOf(DiscoveryFailure.class)
+        .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$A]: [class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$A]")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(DefinitionException.class)
+        .hasMessage("[class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$A]")
         .hasNoCause();
     }
 
@@ -283,10 +286,14 @@ public class DefaultInstantiatorTest {
     void getInstanceShouldThrowExceptionWhenDiscoveryFails() {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(J.class)))
         .isExactlyInstanceOf(DiscoveryFailure.class)
-        .hasMessage("Exception during auto discovery: [class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$J]")
+        .hasMessage("Path [class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$J]: [class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$J] cannot be injected; failures:\n"
+          + " - Type cannot be abstract: class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$J"
+        )
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(BindingException.class)
-        .hasMessageStartingWith("Type cannot be injected: class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$J")
+        .isExactlyInstanceOf(DefinitionException.class)
+        .hasMessage("[class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$J] cannot be injected; failures:\n"
+          + " - Type cannot be abstract: class hs.ddif.core.inject.instantiator.DefaultInstantiatorTest$J"
+        )
         .hasNoCause();
     }
   }

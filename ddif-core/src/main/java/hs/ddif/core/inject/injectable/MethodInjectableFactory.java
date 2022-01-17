@@ -65,26 +65,31 @@ public class MethodInjectableFactory {
     Type returnType = TypeUtils.unrollVariables(typeArguments, method.getGenericReturnType());
 
     if(returnType == null) {
-      throw new BindingException("Method has unresolved return type: " + method);
+      throw new DefinitionException(method, "has unresolvable return type");
     }
     if(TypeUtils.containsTypeVariables(returnType)) {
-      throw new BindingException("Method has unresolved type variables: " + method);
+      throw new DefinitionException(method, "has unresolvable type variables");
     }
     if(returnType == void.class) {
-      throw new BindingException("Method has no return type: " + method);
+      throw new DefinitionException(method, "has no return type");
     }
     if(method.isAnnotationPresent(Inject.class)) {
-      throw new BindingException("Method cannot be annotated with Inject: " + method);
+      throw new DefinitionException(method, "cannot be annotated with Inject");
     }
 
-    return injectableFactory.create(
-      returnType,
-      Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
-      bindingProvider.ofMethod(method, ownerType),
-      BindingProvider.findScopeAnnotation(method),
-      method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
-      new MethodObjectFactory(method)
-    );
+    try {
+      return injectableFactory.create(
+        returnType,
+        Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
+        bindingProvider.ofMethod(method, ownerType),
+        ScopeAnnotations.find(method),
+        method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
+        new MethodObjectFactory(method)
+      );
+    }
+    catch(BindingException e) {
+      throw new DefinitionException(method, "has unresolvable bindings");
+    }
   }
 
   static class MethodObjectFactory implements ObjectFactory {
@@ -116,7 +121,7 @@ public class MethodInjectableFactory {
         return method.invoke(instance, values);
       }
       catch(Exception e) {
-        throw new InstanceCreationFailure(method, "Exception while constructing instance via Producer", e);
+        throw new InstanceCreationFailure(method, "call failed", e);
       }
     }
   }

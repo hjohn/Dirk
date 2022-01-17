@@ -1,17 +1,16 @@
 package hs.ddif.core.config;
 
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
-import hs.ddif.core.inject.bind.BindingException;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
+import hs.ddif.core.util.Types;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 
 import javax.inject.Provider;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * This extension detects if a class implements {@link Provider} and registers
@@ -30,19 +29,19 @@ public class ProviderGathererExtension implements AutoDiscoveringGatherer.Extens
   }
 
   @Override
-  public List<Injectable> getDerived(Injectable injectable) {
-    Class<?> cls = TypeUtils.getRawType(injectable.getType(), null);
+  public List<Injectable> getDerived(Type type) {
+    Class<?> cls = Types.raw(type);
 
     if(Provider.class.isAssignableFrom(cls)) {
       try {
         Method method = cls.getMethod("get");
         Type providedType = method.getGenericReturnType();
 
-        if(TypeUtils.getRawType(providedType, null) == Provider.class) {
-          throw new BindingException("Nested Provider not allowed in: " + method);
+        if(Types.raw(providedType) == Provider.class) {
+          throw new DefinitionException(method, "cannot have a return type with a nested Provider");
         }
 
-        return List.of(methodInjectableFactory.create(method, injectable.getType()));
+        return List.of(methodInjectableFactory.create(method, type));
       }
       catch(NoSuchMethodException | SecurityException e) {
         throw new IllegalStateException(e);

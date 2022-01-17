@@ -4,7 +4,7 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.config.consistency.ViolatesSingularDependencyException;
-import hs.ddif.core.inject.bind.BindingException;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.store.DuplicateQualifiedTypeException;
 import hs.ddif.core.test.injectables.BeanWithOptionalProvider;
 import hs.ddif.core.test.injectables.BeanWithProvider;
@@ -197,24 +197,24 @@ public class InjectorProviderTest {
   @Test
   public void nestedProvidersShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.registerInstance(new NestedDatabaseProvider()))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Nested Provider not allowed in: public javax.inject.Provider hs.ddif.core.InjectorProviderTest$NestedDatabaseProvider.get()")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public javax.inject.Provider hs.ddif.core.InjectorProviderTest$NestedDatabaseProvider.get()] cannot have a return type with a nested Provider")
       .hasNoCause();
   }
 
   @Test
   public void producerFieldProducingProviderShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.register(ProviderFieldProducer.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Nested Provider not allowed in: private static javax.inject.Provider hs.ddif.core.InjectorProviderTest$ProviderFieldProducer.product")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Field [private static javax.inject.Provider hs.ddif.core.InjectorProviderTest$ProviderFieldProducer.product] cannot be of a type with a nested Provider")
       .hasNoCause();
   }
 
   @Test
   public void producerMethodProducingProviderShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.register(ProviderMethodProducer.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Nested Provider not allowed in: private static javax.inject.Provider hs.ddif.core.InjectorProviderTest$ProviderMethodProducer.product()")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [private static javax.inject.Provider hs.ddif.core.InjectorProviderTest$ProviderMethodProducer.product()] cannot have a return type with a nested Provider")
       .hasNoCause();
   }
 

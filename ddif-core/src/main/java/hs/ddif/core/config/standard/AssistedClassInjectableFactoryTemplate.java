@@ -6,6 +6,7 @@ import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate;
 import hs.ddif.core.inject.injectable.ClassObjectFactory;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactory;
 import hs.ddif.core.inject.injection.Injection;
@@ -19,6 +20,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -136,7 +138,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public Injectable create(TypeAnalysis<Context> analysis) {
+  public Injectable create(TypeAnalysis<Context> analysis) throws BindingException {
     Type type = analysis.getData().type;
     Injectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
 
@@ -164,7 +166,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     return factoryInjectable;
   }
 
-  private Class<?> generateFactoryClass(Type type, Method factoryMethod) {
+  private Class<?> generateFactoryClass(Type type, Method factoryMethod) throws BindingException {
     Class<?> productType = factoryMethod.getReturnType();
     Constructor<?> productConstructor = bindingProvider.getAnnotatedConstructor(productType);
     Interceptor interceptor = new Interceptor(productConstructor, factoryMethod);
@@ -211,7 +213,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
         String name = parameter == null ? determineArgumentName(annotation, (Field)accessibleObject) : determineArgumentName(parameter);
 
         if(name == null) {
-          throw new BindingException("Missing argument name. Name cannot be determined for [" + accessibleObject + "] parameter [" + parameter + "]; specify one with @Argument or compile classes with parameter name information");
+          throw new DefinitionException((Member)accessibleObject, "unable to determine argument name for parameter [" + parameter + "]; specify one with @Argument or compile classes with parameter name information");
         }
 
         parameterBindings.put(name, binding);
@@ -373,7 +375,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     List<String> names = new ArrayList<>();
 
     if(factoryMethod.getParameterCount() != argumentBindings.size()) {
-      throw new BindingException("Factory method has wrong number of arguments: [" + factoryMethod + "] should have " + argumentBindings.size() + " argument(s) of types: " + argumentBindings.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getType())));
+      throw new DefinitionException(factoryMethod, "should have " + argumentBindings.size() + " argument(s) of types: " + argumentBindings.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getType())));
     }
 
     Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
@@ -383,17 +385,17 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
       String name = determineArgumentName(parameters[i]);
 
       if(name == null) {
-        throw new BindingException("Missing argument name: [" + factoryMethod + "] is missing name for [" + parameters[i] + "]; specify one with @Argument or compile classes with parameter name information");
+        throw new DefinitionException(factoryMethod, "is missing argument name for [" + parameters[i] + "]; specify one with @Argument or compile classes with parameter name information");
       }
 
       if(!argumentBindings.containsKey(name)) {
-        throw new BindingException("Factory method is missing required argument: [" + factoryMethod + "] is missing required argument with name: " + name);
+        throw new DefinitionException(factoryMethod, "is missing required argument with name: " + name);
       }
 
       Type factoryArgumentType = Primitives.toBoxed(genericParameterTypes[i]);
 
       if(!argumentBindings.get(name).getType().equals(factoryArgumentType)) {
-        throw new BindingException("Factory method has argument of wrong type: [" + factoryMethod + "] has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
+        throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
       }
 
       names.add(name);

@@ -27,7 +27,6 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
-import javax.inject.Scope;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -36,7 +35,6 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  */
 public class BindingProvider {
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
-  private static final Annotation SCOPE = Annotations.of(Scope.class);
 
   private final BindingFactory bindingFactory;
 
@@ -56,8 +54,9 @@ public class BindingProvider {
    * @param constructor a {@link Constructor} to examine for bindings, cannot be {@code null}
    * @param cls a {@link Class} to examine for bindings, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
+   * @throws BindingException when an exception occurred while creating a binding
    */
-  public List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) {
+  public List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) throws BindingException {
     List<Binding> bindings = ofConstructor(constructor);
 
     bindings.addAll(ofMembers(cls));
@@ -70,8 +69,9 @@ public class BindingProvider {
    *
    * @param constructor a {@link Constructor} to examine for bindings, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
+   * @throws BindingException when an exception occurred while creating a binding
    */
-  public List<Binding> ofConstructor(Constructor<?> constructor) {
+  public List<Binding> ofConstructor(Constructor<?> constructor) throws BindingException {
     return ofExecutable(constructor, constructor.getDeclaringClass());
   }
 
@@ -81,8 +81,9 @@ public class BindingProvider {
    *
    * @param cls a {@link Class} to examine for bindings, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}, but can be empty
+   * @throws BindingException when an exception occurred while creating a binding
    */
-  public List<Binding> ofMembers(Class<?> cls) {
+  public List<Binding> ofMembers(Class<?> cls) throws BindingException {
     List<Binding> bindings = new ArrayList<>();
     Class<?> currentInjectableClass = cls;
     Map<TypeVariable<?>, Type> typeArguments = null;
@@ -91,7 +92,7 @@ public class BindingProvider {
       for(final Field field : currentInjectableClass.getDeclaredFields()) {
         if(field.isAnnotationPresent(Inject.class)) {
           if(Modifier.isFinal(field.getModifiers())) {
-            throw new BindingException("Cannot inject final field: " + field + " in: " + cls);
+            throw new BindingException(cls, field, "cannot be final");
           }
 
           if(typeArguments == null) {
@@ -113,8 +114,8 @@ public class BindingProvider {
               Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER)
             ));
           }
-          catch(BindingException e) {
-            throw new BindingException("Unable to create binding for: " + field + " in: " + cls, e);
+          catch(Exception e) {
+            throw new BindingException(cls, field, "could not be bound", e);
           }
         }
       }
@@ -135,8 +136,9 @@ public class BindingProvider {
    * @param method a {@link Method} to examine for bindings, cannot be {@code null}
    * @param ownerType a {@link Type} in which this method is declared, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
+   * @throws BindingException when an exception occurred while creating a binding
    */
-  public List<Binding> ofMethod(Method method, Type ownerType) {
+  public List<Binding> ofMethod(Method method, Type ownerType) throws BindingException {
     return ofExecutable(method, ownerType);
   }
 
@@ -162,9 +164,9 @@ public class BindingProvider {
    *
    * @param cls a {@link Class}, cannot be {@code null}
    * @return a {@link Constructor} suitable for injection, never {@code null}
-   * @throws BindingException when no suitable constructor is found
+   * @throws BindingException when an exception occurred while creating a binding
    */
-  public Constructor<?> getAnnotatedConstructor(Class<?> cls) {
+  public Constructor<?> getAnnotatedConstructor(Class<?> cls) throws BindingException {
     return getConstructor(cls, true);
   }
 
@@ -174,36 +176,20 @@ public class BindingProvider {
    *
    * @param cls a {@link Class}, cannot be {@code null}
    * @return a {@link Constructor} suitable for injection, never {@code null}
-   * @throws BindingException when no suitable constructor is found
+   * @throws BindingException when an exception occurred while creating a binding
    */
-  public static Constructor<?> getConstructor(Class<?> cls) {
+  public static Constructor<?> getConstructor(Class<?> cls) throws BindingException {
     return getConstructor(cls, false);
   }
 
-  /**
-   * Finds a {@link Scope} annotation on the given {@link AnnotatedElement}.
-   *
-   * @param element an {@link AnnotatedElement}, cannot be {@code null}
-   * @return a {@link Scope} annotation, or {@code null} if not present
-   */
-  public static Annotation findScopeAnnotation(AnnotatedElement element) {
-    Set<Annotation> matchingAnnotations = Annotations.findDirectlyMetaAnnotatedAnnotations(element, SCOPE);
-
-    if(matchingAnnotations.size() > 1) {
-      throw new BindingException("Multiple scope annotations found, but only one allowed: " + element + ", found: " + matchingAnnotations);
-    }
-
-    return matchingAnnotations.isEmpty() ? null : matchingAnnotations.iterator().next();
-  }
-
-  private static Constructor<?> getConstructor(Class<?> cls, boolean annotatedOnly) {
+  private static Constructor<?> getConstructor(Class<?> cls, boolean annotatedOnly) throws BindingException {
     Constructor<?> suitableConstructor = null;
     Constructor<?> defaultConstructor = null;
 
     for(Constructor<?> constructor : cls.getDeclaredConstructors()) {
       if(constructor.isAnnotationPresent(Inject.class)) {
         if(suitableConstructor != null) {
-          throw new BindingException("Multiple @Inject annotated constructors found, but only one allowed: " + cls);
+          throw new BindingException(cls, "cannot have multiple Inject annotated constructors");
         }
 
         suitableConstructor = constructor;
@@ -214,13 +200,13 @@ public class BindingProvider {
     }
 
     if(suitableConstructor == null && defaultConstructor == null) {
-      throw new BindingException("No suitable constructor found; annotate a constructor" + (annotatedOnly ? "" : " or provide an empty public constructor") + ": " + cls);
+      throw new BindingException(cls, "should have at least one suitable constructor; annotate a constructor" + (annotatedOnly ? "" : " or provide an empty public constructor"));
     }
 
     return suitableConstructor == null ? defaultConstructor : suitableConstructor;
   }
 
-  private List<Binding> ofExecutable(Executable executable, Type ownerType) {
+  private List<Binding> ofExecutable(Executable executable, Type ownerType) throws BindingException {
     Parameter[] parameters = executable.getParameters();
     List<Binding> bindings = new ArrayList<>();
 
@@ -238,8 +224,8 @@ public class BindingProvider {
 
         bindings.add(binding);
       }
-      catch(BindingException e) {
-        throw new BindingException("Unable to create binding for Parameter " + i + " [" + type + " " + parameters[i].getName() + "] of: " + executable + " in: " + ownerType, e);
+      catch(Exception e) {
+        throw new BindingException(ownerType, executable, "could not bind parameter " + i + " [" + type + " " + parameters[i].getName() + "]", e);
       }
     }
 
@@ -251,11 +237,11 @@ public class BindingProvider {
     return bindings;
   }
 
-  private Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, Type type, boolean optional, Set<Annotation> qualifiers) {
+  private Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, Type type, boolean optional, Set<Annotation> qualifiers) throws BindingException {
     return createBinding(accessibleObject, parameter, false, type, optional, qualifiers);
   }
 
-  private Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, boolean isProviderAlready, Type type, boolean optional, Set<Annotation> qualifiers) {
+  private Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, boolean isProviderAlready, Type type, boolean optional, Set<Annotation> qualifiers) throws BindingException {
     final Class<?> cls = TypeUtils.getRawType(type, null);
 
     if(Set.class.isAssignableFrom(cls)) {
@@ -273,7 +259,7 @@ public class BindingProvider {
 
   private static Type requireNotProvider(Type type) {
     if(TypeUtils.getRawType(type, null) == Provider.class) {
-      throw new BindingException("Nested Provider not allowed: " + type);
+      throw new IllegalArgumentException("Nested Provider not allowed: " + type);
     }
 
     return type;

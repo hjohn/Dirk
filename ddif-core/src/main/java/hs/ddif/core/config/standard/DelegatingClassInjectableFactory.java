@@ -4,6 +4,7 @@ import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysis;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.inject.injectable.Injectable;
 
 import java.lang.reflect.Type;
@@ -37,8 +38,10 @@ public class DelegatingClassInjectableFactory implements ClassInjectableFactory 
       throw new IllegalArgumentException("type cannot be null");
     }
 
+    Class<?> cls = TypeUtils.getRawType(type, null);
+
     if(TypeUtils.containsTypeVariables(type)) {
-      throw new BindingException("Unresolved type variables in " + type + " are not allowed: " + Arrays.toString(TypeUtils.getRawType(type, null).getTypeParameters()));
+      throw new DefinitionException(cls, "cannot have unresolvable type variables: " + Arrays.toString(cls.getTypeParameters()));
     }
 
     List<TypeAnalysis<?>> failedAnalyses = new ArrayList<>();
@@ -51,9 +54,14 @@ public class DelegatingClassInjectableFactory implements ClassInjectableFactory 
         continue;
       }
 
-      return template.create(analysis);
+      try {
+        return template.create(analysis);
+      }
+      catch(BindingException e) {
+        throw new DefinitionException(e);
+      }
     }
 
-    throw new BindingException("Type cannot be injected: " + type + "; failures:" + failedAnalyses.stream().map(ta -> ta.getUnsuitableReason(type)).collect(Collectors.joining("\n - ", "\n - ", "")));
+    throw new DefinitionException(cls, "cannot be injected; failures:" + failedAnalyses.stream().map(ta -> ta.getUnsuitableReason(type)).collect(Collectors.joining("\n - ", "\n - ", "")));
   }
 }

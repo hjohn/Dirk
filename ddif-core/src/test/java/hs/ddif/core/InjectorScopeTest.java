@@ -3,7 +3,7 @@ package hs.ddif.core;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.ScopeConflictException;
-import hs.ddif.core.inject.bind.BindingException;
+import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.test.scope.TestScope;
@@ -15,9 +15,11 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -121,13 +123,20 @@ public class InjectorScopeTest {
       injector.register(SomeUserBeanWithTestScope2.class);
     }
 
-    @Test(expected = BindingException.class)
+    @Test
     public void shouldThrowExceptionWhenMultipleScopesDefinedOnBean() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(TestScopedBean.class);
-      injector.register(IllegalMultiScopedBean.class);
+
+      assertThatThrownBy(() -> injector.register(IllegalMultiScopedBean.class))
+        .isExactlyInstanceOf(DefinitionException.class)
+        .hasMessage("Path [class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean]: [class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@javax.inject.Singleton(), @hs.ddif.core.test.scope.TestScope()]")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(DefinitionException.class)
+        .hasMessage("[class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@javax.inject.Singleton(), @hs.ddif.core.test.scope.TestScope()]")
+        .hasNoCause();
     }
   }
 

@@ -2,7 +2,6 @@ package hs.ddif.core.inject.injectable;
 
 import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
-import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.instantiation.Instantiator;
 import hs.ddif.core.store.Key;
@@ -18,8 +17,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,44 +30,58 @@ public class MethodInjectableFactoryTest {
 
   @Test
   void constructorShouldRejectNullMethod() {
-    assertThat(assertThrows(IllegalArgumentException.class, () -> methodInjectableFactory.create(null, A.class)))
-      .hasMessage("method cannot be null");
+    assertThatThrownBy(() -> methodInjectableFactory.create(null, A.class))
+      .isExactlyInstanceOf(IllegalArgumentException.class)
+      .hasMessage("method cannot be null")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectNullOwnerType() {
-    assertThat(assertThrows(IllegalArgumentException.class, () -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), null)))
-      .hasMessage("ownerType cannot be null");
+    assertThatThrownBy(() -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), null))
+      .isExactlyInstanceOf(IllegalArgumentException.class)
+      .hasMessage("ownerType cannot be null")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectIncompatibleOwnerType() {
-    assertThat(assertThrows(IllegalArgumentException.class, () -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), B.class)))
-      .hasMessageStartingWith("ownerType must be assignable to method's declaring class:");
+    assertThatThrownBy(() -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), B.class))
+      .isExactlyInstanceOf(IllegalArgumentException.class)
+      .hasMessage("ownerType must be assignable to method's declaring class: class hs.ddif.core.inject.injectable.MethodInjectableFactoryTest$B; declaring class: class hs.ddif.core.inject.injectable.MethodInjectableFactoryTest$A")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectMethodWithUnresolvableReturnType() {
-    assertThat(assertThrows(BindingException.class, () -> methodInjectableFactory.create(B.class.getDeclaredMethod("b"), B.class)))
-      .hasMessageStartingWith("Method has unresolved return type:");
+    assertThatThrownBy(() -> methodInjectableFactory.create(B.class.getDeclaredMethod("b"), B.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public java.lang.Object hs.ddif.core.inject.injectable.MethodInjectableFactoryTest$B.b()] has unresolvable return type")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectMethodWithUnresolvableTypeVariables() {
-    assertThat(assertThrows(BindingException.class, () -> methodInjectableFactory.create(B.class.getDeclaredMethod("d"), B.class)))
-      .hasMessageStartingWith("Method has unresolved type variables:");
+    assertThatThrownBy(() -> methodInjectableFactory.create(B.class.getDeclaredMethod("d"), B.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public java.util.List hs.ddif.core.inject.injectable.MethodInjectableFactoryTest$B.d()] has unresolvable type variables")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectVoidMethod() {
-    assertThat(assertThrows(BindingException.class, () -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), A.class)))
-      .hasMessageStartingWith("Method has no return type:");
+    assertThatThrownBy(() -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), A.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [void hs.ddif.core.inject.injectable.MethodInjectableFactoryTest$A.a()] has no return type")
+      .hasNoCause();
   }
 
   @Test
   void constructorShouldRejectMethodAnnotatedWithInject() {
-    assertThat(assertThrows(BindingException.class, () -> methodInjectableFactory.create(A.class.getDeclaredMethod("c"), A.class)))
-      .hasMessageStartingWith("Method cannot be annotated with Inject:");
+    assertThatThrownBy(() -> methodInjectableFactory.create(A.class.getDeclaredMethod("c"), A.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [java.lang.String hs.ddif.core.inject.injectable.MethodInjectableFactoryTest$A.c()] cannot be annotated with Inject")
+      .hasNoCause();
   }
 
   @Test

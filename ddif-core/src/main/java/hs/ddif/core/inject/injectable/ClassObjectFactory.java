@@ -37,7 +37,7 @@ public class ClassObjectFactory implements ObjectFactory {
   @Override
   public Object createInstance(List<Injection> injections) throws InstanceCreationFailure {
     if(UNDER_CONSTRUCTION.contains(this)) {
-      throw new InstanceCreationFailure(constructor.getDeclaringClass(), "Already under construction (dependency creation loop in @PostConstruct method!)");
+      throw new InstanceCreationFailure(constructor.getDeclaringClass(), "already under construction (dependency creation loop in @PostConstruct method!)");
     }
 
     try {
@@ -70,7 +70,7 @@ public class ClassObjectFactory implements ObjectFactory {
       return constructor.newInstance(values);
     }
     catch(Exception e) {
-      throw new InstanceCreationFailure(constructor, "Exception while constructing instance", e);
+      throw new InstanceCreationFailure(constructor, "call failed", e);
     }
   }
 
@@ -78,18 +78,19 @@ public class ClassObjectFactory implements ObjectFactory {
     for(Injection injection : injections) {
       AccessibleObject accessibleObject = injection.getTarget();
 
-      try {
-        if(accessibleObject instanceof Field) {
-          Field field = (Field)accessibleObject;
+      if(accessibleObject instanceof Field) {
+        Field field = (Field)accessibleObject;
+
+        try {
           Object valueToSet = injection.getValue();
 
           if(valueToSet != null) {  // Do not set fields to null, leave default value instead
             field.set(instance, valueToSet);
           }
         }
-      }
-      catch(Exception e) {
-        throw new InstanceCreationFailure(accessibleObject, "Exception while injecting", e);
+        catch(Exception e) {
+          throw new InstanceCreationFailure(field, "inject failed", e);
+        }
       }
     }
   }

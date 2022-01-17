@@ -1,7 +1,5 @@
 package hs.ddif.core.inject.injectable;
 
-import hs.ddif.core.inject.bind.BindingException;
-
 import java.lang.reflect.Type;
 
 /**
@@ -14,7 +12,6 @@ public interface ClassInjectableFactory {
    *
    * @param type a {@link Type}, cannot be {@code null}
    * @return a {@link Injectable}, never {@code null}
-   * @throws BindingException when the given type does not meet all requirements
    */
   Injectable create(Type type);
 }
