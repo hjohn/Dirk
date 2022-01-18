@@ -36,27 +36,29 @@ public class InjectorStoreConsistencyPolicyStressTest {
     int successes = 0;
 
     for(int i = 0; i < total; i++) {
-      Collections.shuffle(classes, rnd);
-      int count = rnd.nextInt(classes.size() - 1) + 1;
-      List<Type> list = new ArrayList<>(classes.subList(0, count));
-
       try {
         double x = rnd.nextDouble();
 
-        if(x < 0.01) {
-          injector.getCandidateRegistry().register(list);
-          actual.addAll(list);
-          classesNeverRegistered.removeAll(list);
+        if(x < 0.02) {
+          Collections.shuffle(classes, rnd);
+          int count = rnd.nextInt(classes.size() - 1) + 1;
+          List<Type> list = new ArrayList<>(classes.subList(0, count));
+
+          if(x < 0.01) {  // Adds random classes, registered or not
+            injector.getCandidateRegistry().register(list);
+            actual.addAll(list);
+            classesNeverRegistered.removeAll(list);
+          }
+          else {  // Removes random classes, registered or not
+            injector.getCandidateRegistry().remove(list);
+            actual.removeAll(list);
+          }
         }
-        else if(x < 0.02) {
-          injector.getCandidateRegistry().remove(list);
-          actual.removeAll(list);
-        }
-        else if(x < 0.03) {
+        else if(x < 0.03) {  // Removes everything
           injector.getCandidateRegistry().remove(new ArrayList<>(actual));
           actual.clear();
         }
-        else if((x < 0.55 || actual.size() == 0) && actual.size() < classes.size()) {
+        else if((x < 0.55 || actual.size() == 0) && actual.size() < classes.size()) {  // Only adds classes known to not be registered
           List<Type> toAdd = new ArrayList<>(classes);
 
           toAdd.removeAll(actual);
@@ -70,12 +72,12 @@ public class InjectorStoreConsistencyPolicyStressTest {
           actual.addAll(toAdd);
           classesNeverRegistered.removeAll(toAdd);
         }
-        else {
+        else {  // Only removes classes known to be registered
           List<Type> toRemove = new ArrayList<>(actual);
 
           Collections.shuffle(toRemove, rnd);
 
-          int amount = rnd.nextInt((toRemove.size() - 1) / 2) + 1;
+          int amount = toRemove.size() > 2 ? rnd.nextInt((toRemove.size() - 1) / 2) + 1 : 1;
 
           toRemove = toRemove.subList(0, amount);
           injector.getCandidateRegistry().remove(toRemove);
@@ -84,7 +86,7 @@ public class InjectorStoreConsistencyPolicyStressTest {
 
         successes++;
       }
-      catch(IllegalStateException | AssertionError e) {
+      catch(IllegalStateException | IllegalArgumentException | AssertionError e) {
         throw e;
       }
       catch(CyclicDependencyException e) {
@@ -97,7 +99,7 @@ public class InjectorStoreConsistencyPolicyStressTest {
       for(Type type : classes) {
         boolean contains = injector.contains(type);
         if(contains) {
-          contains = injector.getInstances(type).stream().map(Object::getClass).anyMatch(c -> c.equals(type));
+          contains = injector.getInstances(type).stream().map(Object::getClass).anyMatch(type::equals);
         }
 
         if(actual.contains(type)) {
