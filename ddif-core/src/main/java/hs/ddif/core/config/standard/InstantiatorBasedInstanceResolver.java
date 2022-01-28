@@ -9,6 +9,7 @@ import hs.ddif.core.scope.OutOfScopeException;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Implements the {@link InstanceResolver} interface by wrapping an {@link Instantiator}
@@ -27,11 +28,9 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> T getInstance(Type type, Object... criteria) {
+  public synchronized <T> T getInstance(Type type, Object... qualifiers) {
     try {
-      CriteriaParser parser = new CriteriaParser(type, criteria);
-
-      return instantiator.getInstance(parser.getKey(), parser.getMatchers());
+      return instantiator.getInstance(KeyFactory.of(type, qualifiers));
     }
     catch(InstanceResolutionFailure f) {
       throw f.toRuntimeException();
@@ -42,16 +41,14 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> T getInstance(Class<T> cls, Object... criteria) {
-    return getInstance((Type)cls, criteria);
+  public synchronized <T> T getInstance(Class<T> cls, Object... qualifiers) {
+    return getInstance((Type)cls, qualifiers);
   }
 
   @Override
-  public synchronized <T> List<T> getInstances(Type type, Object... criteria) {
+  public synchronized <T> List<T> getInstances(Type type, Predicate<Type> predicate, Object... qualifiers) {
     try {
-      CriteriaParser parser = new CriteriaParser(type, criteria);
-
-      return instantiator.getInstances(parser.getKey(), List.of());
+      return instantiator.getInstances(KeyFactory.of(type, qualifiers), predicate);
     }
     catch(InstanceCreationFailure f) {
       throw f.toRuntimeException();
@@ -59,7 +56,17 @@ public class InstantiatorBasedInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> List<T> getInstances(Class<T> cls, Object... criteria) {
-    return getInstances((Type)cls, criteria);
+  public synchronized <T> List<T> getInstances(Class<T> cls, Predicate<Type> predicate, Object... qualifiers) {
+    return getInstance((Type)cls, predicate, qualifiers);
+  }
+
+  @Override
+  public synchronized <T> List<T> getInstances(Type type, Object... qualifiers) {
+    return getInstances(type, null, qualifiers);
+  }
+
+  @Override
+  public synchronized <T> List<T> getInstances(Class<T> cls, Object... qualifiers) {
+    return getInstances((Type)cls, qualifiers);
   }
 }

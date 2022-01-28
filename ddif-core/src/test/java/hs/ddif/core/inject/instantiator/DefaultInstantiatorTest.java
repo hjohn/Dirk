@@ -83,16 +83,11 @@ public class DefaultInstantiatorTest {
       assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class)))
         .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
-
-      assertThatThrownBy(() -> instantiator.getInstance(new Key(A.class), List.of()))
-        .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasNoCause();
     }
 
     @Test
     void shouldReturnNullWhenFindingSingleInstance() throws MultipleInstances, InstanceCreationFailure, OutOfScopeException {
       assertNull(instantiator.findInstance(new Key(A.class)));
-      assertNull(instantiator.findInstance(new Key(A.class), List.of()));
     }
 
     @Test

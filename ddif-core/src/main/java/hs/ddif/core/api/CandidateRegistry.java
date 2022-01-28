@@ -21,14 +21,14 @@ import java.util.List;
 public interface CandidateRegistry {
 
   /**
-   * Returns <code>true</code> when the given type with the given criteria is present,
+   * Returns <code>true</code> when the given type with the given qualifiers is present,
    * otherwise <code>false</code>.
    *
    * @param type a type to check for, cannot be {@code null}
-   * @param criterions optional list of criteria, see {@link InstanceResolver}
+   * @param qualifiers optional list of qualifier annotations, either {@link Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return <code>true</code> when the given type with the given criteria is present, otherwise <code>false</code>
    */
-  boolean contains(Type type, Object... criterions);
+  boolean contains(Type type, Object... qualifiers);
 
   /**
    * Registers a {@link Type}, and all its derived candidates if any, if all

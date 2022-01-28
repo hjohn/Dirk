@@ -154,12 +154,12 @@ public class InjectableStoreTest {
     assertEquals(10, store.resolve(new Key(Object.class)).size());
 
     // All Numbers (using Matcher)
-    assertEquals(4, store.resolve(new Key(Object.class), List.of(new Predicate<Type>() {
+    assertEquals(4, store.resolve(new Key(Object.class), new Predicate<Type>() {
       @Override
       public boolean test(Type type) {
         return Number.class.isAssignableFrom((Class<?>)type);
       }
-    })).size());
+    }).size());
 
     // All Red Objects
     assertEquals(3, store.resolve(new Key(Object.class, Set.of(RED))).size());

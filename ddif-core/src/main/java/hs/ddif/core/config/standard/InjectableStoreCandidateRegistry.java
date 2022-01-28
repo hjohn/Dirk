@@ -32,10 +32,8 @@ public class InjectableStoreCandidateRegistry implements CandidateRegistry {
   }
 
   @Override
-  public boolean contains(Type type, Object... criteria) {
-    CriteriaParser parser = new CriteriaParser(type, criteria);
-
-    return store.contains(parser.getKey(), parser.getMatchers());
+  public boolean contains(Type type, Object... qualifiers) {
+    return store.contains(KeyFactory.of(type, qualifiers));
   }
 
   @Override

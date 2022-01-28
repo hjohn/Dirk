@@ -1,9 +1,5 @@
 package hs.ddif.core.inject.instantiation;
 
-import java.lang.reflect.Type;
-import java.util.List;
-import java.util.function.Predicate;
-
 /**
  * Base class for exceptions that can be thrown during instance resolution by
  * an {@link Instantiator}.
@@ -27,16 +23,6 @@ public abstract class InstanceResolutionFailure extends Exception {
    */
   public InstanceResolutionFailure(String message) {
     super(message);
-  }
-
-  /**
-   * Generates a description for a list of {@link Predicate}s.
-   *
-   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
-   * @return a descriptive string, never {@code null}
-   */
-  protected static String toCriteriaString(List<Predicate<Type>> matchers) {
-    return matchers.isEmpty() ? "" : " with " + matchers;
   }
 
   /**

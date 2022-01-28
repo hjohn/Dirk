@@ -3,10 +3,7 @@ package hs.ddif.core.inject.instantiation;
 import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.store.Key;
 
-import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 
 /**
  * Thrown when multiple matching instances were available.
@@ -17,11 +14,10 @@ public class MultipleInstances extends InstanceResolutionFailure {
    * Constructs a new instance.
    *
    * @param key a {@link Key}, cannot be {@code null}
-   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
    * @param injectables a set of injectables, cannot be {@code null}
    */
-  public MultipleInstances(Key key, List<Predicate<Type>> matchers, Set<?> injectables) {
-    super("Multiple matching instances: " + key + toCriteriaString(matchers) + ": " + injectables);
+  public MultipleInstances(Key key, Set<?> injectables) {
+    super("Multiple matching instances: " + key + ": " + injectables);
   }
 
   @Override
