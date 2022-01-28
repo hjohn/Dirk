@@ -209,7 +209,7 @@ public class BindingProviderTest {
      */
 
     when(instantiator.findInstance(new Key(Short.class))).thenReturn(null);
-    when(instantiator.getInstance(new Key(Short.class))).thenThrow(new NoSuchInstance(new Key(Short.class), List.of()));
+    when(instantiator.getInstance(new Key(Short.class))).thenThrow(new NoSuchInstance(new Key(Short.class)));
 
     assertThat(bindings.get(10).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
       assertThatThrownBy(() -> p.get())

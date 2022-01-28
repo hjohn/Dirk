@@ -18,6 +18,7 @@ import hs.ddif.core.store.QualifiedTypeStore;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.inject.Provider;
@@ -98,28 +99,38 @@ public class Injector implements InstanceResolver, CandidateRegistry {
   }
 
   @Override
-  public <T> T getInstance(Type type, Object... criteria) {
-    return instanceResolver.getInstance(type, criteria);
+  public <T> T getInstance(Type type, Object... qualifiers) {
+    return instanceResolver.getInstance(type, qualifiers);
   }
 
   @Override
-  public <T> T getInstance(Class<T> cls, Object... criteria) {
-    return instanceResolver.getInstance(cls, criteria);
+  public <T> T getInstance(Class<T> cls, Object... qualifiers) {
+    return instanceResolver.getInstance(cls, qualifiers);
   }
 
   @Override
-  public <T> List<T> getInstances(Type type, Object... criteria) {
-    return instanceResolver.getInstances(type, criteria);
+  public <T> List<T> getInstances(Type type, Predicate<Type> typePredicate, Object... qualifiers) {
+    return instanceResolver.getInstances(type, typePredicate, qualifiers);
   }
 
   @Override
-  public <T> List<T> getInstances(Class<T> cls, Object... criteria) {
-    return instanceResolver.getInstances(cls, criteria);
+  public <T> List<T> getInstances(Class<T> cls, Predicate<Type> typePredicate, Object... qualifiers) {
+    return instanceResolver.getInstances(cls, typePredicate, qualifiers);
   }
 
   @Override
-  public boolean contains(Type type, Object... criteria) {
-    return registry.contains(type, criteria);
+  public <T> List<T> getInstances(Type type, Object... qualifiers) {
+    return instanceResolver.getInstances(type, qualifiers);
+  }
+
+  @Override
+  public <T> List<T> getInstances(Class<T> cls, Object... qualifiers) {
+    return instanceResolver.getInstances(cls, qualifiers);
+  }
+
+  @Override
+  public boolean contains(Type type, Object... qualifiers) {
+    return registry.contains(type, qualifiers);
   }
 
   @Override

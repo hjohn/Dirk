@@ -64,20 +64,20 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
 
   @Override
   public synchronized Set<T> resolve(Key key) {
-    return resolve(key, List.of());
+    return resolve(key, null);
   }
 
   /**
-   * Look up {@link QualifiedType}s by {@link Key} and a list of {@link Predicate}s.
+   * Look up {@link QualifiedType}s by {@link Key} and a {@link Predicate}.
    * For a {@link QualifiedType} to match it must be of the same type or a subtype of the
    * type in the key, and it must have all the qualifiers specified by the key.
    * The empty set is returned if there were no matches.
    *
    * @param key the {@link Key}, cannot be {@code null}
-   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
+   * @param typePredicate a {@link Predicate}, can be {@code null} in which case no further filtering occurs
    * @return a set of {@link QualifiedType}s, never {@code null} and never contains {@code null}s but can be empty
    */
-  public synchronized Set<T> resolve(Key key, Collection<Predicate<Type>> matchers) {
+  public synchronized Set<T> resolve(Key key, Predicate<Type> typePredicate) {
     Type type = key.getType();
     Collection<Set<T>> sets;
     Set<Type> upperBounds;
@@ -146,8 +146,8 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
      * Finally apply custom supplied matchers:
      */
 
-    for(Predicate<Type> matcher : matchers) {
-      filterByMatcher(matches, matcher);
+    if(typePredicate != null) {
+      filterByPredicate(matches, typePredicate);
     }
 
     return matches;
@@ -183,11 +183,11 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
     return false;
   }
 
-  private void filterByMatcher(Set<T> matches, Predicate<Type> matcher) {
+  private void filterByPredicate(Set<T> matches, Predicate<Type> predicate) {
     for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
       T qualifiedType = iterator.next();
 
-      if(!matcher.test(qualifiedType.getType())) {
+      if(!predicate.test(qualifiedType.getType())) {
         iterator.remove();
       }
     }
@@ -195,15 +195,15 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
 
   /**
    * Checks if there is a {@link QualifiedType} associated with the given {@link Key} and
-   * matching the given {@link Predicate}s in the store.
+   * matching the given {@link Predicate} in the store.
    *
    * @param key the {@link Key}, cannot be {@code null}
-   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
+   * @param typePredicate a {@link Predicate}, can be {@code null} in which case no further filtering occurs
    * @return {@code true} if there was a {@link QualifiedType} associated with the given {@link Key} and
    *   matching the given {@link Predicate}s, otherwise {@code false}
    */
-  public synchronized boolean contains(Key key, List<Predicate<Type>> matchers) {
-    return !resolve(key, matchers).isEmpty();
+  public synchronized boolean contains(Key key, Predicate<Type> typePredicate) {
+    return !resolve(key, typePredicate).isEmpty();
   }
 
   /**
@@ -214,7 +214,7 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
    *   otherwise {@code false}
    */
   public synchronized boolean contains(Key key) {
-    return contains(key, List.of());
+    return contains(key, null);
   }
 
   /**

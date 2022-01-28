@@ -56,69 +56,26 @@ public class DefaultInstantiator implements Instantiator {
     }
   }
 
-  /**
-   * Returns an instance matching the given {@link Key} and a list of {@link Predicate}s (if any) in
-   * which all dependencies are injected.
-   *
-   * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
-   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
-   * @return an instance of the given class matching the given matchers, never {@code null}
-   * @throws NoSuchInstance when no matching instance could be found or created
-   * @throws OutOfScopeException when out of scope
-   * @throws MultipleInstances when multiple matching instances were found or could be created
-   * @throws InstanceCreationFailure when instantiation of an instance failed
-   */
   @Override
-  public synchronized <T> T getInstance(Key key, List<Predicate<Type>> matchers) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
-    T object = findInstance(key, matchers);
+  public synchronized <T> T getInstance(Key key) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
+    T object = findInstance(key);
 
     if(object == null) {
-      throw new NoSuchInstance(key, matchers);
+      throw new NoSuchInstance(key);
     }
 
     return object;
   }
 
-  /**
-   * Returns an instance matching the given {@link Key} (if any) in
-   * which all dependencies are injected.
-   *
-   * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
-   * @return an instance matching the given {@link Key}, never {@code null}
-   * @throws NoSuchInstance when no matching instance could be found or created
-   * @throws OutOfScopeException when out of scope
-   * @throws MultipleInstances when multiple matching instances were found or could be created
-   * @throws InstanceCreationFailure when instantiation of an instance failed
-   */
   @Override
-  public synchronized <T> T getInstance(Key key) throws OutOfScopeException, NoSuchInstance, MultipleInstances, InstanceCreationFailure {
-    return getInstance(key, List.of());
-  }
-
-  /**
-   * Finds an instance matching the given {@link Key} and a list of {@link Predicate}s (if any) in
-   * which all dependencies are injected. If not found, {@code null}
-   * is returned.
-   *
-   * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
-   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
-   * @return an instance of the given class matching the given matchers, or {@code null} when no instance was found
-   * @throws OutOfScopeException when out of scope
-   * @throws MultipleInstances when multiple matching instances were found or could be created
-   * @throws InstanceCreationFailure when instantiation of an instance failed
-   */
-  @Override
-  public synchronized <T> T findInstance(Key key, List<Predicate<Type>> matchers) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
-    Set<Injectable> injectables = discover(key, matchers);
+  public synchronized <T> T findInstance(Key key) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
+    Set<Injectable> injectables = discover(key);
 
     if(injectables.isEmpty()) {
       return null;
     }
     if(injectables.size() > 1) {
-      throw new MultipleInstances(key, matchers, injectables);
+      throw new MultipleInstances(key, injectables);
     }
 
     Injectable injectable = injectables.iterator().next();
@@ -126,38 +83,11 @@ public class DefaultInstantiator implements Instantiator {
     return getInstance(injectable, findScopeResolver(injectable));
   }
 
-  /**
-   * Finds an instance matching the given {@link Key} (if any) in
-   * which all dependencies are injected. If not found, {@code null}
-   * is returned.
-   *
-   * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
-   * @return an instance matching the given {@link Key}, or {@code null} when no instance was found
-   * @throws OutOfScopeException when out of scope
-   * @throws MultipleInstances when multiple matching instances were found or could be created
-   * @throws InstanceCreationFailure when instantiation of an instance failed
-   */
   @Override
-  public synchronized <T> T findInstance(Key key) throws OutOfScopeException, MultipleInstances, InstanceCreationFailure {
-    return findInstance(key, List.of());
-  }
-
-  /**
-   * Returns all instances matching the given {@link Key} and a list of {@link Predicate}s (if any) and, if scoped,
-   * which are active in the current scope.  When there are no matches, an empty set is returned.
-   *
-   * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
-   * @param matchers a list of {@link Predicate}s, cannot be {@code null}
-   * @return all instances of the given class matching the given matchers (if any)
-   * @throws InstanceCreationFailure when instantiation of an instance failed
-   */
-  @Override
-  public synchronized <T> List<T> getInstances(Key key, List<Predicate<Type>> matchers) throws InstanceCreationFailure {
+  public synchronized <T> List<T> getInstances(Key key, Predicate<Type> typePredicate) throws InstanceCreationFailure {
     List<T> instances = new ArrayList<>();
 
-    for(Injectable injectable : store.resolve(key, matchers)) {
+    for(Injectable injectable : store.resolve(key, typePredicate)) {
       ScopeResolver scopeResolver = findScopeResolver(injectable);
 
       if(scopeResolver == null || scopeResolver.isScopeActive(injectable)) {
@@ -182,29 +112,16 @@ public class DefaultInstantiator implements Instantiator {
     return instances;
   }
 
-  /**
-   * Returns all instances matching the given {@link Key} (if any) and, if scoped,
-   * which are active in the current scope.  When there are no matches, an empty set is returned.
-   *
-   * @param <T> the type of the instance
-   * @param key a {@link Key} identifying the type of the instance required, cannot be {@code null}
-   * @return all instances of the given class matching the given matchers (if any)
-   * @throws InstanceCreationFailure when instantiation of an instance failed
-   */
   @Override
   public synchronized <T> List<T> getInstances(Key key) throws InstanceCreationFailure {
-    return getInstances(key, List.of());
+    return getInstances(key, null);
   }
 
-  private Set<Injectable> discover(Key key, List<Predicate<Type>> matchers) throws DiscoveryFailure {
-    Set<Injectable> injectables = store.resolve(key, matchers);
+  private Set<Injectable> discover(Key key) throws DiscoveryFailure {
+    Set<Injectable> injectables = store.resolve(key);
 
     if(!injectables.isEmpty()) {
       return injectables;
-    }
-
-    if(!matchers.isEmpty()) {
-      return Set.of();
     }
 
     Set<Injectable> gatheredInjectables = gatherer.gather(store, key);

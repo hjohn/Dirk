@@ -1,37 +1,47 @@
 package hs.ddif.core.api;
 
-import hs.ddif.core.util.Annotations;
-
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
- * Provides methods to resolve queries, consisting of a {@link Type} and free form
- * criteria, to instances.<p>
+ * Provides methods to resolve {@link Type}s to instances.
  *
- * Supported criteria that can be used in queries are:
- * <ul>
- * <li>A {@link Class} to match by implemented interface or {@link javax.inject.Qualifier}
- *     annotation, for example the interface <code>Comparable</code> or the annotation
- *     <code>Named</code></li>
- * <li>An {@link java.lang.annotation.Annotation} to match by annotation, including matching
- *     all of its values; {@code Annotation} instances can be obtained using {@link Annotations}
- *     helper class</li>
- * <li>A {@link java.util.function.Predicate} to match by custom criteria provided by a {@link java.util.function.Predicate}
- *     implementation</li>
- * </ul>
+ * <p>All methods support filtering by qualifier annotation, by providing either an {@link java.lang.annotation.Annotation}
+ * instance (obtainable via {@link hs.ddif.core.util.Annotations#of(Class)}) or by providing a
+ * {@link Class} instance of &lt;? extends Annotation&gt;. Annotations must be be {@link javax.inject.Qualifier}
+ * annotations or they will be rejected.
  *
- * Examples:<br>
+ * <p>Methods that can return multiple instances also support a {@link Predicate} of {@link Type} to allow
+ * custom filtering.
  *
- * <pre>getInstance(Database.class, Queryable.class)</pre>
+ * <p>Filtering by generic type is possible by providing {@link java.lang.reflect.ParameterizedType} or a {@link java.lang.reflect.WildcardType}.
+ * There are various ways to construct such types, see for example {@link hs.ddif.core.util.Types} and
+ * {@link hs.ddif.core.util.TypeReference}.
  *
- * would return a {@code Database} instance which implements the {@code Queryable} interface.
+ * <p>Examples:<br>
+ *
+ * <pre>getInstance(Database.class)</pre>
+ *
+ * would return a {@code Database} instance.
+ *
+ * <pre>getInstance(Types.wildcardExtends(Database.class, Queryable.class))</pre>
+ *
+ * would return an object which implements or extends both {@code Database} and {@code Queryable}.
  *
  * <pre>getInstances(Vehicle.class, Red.class)</pre>
  *
+ * or
+ *
+ * <pre>getInstances(Vehicle.class, Annotations.of(Red.class))</pre>
+ *
  * would return all {@code Vehicle}s instances annotated with the {@code @Red} qualifier annotation.
  *
- * <pre>getInstance(String.class, AnnotationDescriptor.named("config.url")</pre>
+ * <pre>getInstance(String.class, Annotations.named("config.url")</pre>
+ *
+ * or
+ *
+ * <pre>getInstance(String.class, Annotations.of(Named.class, Map.of("value", "config.url"))</pre>
  *
  * would return a {@code String} instance which was registered with a {@code Named} annotation with
  * value "config.url".
@@ -45,13 +55,13 @@ public interface InstanceResolver {
    *
    * @param <T> the type of the instance
    * @param type the type of the instance required, cannot be {@code null}
-   * @param criterions optional list of criteria, see {@link InstanceResolver}
+   * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return an instance of the given class matching the given criteria, never {@code null}
    * @throws NoSuchInstanceException when no matching instance was available or could be created
    * @throws MultipleInstancesException when multiple matching instances were available
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> T getInstance(Type type, Object... criterions);
+  <T> T getInstance(Type type, Object... qualifiers);
 
   /**
    * Returns an instance of the given class matching the given criteria (if any) in
@@ -60,13 +70,13 @@ public interface InstanceResolver {
    *
    * @param <T> the type of the instance
    * @param cls the class of the instance required, cannot be {@code null}
-   * @param criterions optional list of criteria, see {@link InstanceResolver}
+   * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return an instance of the given class matching the given criteria (if any)
    * @throws NoSuchInstanceException when no matching instance was available or could be created
    * @throws MultipleInstancesException when multiple matching instances were available
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> T getInstance(Class<T> cls, Object... criterions);  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
+  <T> T getInstance(Class<T> cls, Object... qualifiers);  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
 
   /**
    * Returns all instances of the given {@link Type} matching the given criteria (if any) in
@@ -76,11 +86,11 @@ public interface InstanceResolver {
    *
    * @param <T> the type of the instances
    * @param type the {@link Type} of the instances required, cannot be {@code null}
-   * @param criterions optional list of criteria, see {@link InstanceResolver}
+   * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return all instances of the given {@link Type} matching the given criteria (if any), never {@code null}, can be empty
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> List<T> getInstances(Type type, Object... criterions);
+  <T> List<T> getInstances(Type type, Object... qualifiers);
 
   /**
    * Returns all instances of the given class matching the given criteria (if any) in
@@ -90,9 +100,39 @@ public interface InstanceResolver {
    *
    * @param <T> the type of the instances
    * @param cls the class of the instances required, cannot be {@code null}
-   * @param criteria optional list of criteria, see {@link InstanceResolver}
+   * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return all instances of the given class matching the given criteria (if any), never {@code null}, can be empty
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> List<T> getInstances(Class<T> cls, Object... criteria);
+  <T> List<T> getInstances(Class<T> cls, Object... qualifiers);
+
+  /**
+   * Returns all instances of the given {@link Type} matching the given criteria (if any) in
+   * which all dependencies are injected.  When there are no matches, an empty set is
+   * returned. The instances returned can either be existing instances or newly created
+   * depending on their scope or a mix thereof.
+   *
+   * @param <T> the type of the instances
+   * @param type the {@link Type} of the instances required, cannot be {@code null}
+   * @param predicate a {@link Predicate} of {@link Type} to filter matching instances, can be {@code null} in which case no filtering is applied
+   * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
+   * @return all instances of the given {@link Type} matching the given criteria (if any), never {@code null}, can be empty
+   * @throws InstanceCreationException when an error occurred during creation of a matching instance
+   */
+  <T> List<T> getInstances(Type type, Predicate<Type> predicate, Object... qualifiers);
+
+  /**
+   * Returns all instances of the given class matching the given criteria (if any) in
+   * which all dependencies are injected.  When there are no matches, an empty set is
+   * returned. The instances returned can either be existing instances or newly created
+   * depending on their scope or a mix thereof.
+   *
+   * @param <T> the type of the instances
+   * @param cls the class of the instances required, cannot be {@code null}
+   * @param predicate a {@link Predicate} of {@link Type} to filter matching instances, can be {@code null} in which case no filtering is applied
+   * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
+   * @return all instances of the given class matching the given criteria (if any), never {@code null}, can be empty
+   * @throws InstanceCreationException when an error occurred during creation of a matching instance
+   */
+  <T> List<T> getInstances(Class<T> cls, Predicate<Type> predicate, Object... qualifiers);
 }
