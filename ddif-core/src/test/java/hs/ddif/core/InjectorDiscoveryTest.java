@@ -2,6 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
+import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
@@ -77,6 +78,9 @@ public class InjectorDiscoveryTest {
       .hasMessage("Path [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .hasNoCause();
   }

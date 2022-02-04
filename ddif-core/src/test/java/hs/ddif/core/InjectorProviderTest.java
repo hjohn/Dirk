@@ -5,6 +5,7 @@ import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.config.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.DuplicateQualifiedTypeException;
 import hs.ddif.core.test.injectables.BeanWithOptionalProvider;
 import hs.ddif.core.test.injectables.BeanWithProvider;
@@ -24,6 +25,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -97,10 +99,14 @@ public class InjectorProviderTest {
 
       assertThatThrownBy(() -> injector.getInstance(DatabaseProvider.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
 
       assertThatThrownBy(() -> injector.getInstance(Database.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
     }
   }
@@ -138,6 +144,9 @@ public class InjectorProviderTest {
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
         .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(NoSuchInstance.class)
+        .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
   }
@@ -161,6 +170,9 @@ public class InjectorProviderTest {
 
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(NoSuchInstance.class)
         .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
@@ -226,6 +238,9 @@ public class InjectorProviderTest {
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
       .isExactlyInstanceOf(NoSuchInstanceException.class)
       .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(NoSuchInstance.class)
+      .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
       .hasNoCause();
   }
 
@@ -252,6 +267,9 @@ public class InjectorProviderTest {
 
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
       .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(NoSuchInstance.class)
       .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
       .hasNoCause();
   }
@@ -376,6 +394,8 @@ public class InjectorProviderTest {
     assertThat(injector.getInstance(Z.class, Big.class)).isExactlyInstanceOf(Z.class);
     assertThatThrownBy(() -> injector.getInstance(Z.class, Small.class))
       .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(NoSuchInstance.class)
       .hasNoCause();
 
     injector.register(X.class);

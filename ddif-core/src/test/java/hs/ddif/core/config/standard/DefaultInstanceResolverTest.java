@@ -21,6 +21,8 @@ import hs.ddif.core.instantiation.InstantiatorBindingMap;
 import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.ScopeResolverManager;
 import hs.ddif.core.instantiation.ScopeResolverManagers;
+import hs.ddif.core.instantiation.domain.MultipleInstances;
+import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.QualifiedTypeStore;
@@ -82,6 +84,8 @@ public class DefaultInstanceResolverTest {
     void shouldThrowExceptionWhenGettingSingleInstance() {
       assertThatThrownBy(() -> instanceResolver.getInstance(A.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
     }
 
@@ -159,6 +163,8 @@ public class DefaultInstanceResolverTest {
     void shouldThrowExceptionWhenNotSingular() {
       assertThatThrownBy(() -> instanceResolver.getInstance(String.class))
         .isExactlyInstanceOf(MultipleInstancesException.class)
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(MultipleInstances.class)
         .hasNoCause();
     }
 

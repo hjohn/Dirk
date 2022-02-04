@@ -5,6 +5,7 @@ import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
@@ -37,6 +38,9 @@ public class AssistedInjectionTest {
       assertThatThrownBy(() -> injector.getInstance(TestAssistedSample.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
         .hasMessage("No such instance: [class hs.ddif.core.AssistedInjectionTest$TestAssistedSample]")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(NoSuchInstance.class)
+        .hasMessage("No such instance: [class hs.ddif.core.AssistedInjectionTest$TestAssistedSample]")
         .hasNoCause();
 
       TestAssistedSampleFactory factory = injector.getInstance(TestAssistedSampleFactory.class);
@@ -61,6 +65,9 @@ public class AssistedInjectionTest {
     assertThatThrownBy(() -> injector.getInstance(TestAssistedAbstractSample.class))
       .isExactlyInstanceOf(NoSuchInstanceException.class)
       .hasMessage("No such instance: [class hs.ddif.core.AssistedInjectionTest$TestAssistedAbstractSample]")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(NoSuchInstance.class)
+      .hasMessage("No such instance: [class hs.ddif.core.AssistedInjectionTest$TestAssistedAbstractSample]")
       .hasNoCause();
 
     TestAssistedAbstractSampleFactory factory = injector.getInstance(TestAssistedAbstractSampleFactory.class);
@@ -80,6 +87,9 @@ public class AssistedInjectionTest {
     // The Product of the Factory should not be registered with the Injector:
     assertThatThrownBy(() -> injector.getInstance(TestAssistedAbstractSample.class))
       .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .hasMessage("No such instance: [class hs.ddif.core.AssistedInjectionTest$TestAssistedAbstractSample]")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(NoSuchInstance.class)
       .hasMessage("No such instance: [class hs.ddif.core.AssistedInjectionTest$TestAssistedAbstractSample]")
       .hasNoCause();
 

@@ -38,7 +38,7 @@ public class DefinitionException extends RuntimeException {
    * @param throwable a {@link Throwable} that is to be converted to a definition exception, cannot be {@code null}
    */
   public DefinitionException(Throwable throwable) {
-    super(throwable.getMessage(), throwable.getCause());
+    super(throwable.getMessage(), throwable);
   }
 
   /**

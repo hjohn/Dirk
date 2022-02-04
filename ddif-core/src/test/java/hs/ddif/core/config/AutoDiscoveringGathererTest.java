@@ -4,6 +4,7 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
 import hs.ddif.core.config.standard.DefaultInjectable;
+import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.DefinitionException;
@@ -272,6 +273,9 @@ public class AutoDiscoveringGathererTest {
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(DefinitionException.class)
           .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
           .hasNoCause();
 
         assertThatThrownBy(() -> gatherer.gather(store, List.of(X.class, Y.class)))
@@ -280,6 +284,9 @@ public class AutoDiscoveringGathererTest {
           .hasNoSuppressedExceptions()
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
           .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
           .hasNoCause();
       }
