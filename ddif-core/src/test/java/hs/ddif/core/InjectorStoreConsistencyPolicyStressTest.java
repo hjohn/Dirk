@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.core.config.consistency.CyclicDependencyException;
+import hs.ddif.core.inject.store.CyclicDependencyException;
 import hs.ddif.core.util.Nullable;
 
 import java.lang.reflect.Type;

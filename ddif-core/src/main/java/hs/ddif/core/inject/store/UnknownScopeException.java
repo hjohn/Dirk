@@ -1,4 +1,4 @@
-package hs.ddif.core.config.consistency;
+package hs.ddif.core.inject.store;
 
 /**
  * Thrown when an attempt is made to register an injectable which was annotated

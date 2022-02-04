@@ -5,6 +5,7 @@ import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.config.gather.Gatherer;
 import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.InstantiatorFactory;
@@ -13,7 +14,6 @@ import hs.ddif.core.instantiation.domain.InstanceResolutionFailure;
 import hs.ddif.core.instantiation.domain.MultipleInstances;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.Key;
-import hs.ddif.core.store.QualifiedTypeStore;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * Implements the {@link InstanceResolver} interface.
  */
 public class DefaultInstanceResolver implements InstanceResolver {
-  private final QualifiedTypeStore<Injectable> store;
+  private final InjectableStore store;
   private final Gatherer gatherer;
   private final InstantiationContext instantiationContext;
   private final InstantiatorFactory instantiatorFactory;
@@ -35,12 +35,12 @@ public class DefaultInstanceResolver implements InstanceResolver {
   /**
    * Constructs a new instance.
    *
-   * @param store a {@link QualifiedTypeStore}, cannot be {@code null}
+   * @param store an {@link InjectableStore}, cannot be {@code null}
    * @param gatherer a {@link Gatherer}, cannot be {@code null}
    * @param instantiationContext an {@link InstantiationContext}, cannot be {@code null}
    * @param instantiatorFactory an {@link InstantiatorFactory}, cannot be {@code null}
    */
-  public DefaultInstanceResolver(QualifiedTypeStore<Injectable> store, Gatherer gatherer, InstantiationContext instantiationContext, InstantiatorFactory instantiatorFactory) {
+  public DefaultInstanceResolver(InjectableStore store, Gatherer gatherer, InstantiationContext instantiationContext, InstantiatorFactory instantiatorFactory) {
     this.store = store;
     this.gatherer = gatherer;
     this.instantiationContext = instantiationContext;
@@ -97,9 +97,9 @@ public class DefaultInstanceResolver implements InstanceResolver {
   /**
    * Returns the underlying store this resolver uses.
    *
-   * @return a {@link QualifiedTypeStore}, never null
+   * @return a {@link InjectableStore}, never null
    */
-  public QualifiedTypeStore<Injectable> getStore() {
+  public InjectableStore getStore() {
     return store;
   }
 

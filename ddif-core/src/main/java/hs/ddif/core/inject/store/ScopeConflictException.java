@@ -1,4 +1,4 @@
-package hs.ddif.core.config.consistency;
+package hs.ddif.core.inject.store;
 
 /**
  * Thrown during registration when an injectable is determined to be dependent on

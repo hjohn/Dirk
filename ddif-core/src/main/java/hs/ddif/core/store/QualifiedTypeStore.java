@@ -24,9 +24,7 @@ import javax.inject.Provider;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Store which keeps track of {@link QualifiedType}s. A {@link StoreConsistencyPolicy} can
- * be used to track the additions and removals to the store and veto them if it would
- * violate the policy.
+ * Store which keeps track of {@link QualifiedType}s.
  *
  * <p>The store can be searched for {@link QualifiedType}s matching a {@link Key}. For
  * a {@link QualifiedType} to match it must be of the same type or a subtype of the
@@ -42,24 +40,6 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
    * type or qualifier class.
    */
   private final Map<Class<?>, Map<Annotation, Set<T>>> qualifiedTypesByQualifierByType = new HashMap<>();
-
-  private final StoreConsistencyPolicy<T> policy;
-
-  /**
-   * Constructs a new instance.
-   *
-   * @param policy a {@link StoreConsistencyPolicy} to enforce invariants, can be {@code null}
-   */
-  public QualifiedTypeStore(StoreConsistencyPolicy<T> policy) {
-    this.policy = policy == null ? new NoStoreConsistencyPolicy() : policy;
-  }
-
-  /**
-   * Constructs a new instance.
-   */
-  public QualifiedTypeStore() {
-    this(null);
-  }
 
   @Override
   public synchronized Set<T> resolve(Key key) {
@@ -209,8 +189,6 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
         putInternal(qualifiedType);
         addedQualifiedTypes.add(qualifiedType);
       }
-
-      policy.addAll(this, qualifiedTypes);  // if this fails, policy will clean up after itself, no need to policy clean-up
     }
     catch(Exception e) {
       try {
@@ -247,8 +225,6 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
         throw new NoSuchQualifiedTypeException(qualifiedType);
       }
     }
-
-    policy.removeAll(this, qualifiedTypes);  // if this fails, policy will clean up after itself, no need to do clean-up
 
     // Change the store, no exceptions should occur here:
     for(T qualifiedType : qualifiedTypes) {
@@ -357,18 +333,6 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
           iterator.remove();
         }
       }
-    }
-  }
-
-  class NoStoreConsistencyPolicy implements StoreConsistencyPolicy<T> {
-    @Override
-    public void addAll(Resolver<T> resolver, Collection<T> qualifiedTypes) {
-      // No-op
-    }
-
-    @Override
-    public void removeAll(Resolver<T> resolver, Collection<T> qualifiedTypes) {
-      // No-op
     }
   }
 

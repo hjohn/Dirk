@@ -1,4 +1,4 @@
-package hs.ddif.core.config.consistency;
+package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
@@ -9,7 +9,6 @@ import hs.ddif.core.instantiation.InstantiatorBindingMap;
 import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.ScopeResolverManager;
 import hs.ddif.core.instantiation.ScopeResolverManagers;
-import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
@@ -29,13 +28,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
-public class InjectorStoreConsistencyPolicyTest {
+public class InjectableStoreConsistencyTest {
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
 
   private InstantiatorFactory instantiatorFactory = InstanceFactories.create();
   private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create();
-  private InjectorStoreConsistencyPolicy<Injectable> policy = new InjectorStoreConsistencyPolicy<>(instantiatorBindingMap, scopeResolverManager);
 
   private Injectable a = classInjectableFactory.create(A.class);
   private Injectable b = classInjectableFactory.create(B.class);
@@ -52,88 +50,70 @@ public class InjectorStoreConsistencyPolicyTest {
   private Injectable n = classInjectableFactory.create(N.class);
   private Injectable o = classInjectableFactory.create(O.class);
 
-  private QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>();
+  private InjectableStore store = new InjectableStore(instantiatorBindingMap, scopeResolverManager);
 
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {
-    assertThatThrownBy(() -> policy.addAll(store, Set.of(classInjectableFactory.create(K.class))))
+    assertThatThrownBy(() -> store.putAll(Set.of(classInjectableFactory.create(K.class))))
       .isExactlyInstanceOf(UnknownScopeException.class)
       .hasNoCause();
   }
 
   @Test
   void addAllShouldRejectInjectablesWithCyclicDependency() {
-    store.putAll(List.of(e, b, c, d));
-
-    CyclicDependencyException ex = assertThrows(CyclicDependencyException.class, () -> policy.addAll(store, List.of(e, b, c, d)));
+    CyclicDependencyException ex = assertThrows(CyclicDependencyException.class, () -> store.putAll(List.of(e, b, c, d)));
 
     assertEquals(4, ex.getCycle().size());
   }
 
   @Test
   void addBShouldFailAsItHasUnresolvableDependency() {
-    store.put(b);
-
-    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(b)));
+    assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(b)));
   }
 
   @Test
   void addAAndBAndHShouldFailsAsThereAreMultipleCandidatesOfZForB() {
-    store.putAll(List.of(a, b, h));
-
-    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(a, b, h)));
+    assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(a, b, h)));
   }
 
   @Test
   void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB2() {
-    store.putAll(List.of(b, a, h));
-
-    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(b, a, h)));
+    assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(b, a, h)));
   }
   @Test
   void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB3() {
-    store.putAll(List.of(a, h, b));
-
-    assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(a, h, b)));
+    assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(a, h, b)));
   }
 
   @Test
   void addIShouldFail() {
-    store.put(i);
-
-    assertThrows(CyclicDependencyException.class, () -> policy.addAll(store, List.of(i)));
+    assertThrows(CyclicDependencyException.class, () -> store.putAll(List.of(i)));
   }
 
   @Test
   void addJShouldFail() {
-    store.put(j);
-
-    assertThrows(CyclicDependencyException.class, () -> policy.addAll(store, List.of(j)));
+    assertThrows(CyclicDependencyException.class, () -> store.putAll(List.of(j)));
   }
 
   @Test
   void addLShouldWork() {
-    store.put(l);
-    policy.addAll(store, List.of(l));
+    store.putAll(List.of(l));
   }
 
   @Test
   void addLAndAShouldWork() {
     store.putAll(List.of(l, a));
-    policy.addAll(store, List.of(l, a));
   }
 
   @Nested
   class WhenClasses_A_And_H_AreAdded {
     {
       store.putAll(List.of(a, h));
-      policy.addAll(store, List.of(a, h));
     }
 
     @Test
     void add_L_ShouldFailBecause_Z_IsProvidedTwice() {
-      store.putAll(List.of(l));
-      assertThrows(UnresolvableDependencyException.class, () -> policy.addAll(store, List.of(l)));
+      assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(l)));
     }
   }
 
@@ -141,25 +121,21 @@ public class InjectorStoreConsistencyPolicyTest {
   class When_L_IsAdded {
     {
       store.putAll(List.of(l));
-      policy.addAll(store, List.of(l));
     }
 
     @Test
     void remove_L_ShouldWork() {
-      store.remove(l);
-      policy.removeAll(store, List.of(l));
+      store.removeAll(List.of(l));
     }
 
     @Test
     void add_A_ShouldWork() {
       store.putAll(List.of(a));
-      policy.addAll(store, List.of(a));
     }
 
     @Test
     void add_A_and_H_ShouldFailBecause_Z_IsProvidedTwice() {
-      store.putAll(List.of(a, h));
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(a, h)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(a, h)));
     }
   }
 
@@ -167,84 +143,76 @@ public class InjectorStoreConsistencyPolicyTest {
   class WhenClassesAAndBAndCAndDAreAdded {
     {
       store.putAll(List.of(a, b, c, d));
-      policy.addAll(store, List.of(b, d, c, a));
     }
 
     @Test
     void removeAllShouldWork() {
-      policy.removeAll(store, List.of(a, b, c, d));
+      store.removeAll(List.of(a, b, c, d));
     }
 
     @Test
     void removeAShouldFail() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.removeAll(store, List.of(a)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(a)));
     }
 
     @Test
     void removeBShouldFail() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.removeAll(store, List.of(b)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(b)));
     }
 
     @Test
     void removeCShouldFail() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.removeAll(store, List.of(c)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(c)));
     }
 
     @Test
     void removeAAndCAndDShouldFail() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.removeAll(store, List.of(c, a, d)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(c, a, d)));
     }
 
     @Test
     void removeDShouldWork() {
-      policy.removeAll(store, List.of(d));
+      store.removeAll(List.of(d));
     }
 
     @Test
     void removeCAndDShouldWork() {
-      policy.removeAll(store, List.of(c, d));
+      store.removeAll(List.of(c, d));
     }
 
     @Test
     void addEShouldFailAsEWouldCreateCyclicDependency() {
-      store.put(e);
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(e)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(e)));
     }
 
     @Test
     void addGAndFAndEShouldFailAsEWouldCreateCyclicDependency() {
-      store.putAll(List.of(g, f, e));
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(g, f, e)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(g, f, e)));
     }
 
     @Test
     void addFShouldWork() {
-      store.put(f);
-      policy.addAll(store, List.of(f));
+      store.putAll(List.of(f));
     }
 
     @Test
     void addGAndFShouldWork() {
       store.putAll(List.of(g, f));
-      policy.addAll(store, List.of(g, f));
     }
 
     @Test
     void addHShouldFailAsZWouldBeProvidedTwice() {
-      store.put(h);
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(h)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(h)));
     }
 
     @Test
     void addGAndFAndHShouldFailAsZWouldBeProvidedTwice() {
-      store.putAll(List.of(g, h, f));
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.addAll(store, List.of(g, h, f)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(g, h, f)));
     }
 
     @Test
     void addLShouldWork() {
       store.putAll(List.of(l));
-      policy.addAll(store, List.of(l));
     }
   }
 
@@ -252,25 +220,21 @@ public class InjectorStoreConsistencyPolicyTest {
   class WhenClassesMAndNAndOAreAdded {
     {
       store.putAll(List.of(m, n, o));
-      policy.addAll(store, List.of(m, n, o));
     }
 
     @Test
     void removeMShouldFailAsRequiredByN() {
-      store.remove(m);
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.removeAll(store, List.of(m)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(m)));
     }
 
     @Test
     void removeNShouldFailAsRequiredByM() {
-      store.remove(n);
-      assertThrows(ViolatesSingularDependencyException.class, () -> policy.removeAll(store, List.of(n)));
+      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(n)));
     }
 
     @Test
     void removeOShouldWorkAsMOnlyDependsOnItOptionally() {
-      store.remove(o);
-      policy.removeAll(store, List.of(o));
+      store.removeAll(List.of(o));
     }
   }
 

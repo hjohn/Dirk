@@ -2,18 +2,16 @@ package hs.ddif.core;
 
 import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.api.InstanceResolver;
-import hs.ddif.core.config.consistency.InjectorStoreConsistencyPolicy;
 import hs.ddif.core.config.gather.Gatherer;
 import hs.ddif.core.config.standard.DefaultInstanceResolver;
 import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
-import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
+import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.instantiation.DefaultInstantiationContext;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.InstantiatorBindingMap;
 import hs.ddif.core.instantiation.ScopeResolverManager;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.QualifiedTypeStore;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -68,7 +66,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
    * @param gatherer a {@link Gatherer}, cannot be {@code null}
    */
   Injector(InstantiatorBindingMap instantiatorBindingMap, ScopeResolverManager scopeResolverManager, InstanceInjectableFactory instanceInjectableFactory, Gatherer gatherer) {
-    QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(new InjectorStoreConsistencyPolicy<>(instantiatorBindingMap, scopeResolverManager));
+    InjectableStore store = new InjectableStore(instantiatorBindingMap, scopeResolverManager);
     InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, scopeResolverManager);
 
     this.registry = new InjectableStoreCandidateRegistry(store, gatherer, instanceInjectableFactory);

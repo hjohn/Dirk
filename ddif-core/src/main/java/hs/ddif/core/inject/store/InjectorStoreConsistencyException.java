@@ -1,4 +1,4 @@
-package hs.ddif.core.config.consistency;
+package hs.ddif.core.inject.store;
 
 /**
  * Base exception which signals when an Injector would no longer be able to

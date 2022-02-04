@@ -1,4 +1,4 @@
-package hs.ddif.core.config.consistency;
+package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.core.config.standard.DefaultInjectable;
@@ -10,7 +10,6 @@ import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.ScopeResolverManager;
 import hs.ddif.core.instantiation.ScopeResolverManagers;
 import hs.ddif.core.store.Key;
-import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
 
@@ -35,15 +34,14 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
     InstantiatorFactory instantiatorFactory = InstanceFactories.create();
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create();
-    InjectorStoreConsistencyPolicy<Injectable> policy = new InjectorStoreConsistencyPolicy<>(instantiatorBindingMap, scopeResolverManager);
-    QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(policy);
+    InjectableStore store = new InjectableStore(instantiatorBindingMap, scopeResolverManager);
     List<Injectable> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
     Singleton annotation = Annotations.of(Singleton.class);
 
     for(int i = 0; i < 10000; i++) {
-      policy.checkInvariants();
+      store.checkInvariants();
 
       int randomBindings = Math.min(rnd.nextInt(4), knownInjectables.size());
       List<Binding> bindings = new ArrayList<>();
@@ -63,7 +61,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
         injections -> null
       );
 
-      store.put(injectable);
+      store.putAll(List.of(injectable));
 
       knownInjectables.add(injectable);
     }
