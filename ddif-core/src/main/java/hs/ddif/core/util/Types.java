@@ -1,6 +1,7 @@
 package hs.ddif.core.util;
 
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -67,5 +68,18 @@ public class Types {
    */
   public static Class<?> raw(Type type) {
     return TypeUtils.getRawType(type, null);
+  }
+
+  /**
+   * Gets the {@link Type} of a generic parameter, identified by given by the {@link TypeVariable},
+   * of the given {@link Class} when resolved against the given {@link Type}.
+   *
+   * @param type a {@link Type} from which to determine the parameters of the given {@link Class}, cannot be {@code null}
+   * @param cls a {@link Class} to determine a type parameter for, cannot be {@code null}
+   * @param typeVariable a {@link TypeVariable} of the given {@link Class} to extract, cannot be {@code null}
+   * @return a {@link Type}, can be {@code null} if the {@link TypeVariable} was not associated with the given {@link Class}
+   */
+  public static Type getTypeParameter(Type type, Class<?> cls, TypeVariable<?> typeVariable) {
+    return TypeUtils.getTypeArguments(type, cls).get(typeVariable);
   }
 }

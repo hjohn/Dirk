@@ -3,7 +3,6 @@ package hs.ddif.core.config;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
-import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
@@ -34,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class AutoDiscoveringGathererTest {
-  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private final BindingProvider bindingProvider = new BindingProvider();
   private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>();
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
   private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
@@ -191,48 +190,36 @@ public class AutoDiscoveringGathererTest {
       }
 
       @Test
-      void shouldRejectTypeThatHasQualifiers() {
-        assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_C.class)))
-          .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C] -> Field [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$J hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C.j]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$J] found during auto discovery is missing qualifiers required by: Field [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$J hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C.j]")
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$J] found during auto discovery is missing qualifiers required by: Field [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$J hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_C.j]")
-          .hasNoCause();
+      void shouldNotIncludeTypeThatHasQualifiers() throws DiscoveryFailure {
+        assertThat(gatherer.gather(store, new Key(Bad_C.class))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(Bad_C.class)
+          // J was not included as it was required to have qualifiers
+        );
       }
 
       @Test
-      void shouldRejectTypeWithUndiscoverableDependency() {
-        assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_A.class)))
-          .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A] -> Field [hs.ddif.core.config.AutoDiscoveringGathererTest$C hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A.c]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
-          .hasNoCause();
+      void shouldNotIncludeUndiscoverableDependency() throws DiscoveryFailure {
+        assertThat(gatherer.gather(store, new Key(Bad_A.class))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(Bad_A.class)
+          // C was not included as it has no suitable constructor
+        );
       }
 
       @Test
-      void shouldRejectTypeWithUndiscoverableDependencyInDependency() {
-        assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_D.class)))
-          .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_D] -> [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A] -> Field [hs.ddif.core.config.AutoDiscoveringGathererTest$C hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_A.c]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
-          .hasNoCause();
+      void shouldNotIncludeUndiscoverableDependencyInDependency() throws DiscoveryFailure {
+        assertThat(gatherer.gather(store, new Key(Bad_D.class))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(Bad_D.class),
+          classInjectableFactory.create(Bad_A.class)
+          // C through Bad_A was not included as it has no suitable constructor
+        );
       }
 
       @Test
-      void shouldRejectTypeWithMultipleUndiscoverableDependenciesAndUseSuppressedExceptionsForDetails() {
-        assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_B.class)))
-          .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B] -> Field [hs.ddif.core.config.AutoDiscoveringGathererTest$E hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B.e]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$E] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
-          .hasSuppressedException(new DefinitionException("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B] -> Field [hs.ddif.core.config.AutoDiscoveringGathererTest$C hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_B.c]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor", new DefinitionException("[class hs.ddif.core.config.AutoDiscoveringGathererTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor", null)))
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$E] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
-          .hasNoCause();
+      void shouldNotIncludeUndiscoverableDependencies() throws DiscoveryFailure {
+        assertThat(gatherer.gather(store, new Key(Bad_B.class))).containsExactlyInAnyOrder(
+          classInjectableFactory.create(Bad_B.class)
+          // C and E are not included as neither has a suitable constructor
+        );
       }
 
       @Test

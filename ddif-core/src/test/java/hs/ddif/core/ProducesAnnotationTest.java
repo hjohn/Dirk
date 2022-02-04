@@ -47,7 +47,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectFactoryWithUnresolvableProducerDependencies() {
     UnresolvableDependencyException e = assertThrows(UnresolvableDependencyException.class, () -> injector.register(SimpleFactory1.class));
 
-    assertThat(e).hasMessageStartingWith("Missing dependency of type [class java.lang.Integer] required for Parameter 0 of [");
+    assertThat(e).hasMessageStartingWith("Missing dependency [class java.lang.Integer] required for Parameter 0 of [");
     assertFalse(injector.contains(Object.class));
   }
 
@@ -55,7 +55,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectFactoryWithUnresolvableDependencies() {
     UnresolvableDependencyException e = assertThrows(UnresolvableDependencyException.class, () -> injector.register(SimpleFactory2.class));
 
-    assertThat(e).hasMessageStartingWith("Missing dependency of type [class java.lang.Integer] required for Field [");
+    assertThat(e).hasMessageStartingWith("Missing dependency [class java.lang.Integer] required for Field [");
     assertFalse(injector.contains(Object.class));
   }
 
@@ -130,10 +130,10 @@ public class ProducesAnnotationTest {
 
     assertThrows(DuplicateQualifiedTypeException.class, () -> injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class)));
 
-    List<String> x1 = injector.getInstance(new TypeReference<List<String>>() {}.getType());
-    List<Long> y1 = injector.getInstance(new TypeReference<List<Long>>() {}.getType());
-    List<String> x2 = injector.getInstance(new TypeReference<List<String>>() {}.getType());
-    List<Long> y2 = injector.getInstance(new TypeReference<List<Long>>() {}.getType());
+    List<String> x1 = injector.getInstance(new TypeReference<ArrayList<String>>() {}.getType());
+    List<Long> y1 = injector.getInstance(new TypeReference<ArrayList<Long>>() {}.getType());
+    List<String> x2 = injector.getInstance(new TypeReference<ArrayList<String>>() {}.getType());
+    List<Long> y2 = injector.getInstance(new TypeReference<ArrayList<Long>>() {}.getType());
 
     assertTrue(x1 == x2);
     assertTrue(y1 == y2);
@@ -243,7 +243,7 @@ public class ProducesAnnotationTest {
   public void shouldNotRegisterClassWhichDependsOnUnregisteredClass() {
     assertThatThrownBy(() -> injector.register(StaticFieldBasedPhoneProducer.class))
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessage("Missing dependency of type [class hs.ddif.core.ProducesAnnotationTest$Thing3] required for Field [hs.ddif.core.ProducesAnnotationTest$Thing3 hs.ddif.core.ProducesAnnotationTest$StaticFieldBasedPhoneProducer.thing]")
+      .hasMessage("Missing dependency [class hs.ddif.core.ProducesAnnotationTest$Thing3] required for Field [hs.ddif.core.ProducesAnnotationTest$Thing3 hs.ddif.core.ProducesAnnotationTest$StaticFieldBasedPhoneProducer.thing]")
       .hasNoCause();
     assertFalse(injector.contains(Object.class));
   }

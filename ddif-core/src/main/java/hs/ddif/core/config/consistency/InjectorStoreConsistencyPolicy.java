@@ -2,7 +2,9 @@ package hs.ddif.core.config.consistency;
 
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.scope.ScopeResolver;
+import hs.ddif.core.instantiation.Instantiator;
+import hs.ddif.core.instantiation.InstantiatorBindingMap;
+import hs.ddif.core.instantiation.ScopeResolverManager;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.Resolver;
 import hs.ddif.core.store.StoreConsistencyPolicy;
@@ -24,35 +26,40 @@ import javax.inject.Singleton;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Policy that makes sure the InjectableStore at all times contains
- * injectables that can be fully resolved.
+ * Policy that makes sure the store at all times contains injectables that can
+ * be fully resolved.
  *
  * @param <T> the type of {@link Injectable} the policy uses
  */
 public class InjectorStoreConsistencyPolicy<T extends Injectable> implements StoreConsistencyPolicy<T> {
 
   /**
-   * Structure keeping track of {@link Key} used in direct bindings that must be available
-   * for the binding to be satisfied. When the direct binding is required, then exactly
-   * one source must be available to supply that binding. If the binding is optional, then
-   * zero or one sources must be available.
+   * Structure keeping track of {@link Key}s used in bindings that must be available
+   * for the binding to be satisfied.
+   *
+   * <p>The structure only contains each {@link Key} once, grouped by its (raw) class for
+   * improved performance when updating the structure. A search for a key will however
+   * always yield exactly one match.
+   *
+   * <p>The groups used can be anything, as long as a group can be deterministically
+   * determined from a given key. Preferably the group chosen is as distinct as possible.
+   * It would for example be possible to choose an annotation, like the Named annotation,
+   * as a group.
    */
   private final Map<Class<?>, Map<Key, Node>> nodes = new HashMap<>();
 
-  /**
-   * Set containing known scope annotations.
-   */
-  private final Set<Class<? extends Annotation>> knownScopeAnnotations = new HashSet<>();
+  private final InstantiatorBindingMap instantiatorBindingMap;
+  private final ScopeResolverManager scopeResolverManager;
 
   /**
    * Constructs a new instance.
    *
-   * @param scopeResolvers an array of {@link ScopeResolver}s, cannot be {@code null}
+   * @param instantiatorBindingMap an {@link InstantiatorBindingMap}, cannot be {@code null}
+   * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
    */
-  public InjectorStoreConsistencyPolicy(ScopeResolver... scopeResolvers) {
-    for(ScopeResolver scopeResolver : scopeResolvers) {
-      knownScopeAnnotations.add(scopeResolver.getScopeAnnotationClass());
-    }
+  public InjectorStoreConsistencyPolicy(InstantiatorBindingMap instantiatorBindingMap, ScopeResolverManager scopeResolverManager) {
+    this.instantiatorBindingMap = instantiatorBindingMap;
+    this.scopeResolverManager = scopeResolverManager;
   }
 
   @Override
@@ -63,17 +70,26 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
       ensureScopeIsKnown(injectable);
     }
 
-    // Check if the new injectables can have all their required dependencies resolved:
-    for(T injectable : injectables) {
-      ensureRequiredBindingsAreAvailable(resolver, injectable);
+    addInstanceFactories(injectables);  // modifies structure but must be done before checking for required bindings
+
+    try {
+      ensureNoCyclicDependencies(resolver, injectables);
+
+      // Check if the new injectables can have all their required dependencies resolved:
+      for(T injectable : injectables) {
+        ensureRequiredBindingsAreAvailable(resolver, injectable);
+      }
+
+      addInjectables(resolver, injectables).ifPresent(violation -> {
+        removeInjectables(injectables);
+        violation.doThrow();
+      });
     }
+    catch(Exception e) {
+      removeInstanceFactories(injectables);
 
-    ensureNoCyclicDependencies(resolver, injectables);
-
-    addInjectables(resolver, injectables).ifPresent(violation -> {
-      removeInjectables(injectables);
-      violation.doThrow();
-    });
+      throw e;
+    }
   }
 
   @Override
@@ -82,16 +98,33 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
       addInjectables(baseResolver, injectables);
       violation.doThrow();
     });
+
+    removeInstanceFactories(injectables);
+  }
+
+  private void addInstanceFactories(Collection<T> injectables) {
+    for(T injectable : injectables) {
+      for(Binding binding : injectable.getBindings()) {
+        instantiatorBindingMap.addBinding(binding);
+      }
+    }
+  }
+
+  private void removeInstanceFactories(Collection<T> injectables) {
+    for(T injectable : injectables) {
+      for(Binding binding : injectable.getBindings()) {
+        instantiatorBindingMap.removeBinding(binding);
+      }
+    }
   }
 
   private Optional<Violation> addInjectables(Resolver<T> resolver, Collection<T> injectables) {
     for(T injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        if(!binding.isCollection()) {
-          Key key = binding.getKey();
+        Instantiator<?> instantiator = instantiatorBindingMap.getInstantiator(binding);
+        Key key = instantiator.getKey();
 
-          addTarget(resolver, key, binding.isOptional(), injectables);
-        }
+        addTarget(resolver, key, instantiator.requiresAtLeastOne(), instantiator.requiresAtMostOne(), injectables);
       }
     }
 
@@ -101,35 +134,38 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
   private Optional<Violation> removeInjectables(Collection<T> injectables) {
     for(T injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        if(!binding.isCollection()) {
-          Key key = binding.getKey();
+        Instantiator<?> instantiator = instantiatorBindingMap.getInstantiator(binding);
+        Key key = instantiator.getKey();
 
-          removeTarget(key, binding.isOptional());
-        }
+        removeTarget(key, instantiator.requiresAtLeastOne(), instantiator.requiresAtMostOne());
       }
     }
 
     return removeSources(injectables);
   }
 
-  private static <T extends Injectable> void ensureRequiredBindingsAreAvailable(Resolver<T> resolver, T injectable) {
+  private void ensureRequiredBindingsAreAvailable(Resolver<T> resolver, T injectable) {
 
     /*
      * Check the created bindings for unresolved or ambiguous dependencies and scope problems:
      */
 
     for(Binding binding : injectable.getBindings()) {
-      if(!binding.isCollection()) {
-        Key key = binding.getKey();
+      Instantiator<?> instantiator = instantiatorBindingMap.getInstantiator(binding);
+      boolean requiresAtLeastOne = instantiator.requiresAtLeastOne();
+      boolean requiresAtMostOne = instantiator.requiresAtMostOne();
+
+      if(requiresAtMostOne) {
+        Key key = instantiator.getKey();
         Set<T> injectables = resolver.resolve(key);
 
         // The binding is a single binding, if there are more than one matches it is ambiguous, and if there is no match then it must be optional
-        if(injectables.size() > 1 || (!binding.isOptional() && injectables.size() < 1)) {
-          throw new UnresolvableDependencyException(binding, injectables);
+        if(injectables.size() > 1 || (requiresAtLeastOne && injectables.size() < 1)) {
+          throw new UnresolvableDependencyException(key, binding, injectables);
         }
 
-        // Check scope only for direct bindings. Indirect ones that inject a Provider can be used anywhere.
-        if(binding.isDirect() && !injectables.isEmpty()) {
+        // Check scope only for non lazy bindings. Lazy ones that inject a Provider can be used anywhere.
+        if(!instantiator.isLazy() && !injectables.isEmpty()) {
           T dependency = injectables.iterator().next();  // Previous check ensures there is only a single element in the set
 
           ensureBindingScopeIsValid(injectable, dependency);
@@ -161,12 +197,12 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
   private void ensureScopeIsKnown(T injectable) {
     Annotation scope = injectable.getScope();
 
-    if(scope != null && !knownScopeAnnotations.contains(scope.annotationType())) {
+    if(scope != null && !scopeResolverManager.isRegisteredScope(scope.annotationType())) {
       throw new UnknownScopeException("Unknown scope " + scope + ": " + injectable);
     }
   }
 
-  private static <T extends Injectable> void ensureNoCyclicDependencies(Resolver<T> resolver, Collection<T> injectables) {
+  private void ensureNoCyclicDependencies(Resolver<T> resolver, Collection<T> injectables) {
     class CycleDetector {
       Set<T> input = new HashSet<>(injectables);
       Set<T> visited = new HashSet<>();
@@ -186,7 +222,9 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
         visiting.add(injectable);
 
         for(Binding binding : injectable.getBindings()) {
-          if(!binding.isCollection() && binding.isDirect()) {
+          Instantiator<?> instantiator = instantiatorBindingMap.getInstantiator(binding);
+
+          if(!instantiator.isLazy()) {
             Key key = binding.getKey();
 
             for(T boundInjectable : resolver.resolve(key)) {
@@ -255,7 +293,7 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
       Type type = source.getType();
       Set<Annotation> qualifiers = source.getQualifiers();
 
-      for(Class<?> cls : Types.getSuperTypes(TypeUtils.getRawType(type, null))) {
+      for(Class<?> cls : Types.getSuperTypes(Types.raw(type))) {
         Map<Key, Node> nodesByKeys = nodes.get(cls);
 
         if(nodesByKeys != null) {
@@ -263,7 +301,7 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
             if(TypeUtils.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
               Node node = nodesByKeys.get(key);
 
-              node.increaseSources();
+              node.increaseSources(source);
 
               if(violation == null && node.isInvalid()) {
                 violation = new Violation(type, key, true);
@@ -296,7 +334,7 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
       Type type = source.getType();
       Set<Annotation> qualifiers = source.getQualifiers();
 
-      for(Class<?> cls : Types.getSuperTypes(TypeUtils.getRawType(type, null))) {
+      for(Class<?> cls : Types.getSuperTypes(Types.raw(type))) {
         Map<Key, Node> nodesByKeys = nodes.get(cls);
 
         if(nodesByKeys != null) {
@@ -304,7 +342,7 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
             if(TypeUtils.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
               Node node = nodesByKeys.get(key);
 
-              node.decreaseSources();
+              node.decreaseSources(source);
 
               if(violation == null && node.isInvalid()) {
                 violation = new Violation(type, key, false);
@@ -318,32 +356,32 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
     return Optional.ofNullable(violation);
   }
 
-  private void addTarget(Resolver<T> resolver, Key key, boolean isOptional, Collection<T> sources) {
-    Class<?> cls = TypeUtils.getRawType(key.getType(), null);
+  private void addTarget(Resolver<T> resolver, Key key, boolean minimumOne, boolean maximumOne, Collection<T> sources) {
+    Class<?> cls = Types.raw(key.getType());
 
     nodes.computeIfAbsent(cls, k -> new HashMap<>())
       .computeIfAbsent(key, k -> {
         // when a new Key is added, initialise the Node with the current number of candidates that can satisfy it
         Set<T> candidates = resolver.resolve(key);
-        Node node = new Node(candidates.size());
+        Node node = new Node(candidates);
 
         for(T source : sources) {
           if(candidates.contains(source)) {
-            node.decreaseSources();  // exclude candidates that are new; they will get counted when calling #addSources
+            node.decreaseSources(source);  // exclude candidates that are new; they will get counted when calling #addSources
           }
         }
 
         return node;
       })
-      .increaseTargets(isOptional);
+      .increaseTargets(minimumOne, maximumOne);
   }
 
-  private void removeTarget(Key key, boolean isOptional) {
-    Class<?> cls = TypeUtils.getRawType(key.getType(), null);
+  private void removeTarget(Key key, boolean minimumOne, boolean maximumOne) {
+    Class<?> cls = Types.raw(key.getType());
 
     nodes.computeIfPresent(
       cls,
-      (c, m) -> m.computeIfPresent(key, (k, n) -> n.decreaseTargets(isOptional) ? null : n) == null ? null : m
+      (c, m) -> m.computeIfPresent(key, (k, n) -> n.decreaseTargets(minimumOne, maximumOne) ? null : n) == null ? null : m
     );
   }
 
@@ -363,56 +401,67 @@ public class InjectorStoreConsistencyPolicy<T extends Injectable> implements Sto
     }
   }
 
-  static class Node {
+  class Node {
 
     /**
      * The number of targets that require at least one source.
      */
-    int greaterThanZeroReferences;
+    int minimumOneReferences;
 
     /**
      * The number of targets that require at most one source.
      */
-    int lessThanTwoReferences;
+    int maximumOneReferences;
 
     /**
-     * The number of sources available.
+     * Total number of times these sources are referred.
      */
-    int sourceCount;
+    int references;
 
-    Node(int sourceCount) {
-      this.sourceCount = sourceCount;
+    /**
+     * The sources available.
+     */
+    final Set<T> sources;
+
+    Node(Set<T> sources) {
+      this.sources = new HashSet<>(sources);
     }
 
-    boolean increaseTargets(boolean optional) {
-      greaterThanZeroReferences += optional ? 0 : 1;
-      lessThanTwoReferences++;
+    boolean increaseTargets(boolean minimumOne, boolean maximumOne) {
+      minimumOneReferences += minimumOne ? 1 : 0;
+      maximumOneReferences += maximumOne ? 1 : 0;
+      references++;
 
-      return greaterThanZeroReferences == 0 && lessThanTwoReferences == 0;
+      return references == 0;
     }
 
-    boolean decreaseTargets(boolean optional) {
-      greaterThanZeroReferences -= optional ? 0 : 1;
-      lessThanTwoReferences--;
+    boolean decreaseTargets(boolean minimumOne, boolean maximumOne) {
+      minimumOneReferences -= minimumOne ? 1 : 0;
+      maximumOneReferences -= maximumOne ? 1 : 0;
+      references--;
 
-      return greaterThanZeroReferences == 0 && lessThanTwoReferences == 0;
+      return references == 0;
     }
 
-    void increaseSources() {
-      sourceCount++;
+    void increaseSources(T source) {
+      if(!sources.add(source)) {
+        throw new AssertionError("Node already contained source: " + source);
+      }
     }
 
-    void decreaseSources() {
-      sourceCount--;
+    void decreaseSources(T source) {
+      if(!sources.remove(source)) {
+        throw new AssertionError("Node did not contain source: " + source + "; available: " + sources);
+      }
     }
 
     boolean isInvalid() {
-      return (greaterThanZeroReferences > 0 && sourceCount < 1) || (lessThanTwoReferences > 0 && sourceCount > 1);
+      return (minimumOneReferences > 0 && sources.size() < 1) || (maximumOneReferences > 0 && sources.size() > 1) || references == 0;
     }
 
     @Override
     public String toString() {
-      return "Node[>0 = " + greaterThanZeroReferences + "; <2 = " + lessThanTwoReferences + "; sourceCount = " + sourceCount + "]";
+      return "Node[>0 = " + minimumOneReferences + "; <2 = " + maximumOneReferences + "; references = " + references + "; sources = " + sources + "]";
     }
   }
 }

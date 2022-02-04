@@ -298,7 +298,7 @@ public class AssistedInjectionTest {
     // requires TestService which was not registered yet.
     assertThatThrownBy(() -> injector.register(TestAssistedSampleFactory.class))
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessageStartingWith("Missing dependency of type [class hs.ddif.core.AssistedInjectionTest$TestService] required for")
+      .hasMessageStartingWith("Missing dependency [class hs.ddif.core.AssistedInjectionTest$TestService] required for")
       .hasNoCause();
   }
 

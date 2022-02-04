@@ -1,16 +1,12 @@
 package hs.ddif.core.inject.injectable;
 
 import hs.ddif.core.inject.bind.BindingProvider;
-import hs.ddif.core.inject.injection.Injection;
-import hs.ddif.core.inject.injection.ObjectFactory;
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -80,25 +76,5 @@ public class FieldInjectableFactory {
       field,  // for proper discrimination, the exact field should also be taken into account, next to its generic type
       new FieldObjectFactory(field)
     );
-  }
-
-  static class FieldObjectFactory implements ObjectFactory {
-    private final Field field;
-
-    FieldObjectFactory(Field field) {
-      this.field = field;
-    }
-
-    @Override
-    public Object createInstance(List<Injection> injections) throws InstanceCreationFailure {
-      try {
-        field.setAccessible(true);
-
-        return field.get(injections.isEmpty() ? null : injections.get(0).getValue());
-      }
-      catch(Exception e) {
-        throw new InstanceCreationFailure(field, "read failed", e);
-      }
-    }
   }
 }

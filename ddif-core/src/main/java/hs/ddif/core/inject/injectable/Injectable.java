@@ -2,7 +2,7 @@ package hs.ddif.core.inject.injectable;
 
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.injection.Injection;
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
+import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.store.QualifiedType;
 
 import java.lang.annotation.Annotation;

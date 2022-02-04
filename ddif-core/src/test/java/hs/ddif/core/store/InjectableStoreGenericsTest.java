@@ -1,6 +1,5 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
@@ -23,7 +22,7 @@ import org.junit.rules.ExpectedException;
 import static org.junit.Assert.assertTrue;
 
 public class InjectableStoreGenericsTest {
-  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private final BindingProvider bindingProvider = new BindingProvider();
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);

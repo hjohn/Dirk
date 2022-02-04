@@ -1,7 +1,6 @@
 package hs.ddif.core.config;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.FieldInjectableFactory;
@@ -15,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProducesGathererExtensionTest {
-  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private final BindingProvider bindingProvider = new BindingProvider();
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
   private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
 

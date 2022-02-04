@@ -2,7 +2,7 @@ package hs.ddif.core.inject.injectable;
 
 import hs.ddif.core.inject.injection.Injection;
 import hs.ddif.core.inject.injection.ObjectFactory;
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
+import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;

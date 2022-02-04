@@ -1,7 +1,6 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.annotations.Argument;
-import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplate.Context;
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.bind.BindingException;
@@ -9,13 +8,7 @@ import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
-import hs.ddif.core.inject.instantiation.Instantiator;
-import hs.ddif.core.inject.instantiation.MultipleInstances;
-import hs.ddif.core.inject.instantiation.NoSuchInstance;
-import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Green;
@@ -30,13 +23,14 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AssistedClassInjectableFactoryTemplateTest {
-  private BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private BindingProvider bindingProvider = new BindingProvider();
   private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new);
 
   @Test
@@ -45,7 +39,8 @@ public class AssistedClassInjectableFactoryTemplateTest {
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryA.class::isAssignableFrom);
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
-      new Key(String.class, List.of(Annotations.of(Red.class))), new Key(String.class, List.of(Annotations.of(Green.class)))
+      new Key(TypeUtils.parameterize(Provider.class, String.class), List.of(Annotations.of(Red.class))),
+      new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
     assertThat(injectable.getScope()).isEqualTo(Annotations.of(Singleton.class));
@@ -57,7 +52,8 @@ public class AssistedClassInjectableFactoryTemplateTest {
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryB.class::isAssignableFrom);
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
-      new Key(String.class, List.of(Annotations.of(Red.class))), new Key(String.class, List.of(Annotations.of(Green.class)))
+      new Key(TypeUtils.parameterize(Provider.class, String.class), List.of(Annotations.of(Red.class))),
+      new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class));
     assertThat(injectable.getScope()).isEqualTo(Annotations.of(Singleton.class));
@@ -69,7 +65,11 @@ public class AssistedClassInjectableFactoryTemplateTest {
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryC.class::isAssignableFrom);
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
-      new Key(A.class), new Key(B.class), new Key(C.class), new Key(String.class, List.of(Annotations.of(Red.class))), new Key(String.class, List.of(Annotations.of(Green.class)))
+      new Key(A.class),
+      new Key(B.class),
+      new Key(C.class),
+      new Key(TypeUtils.parameterize(Provider.class, String.class), List.of(Annotations.of(Red.class))),
+      new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
     assertThat(injectable.getScope()).isEqualTo(Annotations.of(Singleton.class));
@@ -117,15 +117,15 @@ public class AssistedClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldInstantiateTypeViaFactory() throws NoSuchInstance, MultipleInstances, InstanceCreationFailure, OutOfScopeException, BindingException {
-    QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>();
-    Instantiator instantiator = new DefaultInstantiator(store, new AutoDiscoveringGatherer(false, List.of(), InjectableFactories.forClass()), new SingletonScopeResolver());
+  void shouldInstantiateTypeViaFactory() throws BindingException {
+    DefaultInstanceResolver instanceResolver = InstanceResolvers.createWithConsistencyPolicy();
+    QualifiedTypeStore<Injectable> store = instanceResolver.getStore();
 
     store.put(new InstanceInjectableFactory(DefaultInjectable::new).create("Red", Annotations.of(Red.class)));
     store.put(new InstanceInjectableFactory(DefaultInjectable::new).create("Green", Annotations.of(Green.class)));
     store.put(create(FactoryA.class));
 
-    FactoryA instance = (FactoryA)instantiator.getInstance(new Key(FactoryA.class));
+    FactoryA instance = instanceResolver.getInstance(FactoryA.class);
 
     Product product1 = instance.create(5, 6);
     Product product2 = instance.create(5, 6);

@@ -1,10 +1,7 @@
 package hs.ddif.core.inject.injectable;
 
-import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingProvider;
-import hs.ddif.core.inject.instantiation.Instantiator;
-import hs.ddif.core.store.Key;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,21 +9,14 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 public class MethodInjectableFactoryTest {
-  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private final BindingProvider bindingProvider = new BindingProvider();
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
-
-  @Mock private Instantiator instantiator;
 
   @Test
   void constructorShouldRejectNullMethod() {
@@ -100,13 +90,11 @@ public class MethodInjectableFactoryTest {
       "Owner Type [class hs.ddif.core.inject.injectable.MethodInjectableFactoryTest$C]"
     );
 
-    when(instantiator.getInstance(new Key(C.class))).thenReturn(new C());
-
-    assertEquals("Bye", injectable.createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
+    assertEquals("Bye", injectable.createInstance(Bindings.resolve(injectable.getBindings(), new C())));
   }
 
   @Test
-  void shouldReturnCorrectInjectableForStaticMethod() throws Exception {
+  void shouldReturnCorrectInjectableForStaticMethodWithOneParameter() throws Exception {
     Injectable injectable = methodInjectableFactory.create(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());
@@ -114,9 +102,7 @@ public class MethodInjectableFactoryTest {
       "Parameter 0 of [public static java.lang.String hs.ddif.core.inject.injectable.MethodInjectableFactoryTest$C.e(hs.ddif.core.inject.injectable.MethodInjectableFactoryTest$D)]"
     );
 
-    when(instantiator.getInstance(new Key(D.class))).thenReturn(new D());
-
-    assertEquals("Hello D", injectable.createInstance(Bindings.resolve(instantiator, injectable.getBindings())));
+    assertEquals("Hello D", injectable.createInstance(Bindings.resolve(injectable.getBindings(), new D())));
   }
 
   static class A {

@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
@@ -61,6 +62,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -907,5 +909,41 @@ public class InjectorTest {
       .isExactlyInstanceOf(InstanceCreationException.class)
       .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in @PostConstruct method!)")
       .hasNoCause();
+  }
+
+  @Test
+  public void shouldAutoCreateCollections() {
+    injector.registerInstance("A");
+    injector.registerInstance("B");
+    injector.registerInstance("C");
+
+    List<String> list = injector.getInstance(TypeUtils.parameterize(List.class, String.class));
+
+    assertThat(list).containsExactlyInAnyOrder("A", "B", "C");
+
+    Set<String> set = injector.getInstance(TypeUtils.parameterize(Set.class, String.class));
+
+    assertThat(set).containsExactlyInAnyOrder("A", "B", "C");
+  }
+
+  @Test
+  public void shouldSkipNullsInCollections() {
+    injector.register(NullProducers.class);
+
+    List<String> list = injector.getInstance(TypeUtils.parameterize(List.class, String.class));
+
+    assertThat(list).containsExactlyInAnyOrder("B", "C");
+
+    Set<String> set = injector.getInstance(TypeUtils.parameterize(Set.class, String.class));
+
+    assertThat(set).containsExactlyInAnyOrder("B", "C");
+  }
+
+  static class NullProducers {
+    @Produces String a = null;
+    @Produces String b = "B";
+    @Produces String c = "C";
+
+    public NullProducers() {}
   }
 }

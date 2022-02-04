@@ -2,8 +2,13 @@ package hs.ddif.core.config.consistency;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
-import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.inject.injectable.InjectableFactories;
+import hs.ddif.core.instantiation.InstanceFactories;
+import hs.ddif.core.instantiation.InstantiatorBindingMap;
+import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.instantiation.ScopeResolverManager;
+import hs.ddif.core.instantiation.ScopeResolverManagers;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
@@ -27,7 +32,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class InjectorStoreConsistencyPolicyTest {
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
 
-  private InjectorStoreConsistencyPolicy<Injectable> policy = new InjectorStoreConsistencyPolicy<>();
+  private InstantiatorFactory instantiatorFactory = InstanceFactories.create();
+  private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
+  private ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create();
+  private InjectorStoreConsistencyPolicy<Injectable> policy = new InjectorStoreConsistencyPolicy<>(instantiatorBindingMap, scopeResolverManager);
 
   private Injectable a = classInjectableFactory.create(A.class);
   private Injectable b = classInjectableFactory.create(B.class);

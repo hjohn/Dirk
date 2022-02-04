@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.core.api.NoSuchInstanceException;
+import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.config.consistency.ScopeConflictException;
 import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.scope.AbstractScopeResolver;
@@ -16,17 +16,18 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.Test;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class InjectorScopeTest {
 
-  public static class Classes {
+  @Nested
+  class Classes {
 
     @Test
     public void shouldThrowOutOfScopeExceptionWhenNoScopeActive() {
@@ -38,9 +39,13 @@ public class InjectorScopeTest {
 
       injector.register(TestScopedBean.class);
 
-      NoSuchInstanceException e = assertThrows(NoSuchInstanceException.class, () -> injector.getInstance(TestScopedBean.class));
-
-      assertEquals(OutOfScopeException.class, e.getCause().getClass());
+      assertThatThrownBy(() -> injector.getInstance(TestScopedBean.class))
+        .isExactlyInstanceOf(InstanceCreationException.class)
+        .hasMessage("[class hs.ddif.core.InjectorScopeTest$TestScopedBean] could not be created")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(OutOfScopeException.class)
+        .hasMessage("Scope not active: interface hs.ddif.core.test.scope.TestScope for: Injectable[hs.ddif.core.InjectorScopeTest$TestScopedBean]")
+        .hasNoCause();
     }
 
     @Test
@@ -105,22 +110,26 @@ public class InjectorScopeTest {
       assertNotEquals(testScopedBean3, testScopedBean4);
     }
 
-    @Test(expected = ScopeConflictException.class)
+    @Test
     public void shouldThrowExceptionWhenNarrowScopedBeansAreInjectedIntoBroaderScopedBeans() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(TestScopedBean.class);
-      injector.register(IllegalSingletonBean.class);
+
+      assertThatThrownBy(() -> injector.register(IllegalSingletonBean.class))
+        .isExactlyInstanceOf(ScopeConflictException.class);
     }
 
-    @Test(expected = ScopeConflictException.class)
+    @Test
     public void shouldThrowExceptionWhenNarrowScopedBeansAreInjectedIntoBroaderScopedBeans2() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(UnscopedBean.class);
-      injector.register(SomeUserBeanWithTestScope2.class);
+
+      assertThatThrownBy(() -> injector.register(SomeUserBeanWithTestScope2.class))
+        .isExactlyInstanceOf(ScopeConflictException.class);
     }
 
     @Test
@@ -140,7 +149,8 @@ public class InjectorScopeTest {
     }
   }
 
-  public static class Providers {
+  @Nested
+  class Providers {
 
     /*
      * Tests related to Providers and Scopes:
@@ -174,12 +184,14 @@ public class InjectorScopeTest {
     }
 
     // Singleton -> Prototype = ERROR
-    @Test(expected = ScopeConflictException.class)
+    @Test
     public void shouldThrowExceptionWhenRegisteringSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
-      injector.register(SingletonBeanDependentOnX.class);
+
+      assertThatThrownBy(() -> injector.register(SingletonBeanDependentOnX.class))
+        .isExactlyInstanceOf(ScopeConflictException.class);
     }
 
     // Singleton -> Provider<Singleton> = OK
@@ -217,33 +229,33 @@ public class InjectorScopeTest {
       injector.registerInstance(new XProvider());
       injector.register(SingletonBeanDependentOnXProvider.class);
     }
+  }
 
-    public static class X {
-    }
+  public static class X {
+  }
 
-    public static class PrototypeBeanDependantOnX {
-      @Inject X x;
-    }
+  public static class PrototypeBeanDependantOnX {
+    @Inject X x;
+  }
 
-    @Singleton
-    public static class SingletonBeanDependentOnX {
-      @Inject X x;
-    }
+  @Singleton
+  public static class SingletonBeanDependentOnX {
+    @Inject X x;
+  }
 
-    public static class PrototypeBeanDependantOnXProvider {
-      @Inject Provider<X> xProvider;
-    }
+  public static class PrototypeBeanDependantOnXProvider {
+    @Inject Provider<X> xProvider;
+  }
 
-    @Singleton
-    public static class SingletonBeanDependentOnXProvider {
-      @Inject Provider<X> xProvider;
-    }
+  @Singleton
+  public static class SingletonBeanDependentOnXProvider {
+    @Inject Provider<X> xProvider;
+  }
 
-    public static class XProvider implements Provider<X> {  // A provider by default is assumed to provide a new bean everytime (the most narrow scope, or prototype scope)
-      @Override
-      public X get() {
-        return null;
-      }
+  public static class XProvider implements Provider<X> {  // A provider by default is assumed to provide a new bean everytime (the most narrow scope, or prototype scope)
+    @Override
+    public X get() {
+      return null;
     }
   }
 
