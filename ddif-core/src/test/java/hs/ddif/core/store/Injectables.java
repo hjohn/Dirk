@@ -3,7 +3,7 @@ package hs.ddif.core.store;
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injection.Injection;
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
+import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;

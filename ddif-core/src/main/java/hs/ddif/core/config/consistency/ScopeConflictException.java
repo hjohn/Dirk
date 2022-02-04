@@ -1,7 +1,7 @@
 package hs.ddif.core.config.consistency;
 
 /**
- * Thrown during registration when an injectable is determined to be depedendant on
+ * Thrown during registration when an injectable is determined to be dependent on
  * an injectable with a narrower scope.
  */
 public class ScopeConflictException extends InjectorStoreConsistencyException {

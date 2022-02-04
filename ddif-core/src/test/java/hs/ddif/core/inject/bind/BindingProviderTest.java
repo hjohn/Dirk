@@ -1,10 +1,6 @@
 package hs.ddif.core.inject.bind;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.config.standard.DefaultBinding;
-import hs.ddif.core.inject.instantiation.Instantiator;
-import hs.ddif.core.inject.instantiation.NoSuchInstance;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
@@ -19,28 +15,18 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.groups.Tuple.tuple;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 public class BindingProviderTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation GREEN = Annotations.of(Green.class);
 
-  private BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
-
-  @Mock private Instantiator instantiator;
+  private BindingProvider bindingProvider = new BindingProvider();
 
   @Test
   public void ofMembersShouldBindToGenericFieldInSubclass() throws Exception {
@@ -128,28 +114,6 @@ public class BindingProviderTest {
   }
 
   @Test
-  public void ofConstructorShouldRejectNestedProvider() {
-    assertThatThrownBy(() -> bindingProvider.ofConstructor(ClassE.class.getDeclaredConstructors()[0]))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Constructor [hs.ddif.core.inject.bind.BindingProviderTest$ClassE(javax.inject.Provider)] of [class hs.ddif.core.inject.bind.BindingProviderTest$ClassE] could not bind parameter 0 [javax.inject.Provider<javax.inject.Provider<java.lang.String>> provider]: Nested Provider not allowed: javax.inject.Provider<java.lang.String>")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(IllegalArgumentException.class)
-      .hasMessage("Nested Provider not allowed: javax.inject.Provider<java.lang.String>")
-      .hasNoCause();
-  }
-
-  @Test
-  public void ofMembersShouldRejectNestedProvider() {
-    assertThatThrownBy(() -> bindingProvider.ofMembers(ClassE.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Field [javax.inject.Provider hs.ddif.core.inject.bind.BindingProviderTest$ClassE.x] of [class hs.ddif.core.inject.bind.BindingProviderTest$ClassE] could not be bound: Nested Provider not allowed: javax.inject.Provider<java.lang.String>")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(IllegalArgumentException.class)
-      .hasMessage("Nested Provider not allowed: javax.inject.Provider<java.lang.String>")
-      .hasNoCause();
-  }
-
-  @Test
   public void ofMembersShouldRejectFinalField() {
     assertThatThrownBy(() -> bindingProvider.ofMembers(ClassF.class))
       .isExactlyInstanceOf(BindingException.class)
@@ -162,73 +126,21 @@ public class BindingProviderTest {
     List<Binding> bindings = bindingProvider.ofConstructorAndMembers(ClassA.class.getDeclaredConstructor(ClassB.class), ClassA.class);
 
     assertThat(bindings)
-      .extracting(Binding::getKey, Binding::isOptional)
+      .extracting(Binding::getKey)
       .containsExactly(
-        tuple(new Key(ClassB.class), false),
-        tuple(new Key(String.class), false),
-        tuple(new Key(Integer.class), false),
-        tuple(new Key(TypeUtils.parameterize(List.class, Double.class)), true),
-        tuple(new Key(TypeUtils.parameterize(Set.class, String.class)), true),
-        tuple(new Key(TypeUtils.parameterize(List.class, Double.class), List.of(RED)), true),
-        tuple(new Key(TypeUtils.parameterize(Set.class, String.class), List.of(RED)), true),
-        tuple(new Key(TypeUtils.parameterize(List.class, Double.class), List.of(GREEN)), true),
-        tuple(new Key(TypeUtils.parameterize(Set.class, String.class), List.of(GREEN)), true),
-        tuple(new Key(Long.class), true),
-        tuple(new Key(Short.class), false),
-        tuple(new Key(Short.class), true)
+        new Key(ClassB.class),
+        new Key(String.class),
+        new Key(TypeUtils.parameterize(Provider.class, Integer.class)),
+        new Key(TypeUtils.parameterize(List.class, Double.class)),
+        new Key(TypeUtils.parameterize(Set.class, String.class)),
+        new Key(TypeUtils.parameterize(List.class, Double.class), List.of(RED)),
+        new Key(TypeUtils.parameterize(Set.class, String.class), List.of(RED)),
+        new Key(TypeUtils.parameterize(List.class, Double.class), List.of(GREEN)),
+        new Key(TypeUtils.parameterize(Set.class, String.class), List.of(GREEN)),
+        new Key(Long.class),
+        new Key(TypeUtils.parameterize(Provider.class, Short.class)),
+        new Key(TypeUtils.parameterize(Provider.class, Short.class))
       );
-
-    ClassB classB = new ClassB();
-
-    when(instantiator.getInstance(new Key(ClassB.class))).thenReturn(classB);
-    when(instantiator.getInstance(new Key(String.class))).thenReturn("Hello");
-    when(instantiator.getInstance(new Key(Integer.class))).thenReturn(5);
-    when(instantiator.getInstances(new Key(Double.class))).thenReturn(List.of(1.2, 3.4));
-    when(instantiator.getInstances(new Key(String.class))).thenReturn(List.of("a", "b"));
-    when(instantiator.getInstances(new Key(Double.class, List.of(RED)))).thenReturn(List.of());
-    when(instantiator.getInstances(new Key(String.class, List.of(RED)))).thenReturn(List.of());
-    when(instantiator.getInstances(new Key(Double.class, List.of(GREEN)))).thenReturn(List.of());
-    when(instantiator.getInstances(new Key(String.class, List.of(GREEN)))).thenReturn(List.of());
-    when(instantiator.findInstance(new Key(Long.class))).thenReturn(null);
-
-    assertThat(bindings.get(0).getValue(instantiator)).isEqualTo(classB);
-    assertThat(bindings.get(1).getValue(instantiator)).isEqualTo("Hello");
-    assertThat(bindings.get(2).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
-      assertThat(p.get()).isEqualTo(5);
-    });
-    assertThat(bindings.get(3).getValue(instantiator)).isEqualTo(List.of(1.2, 3.4));
-    assertThat(bindings.get(4).getValue(instantiator)).isEqualTo(Set.of("a", "b"));
-    assertThat(bindings.get(5).getValue(instantiator)).isNull();
-    assertThat(bindings.get(6).getValue(instantiator)).isNull();
-    assertThat(bindings.get(7).getValue(instantiator)).isEqualTo(List.of());
-    assertThat(bindings.get(8).getValue(instantiator)).isEqualTo(Set.of());
-    assertThat(bindings.get(9).getValue(instantiator)).isNull();
-
-    /*
-     * Test optional provider functionality:
-     */
-
-    when(instantiator.findInstance(new Key(Short.class))).thenReturn(null);
-    when(instantiator.getInstance(new Key(Short.class))).thenThrow(new NoSuchInstance(new Key(Short.class)));
-
-    assertThat(bindings.get(10).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
-      assertThatThrownBy(() -> p.get())
-        .isExactlyInstanceOf(NoSuchInstanceException.class);
-    });
-    assertThat(bindings.get(11).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
-      assertThat(p.get()).isNull();
-    });
-
-    reset(instantiator);
-    when(instantiator.findInstance(new Key(Short.class))).thenReturn((short)2);
-    when(instantiator.getInstance(new Key(Short.class))).thenReturn((short)3);
-
-    assertThat(bindings.get(10).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
-      assertThat(p.get()).isEqualTo((short)3);
-    });
-    assertThat(bindings.get(11).getValue(instantiator)).isInstanceOfSatisfying(Provider.class, p -> {
-      assertThat(p.get()).isEqualTo((short)2);
-    });
   }
 
   @SuppressWarnings("unused")

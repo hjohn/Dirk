@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConcreteClassInjectableFactoryTemplateTest {
-  private BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private BindingProvider bindingProvider = new BindingProvider();
   private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new);
 
   @Test

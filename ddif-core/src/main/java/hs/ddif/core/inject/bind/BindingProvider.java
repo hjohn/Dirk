@@ -1,15 +1,10 @@
 package hs.ddif.core.inject.bind;
 
-import hs.ddif.annotations.Opt;
-import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.inject.instantiation.InstanceResolutionFailure;
-import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
@@ -19,13 +14,13 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Qualifier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -35,17 +30,6 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  */
 public class BindingProvider {
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
-
-  private final BindingFactory bindingFactory;
-
-  /**
-   * Constructs a new instance.
-   *
-   * @param bindingFactory a {@link BindingFactory}, cannot be {@code null}
-   */
-  public BindingProvider(BindingFactory bindingFactory) {
-    this.bindingFactory = bindingFactory;
-  }
 
   /**
    * Returns all bindings for the given {@link Constructor} and all member bindings
@@ -105,18 +89,7 @@ public class BindingProvider {
 
           Type type = TypeUtils.unrollVariables(typeArguments, field.getGenericType());
 
-          try {
-            bindings.add(createBinding(
-              field,
-              null,
-              type,
-              isOptional(field),
-              Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER)
-            ));
-          }
-          catch(Exception e) {
-            throw new BindingException(cls, field, "could not be bound", e);
-          }
+          bindings.add(new DefaultBinding(new Key(type, Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER)), field, null));
         }
       }
 
@@ -206,27 +179,14 @@ public class BindingProvider {
     return suitableConstructor == null ? defaultConstructor : suitableConstructor;
   }
 
-  private List<Binding> ofExecutable(Executable executable, Type ownerType) throws BindingException {
+  private static List<Binding> ofExecutable(Executable executable, Type ownerType) {
     Parameter[] parameters = executable.getParameters();
     List<Binding> bindings = new ArrayList<>();
 
     for(int i = 0; i < parameters.length; i++) {
       Type type = parameters[i].getParameterizedType();
 
-      try {
-        Binding binding = createBinding(
-          executable,
-          parameters[i],
-          type,
-          isOptional(parameters[i]),
-          Annotations.findDirectlyMetaAnnotatedAnnotations(parameters[i], QUALIFIER)
-        );
-
-        bindings.add(binding);
-      }
-      catch(Exception e) {
-        throw new BindingException(ownerType, executable, "could not bind parameter " + i + " [" + type + " " + parameters[i].getName() + "]", e);
-      }
+      bindings.add(new DefaultBinding(new Key(type, Annotations.findDirectlyMetaAnnotatedAnnotations(parameters[i], QUALIFIER)), executable, parameters[i]));
     }
 
     if(!Modifier.isStatic(executable.getModifiers()) && executable instanceof Method) {
@@ -237,160 +197,84 @@ public class BindingProvider {
     return bindings;
   }
 
-  private Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, Type type, boolean optional, Set<Annotation> qualifiers) throws BindingException {
-    return createBinding(accessibleObject, parameter, false, type, optional, qualifiers);
+  private static Binding ownerBinding(Type ownerType) {
+    return new DefaultBinding(new Key(ownerType), null, null);
   }
 
-  private Binding createBinding(AccessibleObject accessibleObject, Parameter parameter, boolean isProviderAlready, Type type, boolean optional, Set<Annotation> qualifiers) throws BindingException {
-    final Class<?> cls = TypeUtils.getRawType(type, null);
+  private static class DefaultBinding implements Binding {
+    private final Key key;
+    private final AccessibleObject accessibleObject;
+    private final Parameter parameter;
 
-    if(Set.class.isAssignableFrom(cls)) {
-      return hashSetBinding(accessibleObject, parameter, requireNotProvider(getFirstTypeParameter(type, Set.class)), qualifiers, optional);
+    /**
+     * Constructs a new instance.
+     *
+     * @param key a {@link Key}, cannot be {@code null}
+     * @param accessibleObject an {@link AccessibleObject}, can be {@code null}
+     * @param parameter a {@link Parameter}, cannot be {@code null} for {@link java.lang.reflect.Executable}s and must be {@code null} otherwise
+     */
+    public DefaultBinding(Key key, AccessibleObject accessibleObject, Parameter parameter) {
+      if(key == null) {
+        throw new IllegalArgumentException("key cannot be null");
+      }
+      if(accessibleObject instanceof Executable && parameter == null) {
+        throw new IllegalArgumentException("parameter cannot be null when accessibleObject is an instance of Executable");
+      }
+      if(!(accessibleObject instanceof Executable) && parameter != null) {
+        throw new IllegalArgumentException("parameter must be null when accessibleObject is not an instance of Executable");
+      }
+
+      this.key = key;
+      this.accessibleObject = accessibleObject;
+      this.parameter = parameter;
     }
-    if(List.class.isAssignableFrom(cls)) {
-      return arrayListBinding(accessibleObject, parameter, requireNotProvider(getFirstTypeParameter(type, List.class)), qualifiers, optional);
-    }
-    if(Provider.class.isAssignableFrom(cls) && !isProviderAlready) {
-      return providerBinding(accessibleObject, parameter, createBinding(accessibleObject, parameter, true, requireNotProvider(getFirstTypeParameter(type, Provider.class)), optional, qualifiers));
-    }
 
-    return directBinding(accessibleObject, parameter, new Key(type, qualifiers), optional);
-  }
-
-  private static Type requireNotProvider(Type type) {
-    if(TypeUtils.getRawType(type, null) == Provider.class) {
-      throw new IllegalArgumentException("Nested Provider not allowed: " + type);
+    @Override
+    public Key getKey() {
+      return key;
     }
 
-    return type;
-  }
+    @Override
+    public AccessibleObject getAccessibleObject() {
+      return accessibleObject;
+    }
 
-  private static Type getFirstTypeParameter(Type type, Class<?> cls) {
-    return TypeUtils.getTypeArguments(type, cls).get(cls.getTypeParameters()[0]);
-  }
+    @Override
+    public Parameter getParameter() {
+      return parameter;
+    }
 
-  private static boolean isOptional(AnnotatedElement element) {
-    for(Annotation annotation : element.getAnnotations()) {
-      Class<? extends Annotation> annotationType = annotation.annotationType();
-      String simpleName = annotationType.getName();
+    @Override
+    public int hashCode() {
+      return Objects.hash(accessibleObject, key, parameter);
+    }
 
-      if(simpleName.endsWith(".Nullable") || annotationType.equals(Opt.class)) {
+    @Override
+    public boolean equals(Object obj) {
+      if(this == obj) {
         return true;
       }
+      if(obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+
+      DefaultBinding other = (DefaultBinding)obj;
+
+      return Objects.equals(key, other.key)
+        && Objects.equals(accessibleObject, other.accessibleObject)
+        && Objects.equals(parameter, other.parameter);
     }
 
-    return false;
-  }
-
-  private Binding hashSetBinding(AccessibleObject accessibleObject, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
-    Key elementKey = new Key(elementType, qualifiers);
-
-    return bindingFactory.create(
-      new Key(TypeUtils.parameterize(Set.class, elementType), qualifiers),
-      accessibleObject,
-      parameter,
-      true,
-      true,
-      true,
-      instantiator -> {
-        List<Object> instances = instantiator.getInstances(elementKey);
-
-        return instances.isEmpty() && optional ? null : new HashSet<>(instances);
+    @Override
+    public String toString() {
+      if(accessibleObject instanceof Executable) {
+        return "Parameter " + Arrays.asList(((Executable)accessibleObject).getParameters()).indexOf(parameter) + " of [" + accessibleObject + "]";
       }
-    );
-  }
-
-  private Binding arrayListBinding(AccessibleObject accessibleObject, Parameter parameter, Type elementType, Set<Annotation> qualifiers, boolean optional) {
-    Key elementKey = new Key(elementType, qualifiers);
-
-    return bindingFactory.create(
-      new Key(TypeUtils.parameterize(List.class, elementType), qualifiers),
-      accessibleObject,
-      parameter,
-      true,
-      true,
-      true,
-      instantiator -> {
-        List<Object> instances = instantiator.getInstances(elementKey);
-
-        return instances.isEmpty() && optional ? null : instances;
+      else if(accessibleObject != null) {
+        return "Field [" + (getKey().getQualifiers().isEmpty() ? "" : getKey().getQualifiers().stream().map(Object::toString).collect(Collectors.joining(" ")) + " ") + ((Field)accessibleObject).toGenericString() + "]";
       }
-    );
-  }
 
-  private Binding providerBinding(AccessibleObject accessibleObject, Parameter parameter, Binding binding) {
-    return bindingFactory.create(
-      binding.getKey(),
-      accessibleObject,
-      parameter,
-      false,
-      false,
-      binding.isOptional(),
-      instantiator -> {
-
-        /*
-         * Although it is possible to attempt to inject an external Provider that is known, it is currently hard
-         * to find the correct instance when qualifiers on the provided type are in play. The store does not
-         * allow searching for a Provider<@Qualifier X>, and searching for @Qualifier Provider<X> (which previous
-         * implementations did) is not at all the same thing.
-         *
-         * To allow for this kind of matching one could instead look for the provided type directly, then use a
-         * custom Matcher. The Matcher interface would need to expose more information (Injectable instead of just
-         * the Class), and Injectable would have to expose its owner type. In that case a Matcher could check the
-         * method (see if it is called "get") and the owner type (see if it is a Provider).
-         *
-         * However, injecting an externally supplied Provider has one disadvantage: a badly behaving provider (which
-         * returns null) can't be prevented. The wrapper approach (which is at the moment always used) can however
-         * check for nulls and throw an exception.
-         */
-
-        return new Provider<>() {
-          @Override
-          public Object get() {
-            try {
-              return binding.getValue(instantiator);
-            }
-            catch(InstanceResolutionFailure f) {
-              throw f.toRuntimeException();
-            }
-            catch(OutOfScopeException e) {
-              throw new NoSuchInstanceException(e.getMessage(), e);
-            }
-          }
-        };
-      }
-    );
-  }
-
-  private Binding directBinding(AccessibleObject accessibleObject, Parameter parameter, Key key, boolean optional) {
-    return bindingFactory.create(
-      key,
-      accessibleObject,
-      parameter,
-      false,
-      true,
-      optional,
-      instantiator -> {
-        if(optional) {
-          return instantiator.findInstance(key);
-        }
-
-        return instantiator.getInstance(key);
-      }
-    );
-  }
-
-  private Binding ownerBinding(Type ownerType) {
-    Key key = new Key(ownerType);
-
-    return bindingFactory.create(
-      key,
-      null,
-      null,
-      false,
-      true,
-      false,
-      instantiator -> instantiator.getInstance(key)
-    );
+      return "Owner Type [" + key.getType() + "]";
+    }
   }
 }

@@ -1,6 +1,6 @@
 package hs.ddif.core.config.gather;
 
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
+import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.store.Key;
 
 /**

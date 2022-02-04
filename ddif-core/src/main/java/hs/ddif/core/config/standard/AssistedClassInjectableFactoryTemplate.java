@@ -11,7 +11,7 @@ import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactory;
 import hs.ddif.core.inject.injection.Injection;
 import hs.ddif.core.inject.injection.ObjectFactory;
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
+import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Primitives;
 
@@ -295,7 +295,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
       for(int i = 0; i < bindings.size(); i++) {
         Binding binding = bindings.get(i);
 
-        templates.add(new InjectionTemplate(fields.get(i), binding.getAccessibleObject(), bindingNames.get(binding), binding.isDirect()));
+        templates.add(new InjectionTemplate(fields.get(i), binding.getAccessibleObject(), bindingNames.get(binding)));
       }
     }
 
@@ -328,9 +328,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
 
       for(InjectionTemplate template : templates) {
         @SuppressWarnings("unchecked")
-        Object value = template.field == null ? parameters.get(template.parameterName)
-                          : template.isDirect ? ((Provider<Object>)template.field.get(factoryInstance)).get()
-                                              : template.field.get(factoryInstance);
+        Object value = template.field == null ? parameters.get(template.parameterName) : ((Provider<Object>)template.field.get(factoryInstance)).get();
 
         injections.add(new Injection(template.accessibleObject, value));
       }
@@ -342,13 +340,11 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
       final Field field;  // null when it's a parameter
       final AccessibleObject accessibleObject;
       final String parameterName;  // null when it's not a parameter
-      final boolean isDirect;
 
-      InjectionTemplate(Field field, AccessibleObject accessibleObject, String parameterName, boolean isDirect) {
+      InjectionTemplate(Field field, AccessibleObject accessibleObject, String parameterName) {
         this.field = field;
         this.accessibleObject = accessibleObject;
         this.parameterName = parameterName;
-        this.isDirect = isDirect;
       }
     }
   }

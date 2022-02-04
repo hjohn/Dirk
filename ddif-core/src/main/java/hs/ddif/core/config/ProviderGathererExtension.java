@@ -32,7 +32,7 @@ public class ProviderGathererExtension implements AutoDiscoveringGatherer.Extens
   public List<Injectable> getDerived(Type type) {
     Class<?> cls = Types.raw(type);
 
-    if(Provider.class.isAssignableFrom(cls)) {
+    if(Provider.class.isAssignableFrom(cls) && !cls.isInterface()) {
       try {
         Method method = cls.getMethod("get");
         Type providedType = method.getGenericReturnType();

@@ -1,15 +1,14 @@
 package hs.ddif.core.config.consistency;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.Binding;
 import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
-import hs.ddif.core.inject.instantiation.Instantiator;
-import hs.ddif.core.inject.instantiation.MultipleInstances;
-import hs.ddif.core.inject.instantiation.NoSuchInstance;
-import hs.ddif.core.scope.OutOfScopeException;
+import hs.ddif.core.instantiation.InstanceFactories;
+import hs.ddif.core.instantiation.InstantiatorBindingMap;
+import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.instantiation.ScopeResolverManager;
+import hs.ddif.core.instantiation.ScopeResolverManagers;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.util.Annotations;
@@ -33,7 +32,10 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
   @Test
   void largeGraphTest() {
-    InjectorStoreConsistencyPolicy<Injectable> policy = new InjectorStoreConsistencyPolicy<>(new SingletonScopeResolver());
+    InstantiatorFactory instantiatorFactory = InstanceFactories.create();
+    InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
+    ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create();
+    InjectorStoreConsistencyPolicy<Injectable> policy = new InjectorStoreConsistencyPolicy<>(instantiatorBindingMap, scopeResolverManager);
     QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(policy);
     List<Injectable> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
@@ -81,26 +83,6 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
     @Override
     public AccessibleObject getAccessibleObject() {
-      return null;
-    }
-
-    @Override
-    public boolean isCollection() {
-      return false;
-    }
-
-    @Override
-    public boolean isDirect() {
-      return true;
-    }
-
-    @Override
-    public boolean isOptional() {
-      return false;
-    }
-
-    @Override
-    public Object getValue(Instantiator instantiator) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance, OutOfScopeException {
       return null;
     }
 

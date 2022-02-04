@@ -1,8 +1,7 @@
-package hs.ddif.core.inject.instantiation;
+package hs.ddif.core.instantiation.domain;
 
 /**
- * Base class for exceptions that can be thrown during instance resolution by
- * an {@link Instantiator}.
+ * Base class for exceptions that can be thrown during instance resolution.
  */
 public abstract class InstanceResolutionFailure extends Exception {
 

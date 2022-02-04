@@ -16,11 +16,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
  * through bindings when gathering injectables for a {@link Type}.
  */
 public class AutoDiscoveringGatherer implements Gatherer {
+  private static final Logger LOGGER = Logger.getLogger(AutoDiscoveringGatherer.class.getName());
 
   /**
    * Allows simple extensions to a {@link AutoDiscoveringGatherer}.
@@ -93,10 +95,10 @@ public class AutoDiscoveringGatherer implements Gatherer {
     private final IncludingResolver includingResolver;
 
     /**
-     * When auto discovery is on, keeps track of unresolved bindings. A linked hash map
+     * When auto discovery is on, keeps track of unresolved bindings. A linked hash set
      * is used to get deterministic behavior for the exception messages.
      */
-    private final Map<Binding, Exception> unresolvedBindings = new LinkedHashMap<>();
+    private final Set<Binding> unresolvedBindings = new LinkedHashSet<>();
 
     /**
      * Keys that must always be discovered without the use of auto discovery through
@@ -128,14 +130,6 @@ public class AutoDiscoveringGatherer implements Gatherer {
       visitTypes.add(injectable.getType());
 
       return gather();
-    }
-
-    private String toChain(Binding binding) {
-      if(via.containsKey(binding.getKey())) {
-        return toChain(via.get(binding.getKey())) + " -> " + binding;
-      }
-
-      return "Path " + binding.toString();
     }
 
     private String toChain(Key key) {
@@ -200,12 +194,12 @@ public class AutoDiscoveringGatherer implements Gatherer {
         for(Binding binding : injectable.getBindings()) {
           Key key = binding.getKey();
 
-          if(!binding.isCollection() && !binding.isOptional() && includingResolver.resolve(key).isEmpty()) {
+          if(includingResolver.resolve(key).isEmpty()) {
             via.put(key, injectableKey);
             visitTypes.add(key.getType());
 
             if(autoDiscovery) {
-              unresolvedBindings.put(binding, null);
+              unresolvedBindings.add(binding);
             }
           }
         }
@@ -267,46 +261,24 @@ public class AutoDiscoveringGatherer implements Gatherer {
       throw throwable;
     }
 
-    private boolean discoverBindings() throws T {
-      for(Iterator<Binding> iterator = unresolvedBindings.keySet().iterator(); iterator.hasNext();) {
+    private boolean discoverBindings() {
+      for(Iterator<Binding> iterator = unresolvedBindings.iterator(); iterator.hasNext();) {
         Binding binding = iterator.next();
         Key key = binding.getKey();
 
-        if(!includingResolver.resolve(key).isEmpty()) {
-          iterator.remove();
-        }
-        else {
+        iterator.remove();
+
+        if(includingResolver.resolve(key).isEmpty()) {
           try {
-            Injectable injectable = attemptCreateInjectable(binding);
-
-            iterator.remove();  // only remove if creation was successful
-
-            return addInjectables(List.of(injectable));
+            return addInjectables(List.of(attemptCreateInjectable(binding)));
           }
           catch(Exception e) {
-            unresolvedBindings.put(binding, e);  // add the exception
+            LOGGER.info("Auto discovery of binding unsuccessful: " + binding + ": " + e.getMessage());
           }
         }
       }
 
-      T throwable = null;
-
-      for(Binding binding : unresolvedBindings.keySet()) {
-        Exception exception = unresolvedBindings.get(binding);
-
-        if(throwable == null) {
-          throwable = exceptionFactory.apply(toChain(binding) + ": " + exception.getMessage(), exception);
-        }
-        else {
-          throwable.addSuppressed(new DefinitionException(toChain(binding) + ": " + exception.getMessage(), exception));
-        }
-      }
-
-      if(throwable == null) {
-        return false;
-      }
-
-      throw throwable;
+      return false;
     }
 
     private Injectable attemptCreateInjectable(Key key) {

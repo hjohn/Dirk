@@ -49,21 +49,11 @@ public class Key implements QualifiedType {
     this(type, Set.of());
   }
 
-  /**
-   * Returns an unmodifiable set of qualifier {@link Annotation}s.
-   *
-   * @return an unmodifiable set of qualifier {@link Annotation}s, never {@code null} and never contains {@code null}s but can be empty
-   */
   @Override
   public Set<Annotation> getQualifiers() {
     return qualifiers;
   }
 
-  /**
-   * Returns the {@link Type}.
-   *
-   * @return the {@link Type}, never {@code null}
-   */
   @Override
   public Type getType() {
     return type;

@@ -2,17 +2,12 @@ package hs.ddif.core.inject.injectable;
 
 import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.bind.BindingProvider;
-import hs.ddif.core.inject.injection.Injection;
-import hs.ddif.core.inject.injection.ObjectFactory;
-import hs.ddif.core.inject.instantiation.InstanceCreationFailure;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -89,40 +84,6 @@ public class MethodInjectableFactory {
     }
     catch(BindingException e) {
       throw new DefinitionException(method, "has unresolvable bindings");
-    }
-  }
-
-  static class MethodObjectFactory implements ObjectFactory {
-    private final Method method;
-
-    MethodObjectFactory(Method method) {
-      this.method = method;
-    }
-
-    @Override
-    public Object createInstance(List<Injection> injections) throws InstanceCreationFailure {
-      try {
-        boolean isStatic = Modifier.isStatic(method.getModifiers());
-        Object[] values = new Object[injections.size() - (isStatic ? 0 : 1)];  // Parameters for method
-        Object instance = null;
-        int parameterIndex = 0;
-
-        for(Injection binding : injections) {
-          if(binding.getTarget() instanceof Method) {
-            values[parameterIndex++] = binding.getValue();
-          }
-          else {
-            instance = binding.getValue();
-          }
-        }
-
-        method.setAccessible(true);
-
-        return method.invoke(instance, values);
-      }
-      catch(Exception e) {
-        throw new InstanceCreationFailure(method, "call failed", e);
-      }
     }
   }
 }

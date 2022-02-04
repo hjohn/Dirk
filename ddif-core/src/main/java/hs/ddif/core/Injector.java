@@ -4,14 +4,14 @@ import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.config.consistency.InjectorStoreConsistencyPolicy;
 import hs.ddif.core.config.gather.Gatherer;
-import hs.ddif.core.config.scope.SingletonScopeResolver;
-import hs.ddif.core.config.scope.WeakSingletonScopeResolver;
-import hs.ddif.core.config.standard.DefaultInstantiator;
+import hs.ddif.core.config.standard.DefaultInstanceResolver;
 import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
-import hs.ddif.core.config.standard.InstantiatorBasedInstanceResolver;
 import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
-import hs.ddif.core.inject.instantiation.Instantiator;
+import hs.ddif.core.instantiation.DefaultInstantiationContext;
+import hs.ddif.core.instantiation.InstantiationContext;
+import hs.ddif.core.instantiation.InstantiatorBindingMap;
+import hs.ddif.core.instantiation.ScopeResolverManager;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.QualifiedTypeStore;
 
@@ -19,7 +19,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import javax.inject.Provider;
 
@@ -63,19 +62,17 @@ public class Injector implements InstanceResolver, CandidateRegistry {
   /**
    * Constructs a new instance.
    *
+   * @param instantiatorBindingMap an {@link InstantiatorBindingMap}, cannot be {@code null}
+   * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
    * @param instanceInjectableFactory a {@link InstanceInjectableFactory}, cannot be {@code null}
    * @param gatherer a {@link Gatherer}, cannot be {@code null}
-   * @param scopeResolvers an array of {@link ScopeResolver}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
-  Injector(InstanceInjectableFactory instanceInjectableFactory, Gatherer gatherer, ScopeResolver... scopeResolvers) {
-    ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
-    ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
-
-    QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(new InjectorStoreConsistencyPolicy<>(extendedScopeResolvers));
-    Instantiator instantiator = new DefaultInstantiator(store, gatherer, extendedScopeResolvers);
+  Injector(InstantiatorBindingMap instantiatorBindingMap, ScopeResolverManager scopeResolverManager, InstanceInjectableFactory instanceInjectableFactory, Gatherer gatherer) {
+    QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(new InjectorStoreConsistencyPolicy<>(instantiatorBindingMap, scopeResolverManager));
+    InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, scopeResolverManager);
 
     this.registry = new InjectableStoreCandidateRegistry(store, gatherer, instanceInjectableFactory);
-    this.instanceResolver = new InstantiatorBasedInstanceResolver(instantiator);
+    this.instanceResolver = new DefaultInstanceResolver(store, gatherer, instantiationContext, instantiatorBindingMap.getInstantiatorFactory());
   }
 
   /**

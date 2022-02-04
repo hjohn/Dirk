@@ -1,6 +1,5 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.config.standard.DefaultBinding;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
@@ -20,12 +19,10 @@ import hs.ddif.core.util.Types;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Random;
 import java.util.RandomAccess;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -46,7 +43,7 @@ public class InjectableStoreTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation BIG = Annotations.of(Big.class);
 
-  private final BindingProvider bindingProvider = new BindingProvider(DefaultBinding::new);
+  private final BindingProvider bindingProvider = new BindingProvider();
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
   private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
@@ -152,14 +149,6 @@ public class InjectableStoreTest {
 
     // All Objects
     assertEquals(10, store.resolve(new Key(Object.class)).size());
-
-    // All Numbers (using Matcher)
-    assertEquals(4, store.resolve(new Key(Object.class), new Predicate<Type>() {
-      @Override
-      public boolean test(Type type) {
-        return Number.class.isAssignableFrom((Class<?>)type);
-      }
-    }).size());
 
     // All Red Objects
     assertEquals(3, store.resolve(new Key(Object.class, Set.of(RED))).size());

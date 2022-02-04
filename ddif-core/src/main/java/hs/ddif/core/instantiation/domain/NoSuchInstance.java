@@ -1,4 +1,4 @@
-package hs.ddif.core.inject.instantiation;
+package hs.ddif.core.instantiation.domain;
 
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.store.Key;
