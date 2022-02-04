@@ -6,7 +6,9 @@ import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.consistency.UnresolvableDependencyException;
 import hs.ddif.core.config.consistency.ViolatesSingularDependencyException;
+import hs.ddif.core.inject.bind.BindingException;
 import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.DuplicateQualifiedTypeException;
 import hs.ddif.core.store.NoSuchQualifiedTypeException;
 import hs.ddif.core.test.injectables.AbstractBean;
@@ -292,6 +294,8 @@ public class InjectorTest {
 
     assertThatThrownBy(() -> injector.getInstance(BeanWithInjection.class))
       .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(NoSuchInstance.class)
       .hasNoCause();
   }
 
@@ -579,6 +583,9 @@ public class InjectorTest {
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessage("Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
       .hasNoCause();
   }
 
@@ -603,6 +610,9 @@ public class InjectorTest {
       .hasMessage("Path [class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors]: [class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .hasNoCause();
   }

@@ -19,6 +19,6 @@ public class NoSuchInstance extends InstanceResolutionFailure {
 
   @Override
   public NoSuchInstanceException toRuntimeException() {
-    return new NoSuchInstanceException(getMessage(), getCause());
+    return new NoSuchInstanceException(getMessage(), this);
   }
 }

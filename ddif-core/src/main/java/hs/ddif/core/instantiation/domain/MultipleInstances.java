@@ -22,6 +22,6 @@ public class MultipleInstances extends InstanceResolutionFailure {
 
   @Override
   public MultipleInstancesException toRuntimeException() {
-    return new MultipleInstancesException(getMessage(), getCause());
+    return new MultipleInstancesException(getMessage(), this);
   }
 }
