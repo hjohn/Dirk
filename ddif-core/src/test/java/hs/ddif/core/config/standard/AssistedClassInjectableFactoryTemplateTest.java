@@ -9,8 +9,8 @@ import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysi
 import hs.ddif.core.inject.injectable.DefinitionException;
 import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
+import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.store.Key;
-import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
@@ -119,11 +119,13 @@ public class AssistedClassInjectableFactoryTemplateTest {
   @Test
   void shouldInstantiateTypeViaFactory() throws BindingException {
     DefaultInstanceResolver instanceResolver = InstanceResolvers.createWithConsistencyPolicy();
-    QualifiedTypeStore<Injectable> store = instanceResolver.getStore();
+    InjectableStore store = instanceResolver.getStore();
 
-    store.put(new InstanceInjectableFactory(DefaultInjectable::new).create("Red", Annotations.of(Red.class)));
-    store.put(new InstanceInjectableFactory(DefaultInjectable::new).create("Green", Annotations.of(Green.class)));
-    store.put(create(FactoryA.class));
+    store.putAll(List.of(
+      new InstanceInjectableFactory(DefaultInjectable::new).create("Red", Annotations.of(Red.class)),
+      new InstanceInjectableFactory(DefaultInjectable::new).create("Green", Annotations.of(Green.class)),
+      create(FactoryA.class)
+    ));
 
     FactoryA instance = instanceResolver.getInstance(FactoryA.class);
 

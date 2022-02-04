@@ -1,4 +1,4 @@
-package hs.ddif.core.config.consistency;
+package hs.ddif.core.inject.store;
 
 import hs.ddif.core.inject.injectable.Injectable;
 

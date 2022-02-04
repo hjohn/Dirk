@@ -6,14 +6,13 @@ import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.config.consistency.InjectorStoreConsistencyPolicy;
 import hs.ddif.core.inject.bind.BindingProvider;
 import hs.ddif.core.inject.injectable.ClassInjectableFactory;
 import hs.ddif.core.inject.injectable.DefinitionException;
-import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.inject.injectable.InjectableFactories;
 import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
 import hs.ddif.core.inject.injectable.MethodInjectableFactory;
+import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.instantiation.DefaultInstantiationContext;
 import hs.ddif.core.instantiation.InstanceFactories;
 import hs.ddif.core.instantiation.InstantiationContext;
@@ -25,7 +24,6 @@ import hs.ddif.core.instantiation.domain.MultipleInstances;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
-import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
 
@@ -65,8 +63,7 @@ public class DefaultInstanceResolverTest {
   private final InstantiatorFactory instantiatorFactory = InstanceFactories.create();
   private final InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);
-  private final InjectorStoreConsistencyPolicy<Injectable> policy = new InjectorStoreConsistencyPolicy<>(instantiatorBindingMap, scopeResolverManager);
-  private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(policy);
+  private final InjectableStore store = new InjectableStore(instantiatorBindingMap, scopeResolverManager);
   private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, scopeResolverManager);
   private final BindingProvider bindingProvider = new BindingProvider();
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
@@ -102,17 +99,19 @@ public class DefaultInstanceResolverTest {
 
     {
       try {
-        store.put(classInjectableFactory.create(A.class));
-        store.put(classInjectableFactory.create(B.class));
-        store.put(classInjectableFactory.create(C.class));
-        store.put(classInjectableFactory.create(D.class));
-        store.put(classInjectableFactory.create(F.class));
-        store.put(classInjectableFactory.create(G.class));
-        store.put(instanceInjectableFactory.create("red", Annotations.of(Red.class)));
-        store.put(instanceInjectableFactory.create("green", Annotations.named("green")));
-        store.put(methodInjectableFactory.create(B.class.getDeclaredMethod("createH"), B.class));
-        store.put(methodInjectableFactory.create(B.class.getDeclaredMethod("createI"), B.class));
-        store.put(classInjectableFactory.create(K.class));
+        store.putAll(List.of(
+          classInjectableFactory.create(A.class),
+          classInjectableFactory.create(B.class),
+          classInjectableFactory.create(C.class),
+          classInjectableFactory.create(D.class),
+          classInjectableFactory.create(F.class),
+          classInjectableFactory.create(G.class),
+          instanceInjectableFactory.create("red", Annotations.of(Red.class)),
+          instanceInjectableFactory.create("green", Annotations.named("green")),
+          methodInjectableFactory.create(B.class.getDeclaredMethod("createH"), B.class),
+          methodInjectableFactory.create(B.class.getDeclaredMethod("createI"), B.class),
+          classInjectableFactory.create(K.class)
+        ));
       }
       catch(NoSuchMethodException | SecurityException e) {
         throw new IllegalStateException();

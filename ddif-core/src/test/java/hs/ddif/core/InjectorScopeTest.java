@@ -2,8 +2,8 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.config.consistency.ScopeConflictException;
 import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.inject.store.ScopeConflictException;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.test.scope.TestScope;

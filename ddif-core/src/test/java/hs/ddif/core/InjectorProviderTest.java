@@ -2,9 +2,9 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.config.consistency.UnresolvableDependencyException;
-import hs.ddif.core.config.consistency.ViolatesSingularDependencyException;
 import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.inject.store.UnresolvableDependencyException;
+import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.DuplicateQualifiedTypeException;
 import hs.ddif.core.test.injectables.BeanWithOptionalProvider;
