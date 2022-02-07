@@ -16,7 +16,6 @@ import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.Key;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -129,19 +128,6 @@ public class DefaultInstanceResolver implements InstanceResolver {
   }
 
   private <T> List<T> getInstances(Key key, Predicate<Type> typePredicate) throws InstanceCreationFailure {
-    List<T> instances = new ArrayList<>();
-
-    // TODO this basically duplicates the code in ListTypeExtension
-    for(Injectable injectable : instantiationContext.resolve(key)) {
-      if(typePredicate == null || typePredicate.test(injectable.getType())) {
-        T instance = instantiationContext.createInstanceInScope(injectable);
-
-        if(instance != null) {  // Don't add if out of scope or if provider returned a null
-          instances.add(instance);
-        }
-      }
-    }
-
-    return instances;
+    return instantiationContext.createAll(key, typePredicate);
   }
 }

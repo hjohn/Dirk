@@ -11,9 +11,11 @@ import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.Resolver;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 /**
@@ -40,17 +42,42 @@ public class DefaultInstantiationContext implements InstantiationContext {
   }
 
   @Override
-  public Set<Injectable> resolve(Key key) {
-    return resolver.resolve(key);
+  public <T> T create(Key key) throws InstanceCreationFailure, MultipleInstances {
+    Set<Injectable> injectables = resolver.resolve(key);
+
+    if(injectables.size() > 1) {
+      throw new MultipleInstances(key, injectables);
+    }
+
+    if(injectables.size() == 0) {
+      return null;
+    }
+
+    return createInstance(injectables.iterator().next());
   }
 
   @Override
-  public <T> T createInstance(Injectable injectable) throws InstanceCreationFailure {
+  public <T> List<T> createAll(Key key, Predicate<Type> typePredicate) throws InstanceCreationFailure {
+    List<T> instances = new ArrayList<>();
+
+    for(Injectable injectable : resolver.resolve(key)) {
+      if(typePredicate == null || typePredicate.test(injectable.getType())) {
+        T instance = createInstanceInScope(injectable);
+
+        if(instance != null) {
+          instances.add(instance);
+        }
+      }
+    }
+
+    return instances;
+  }
+
+  private <T> T createInstance(Injectable injectable) throws InstanceCreationFailure {
     return createInstance(injectable, false);
   }
 
-  @Override
-  public <T> T createInstanceInScope(Injectable injectable) throws InstanceCreationFailure {
+  private <T> T createInstanceInScope(Injectable injectable) throws InstanceCreationFailure {
     return createInstance(injectable, true);
   }
 

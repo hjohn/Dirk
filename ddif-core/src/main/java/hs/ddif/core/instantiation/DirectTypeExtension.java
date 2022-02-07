@@ -1,13 +1,11 @@
 package hs.ddif.core.instantiation;
 
-import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.domain.MultipleInstances;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.Key;
 
 import java.lang.reflect.AnnotatedElement;
-import java.util.Set;
 
 /**
  * Type extension for {@link Instantiator}s which attempt to directly create or
@@ -30,13 +28,9 @@ public class DirectTypeExtension<T> implements TypeExtension<T> {
 
       @Override
       public T getInstance(InstantiationContext context) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
-        Set<Injectable> injectables = context.resolve(key);
+        T instance = context.create(key);
 
-        if(injectables.size() > 1) {
-          throw new MultipleInstances(key, injectables);
-        }
-
-        if(injectables.size() == 0) {
+        if(instance == null) {
           if(optional) {
             return null;
           }
@@ -44,7 +38,7 @@ public class DirectTypeExtension<T> implements TypeExtension<T> {
           throw new NoSuchInstance(key);
         }
 
-        return context.createInstance(injectables.iterator().next());
+        return instance;
       }
 
       @Override
