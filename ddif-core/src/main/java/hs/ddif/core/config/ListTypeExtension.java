@@ -1,6 +1,5 @@
 package hs.ddif.core.config;
 
-import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.InstantiatorFactory;
@@ -13,7 +12,6 @@ import hs.ddif.core.util.Types;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,15 +36,7 @@ public class ListTypeExtension<T> implements TypeExtension<List<T>> {
 
       @Override
       public List<T> getInstance(InstantiationContext context) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
-        List<T> instances = new ArrayList<>();
-
-        for(Injectable injectable : context.resolve(elementKey)) {
-          T instance = context.createInstanceInScope(injectable);
-
-          if(instance != null) {
-            instances.add(instance);
-          }
-        }
+        List<T> instances = context.createAll(elementKey);
 
         return instances.isEmpty() && optional ? null : instances;
       }

@@ -1,6 +1,5 @@
 package hs.ddif.core.config;
 
-import hs.ddif.core.inject.injectable.Injectable;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.InstantiatorFactory;
@@ -14,6 +13,7 @@ import hs.ddif.core.util.Types;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.TypeVariable;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -38,17 +38,9 @@ public class SetTypeExtension<T> implements TypeExtension<Set<T>> {
 
       @Override
       public Set<T> getInstance(InstantiationContext context) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
-        Set<T> instances = new HashSet<>();
+        List<T> instances = context.createAll(elementKey);
 
-        for(Injectable injectable : context.resolve(elementKey)) {
-          T instance = context.createInstanceInScope(injectable);
-
-          if(instance != null) {
-            instances.add(instance);
-          }
-        }
-
-        return instances.isEmpty() && optional ? null : instances;
+        return instances.isEmpty() && optional ? null : new HashSet<>(instances);
       }
 
       @Override

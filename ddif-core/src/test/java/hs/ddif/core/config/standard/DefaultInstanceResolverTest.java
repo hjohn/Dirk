@@ -206,6 +206,9 @@ public class DefaultInstanceResolverTest {
       assertThatThrownBy(() -> instanceResolver.getInstance(I.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
         .hasMessage("No such instance: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$I]")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(NoSuchInstance.class)
+        .hasMessage("No such instance: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$I]")
         .hasNoCause();
     }
 
