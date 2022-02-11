@@ -1,6 +1,6 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.definition.Injectable;
 
 import java.util.Collections;
 import java.util.List;

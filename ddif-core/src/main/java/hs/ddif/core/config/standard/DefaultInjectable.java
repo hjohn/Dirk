@@ -1,10 +1,10 @@
 package hs.ddif.core.config.standard;
 
-import hs.ddif.core.inject.bind.Binding;
-import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.inject.injection.Injection;
-import hs.ddif.core.inject.injection.ObjectFactory;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.ObjectFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;

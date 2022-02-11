@@ -1,14 +1,11 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.core.inject.injectable.ClassInjectableFactory;
-import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.inject.injectable.InjectableFactories;
+import hs.ddif.core.definition.ClassInjectableFactory;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.instantiation.InstanceFactories;
-import hs.ddif.core.instantiation.InstantiatorBindingMap;
 import hs.ddif.core.instantiation.InstantiatorFactory;
-import hs.ddif.core.instantiation.ScopeResolverManager;
-import hs.ddif.core.instantiation.ScopeResolverManagers;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;

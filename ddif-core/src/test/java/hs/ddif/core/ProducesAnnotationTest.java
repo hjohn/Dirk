@@ -3,7 +3,7 @@ package hs.ddif.core;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.inject.store.CyclicDependencyException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.store.DuplicateQualifiedTypeException;

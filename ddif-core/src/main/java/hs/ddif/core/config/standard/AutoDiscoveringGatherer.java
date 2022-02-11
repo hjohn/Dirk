@@ -2,10 +2,10 @@ package hs.ddif.core.config.standard;
 
 import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.config.gather.Gatherer;
-import hs.ddif.core.inject.bind.Binding;
-import hs.ddif.core.inject.injectable.ClassInjectableFactory;
-import hs.ddif.core.inject.injectable.DefinitionException;
-import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.definition.ClassInjectableFactory;
+import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;

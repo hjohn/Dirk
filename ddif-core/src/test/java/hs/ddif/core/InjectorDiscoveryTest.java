@@ -1,8 +1,8 @@
 package hs.ddif.core;
 
 import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;

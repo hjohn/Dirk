@@ -1,12 +1,12 @@
 package hs.ddif.core.store;
 
 import hs.ddif.core.config.standard.DefaultInjectable;
-import hs.ddif.core.inject.bind.BindingProvider;
-import hs.ddif.core.inject.injectable.ClassInjectableFactory;
-import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.inject.injectable.InjectableFactories;
-import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
-import hs.ddif.core.inject.injectable.MethodInjectableFactory;
+import hs.ddif.core.definition.ClassInjectableFactory;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.InjectableFactories;
+import hs.ddif.core.definition.InstanceInjectableFactory;
+import hs.ddif.core.definition.MethodInjectableFactory;
+import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.util.TypeReference;
 
 import java.io.Serializable;

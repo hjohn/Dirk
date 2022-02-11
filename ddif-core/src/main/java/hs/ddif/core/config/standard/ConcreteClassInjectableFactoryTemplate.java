@@ -1,13 +1,13 @@
 package hs.ddif.core.config.standard;
 
-import hs.ddif.core.inject.bind.Binding;
-import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.inject.bind.BindingProvider;
-import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate;
-import hs.ddif.core.inject.injectable.ClassObjectFactory;
-import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.inject.injectable.InjectableFactory;
-import hs.ddif.core.inject.injectable.ScopeAnnotations;
+import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.InjectableFactory;
+import hs.ddif.core.definition.ScopeAnnotations;
+import hs.ddif.core.definition.bind.Binding;
+import hs.ddif.core.definition.bind.BindingException;
+import hs.ddif.core.definition.bind.BindingProvider;
+import hs.ddif.core.instantiation.factory.ClassObjectFactory;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;

@@ -2,8 +2,8 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Argument;
 import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.inject.injectable.DefinitionException;
+import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.test.qualifiers.Green;

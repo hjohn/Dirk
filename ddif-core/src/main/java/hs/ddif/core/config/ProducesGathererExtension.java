@@ -2,10 +2,10 @@ package hs.ddif.core.config;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
-import hs.ddif.core.inject.injectable.DefinitionException;
-import hs.ddif.core.inject.injectable.FieldInjectableFactory;
-import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.inject.injectable.MethodInjectableFactory;
+import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.core.definition.FieldInjectableFactory;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.MethodInjectableFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
