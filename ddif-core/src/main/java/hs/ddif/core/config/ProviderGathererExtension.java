@@ -1,9 +1,9 @@
 package hs.ddif.core.config;
 
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
-import hs.ddif.core.inject.injectable.DefinitionException;
-import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.inject.injectable.MethodInjectableFactory;
+import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.util.Types;
 
 import java.lang.reflect.Method;

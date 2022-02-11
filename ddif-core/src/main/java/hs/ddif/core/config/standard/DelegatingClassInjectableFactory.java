@@ -1,11 +1,11 @@
 package hs.ddif.core.config.standard;
 
-import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.inject.injectable.ClassInjectableFactory;
-import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate;
-import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysis;
-import hs.ddif.core.inject.injectable.DefinitionException;
-import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.definition.ClassInjectableFactory;
+import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
+import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
+import hs.ddif.core.definition.bind.BindingException;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

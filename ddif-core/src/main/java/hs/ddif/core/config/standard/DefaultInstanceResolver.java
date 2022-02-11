@@ -4,7 +4,7 @@ import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.config.gather.Gatherer;
-import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;

@@ -1,9 +1,9 @@
 package hs.ddif.plugins;
 
 import hs.ddif.annotations.PluginScoped;
-import hs.ddif.core.inject.injectable.ClassInjectableFactory;
-import hs.ddif.core.inject.injectable.Injectable;
-import hs.ddif.core.inject.injectable.InjectableFactories;
+import hs.ddif.core.definition.ClassInjectableFactory;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.scope.OutOfScopeException;
 
 import java.util.List;

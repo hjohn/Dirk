@@ -1,10 +1,10 @@
 package hs.ddif.core.config.standard;
 
-import hs.ddif.core.inject.bind.Binding;
-import hs.ddif.core.inject.bind.BindingException;
-import hs.ddif.core.inject.bind.BindingProvider;
-import hs.ddif.core.inject.injectable.ClassInjectableFactoryTemplate.TypeAnalysis;
-import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
+import hs.ddif.core.definition.bind.Binding;
+import hs.ddif.core.definition.bind.BindingException;
+import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;

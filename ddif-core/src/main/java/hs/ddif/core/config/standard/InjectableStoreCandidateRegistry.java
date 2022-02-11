@@ -2,7 +2,7 @@ package hs.ddif.core.config.standard;
 
 import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.config.gather.Gatherer;
-import hs.ddif.core.inject.injectable.InstanceInjectableFactory;
+import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.inject.store.InjectableStore;
 
 import java.lang.annotation.Annotation;

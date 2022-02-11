@@ -1,6 +1,6 @@
 package hs.ddif.core.config.gather;
 
-import hs.ddif.core.inject.injectable.Injectable;
+import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.Resolver;
 
