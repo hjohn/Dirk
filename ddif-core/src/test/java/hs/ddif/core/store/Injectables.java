@@ -2,7 +2,6 @@ package hs.ddif.core.store;
 
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
 
 import java.lang.annotation.Annotation;
@@ -36,7 +35,7 @@ public class Injectables {
       }
 
       @Override
-      public Object createInstance(List<Injection> injections) throws InstanceCreationFailure {
+      public Object createInstance(List<Injection> injections) {
         throw new UnsupportedOperationException();
       }
 

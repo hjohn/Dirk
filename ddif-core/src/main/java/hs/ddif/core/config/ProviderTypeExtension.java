@@ -4,10 +4,7 @@ import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.TypeExtension;
-import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.domain.InstanceResolutionFailure;
-import hs.ddif.core.instantiation.domain.MultipleInstances;
-import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Types;
 
@@ -37,7 +34,7 @@ public class ProviderTypeExtension<T> implements TypeExtension<Provider<T>> {
       }
 
       @Override
-      public Provider<T> getInstance(InstantiationContext context) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
+      public Provider<T> getInstance(InstantiationContext context) {
         return new Provider<>() {
           @Override
           public T get() {

@@ -16,7 +16,6 @@ import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.qualifiers.Small;
 import hs.ddif.core.util.Annotations;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.util.List;
 
@@ -365,17 +364,17 @@ public class InjectorProviderTest {
     public Appendable get() {
       return new Appendable() {
         @Override
-        public Appendable append(CharSequence csq) throws IOException {
+        public Appendable append(CharSequence csq) {
           return null;
         }
 
         @Override
-        public Appendable append(CharSequence csq, int start, int end) throws IOException {
+        public Appendable append(CharSequence csq, int start, int end) {
           return null;
         }
 
         @Override
-        public Appendable append(char c) throws IOException {
+        public Appendable append(char c) {
           return null;
         }
       };

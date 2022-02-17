@@ -1,6 +1,5 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.instantiation.factory.MethodObjectFactory;
 import hs.ddif.core.util.Annotations;
@@ -73,18 +72,13 @@ public class MethodInjectableFactory {
       throw new DefinitionException(method, "cannot be annotated with Inject");
     }
 
-    try {
-      return injectableFactory.create(
-        returnType,
-        Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
-        bindingProvider.ofMethod(method, ownerType),
-        ScopeAnnotations.find(method),
-        method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
-        new MethodObjectFactory(method)
-      );
-    }
-    catch(BindingException e) {
-      throw new DefinitionException(method, "has unresolvable bindings");
-    }
+    return injectableFactory.create(
+      returnType,
+      Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
+      bindingProvider.ofMethod(method, ownerType),
+      ScopeAnnotations.find(method),
+      method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
+      new MethodObjectFactory(method)
+    );
   }
 }

@@ -309,7 +309,7 @@ public class ProducesAnnotationTest {
     void registeringAFactoryTwiceShouldThrowException() {
       assertThrows(DuplicateQualifiedTypeException.class, new Executable() {
         @Override
-        public void execute() throws Throwable {
+        public void execute() {
           injector.register(UnscopedFactory.class);
         }
       });
@@ -343,7 +343,7 @@ public class ProducesAnnotationTest {
 
       assertThrows(MultipleInstancesException.class, new Executable() {
         @Override
-        public void execute() throws Throwable {
+        public void execute() {
           injector.getInstance(Phone.class);
         }
       });

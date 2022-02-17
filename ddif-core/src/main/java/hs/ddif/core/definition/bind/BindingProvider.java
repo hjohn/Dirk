@@ -53,9 +53,8 @@ public class BindingProvider {
    *
    * @param constructor a {@link Constructor} to examine for bindings, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
-   * @throws BindingException when an exception occurred while creating a binding
    */
-  public List<Binding> ofConstructor(Constructor<?> constructor) throws BindingException {
+  public List<Binding> ofConstructor(Constructor<?> constructor) {
     return ofExecutable(constructor, constructor.getDeclaringClass());
   }
 
@@ -109,9 +108,8 @@ public class BindingProvider {
    * @param method a {@link Method} to examine for bindings, cannot be {@code null}
    * @param ownerType a {@link Type} in which this method is declared, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
-   * @throws BindingException when an exception occurred while creating a binding
    */
-  public List<Binding> ofMethod(Method method, Type ownerType) throws BindingException {
+  public List<Binding> ofMethod(Method method, Type ownerType) {
     return ofExecutable(method, ownerType);
   }
 
