@@ -16,74 +16,74 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MethodInjectableFactoryTest {
   private final BindingProvider bindingProvider = new BindingProvider();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
+  private final MethodInjectableFactory factory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
 
   @Test
-  void constructorShouldRejectNullMethod() {
-    assertThatThrownBy(() -> methodInjectableFactory.create(null, A.class))
+  void createShouldRejectNullMethod() {
+    assertThatThrownBy(() -> factory.create(null, A.class))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("method cannot be null")
       .hasNoCause();
   }
 
   @Test
-  void constructorShouldRejectNullOwnerType() {
-    assertThatThrownBy(() -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), null))
+  void createShouldRejectNullOwnerType() {
+    assertThatThrownBy(() -> factory.create(A.class.getDeclaredMethod("a"), null))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("ownerType cannot be null")
       .hasNoCause();
   }
 
   @Test
-  void constructorShouldRejectIncompatibleOwnerType() {
-    assertThatThrownBy(() -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), B.class))
+  void createShouldRejectIncompatibleOwnerType() {
+    assertThatThrownBy(() -> factory.create(A.class.getDeclaredMethod("a"), B.class))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("ownerType must be assignable to method's declaring class: class hs.ddif.core.definition.MethodInjectableFactoryTest$B; declaring class: class hs.ddif.core.definition.MethodInjectableFactoryTest$A")
       .hasNoCause();
   }
 
   @Test
-  void constructorShouldRejectMethodWithUnresolvableReturnType() {
-    assertThatThrownBy(() -> methodInjectableFactory.create(B.class.getDeclaredMethod("b"), B.class))
+  void createShouldRejectMethodWithUnresolvableReturnType() {
+    assertThatThrownBy(() -> factory.create(B.class.getDeclaredMethod("b"), B.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Method [public java.lang.Object hs.ddif.core.definition.MethodInjectableFactoryTest$B.b()] has unresolvable return type")
       .hasNoCause();
   }
 
   @Test
-  void constructorShouldRejectMethodWithUnresolvableTypeVariables() {
-    assertThatThrownBy(() -> methodInjectableFactory.create(B.class.getDeclaredMethod("d"), B.class))
+  void createShouldRejectMethodWithUnresolvableTypeVariables() {
+    assertThatThrownBy(() -> factory.create(B.class.getDeclaredMethod("d"), B.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Method [public java.util.List hs.ddif.core.definition.MethodInjectableFactoryTest$B.d()] has unresolvable type variables")
       .hasNoCause();
   }
 
   @Test
-  void constructorShouldRejectVoidMethod() {
-    assertThatThrownBy(() -> methodInjectableFactory.create(A.class.getDeclaredMethod("a"), A.class))
+  void createShouldRejectVoidMethod() {
+    assertThatThrownBy(() -> factory.create(A.class.getDeclaredMethod("a"), A.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Method [void hs.ddif.core.definition.MethodInjectableFactoryTest$A.a()] has no return type")
       .hasNoCause();
   }
 
   @Test
-  void constructorShouldRejectMethodAnnotatedWithInject() {
-    assertThatThrownBy(() -> methodInjectableFactory.create(A.class.getDeclaredMethod("c"), A.class))
+  void createShouldRejectMethodAnnotatedWithInject() {
+    assertThatThrownBy(() -> factory.create(A.class.getDeclaredMethod("c"), A.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Method [java.lang.String hs.ddif.core.definition.MethodInjectableFactoryTest$A.c()] cannot be annotated with Inject")
       .hasNoCause();
   }
 
   @Test
-  void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
-    Injectable injectable = methodInjectableFactory.create(C.class.getMethod("b"), C.class);
+  void createShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
+    Injectable injectable = factory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
   }
 
   @Test
-  void shouldReturnCorrectInjectableForNonStaticMethod() throws Exception {
-    Injectable injectable = methodInjectableFactory.create(C.class.getMethod("b"), C.class);
+  void createShouldReturnCorrectInjectableForNonStaticMethod() throws Exception {
+    Injectable injectable = factory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
@@ -94,8 +94,8 @@ public class MethodInjectableFactoryTest {
   }
 
   @Test
-  void shouldReturnCorrectInjectableForStaticMethodWithOneParameter() throws Exception {
-    Injectable injectable = methodInjectableFactory.create(C.class.getMethod("e", D.class), C.class);
+  void createShouldReturnCorrectInjectableForStaticMethodWithOneParameter() throws Exception {
+    Injectable injectable = factory.create(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(

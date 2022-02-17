@@ -22,11 +22,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ClassInjectableFactoryTest {
-  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
+  private final ClassInjectableFactory factory = InjectableFactories.forClass();
 
   @Test
-  public void constructorShouldAcceptValidParameters() throws Exception {
-    Injectable injectable = classInjectableFactory.create(SimpleClass.class);
+  public void createShouldAcceptValidParameters() throws Exception {
+    Injectable injectable = factory.create(SimpleClass.class);
 
     assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
@@ -34,7 +34,7 @@ public class ClassInjectableFactoryTest {
     assertThat(injectable.getBindings()).hasSize(0);
     assertTrue(injectable.createInstance(Bindings.resolve(injectable.getBindings())) instanceof SimpleClass);
 
-    injectable = classInjectableFactory.create(ClassWithDependencies.class);
+    injectable = factory.create(ClassWithDependencies.class);
 
     assertEquals(ClassWithDependencies.class, injectable.getType());
     assertEquals(Collections.singleton(ClassWithDependencies.class.getAnnotation(Red.class)), injectable.getQualifiers());
@@ -54,16 +54,16 @@ public class ClassInjectableFactoryTest {
   }
 
   @Test
-  public void constructorShouldRejectNullInjectableClass() {
-    assertThatThrownBy(() -> classInjectableFactory.create((Type)null))
+  public void createShouldRejectNullInjectableClass() {
+    assertThatThrownBy(() -> factory.create((Type)null))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("type cannot be null")
       .hasNoCause();
   }
 
   @Test
-  public void constructorShouldRejectInterfaceAsInjectableClass() {
-    assertThatThrownBy(() -> classInjectableFactory.create(SimpleInterface.class))
+  public void createShouldRejectInterfaceAsInjectableClass() {
+    assertThatThrownBy(() -> factory.create(SimpleInterface.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[interface hs.ddif.core.definition.ClassInjectableFactoryTest$SimpleInterface] cannot be injected; failures:\n"
         + " - Type cannot be abstract: interface hs.ddif.core.definition.ClassInjectableFactoryTest$SimpleInterface"
@@ -72,8 +72,8 @@ public class ClassInjectableFactoryTest {
   }
 
   @Test
-  public void constructorShouldRejectAbstractClassAsInjectableClass() {
-    assertThatThrownBy(() -> classInjectableFactory.create(SimpleAbstractClass.class))
+  public void createShouldRejectAbstractClassAsInjectableClass() {
+    assertThatThrownBy(() -> factory.create(SimpleAbstractClass.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$SimpleAbstractClass] cannot be injected; failures:\n"
         + " - Type cannot be abstract: class hs.ddif.core.definition.ClassInjectableFactoryTest$SimpleAbstractClass"
@@ -82,8 +82,8 @@ public class ClassInjectableFactoryTest {
   }
 
   @Test
-  public void constructorShouldRejectInjectableClassWithoutConstructors() {
-    assertThatThrownBy(() -> classInjectableFactory.create(ClassWithoutPublicConstructors.class))
+  public void createShouldRejectInjectableClassWithoutConstructors() {
+    assertThatThrownBy(() -> factory.create(ClassWithoutPublicConstructors.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithoutPublicConstructors] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -93,8 +93,8 @@ public class ClassInjectableFactoryTest {
   }
 
   @Test
-  public void constructorShouldRejectInjectableClassWithMultipleAnnotatedConstructors() {
-    assertThatThrownBy(() -> classInjectableFactory.create(ClassWithTooManyAnnotatedConstructors.class))
+  public void createShouldRejectInjectableClassWithMultipleAnnotatedConstructors() {
+    assertThatThrownBy(() -> factory.create(ClassWithTooManyAnnotatedConstructors.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithTooManyAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -104,8 +104,8 @@ public class ClassInjectableFactoryTest {
   }
 
   @Test
-  public void constructorShouldRejectInjectableClassWithAnnotatedFinalFields() {
-    assertThatThrownBy(() -> classInjectableFactory.create(ClassWithAnnotatedFinalField.class))
+  public void createShouldRejectInjectableClassWithAnnotatedFinalFields() {
+    assertThatThrownBy(() -> factory.create(ClassWithAnnotatedFinalField.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Field [private final java.lang.String hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithAnnotatedFinalField.a] of [class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithAnnotatedFinalField] cannot be final")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -115,16 +115,16 @@ public class ClassInjectableFactoryTest {
   }
 
   @Test
-  public void constructorShouldRejectInjectableClassWithMultipleScopes() {
-    assertThatThrownBy(() -> classInjectableFactory.create(ClassWithMultipleScopes.class))
+  public void createShouldRejectInjectableClassWithMultipleScopes() {
+    assertThatThrownBy(() -> factory.create(ClassWithMultipleScopes.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithMultipleScopes] cannot have multiple scope annotations, but found: [@hs.ddif.core.test.scope.TestScope(), @javax.inject.Singleton()]")
       .hasNoCause();
   }
 
   @Test
-  public void constructorShouldRejectInjectableClassWithTypeParameters() {
-    assertThatThrownBy(() -> classInjectableFactory.create(GenericClass.class))
+  public void createShouldRejectInjectableClassWithTypeParameters() {
+    assertThatThrownBy(() -> factory.create(GenericClass.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$GenericClass] cannot have unresolvable type variables: [T]")
       .hasNoCause();
