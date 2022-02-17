@@ -2,10 +2,12 @@ package hs.ddif.core.config.standard;
 
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
+import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
+import hs.ddif.core.definition.UninjectableTypeException;
 import hs.ddif.core.definition.bind.BindingException;
+import hs.ddif.core.util.Types;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -38,7 +40,7 @@ public class DelegatingClassInjectableFactory implements ClassInjectableFactory 
       throw new IllegalArgumentException("type cannot be null");
     }
 
-    Class<?> cls = TypeUtils.getRawType(type, null);
+    Class<?> cls = Types.raw(type);
 
     if(TypeUtils.containsTypeVariables(type)) {
       throw new DefinitionException(cls, "cannot have unresolvable type variables: " + Arrays.toString(cls.getTypeParameters()));
@@ -57,8 +59,11 @@ public class DelegatingClassInjectableFactory implements ClassInjectableFactory 
       try {
         return template.create(analysis);
       }
+      catch(UninjectableTypeException e) {
+        throw new DefinitionException(cls, "is an unsuitable type", e);
+      }
       catch(BindingException e) {
-        throw new DefinitionException(e);
+        throw new DefinitionException(cls, "cannot be injected", e);
       }
     }
 

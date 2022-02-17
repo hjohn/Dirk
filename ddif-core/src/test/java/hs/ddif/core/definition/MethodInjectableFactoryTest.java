@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +55,10 @@ public class MethodInjectableFactoryTest {
   void createShouldRejectMethodWithUnresolvableTypeVariables() {
     assertThatThrownBy(() -> factory.create(B.class.getDeclaredMethod("d"), B.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public java.util.List hs.ddif.core.definition.MethodInjectableFactoryTest$B.d()] has unresolvable type variables")
+      .hasMessage("Method [public java.util.List hs.ddif.core.definition.MethodInjectableFactoryTest$B.d()] has unsuitable return type")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(UninjectableTypeException.class)
+      .hasMessage("[java.util.List<T>] has unresolvable type variables")
       .hasNoCause();
   }
 
@@ -62,7 +66,10 @@ public class MethodInjectableFactoryTest {
   void createShouldRejectVoidMethod() {
     assertThatThrownBy(() -> factory.create(A.class.getDeclaredMethod("a"), A.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [void hs.ddif.core.definition.MethodInjectableFactoryTest$A.a()] has no return type")
+      .hasMessage("Method [void hs.ddif.core.definition.MethodInjectableFactoryTest$A.a()] has unsuitable return type")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(UninjectableTypeException.class)
+      .hasMessage("[void] is not an injectable type")
       .hasNoCause();
   }
 

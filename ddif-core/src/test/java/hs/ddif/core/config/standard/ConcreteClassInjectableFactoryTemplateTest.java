@@ -1,7 +1,8 @@
 package hs.ddif.core.config.standard;
 
-import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
+import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.UninjectableTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -31,7 +32,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldCreateInjectableForValidClass() throws BindingException {
+  void shouldCreateInjectableForValidClass() throws BindingException, UninjectableTypeException {
     Injectable injectable = create(B.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(new Key(String.class));
@@ -40,7 +41,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldCreateInjectableWithQualifiersAndScope() throws BindingException {
+  void shouldCreateInjectableWithQualifiersAndScope() throws BindingException, UninjectableTypeException {
     Injectable injectable = create(C.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
@@ -52,7 +53,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
     );
   }
 
-  private Injectable create(Type type) throws BindingException {
+  private Injectable create(Type type) throws BindingException, UninjectableTypeException {
     TypeAnalysis<Type> analysis = extension.analyze(type);
 
     if(analysis.isNegative()) {

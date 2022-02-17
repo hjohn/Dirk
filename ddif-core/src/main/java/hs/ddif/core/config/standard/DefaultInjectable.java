@@ -1,6 +1,7 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.UninjectableTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
@@ -8,6 +9,7 @@ import hs.ddif.core.instantiation.injection.ObjectFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,10 +19,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
+
 /**
  * An implementation of {@link Injectable}.
  */
-public class DefaultInjectable implements Injectable {
+public final class DefaultInjectable implements Injectable {
   private final Type type;
   private final Set<Annotation> qualifiers;
   private final List<Binding> bindings;
@@ -38,8 +42,9 @@ public class DefaultInjectable implements Injectable {
    * @param scope a scope {@link Annotation}, can be {@code null}
    * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
    * @param objectFactory an {@link ObjectFactory}, cannot be {@code null}
+   * @throws UninjectableTypeException when the given {@link Type} is not suitable for injection
    */
-  public DefaultInjectable(Type type, Set<Annotation> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) {
+  public DefaultInjectable(Type type, Set<Annotation> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) throws UninjectableTypeException {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
@@ -52,6 +57,12 @@ public class DefaultInjectable implements Injectable {
     if(objectFactory == null) {
       throw new IllegalArgumentException("objectFactory cannot be null");
     }
+    if(type == void.class) {
+      throw new UninjectableTypeException(type, "is not an injectable type");
+    }
+    if((!(type instanceof Class) && !(type instanceof ParameterizedType)) || TypeUtils.containsTypeVariables(type)) {
+      throw new UninjectableTypeException(type, "has unresolvable type variables");
+    }
 
     this.type = type;
     this.qualifiers = Collections.unmodifiableSet(new HashSet<>(qualifiers));
@@ -59,7 +70,11 @@ public class DefaultInjectable implements Injectable {
     this.scope = scope;
     this.discriminator = discriminator;
     this.objectFactory = objectFactory;
-    this.hashCode = Objects.hash(type, discriminator, getQualifiers());
+    this.hashCode = calculateHash();
+  }
+
+  private int calculateHash() {
+    return Objects.hash(type, discriminator, getQualifiers());
   }
 
   @Override
@@ -110,6 +125,6 @@ public class DefaultInjectable implements Injectable {
 
   @Override
   public String toString() {
-    return "Injectable[" + (qualifiers.isEmpty() ? "" : qualifiers.stream().map(Object::toString).collect(Collectors.joining(" ")) + " ") + type.getTypeName() + (discriminator instanceof AccessibleObject ? " <- " + discriminator : "") + "]";
+    return "Injectable[" + (qualifiers.isEmpty() ? "" : qualifiers.stream().map(Object::toString).sorted().collect(Collectors.joining(" ")) + " ") + type.getTypeName() + (discriminator instanceof AccessibleObject ? " <- " + discriminator : "") + "]";
   }
 }

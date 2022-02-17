@@ -62,23 +62,22 @@ public class MethodInjectableFactory {
     if(returnType == null) {
       throw new DefinitionException(method, "has unresolvable return type");
     }
-    if(TypeUtils.containsTypeVariables(returnType)) {
-      throw new DefinitionException(method, "has unresolvable type variables");
-    }
-    if(returnType == void.class) {
-      throw new DefinitionException(method, "has no return type");
-    }
     if(method.isAnnotationPresent(Inject.class)) {
       throw new DefinitionException(method, "cannot be annotated with Inject");
     }
 
-    return injectableFactory.create(
-      returnType,
-      Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
-      bindingProvider.ofMethod(method, ownerType),
-      ScopeAnnotations.find(method),
-      method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
-      new MethodObjectFactory(method)
-    );
+    try {
+      return injectableFactory.create(
+        returnType,
+        Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
+        bindingProvider.ofMethod(method, ownerType),
+        ScopeAnnotations.find(method),
+        method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
+        new MethodObjectFactory(method)
+      );
+    }
+    catch(UninjectableTypeException e) {
+      throw new DefinitionException(method, "has unsuitable return type", e);
+    }
   }
 }
