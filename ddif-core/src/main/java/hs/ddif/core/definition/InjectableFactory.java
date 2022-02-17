@@ -23,6 +23,7 @@ public interface InjectableFactory {
    * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
    * @param objectFactory an {@link ObjectFactory}, cannot be {@code null}
    * @return a {@link Injectable}, never {@code null}
+   * @throws UninjectableTypeException when the given {@link Type} is not suitable for injection
    */
-  Injectable create(Type type, Set<Annotation> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory);
+  Injectable create(Type type, Set<Annotation> qualifiers, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) throws UninjectableTypeException;
 }

@@ -4,6 +4,7 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.core.definition.UninjectableTypeException;
 import hs.ddif.core.inject.store.CyclicDependencyException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.store.DuplicateQualifiedTypeException;
@@ -22,6 +23,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
@@ -97,7 +99,10 @@ public class ProducesAnnotationTest {
   void registerShouldRejectVoidProducesMethod() {
     assertThatThrownBy(() -> injector.register(BadFactory3.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [void hs.ddif.core.ProducesAnnotationTest$BadFactory3.create()] has no return type")
+      .hasMessage("Method [void hs.ddif.core.ProducesAnnotationTest$BadFactory3.create()] has unsuitable return type")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(UninjectableTypeException.class)
+      .hasMessage("[void] is not an injectable type")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));
@@ -107,7 +112,10 @@ public class ProducesAnnotationTest {
   void registerShouldRejectProducesMethodWithUnresolvedTypeVariables() {
     assertThatThrownBy(() -> injector.register(GenericProduces.class))  // GenericProduces has a Produces method with a type variable T which is not provided
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericProduces.create()] has unresolvable type variables")
+      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericProduces.create()] has unsuitable return type")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(UninjectableTypeException.class)
+      .hasMessage("[java.util.ArrayList<T>] has unresolvable type variables")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));
@@ -117,7 +125,10 @@ public class ProducesAnnotationTest {
   void registerShouldRejectClassWithUnresolvedTypeVariables() {
     assertThatThrownBy(() -> injector.register(GenericFactory1.class))  // GenericFactory1 has a type variable T which is not provided
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericFactory1.create()] has unresolvable type variables")
+      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericFactory1.create()] has unsuitable return type")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(UninjectableTypeException.class)
+      .hasMessage("[java.util.ArrayList<T>] has unresolvable type variables")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));

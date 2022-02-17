@@ -4,6 +4,7 @@ import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.ScopeAnnotations;
+import hs.ddif.core.definition.UninjectableTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -60,7 +61,7 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public Injectable create(TypeAnalysis<Type> analysis) throws BindingException {
+  public Injectable create(TypeAnalysis<Type> analysis) throws BindingException, UninjectableTypeException {
     Type type = analysis.getData();
     Class<?> cls = TypeUtils.getRawType(type, null);
     Constructor<?> constructor = BindingProvider.getConstructor(cls);

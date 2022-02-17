@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +54,10 @@ public class FieldInjectableFactoryTest {
   void createShouldRejectFieldWithUnresolvableTypeVariables() {
     assertThatThrownBy(() -> factory.create(B.class.getDeclaredField("d"), B.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Field [public java.util.List hs.ddif.core.definition.FieldInjectableFactoryTest$B.d] has unresolvable type variables")
+      .hasMessage("Field [public java.util.List hs.ddif.core.definition.FieldInjectableFactoryTest$B.d] has unsuitable type")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(UninjectableTypeException.class)
+      .hasMessage("[java.util.List<T>] has unresolvable type variables")
       .hasNoCause();
   }
 

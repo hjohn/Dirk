@@ -5,6 +5,7 @@ import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactory;
+import hs.ddif.core.definition.UninjectableTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -143,7 +144,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public Injectable create(TypeAnalysis<Context> analysis) throws BindingException {
+  public Injectable create(TypeAnalysis<Context> analysis) throws BindingException, UninjectableTypeException {
     Type type = analysis.getData().type;
     Injectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
 

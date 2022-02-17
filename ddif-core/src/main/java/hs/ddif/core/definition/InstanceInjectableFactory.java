@@ -37,13 +37,18 @@ public class InstanceInjectableFactory {
       throw new IllegalArgumentException("instance cannot be null");
     }
 
-    return factory.create(
-      instance.getClass(),
-      Set.of(qualifiers),
-      List.of(),
-      SINGLETON,
-      instance,
-      injections -> instance
-    );
+    try {
+      return factory.create(
+        instance.getClass(),
+        Set.of(qualifiers),
+        List.of(),
+        SINGLETON,
+        instance,
+        injections -> instance
+      );
+    }
+    catch(UninjectableTypeException e) {
+      throw new AssertionError(e);
+    }
   }
 }
