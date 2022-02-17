@@ -5,8 +5,6 @@ import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.TypeExtension;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.domain.MultipleInstances;
-import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Types;
 
@@ -37,7 +35,7 @@ public class SetTypeExtension<T> implements TypeExtension<Set<T>> {
       }
 
       @Override
-      public Set<T> getInstance(InstantiationContext context) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
+      public Set<T> getInstance(InstantiationContext context) throws InstanceCreationFailure {
         List<T> instances = context.createAll(elementKey);
 
         return instances.isEmpty() && optional ? null : new HashSet<>(instances);

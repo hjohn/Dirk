@@ -3,7 +3,6 @@ package hs.ddif.core.inject.store;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.store.Injectables;
 import hs.ddif.core.store.Key;
@@ -26,7 +25,7 @@ public class UnresolvableDependencyExceptionTest {
   private final BindingProvider bindingProvider = new BindingProvider();
 
   @Test
-  void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException, BindingException {
+  void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
     List<Binding> bindings = classInjectableFactory.create(A.class).getBindings();
     UnresolvableDependencyException e;
 

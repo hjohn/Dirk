@@ -248,7 +248,7 @@ public class AutoDiscoveringGathererTest {
       }
 
       @Test
-      void shouldRejectTypesThatCannotBeCreatedWithoutBindingDiscovery() throws Exception {
+      void shouldRejectTypesThatCannotBeCreatedWithoutBindingDiscovery() {
 
         /*
          * This is a complicated case. If auto discovery is on, the following happens:
