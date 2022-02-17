@@ -14,6 +14,7 @@ import hs.ddif.core.instantiation.injection.Injection;
 import hs.ddif.core.instantiation.injection.ObjectFactory;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Primitives;
+import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
@@ -121,16 +122,20 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
       return TypeAnalysis.positive(new Context(type, null));
     }
 
-    Class<?> factoryClass = TypeUtils.getRawType(type, null);
+    Class<?> factoryClass = Types.raw(type);
     Method factoryMethod = findFactoryMethod(factoryClass);
 
     if(factoryMethod == null) {
       return TypeAnalysis.negative("Type must have a single abstract method to qualify for assisted injection: %1$s");
     }
-    if(factoryMethod.getReturnType().isPrimitive()) {
+
+    Type returnType = TypeUtils.unrollVariables(TypeUtils.getTypeArguments(type, factoryMethod.getDeclaringClass()), factoryMethod.getGenericReturnType());
+    Class<?> returnClass = Types.raw(returnType);
+
+    if(returnClass.isPrimitive()) {
       return TypeAnalysis.negative("Factory method cannot return a primitive type: %2$s in: %1$s", factoryMethod);
     }
-    if(Modifier.isAbstract(factoryMethod.getReturnType().getModifiers())) {
+    if(Modifier.isAbstract(returnClass.getModifiers())) {
       return TypeAnalysis.negative("Factory method cannot return an abstract type: %2$s in: %1$s", factoryMethod);
     }
 
@@ -154,7 +159,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
 
     factoryInjectable = injectableFactory.create(
       implementedFactoryClass,
-      Annotations.findDirectlyMetaAnnotatedAnnotations(TypeUtils.getRawType(type, null), QUALIFIER),
+      Annotations.findDirectlyMetaAnnotatedAnnotations(Types.raw(type), QUALIFIER),
       factoryBindings,
       Annotations.of(Singleton.class),
       null,
