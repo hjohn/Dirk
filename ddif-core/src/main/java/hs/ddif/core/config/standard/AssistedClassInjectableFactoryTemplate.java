@@ -395,7 +395,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
 
       Type factoryArgumentType = Primitives.toBoxed(genericParameterTypes[i]);
 
-      if(!argumentBindings.get(name).getType().equals(factoryArgumentType)) {
+      if(!Types.raw(argumentBindings.get(name).getType()).equals(Types.raw(factoryArgumentType))) {
         throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
       }
 
