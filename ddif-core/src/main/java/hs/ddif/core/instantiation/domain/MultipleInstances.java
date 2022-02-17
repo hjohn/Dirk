@@ -3,7 +3,7 @@ package hs.ddif.core.instantiation.domain;
 import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.store.Key;
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * Thrown when multiple matching instances were available.
@@ -16,7 +16,7 @@ public class MultipleInstances extends InstanceResolutionFailure {
    * @param key a {@link Key}, cannot be {@code null}
    * @param injectables a set of injectables, cannot be {@code null}
    */
-  public MultipleInstances(Key key, Set<?> injectables) {
+  public MultipleInstances(Key key, Collection<?> injectables) {
     super("Multiple matching instances: " + key + ": " + injectables);
   }
 
