@@ -3,6 +3,7 @@ package hs.ddif.core.inject.store;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.Instantiator;
+import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
@@ -140,6 +141,7 @@ public class InjectableStore implements Resolver<Injectable> {
       });
 
       removeInstanceFactories(injectables);
+      removeScopedInstances(injectables);
     }
     catch(Exception e) {
       qualifiedTypeStore.putAll(injectables);
@@ -161,6 +163,14 @@ public class InjectableStore implements Resolver<Injectable> {
       for(Binding binding : injectable.getBindings()) {
         instantiatorBindingMap.removeBinding(binding);
       }
+    }
+  }
+
+  private void removeScopedInstances(Collection<Injectable> injectables) {
+    for(Injectable injectable : injectables) {
+      ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(injectable.getScope());
+
+      scopeResolver.remove(injectable);
     }
   }
 

@@ -43,10 +43,8 @@ public class PluginManagerTest {
 
   @BeforeEach
   public void beforeEach() {
-    PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
-
     injector = Injectors.autoDiscovering();
-    pluginManager = new PluginManager(injector.getCandidateRegistry(), pluginScopeResolver);
+    pluginManager = new PluginManager(injector.getCandidateRegistry());
 
     injector.register(BeanWithTextProviders.class);
   }

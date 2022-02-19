@@ -1,9 +1,10 @@
 package hs.ddif.test.beans;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.ddif.test.plugin.Database;
 
-@PluginScoped
+import javax.inject.Singleton;
+
+@Singleton
 public class TextDatabase implements Database {
 
   @Override

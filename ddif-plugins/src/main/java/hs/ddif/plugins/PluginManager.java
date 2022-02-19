@@ -8,15 +8,11 @@ import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
-import javax.inject.Singleton;
-
 import org.reflections.Reflections;
-import org.reflections.scanners.Scanners;
 
 /**
  * Manages {@link Plugin}s, registering them with a {@link CandidateRegistry} when
@@ -26,27 +22,19 @@ public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
 
   private final CandidateRegistry baseRegistry;  // the registry to add the plugin classes to, but also may contain required dependencies
-  private final PluginScopeResolver pluginScopeResolver;
 
   /**
    * Constructs a new instance. A {@link CandidateRegistry} must be provided where
-   * types part of a {@link Plugin} can be registered and unregistered. A {@link PluginScopeResolver}
-   * must be provided to support {@link hs.ddif.annotations.PluginScoped}, a scope which is specific
-   * to a plugin (unlike singleton which if defined in a plugin could interfere with other plugins).
+   * types part of a {@link Plugin} can be registered and unregistered.
    *
    * @param registry a {@link CandidateRegistry}, cannot be {@code null}
-   * @param pluginScopeResolver a {@link PluginScopeResolver}, cannot be {@code null}
    */
-  public PluginManager(CandidateRegistry registry, PluginScopeResolver pluginScopeResolver) {
+  public PluginManager(CandidateRegistry registry) {
     if(registry == null) {
       throw new IllegalArgumentException("registry cannot be null");
     }
-    if(pluginScopeResolver == null) {
-      throw new IllegalArgumentException("pluginScopeResolver cannot be null");
-    }
 
     this.baseRegistry = registry;
-    this.pluginScopeResolver = pluginScopeResolver;
   }
 
   /**
@@ -88,7 +76,6 @@ public class PluginManager {
    */
   public void unload(Plugin plugin) {
     baseRegistry.remove(plugin.getTypes());  // may fail
-    pluginScopeResolver.unregister(plugin);  // can't fail, so should be done after baseRegistry#remove
     plugin.destroy();  // can't fail
   }
 
@@ -136,7 +123,6 @@ public class PluginManager {
     Plugin plugin = new Plugin(name, types, classLoader);
 
     baseRegistry.register(plugin.getTypes());
-    pluginScopeResolver.register(plugin);
 
     return plugin;
   }
@@ -175,12 +161,6 @@ public class PluginManager {
     }
 
     Plugin loadPlugin(String pluginName) {
-      Collection<String> classes = reflections.get(Scanners.TypesAnnotated.with(Singleton.class));
-
-      if(!classes.isEmpty()) {
-        throw new IllegalStateException("Plugins should not use @javax.inject.Singleton annotation as this makes it impossible to unload them.  Use @WeakSingleton instead; detected in: " + classes);
-      }
-
       List<Type> types = ComponentScanner.findComponentTypes(reflections, classLoader);
 
       LOGGER.fine("Registering types: " + types);

@@ -1,8 +1,6 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.QualifiedType;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
@@ -32,14 +30,12 @@ public class ScopeResolverManager {
   }
 
   /**
-   * Return the {@link ScopeResolver} for the given {@link Injectable}.
+   * Return the {@link ScopeResolver} for the given scope {@link Annotation}.
    *
-   * @param injectable an {@link Injectable}, cannot be {@code null}
+   * @param scope a scope {@link Annotation}, cannot be {@code null}
    * @return a {@link ScopeResolver}, never {@code null}
    */
-  public ScopeResolver getScopeResolver(Injectable injectable) {
-    Annotation scope = injectable.getScope();
-
+  public ScopeResolver getScopeResolver(Annotation scope) {
     return scopeResolversByAnnotation.getOrDefault(scope == null ? null : scope.annotationType(), NULL_SCOPE_RESOLVER);
   }
 
@@ -60,13 +56,18 @@ public class ScopeResolverManager {
     }
 
     @Override
-    public boolean isScopeActive(QualifiedType qualifiedType) {
+    public boolean isScopeActive() {
       return true;
     }
 
     @Override
-    public <T> T get(QualifiedType qualifiedType, Callable<T> objectFactory) throws Exception {
+    public <T> T get(Object key, Callable<T> objectFactory) throws Exception {
       return objectFactory.call();
+    }
+
+    @Override
+    public void remove(Object object) {
+      // does nothing
     }
   }
 }
