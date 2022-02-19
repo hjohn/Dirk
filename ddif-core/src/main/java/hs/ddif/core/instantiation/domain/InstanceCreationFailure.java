@@ -37,7 +37,7 @@ public class InstanceCreationFailure extends InstanceResolutionFailure {
    * @param cause a {@link Throwable} to use as cause
    */
   public InstanceCreationFailure(Key key, String message, Throwable cause) {
-    super(key + " " + message, cause);
+    super("[" + key + "] " + message, cause);
   }
 
   /**

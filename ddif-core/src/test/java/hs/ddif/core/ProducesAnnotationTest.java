@@ -7,7 +7,7 @@ import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.UninjectableTypeException;
 import hs.ddif.core.inject.store.CyclicDependencyException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
-import hs.ddif.core.store.DuplicateQualifiedTypeException;
+import hs.ddif.core.store.DuplicateKeyException;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
@@ -49,7 +49,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectFactoryWithUnresolvableProducerDependencies() {
     UnresolvableDependencyException e = assertThrows(UnresolvableDependencyException.class, () -> injector.register(SimpleFactory1.class));
 
-    assertThat(e).hasMessageStartingWith("Missing dependency [class java.lang.Integer] required for Parameter 0 of [");
+    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Integer] required for Parameter 0 of [");
     assertFalse(injector.contains(Object.class));
   }
 
@@ -57,7 +57,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectFactoryWithUnresolvableDependencies() {
     UnresolvableDependencyException e = assertThrows(UnresolvableDependencyException.class, () -> injector.register(SimpleFactory2.class));
 
-    assertThat(e).hasMessageStartingWith("Missing dependency [class java.lang.Integer] required for Field [");
+    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Integer] required for Field [");
     assertFalse(injector.contains(Object.class));
   }
 
@@ -139,7 +139,7 @@ public class ProducesAnnotationTest {
     injector.register(StringMethodFactory.class);
     injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class));
 
-    assertThrows(DuplicateQualifiedTypeException.class, () -> injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class)));
+    assertThrows(DuplicateKeyException.class, () -> injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class)));
 
     List<String> x1 = injector.getInstance(new TypeReference<ArrayList<String>>() {}.getType());
     List<Long> y1 = injector.getInstance(new TypeReference<ArrayList<Long>>() {}.getType());
@@ -254,7 +254,7 @@ public class ProducesAnnotationTest {
   public void shouldNotRegisterClassWhichDependsOnUnregisteredClass() {
     assertThatThrownBy(() -> injector.register(StaticFieldBasedPhoneProducer.class))
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessage("Missing dependency [class hs.ddif.core.ProducesAnnotationTest$Thing3] required for Field [hs.ddif.core.ProducesAnnotationTest$Thing3 hs.ddif.core.ProducesAnnotationTest$StaticFieldBasedPhoneProducer.thing]")
+      .hasMessage("Missing dependency [hs.ddif.core.ProducesAnnotationTest$Thing3] required for Field [hs.ddif.core.ProducesAnnotationTest$Thing3 hs.ddif.core.ProducesAnnotationTest$StaticFieldBasedPhoneProducer.thing]")
       .hasNoCause();
     assertFalse(injector.contains(Object.class));
   }
@@ -318,7 +318,7 @@ public class ProducesAnnotationTest {
 
     @Test
     void registeringAFactoryTwiceShouldThrowException() {
-      assertThrows(DuplicateQualifiedTypeException.class, new Executable() {
+      assertThrows(DuplicateKeyException.class, new Executable() {
         @Override
         public void execute() {
           injector.register(UnscopedFactory.class);

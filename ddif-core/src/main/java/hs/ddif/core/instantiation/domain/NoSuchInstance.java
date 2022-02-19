@@ -14,7 +14,7 @@ public class NoSuchInstance extends InstanceResolutionFailure {
    * @param key a {@link Key}, cannot be {@code null}
    */
   public NoSuchInstance(Key key) {
-    super("No such instance: " + key);
+    super("No such instance: [" + key + "]");
   }
 
   @Override

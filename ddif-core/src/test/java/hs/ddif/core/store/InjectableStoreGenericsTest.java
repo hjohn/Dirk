@@ -34,7 +34,7 @@ public class InjectableStoreGenericsTest {
 
   @Before
   public void before() {
-    this.store = new QualifiedTypeStore<>();
+    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
   }
 
   /**

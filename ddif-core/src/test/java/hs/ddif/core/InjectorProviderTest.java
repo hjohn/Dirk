@@ -6,7 +6,7 @@ import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
-import hs.ddif.core.store.DuplicateQualifiedTypeException;
+import hs.ddif.core.store.DuplicateKeyException;
 import hs.ddif.core.test.injectables.BeanWithOptionalProvider;
 import hs.ddif.core.test.injectables.BeanWithProvider;
 import hs.ddif.core.test.injectables.SimpleBean;
@@ -63,7 +63,7 @@ public class InjectorProviderTest {
   public void providersShouldBreakCircularDependenciesOnly() {  // Required Providers cannot be used to delay registration of the provisioned class.
     assertThatThrownBy(() -> injector.register(BeanWithProvider.class))
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessage("Missing dependency [class hs.ddif.core.test.injectables.SimpleBean] required for Field [private javax.inject.Provider<hs.ddif.core.test.injectables.SimpleBean> hs.ddif.core.test.injectables.BeanWithProvider.simpleBeanProvider]")
+      .hasMessage("Missing dependency [hs.ddif.core.test.injectables.SimpleBean] required for Field [private javax.inject.Provider<hs.ddif.core.test.injectables.SimpleBean> hs.ddif.core.test.injectables.BeanWithProvider.simpleBeanProvider]")
       .hasNoCause();
 
     injector.register(SimpleBean.class);
@@ -126,15 +126,15 @@ public class InjectorProviderTest {
       injector.register(BeanWithDatabase.class);
 
       assertThatThrownBy(() -> injector.register(SimpleDatabaseProvider.class))
-        .isExactlyInstanceOf(DuplicateQualifiedTypeException.class)
-        .hasMessage("Duplicate qualified type: Injectable[hs.ddif.core.InjectorProviderTest$Database <- public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider.get()]")
+        .isExactlyInstanceOf(DuplicateKeyException.class)
+        .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] is already present")
         .hasNoCause();
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
 
       assertThatThrownBy(() -> injector.removeInstance(provider))
         .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-        .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] is only provided by: class hs.ddif.core.InjectorProviderTest$Database")
+        .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] is only provided by: class hs.ddif.core.InjectorProviderTest$Database")
         .hasNoCause();
 
       injector.remove(BeanWithDatabase.class);
@@ -142,10 +142,10 @@ public class InjectorProviderTest {
 
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
+        .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
+        .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
   }
@@ -159,7 +159,7 @@ public class InjectorProviderTest {
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
       assertThatThrownBy(() -> injector.remove(SimpleDatabaseProvider.class))
         .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-        .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] is only provided by: class hs.ddif.core.InjectorProviderTest$Database")
+        .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] is only provided by: class hs.ddif.core.InjectorProviderTest$Database")
         .hasNoCause();
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
@@ -169,10 +169,10 @@ public class InjectorProviderTest {
 
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
+        .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
+        .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
   }
@@ -231,15 +231,15 @@ public class InjectorProviderTest {
 
     assertThatThrownBy(() -> injector.register(SimpleDatabaseProvider.class))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
       .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
+      .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(NoSuchInstance.class)
-      .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
+      .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
       .hasNoCause();
   }
 
@@ -250,7 +250,7 @@ public class InjectorProviderTest {
 
     assertThatThrownBy(() -> injector.registerInstance(new Database("jdbc:localhost")))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
       .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
       .hasNoCause();
   }
 
@@ -261,15 +261,15 @@ public class InjectorProviderTest {
 
     assertThatThrownBy(() -> injector.registerInstance(new SimpleDatabaseProvider()))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
       .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
+      .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(NoSuchInstance.class)
-      .hasMessage("No such instance: [class hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
+      .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$SimpleDatabaseProvider]")
       .hasNoCause();
   }
 
@@ -280,7 +280,7 @@ public class InjectorProviderTest {
 
     assertThatThrownBy(() -> injector.registerInstance(new Database("jdbc:localhost")))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
       .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[class hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
       .hasNoCause();
   }
 

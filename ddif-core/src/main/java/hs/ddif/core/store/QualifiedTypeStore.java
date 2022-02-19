@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Provider;
@@ -24,22 +25,31 @@ import javax.inject.Provider;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
- * Store which keeps track of {@link QualifiedType}s.
+ * Store which keeps track of types {@code T} for which a {@link Key} can be extracted.
  *
- * <p>The store can be searched for {@link QualifiedType}s matching a {@link Key}. For
- * a {@link QualifiedType} to match it must be of the same type or a subtype of the
+ * <p>The store can be searched for all types {@code T} matching a {@link Key}. For
+ * a type {@code T} to match it must be of the same type or a subtype of the
  * type in the key, and it must have all the qualifiers specified by the key.
  *
- * @param <T> the type of {@link QualifiedType}s this store holds
+ * @param <T> the type this store holds
  */
-public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> {
+public class QualifiedTypeStore<T> implements Resolver<T> {
   private final Comparator<Set<T>> comparatorConst = Comparator.comparingInt(Set::size);
 
   /**
-   * Map containing qualifier annotation mappings to sets of {@link QualifiedType}s which match one specific
+   * Map containing qualifier annotation mappings to sets of type {@code T}s which match one specific
    * type or qualifier class.
    */
   private final Map<Class<?>, Map<Annotation, Set<T>>> qualifiedTypesByQualifierByType = new HashMap<>();
+
+  /**
+   * Function which extract a {@link Key} from the type T.
+   */
+  private final Function<T, Key> keyExtractor;
+
+  public QualifiedTypeStore(Function<T, Key> keyExtractor) {
+    this.keyExtractor = keyExtractor;
+  }
 
   @Override
   public synchronized Set<T> resolve(Key key) {
@@ -141,10 +151,10 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
   }
 
   /**
-   * Checks if there is a {@link QualifiedType} associated with the given {@link Key} in the store.
+   * Checks if there is a type {@code T} associated with the given {@link Key} in the store.
    *
    * @param key the {@link Key}, cannot be {@code null}
-   * @return {@code true} if there was a {@link QualifiedType} associated with the given {@link Key},
+   * @return {@code true} if there was a type {@code T} associated with the given {@link Key},
    *   otherwise {@code false}
    */
   public synchronized boolean contains(Key key) {
@@ -152,28 +162,28 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
   }
 
   /**
-   * Adds a {@link QualifiedType} to the store.
+   * Adds a type {@code T} to the store.
    *
-   * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
+   * @param qualifiedType a type {@code T}, cannot be {@code null}
    */
   public synchronized void put(T qualifiedType) {
     putAll(List.of(qualifiedType));
   }
 
   /**
-   * Removes a {@link QualifiedType} from the store.
+   * Removes a type {@code T} from the store.
    *
-   * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
+   * @param qualifiedType a type {@code T}, cannot be {@code null}
    */
   public synchronized void remove(T qualifiedType) {
     removeAll(List.of(qualifiedType));
   }
 
   /**
-   * Adds multiple {@link QualifiedType}s to the store. If this method throws an exception then
+   * Adds multiple type {@code T}s to the store. If this method throws an exception then
    * the store will be unmodified.
    *
-   * @param qualifiedTypes a collection of {@link QualifiedType}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param qualifiedTypes a collection of type {@code T}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
   public synchronized void putAll(Collection<T> qualifiedTypes) {
     for(T qualifiedType : qualifiedTypes) {
@@ -209,20 +219,21 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
   }
 
   /**
-   * Removes multiple {@link QualifiedType}s from the store. If this method throws an exception then
+   * Removes multiple type {@code T}s from the store. If this method throws an exception then
    * the store will be unmodified.
    *
-   * @param qualifiedTypes a collection of {@link QualifiedType}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param qualifiedTypes a collection of type {@code T}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
   public synchronized void removeAll(Collection<T> qualifiedTypes) {
     // First check the qualified types for fatal issues, exception does not need to be caught:
     for(T qualifiedType : qualifiedTypes) {
       ensureQualifiedTypeIsValid(qualifiedType);
 
-      Map<Annotation, Set<T>> existingQualifiedTypes = qualifiedTypesByQualifierByType.get(TypeUtils.getRawType(qualifiedType.getType(), null));
+      Key key = keyExtractor.apply(qualifiedType);
+      Map<Annotation, Set<T>> existingQualifiedTypes = qualifiedTypesByQualifierByType.get(Types.raw(key.getType()));
 
       if(existingQualifiedTypes == null || !existingQualifiedTypes.get(null).contains(qualifiedType)) {
-        throw new NoSuchQualifiedTypeException(qualifiedType);
+        throw new NoSuchKeyException(key);
       }
     }
 
@@ -233,9 +244,9 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
   }
 
   /**
-   * Returns a set with a copy of all {@link QualifiedType}s that are part of this store.
+   * Returns a set with a copy of all type {@code T}s that are part of this store.
    *
-   * @return a set with a copy of all {@link QualifiedType}s that are part of this store, never {@code null}
+   * @return a set with a copy of all type {@code T}s that are part of this store, never {@code null}
    *   or contains {@code null}s but can be empty
    */
   public synchronized Set<T> toSet() {
@@ -250,11 +261,13 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
 
   private void putInternal(T qualifiedType) {
     try {
-      for(Class<?> type : Types.getSuperTypes(TypeUtils.getRawType(qualifiedType.getType(), null))) {
+      Key key = keyExtractor.apply(qualifiedType);
+
+      for(Class<?> type : Types.getSuperTypes(TypeUtils.getRawType(key.getType(), null))) {
         if(type != Provider.class) {
           register(type, null, qualifiedType);
 
-          for(Annotation qualifier : qualifiedType.getQualifiers()) {
+          for(Annotation qualifier : key.getQualifiers()) {
             register(type, qualifier, qualifiedType);
           }
         }
@@ -267,11 +280,13 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
 
   private void removeInternal(T qualifiedType) {
     try {
-      for(Class<?> type : Types.getSuperTypes(TypeUtils.getRawType(qualifiedType.getType(), null))) {
+      Key key = keyExtractor.apply(qualifiedType);
+
+      for(Class<?> type : Types.getSuperTypes(TypeUtils.getRawType(key.getType(), null))) {
         if(type != Provider.class) {
           unregister(type, null, qualifiedType);
 
-          for(Annotation qualifier : qualifiedType.getQualifiers()) {
+          for(Annotation qualifier : key.getQualifiers()) {
             unregister(type, qualifier, qualifiedType);
           }
         }
@@ -292,7 +307,7 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
     Map<Annotation, Set<T>> qualifiedTypesByQualifier = qualifiedTypesByQualifierByType.get(Object.class);
 
     if(qualifiedTypesByQualifier != null && qualifiedTypesByQualifier.get(null).contains(qualifiedType)) {
-      throw new DuplicateQualifiedTypeException(qualifiedType);
+      throw new DuplicateKeyException(keyExtractor.apply(qualifiedType));
     }
   }
 
@@ -329,7 +344,7 @@ public class QualifiedTypeStore<T extends QualifiedType> implements Resolver<T> 
       for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
         T qualifiedType = iterator.next();
 
-        if(!TypeUtils.isAssignable(qualifiedType.getType(), type)) {
+        if(!TypeUtils.isAssignable(keyExtractor.apply(qualifiedType).getType(), type)) {
           iterator.remove();
         }
       }

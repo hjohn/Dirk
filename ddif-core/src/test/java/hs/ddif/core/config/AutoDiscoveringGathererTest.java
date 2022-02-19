@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class AutoDiscoveringGathererTest {
   private final BindingProvider bindingProvider = new BindingProvider();
-  private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>();
+  private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
   private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
   private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
@@ -168,10 +168,10 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectWhenDiscoveredTypeMissesRequiredQualifiers() {
         assertThatThrownBy(() -> gatherer.gather(store, new Key(A.class, Set.of(Annotations.of(Red.class)))))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$A]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$A]")
+          .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$A]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$A]")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.AutoDiscoveringGathererTest$A]")
+          .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.AutoDiscoveringGathererTest$A]")
           .hasNoCause();
       }
 
@@ -179,7 +179,7 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeThatIsAbstract() {
         assertThatThrownBy(() -> gatherer.gather(store, new Key(I.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Path [interface hs.ddif.core.config.AutoDiscoveringGathererTest$I]: [interface hs.ddif.core.config.AutoDiscoveringGathererTest$I] cannot be injected; failures:\n"
+          .hasMessage("Path [hs.ddif.core.config.AutoDiscoveringGathererTest$I]: [interface hs.ddif.core.config.AutoDiscoveringGathererTest$I] cannot be injected; failures:\n"
             + " - Type cannot be abstract: interface hs.ddif.core.config.AutoDiscoveringGathererTest$I"
           )
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -227,7 +227,7 @@ public class AutoDiscoveringGathererTest {
       void shouldRejectTypeWhichCanBeDerivedOrConstructedInMultipleWays() {
         assertThatThrownBy(() -> gatherer.gather(store, new Key(Bad_H.class)))
           .isExactlyInstanceOf(DiscoveryFailure.class)
-          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_H]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_H] creation is ambiguous, there are multiple ways to create it")
+          .hasMessage("Path [hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_H]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_H] creation is ambiguous, there are multiple ways to create it")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(DefinitionException.class)
           .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$Bad_H] creation is ambiguous, there are multiple ways to create it")
@@ -268,8 +268,8 @@ public class AutoDiscoveringGathererTest {
 
         assertThatThrownBy(() -> gatherer.gather(store, List.of(X.class, Y.class, Z.class)))
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$X]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$X] cannot be injected")
-          .hasSuppressedException(new DefinitionException("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$Z]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Z] cannot be injected", null))
+          .hasMessage("Path [hs.ddif.core.config.AutoDiscoveringGathererTest$X]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$X] cannot be injected")
+          .hasSuppressedException(new DefinitionException("Path [hs.ddif.core.config.AutoDiscoveringGathererTest$Z]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$Z] cannot be injected", null))
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(DefinitionException.class)
           .hasMessage("[class hs.ddif.core.config.AutoDiscoveringGathererTest$X] cannot be injected")
@@ -280,7 +280,7 @@ public class AutoDiscoveringGathererTest {
 
         assertThatThrownBy(() -> gatherer.gather(store, List.of(X.class, Y.class)))
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Path [class hs.ddif.core.config.AutoDiscoveringGathererTest$X]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$X] cannot be injected")
+          .hasMessage("Path [hs.ddif.core.config.AutoDiscoveringGathererTest$X]: [class hs.ddif.core.config.AutoDiscoveringGathererTest$X] cannot be injected")
           .hasNoSuppressedExceptions()
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(DefinitionException.class)

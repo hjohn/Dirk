@@ -35,7 +35,7 @@ public class UnresolvableDependencyExceptionTest {
       Collections.emptySet()
     );
 
-    assertThat(e).hasMessageStartingWith("Missing dependency [class java.lang.Integer] required for Parameter 1 of [");
+    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Integer] required for Parameter 1 of [");
 
     e = new UnresolvableDependencyException(
       new Key(Double.class, Set.of(Annotations.of(Red.class))),
@@ -44,7 +44,7 @@ public class UnresolvableDependencyExceptionTest {
     );
 
     assertThat(e)
-      .hasMessageStartingWith("Multiple candidates for dependency [@hs.ddif.core.test.qualifiers.Red() class java.lang.Double] required for Field [")
+      .hasMessageStartingWith("Multiple candidates for dependency [@hs.ddif.core.test.qualifiers.Red() java.lang.Double] required for Field [")
       .hasMessageEndingWith(": [Injectable(String.class), Injectable(String.class)]");
 
     e = new UnresolvableDependencyException(
@@ -53,7 +53,7 @@ public class UnresolvableDependencyExceptionTest {
       Collections.emptySet()
     );
 
-    assertThat(e).hasMessageStartingWith("Missing dependency [class java.lang.Long] required for Parameter 0 of [");
+    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Long] required for Parameter 0 of [");
   }
 
   static class A {

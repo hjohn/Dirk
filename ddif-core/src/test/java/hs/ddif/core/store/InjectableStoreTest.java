@@ -53,7 +53,7 @@ public class InjectableStoreTest {
 
   @Before
   public void before() {
-    this.store = new QualifiedTypeStore<>();
+    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
   }
 
   @Test
@@ -74,7 +74,7 @@ public class InjectableStoreTest {
     assertThat(store.resolve(new Key(Y.class))).isNotNull();
     assertThat(store.resolve(new Key(X.class))).isNotNull();
 
-    assertThrows(NoSuchQualifiedTypeException.class, () -> store.remove(classInjectableFactory.create(X.class)));
+    assertThrows(NoSuchKeyException.class, () -> store.remove(classInjectableFactory.create(X.class)));
   }
 
   @Test
@@ -94,12 +94,22 @@ public class InjectableStoreTest {
   }
 
   @Test
+  public void shouldStoreMultipleOfSameType() {
+    store.put(instanceInjectableFactory.create("a"));
+    store.put(instanceInjectableFactory.create("b"));
+    store.put(instanceInjectableFactory.create("c"));
+    store.put(instanceInjectableFactory.create("d"));
+
+    assertThat(store.resolve(new Key(String.class))).hasSize(4);
+  }
+
+  @Test
   public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() {
     store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a")));
 
     assertThatThrownBy(() -> store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a"))))
-      .isExactlyInstanceOf(DuplicateQualifiedTypeException.class)
-      .hasMessage("Duplicate qualified type: Injectable[@javax.inject.Named(value=parameter-a) java.lang.String]")
+      .isExactlyInstanceOf(DuplicateKeyException.class)
+      .hasMessage("[@javax.inject.Named(value=parameter-a) java.lang.String] is already present")
       .hasNoCause();
   }
 
@@ -211,7 +221,7 @@ public class InjectableStoreTest {
       store.put(classInjectableFactory.create(A.class));
       fail();
     }
-    catch(DuplicateQualifiedTypeException e) {
+    catch(DuplicateKeyException e) {
       // expected, check if store is intact:
       assertTrue(store.contains(new Key(A.class)));
       assertEquals(1, store.resolve(new Key(A.class)).size());
@@ -224,7 +234,7 @@ public class InjectableStoreTest {
       store.putAll(List.of(classInjectableFactory.create(A.class), classInjectableFactory.create(A.class)));
       fail();
     }
-    catch(DuplicateQualifiedTypeException e) {
+    catch(DuplicateKeyException e) {
       // expected, check if store is intact:
       assertFalse(store.contains(new Key(A.class)));
     }
@@ -237,7 +247,7 @@ public class InjectableStoreTest {
       store.putAll(List.of(classInjectableFactory.create(B.class), classInjectableFactory.create(A.class)));
       fail();
     }
-    catch(DuplicateQualifiedTypeException e) {
+    catch(DuplicateKeyException e) {
       // expected, check if store is intact:
       assertTrue(store.contains(new Key(A.class)));
       assertFalse(store.contains(new Key(B.class)));

@@ -204,10 +204,10 @@ public class DefaultInstanceResolverTest {
     void getInstanceShouldRejectNullInstancesFromProducers() {
       assertThatThrownBy(() -> instanceResolver.getInstance(I.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .hasMessage("No such instance: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$I]")
+        .hasMessage("No such instance: [hs.ddif.core.config.standard.DefaultInstanceResolverTest$I]")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$I]")
+        .hasMessage("No such instance: [hs.ddif.core.config.standard.DefaultInstanceResolverTest$I]")
         .hasNoCause();
     }
 
@@ -246,10 +246,10 @@ public class DefaultInstanceResolverTest {
     void getInstanceShouldNotDiscoverTypesWithQualifiers() {
       assertThatThrownBy(() -> instanceResolver.getInstance(A.class, Red.class))
         .isExactlyInstanceOf(InstanceCreationException.class)
-        .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
+        .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(DefinitionException.class)
-        .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
+        .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
         .hasNoCause();
     }
 
@@ -257,7 +257,7 @@ public class DefaultInstanceResolverTest {
     void getInstanceShouldThrowExceptionWhenDiscoveryFails() {
       assertThatThrownBy(() -> instanceResolver.getInstance(J.class))
         .isExactlyInstanceOf(InstanceCreationException.class)
-        .hasMessage("Path [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be injected; failures:\n"
+        .hasMessage("Path [hs.ddif.core.config.standard.DefaultInstanceResolverTest$J]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be injected; failures:\n"
           + " - Type cannot be abstract: class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J"
         )
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)

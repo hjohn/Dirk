@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Qualifier;
 
@@ -61,24 +62,7 @@ public class Key implements QualifiedType {
 
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder();
-
-    builder.append("[");
-
-    for(Annotation qualifier : qualifiers) {
-      if(builder.length() > 1) {
-        builder.append(" ");
-      }
-      builder.append(qualifier);
-    }
-
-    if(builder.length() > 1) {
-      builder.append(" ");
-    }
-    builder.append(type);
-    builder.append("]");
-
-    return builder.toString();
+    return (qualifiers.isEmpty() ? "" : qualifiers.stream().map(Object::toString).sorted().collect(Collectors.joining(" ")) + " ") + type.getTypeName();
   }
 
   @Override
