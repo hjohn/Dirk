@@ -50,7 +50,7 @@ public class InjectableStore implements Resolver<Injectable> {
   /**
    * Underlying store to which calls are delegated.
    */
-  private final QualifiedTypeStore<Injectable> qualifiedTypeStore = new QualifiedTypeStore<>();
+  private final QualifiedTypeStore<Injectable> qualifiedTypeStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
 
   /**
    * Constructs a new instance.

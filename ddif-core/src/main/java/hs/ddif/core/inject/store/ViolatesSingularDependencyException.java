@@ -24,6 +24,6 @@ public class ViolatesSingularDependencyException extends InjectorStoreConsistenc
    */
   public ViolatesSingularDependencyException(Type type, Key key, boolean isRegistration) {
     // TODO would be great if the message could show which injectables use this singular dependency.
-    super(key + " " + (isRegistration ? "would be provided again" : "is only provided") + " by: " + type);
+    super("[" + key + "] " + (isRegistration ? "would be provided again" : "is only provided") + " by: " + type);
   }
 }

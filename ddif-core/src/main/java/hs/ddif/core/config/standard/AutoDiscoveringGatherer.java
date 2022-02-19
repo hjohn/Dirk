@@ -91,7 +91,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
   }
 
   class Executor<T extends Exception> {
-    private final QualifiedTypeStore<Injectable> tempStore = new QualifiedTypeStore<>();
+    private final QualifiedTypeStore<Injectable> tempStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
     private final IncludingResolver includingResolver;
 
     /**
@@ -134,10 +134,10 @@ public class AutoDiscoveringGatherer implements Gatherer {
 
     private String toChain(Key key) {
       if(via.containsKey(key)) {
-        return toChain(via.get(key)) + " -> " + key;
+        return toChain(via.get(key)) + " -> [" + key + "]";
       }
 
-      return "Path " + key.toString();
+      return "Path [" + key + "]";
     }
 
     private Set<Injectable> gather() throws T {
@@ -286,7 +286,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
       Injectable injectable = classInjectableFactory.create(type);
 
       if(!injectable.getQualifiers().containsAll(key.getQualifiers())) {
-        throw new DefinitionException(Types.raw(type), "found during auto discovery is missing qualifiers required by: " + key);
+        throw new DefinitionException(Types.raw(type), "found during auto discovery is missing qualifiers required by: [" + key + "]");
       }
 
       return injectable;

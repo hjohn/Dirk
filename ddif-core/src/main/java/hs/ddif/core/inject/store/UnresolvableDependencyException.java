@@ -31,7 +31,7 @@ public class UnresolvableDependencyException extends InjectorStoreConsistencyExc
 
   private static String formatMessage(Key key, Binding binding, Set<? extends Injectable> candidates) {
     return (candidates.isEmpty() ? "Missing" : "Multiple candidates for")
-      + " dependency " + key
+      + " dependency [" + key + "]"
       + " required for " + binding
       + (candidates.isEmpty() ? "" : ": " + candidates);
   }

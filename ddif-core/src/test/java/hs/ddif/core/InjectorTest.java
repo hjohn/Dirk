@@ -9,8 +9,8 @@ import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
-import hs.ddif.core.store.DuplicateQualifiedTypeException;
-import hs.ddif.core.store.NoSuchQualifiedTypeException;
+import hs.ddif.core.store.DuplicateKeyException;
+import hs.ddif.core.store.NoSuchKeyException;
 import hs.ddif.core.test.injectables.AbstractBean;
 import hs.ddif.core.test.injectables.BeanWithBigInjection;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
@@ -203,7 +203,7 @@ public class InjectorTest {
     // adding another string would mean the optional string injection point would become ambiguous
     assertThatThrownBy(() -> injector.registerInstance("another-string"))
       .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[class java.lang.String] would be provided again by: class java.lang.String")
+      .hasMessage("[java.lang.String] would be provided again by: class java.lang.String")
       .hasNoCause();
 
     injector.removeInstance("new");
@@ -303,7 +303,7 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenRemovingInterface() {
     assertThatThrownBy(() -> injector.remove(SimpleInterface.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [interface hs.ddif.core.test.injectables.SimpleInterface]: [interface hs.ddif.core.test.injectables.SimpleInterface] cannot be injected; failures:\n"
+      .hasMessage("Path [hs.ddif.core.test.injectables.SimpleInterface]: [interface hs.ddif.core.test.injectables.SimpleInterface] cannot be injected; failures:\n"
         + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.test.injectables.SimpleInterface\n"
         + " - Type cannot be abstract: interface hs.ddif.core.test.injectables.SimpleInterface"
       )
@@ -318,7 +318,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingUnregisteredBean() {
-    assertThrows(NoSuchQualifiedTypeException.class, () -> injector.remove(Exception.class));
+    assertThrows(NoSuchKeyException.class, () -> injector.remove(Exception.class));
   }
 
   @Test
@@ -379,7 +379,7 @@ public class InjectorTest {
     injector.register(String.class);
 
     assertThatThrownBy(() -> injector.register(String.class))
-      .isExactlyInstanceOf(DuplicateQualifiedTypeException.class)
+      .isExactlyInstanceOf(DuplicateKeyException.class)
       .hasNoCause();
   }
 
@@ -387,7 +387,7 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenRegisteringInterface() {
     assertThatThrownBy(() -> injector.register(List.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [interface java.util.List]: [interface java.util.List] cannot have unresolvable type variables: [E]")
+      .hasMessage("Path [java.util.List]: [interface java.util.List] cannot have unresolvable type variables: [E]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[interface java.util.List] cannot have unresolvable type variables: [E]")
@@ -568,7 +568,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingUnregisteredSuperClass() {
-    assertThrows(NoSuchQualifiedTypeException.class, () -> injector.remove(UnregisteredParentBean.class));
+    assertThrows(NoSuchKeyException.class, () -> injector.remove(UnregisteredParentBean.class));
   }
 
   /*
@@ -579,7 +579,7 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenFinalFieldAnnotatedWithInject() throws SecurityException {
     assertThatThrownBy(() -> injector.register(FieldInjectionSampleWithAnnotatedFinalField.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField]: [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be injected")
+      .hasMessage("Path [hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField]: [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be injected")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be injected")
@@ -607,7 +607,7 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenMultipleConstructorsAnnotatedWithInject() {
     assertThatThrownBy(() -> injector.register(ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors]: [class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot be injected")
+      .hasMessage("Path [hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors]: [class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot be injected")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot be injected")
@@ -665,7 +665,7 @@ public class InjectorTest {
       }
     });
 
-    assertThrows(NoSuchQualifiedTypeException.class, () -> injector.removeInstance(new Provider<String>() {
+    assertThrows(NoSuchKeyException.class, () -> injector.removeInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
@@ -682,7 +682,7 @@ public class InjectorTest {
       }
     });
 
-    assertThrows(NoSuchQualifiedTypeException.class, () -> injector.remove(String.class));
+    assertThrows(NoSuchKeyException.class, () -> injector.remove(String.class));
   }
 
   @Test

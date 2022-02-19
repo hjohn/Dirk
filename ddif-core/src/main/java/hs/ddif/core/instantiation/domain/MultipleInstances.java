@@ -17,7 +17,7 @@ public class MultipleInstances extends InstanceResolutionFailure {
    * @param injectables a set of injectables, cannot be {@code null}
    */
   public MultipleInstances(Key key, Collection<?> injectables) {
-    super("Multiple matching instances: " + key + ": " + injectables);
+    super("Multiple matching instances: [" + key + "]: " + injectables);
   }
 
   @Override

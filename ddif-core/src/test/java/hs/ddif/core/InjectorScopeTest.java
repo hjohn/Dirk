@@ -166,7 +166,7 @@ public class InjectorScopeTest {
 
       assertThatThrownBy(() -> injector.register(IllegalMultiScopedBean.class))
         .isExactlyInstanceOf(DefinitionException.class)
-        .hasMessage("Path [class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean]: [class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@javax.inject.Singleton(), @hs.ddif.core.test.scope.TestScope()]")
+        .hasMessage("Path [hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean]: [class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@javax.inject.Singleton(), @hs.ddif.core.test.scope.TestScope()]")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(DefinitionException.class)
         .hasMessage("[class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@javax.inject.Singleton(), @hs.ddif.core.test.scope.TestScope()]")

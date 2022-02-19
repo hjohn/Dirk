@@ -47,10 +47,10 @@ public class InjectorDiscoveryTest {
   public void shouldNotDiscoverNewTypeWithoutAnyConstructorMatch() {
     assertThatThrownBy(() -> injector.getInstance(SampleWithDependencyOnSampleWithoutConstructorMatch.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch] instantiation failed because auto discovery was unable to resolve all dependencies; found: [Injectable[hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch]]")
+      .hasMessage("[hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch] instantiation failed because auto discovery was unable to resolve all dependencies; found: [Injectable[hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch]]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessage("Missing dependency [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] required for Field [public hs.ddif.core.test.injectables.SampleWithoutConstructorMatch hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch.sampleWithoutConstructorMatch]")
+      .hasMessage("Missing dependency [hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] required for Field [public hs.ddif.core.test.injectables.SampleWithoutConstructorMatch hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch.sampleWithoutConstructorMatch]")
       .hasNoCause();
 
     assertFalse(injector.contains(SampleWithDependencyOnSampleWithoutConstructorMatch.class));
@@ -61,10 +61,10 @@ public class InjectorDiscoveryTest {
   public void shouldNotDiscoverNewTypeWithMultipleConstructorMatch() {
     assertThatThrownBy(() -> injector.getInstance(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors] instantiation failed because auto discovery was unable to resolve all dependencies; found: [Injectable[hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors]]")
+      .hasMessage("[hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors] instantiation failed because auto discovery was unable to resolve all dependencies; found: [Injectable[hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors]]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessage("Missing dependency [class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] required for Field [public hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.sample]")
+      .hasMessage("Missing dependency [hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] required for Field [public hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.sample]")
       .hasNoCause();
 
     assertFalse(injector.contains(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class));
@@ -75,7 +75,7 @@ public class InjectorDiscoveryTest {
   public void shouldThrowBindingExceptionWhenAddingClassWithoutConstructorMatch() {
     assertThatThrownBy(() -> injector.getInstance(SampleWithoutConstructorMatch.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Path [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] cannot be injected")
+      .hasMessage("Path [hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] cannot be injected")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] cannot be injected")
@@ -101,10 +101,10 @@ public class InjectorDiscoveryTest {
 
     assertThatThrownBy(() -> injector.getInstance(D.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("[class hs.ddif.core.InjectorDiscoveryTest$D] instantiation failed because auto discovery was unable to resolve all dependencies; found: [Injectable[hs.ddif.core.InjectorDiscoveryTest$A], Injectable[hs.ddif.core.InjectorDiscoveryTest$B], Injectable[hs.ddif.core.InjectorDiscoveryTest$C], Injectable[hs.ddif.core.InjectorDiscoveryTest$D]]")
+      .hasMessage("[hs.ddif.core.InjectorDiscoveryTest$D] instantiation failed because auto discovery was unable to resolve all dependencies; found: [Injectable[hs.ddif.core.InjectorDiscoveryTest$A], Injectable[hs.ddif.core.InjectorDiscoveryTest$B], Injectable[hs.ddif.core.InjectorDiscoveryTest$C], Injectable[hs.ddif.core.InjectorDiscoveryTest$D]]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessage("Missing dependency [interface hs.ddif.core.InjectorDiscoveryTest$E] required for Field [hs.ddif.core.InjectorDiscoveryTest$E hs.ddif.core.InjectorDiscoveryTest$C.e]")
+      .hasMessage("Missing dependency [hs.ddif.core.InjectorDiscoveryTest$E] required for Field [hs.ddif.core.InjectorDiscoveryTest$E hs.ddif.core.InjectorDiscoveryTest$C.e]")
       .hasNoCause();
 
     assertFalse(injector.contains(A.class));
@@ -117,10 +117,10 @@ public class InjectorDiscoveryTest {
   public void shouldThrowBindingExceptionWhenDiscoveredClassRequiresQualifiers() {
     assertThatThrownBy(() -> injector.getInstance(G.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("[class hs.ddif.core.InjectorDiscoveryTest$G] instantiation failed because auto discovery was unable to resolve all dependencies; found: [Injectable[hs.ddif.core.InjectorDiscoveryTest$G]]")
+      .hasMessage("[hs.ddif.core.InjectorDiscoveryTest$G] instantiation failed because auto discovery was unable to resolve all dependencies; found: [Injectable[hs.ddif.core.InjectorDiscoveryTest$G]]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessageMatching(Pattern.quote("Missing dependency [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") class hs.ddif.core.InjectorDiscoveryTest$A] required for Field [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a]"))
+      .hasMessageMatching(Pattern.quote("Missing dependency [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A] required for Field [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a]"))
       .hasNoCause();
   }
 
