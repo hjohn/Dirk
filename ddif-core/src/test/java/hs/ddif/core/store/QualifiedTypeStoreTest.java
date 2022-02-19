@@ -39,7 +39,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class InjectableStoreTest {
+public class QualifiedTypeStoreTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation BIG = Annotations.of(Big.class);
 
