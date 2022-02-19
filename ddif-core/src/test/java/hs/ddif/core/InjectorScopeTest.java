@@ -2,6 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.InstanceCreationException;
+import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.inject.store.ScopeConflictException;
 import hs.ddif.core.scope.AbstractScopeResolver;
@@ -46,6 +47,30 @@ public class InjectorScopeTest {
         .isExactlyInstanceOf(OutOfScopeException.class)
         .hasMessage("Scope not active: interface hs.ddif.core.test.scope.TestScope for: Injectable[hs.ddif.core.InjectorScopeTest$TestScopedBean]")
         .hasNoCause();
+    }
+
+    @Test
+    public void shouldRemoveInstancesFromScopeResolver() {
+      Injector injector = Injectors.manual();
+
+      injector.register(S.class);
+
+      S instance1 = injector.getInstance(S.class);
+      S instance2 = injector.getInstance(S.class);
+
+      assertThat(instance1).isEqualTo(instance2);
+
+      injector.remove(S.class);
+
+      assertThatThrownBy(() -> injector.getInstance(S.class)).isExactlyInstanceOf(NoSuchInstanceException.class);
+
+      injector.register(S.class);
+
+      S instance3 = injector.getInstance(S.class);
+      S instance4 = injector.getInstance(S.class);
+
+      assertThat(instance3).isEqualTo(instance4);
+      assertThat(instance3).isNotEqualTo(instance1);  // proves that it was removed from the ScopeResolver
     }
 
     @Test
@@ -229,6 +254,10 @@ public class InjectorScopeTest {
       injector.registerInstance(new XProvider());
       injector.register(SingletonBeanDependentOnXProvider.class);
     }
+  }
+
+  @Singleton
+  public static class S {
   }
 
   public static class X {

@@ -1,6 +1,5 @@
 package hs.ddif.plugins;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.ddif.annotations.Produces;
 import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.api.CandidateRegistry;
@@ -60,7 +59,7 @@ public class ComponentScanner {
   static List<Type> findComponentTypes(Reflections reflections, ClassLoader classLoader) {
     return
       reflections.get(
-        Scanners.TypesAnnotated.with(Named.class, Singleton.class, WeakSingleton.class, PluginScoped.class)
+        Scanners.TypesAnnotated.with(Named.class, Singleton.class, WeakSingleton.class)
           .add(
             Scanners.FieldsAnnotated.with(Inject.class, Produces.class)
               .add(Scanners.MethodsAnnotated.with(Inject.class, Produces.class))

@@ -29,10 +29,9 @@ public class PluginSingletonTest {
 
   @Test
   public void shouldLoadAndUnloadPluginWithPluginSingleton() {
-    PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
-    Injector injector = Injectors.autoDiscovering(pluginScopeResolver);
+    Injector injector = Injectors.autoDiscovering();
 
-    PluginManager pluginManager = new PluginManager(injector.getCandidateRegistry(), pluginScopeResolver);
+    PluginManager pluginManager = new PluginManager(injector.getCandidateRegistry());
 
     for(int i = 0; i < 5; i++) {
       Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);

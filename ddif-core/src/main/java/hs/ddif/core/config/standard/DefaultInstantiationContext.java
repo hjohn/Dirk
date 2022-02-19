@@ -86,10 +86,10 @@ public class DefaultInstantiationContext implements InstantiationContext {
   }
 
   private <T> T createInstance(Injectable injectable, boolean allowOutOfScope) throws InstanceCreationFailure {
-    ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(injectable);
+    ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(injectable.getScope());
 
     try {
-      if(!allowOutOfScope || scopeResolver.isScopeActive(injectable)) {
+      if(!allowOutOfScope || scopeResolver.isScopeActive()) {
         return scopeResolver.get(injectable, () -> createInstanceInternal(injectable));
       }
 
