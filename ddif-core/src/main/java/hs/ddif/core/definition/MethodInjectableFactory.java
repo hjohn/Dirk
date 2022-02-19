@@ -68,15 +68,14 @@ public class MethodInjectableFactory {
 
     try {
       return injectableFactory.create(
-        returnType,
-        Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER),
+        new QualifiedType(returnType, Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER)),
         bindingProvider.ofMethod(method, ownerType),
         ScopeAnnotations.find(method),
         method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
         new MethodObjectFactory(method)
       );
     }
-    catch(UninjectableTypeException e) {
+    catch(BadQualifiedTypeException e) {
       throw new DefinitionException(method, "has unsuitable return type", e);
     }
   }

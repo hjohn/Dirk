@@ -6,7 +6,7 @@ import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InstanceInjectableFactory;
-import hs.ddif.core.definition.UninjectableTypeException;
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -39,7 +39,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new);
 
   @Test
-  void shouldConstructSimpleFactory() throws BindingException, UninjectableTypeException {
+  void shouldConstructSimpleFactory() throws BindingException, BadQualifiedTypeException {
     Injectable injectable = create(FactoryA.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryA.class::isAssignableFrom);
@@ -52,7 +52,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldConstructFactoryWithQualifiers() throws BindingException, UninjectableTypeException {
+  void shouldConstructFactoryWithQualifiers() throws BindingException, BadQualifiedTypeException {
     Injectable injectable = create(FactoryB.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryB.class::isAssignableFrom);
@@ -65,7 +65,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldConstructFactoryWithDependencies() throws BindingException, UninjectableTypeException {
+  void shouldConstructFactoryWithDependencies() throws BindingException, BadQualifiedTypeException {
     Injectable injectable = create(FactoryC.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryC.class::isAssignableFrom);
@@ -81,7 +81,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldConstructFactoryWithGenericMethodAndGenericResult() throws BindingException, InstanceCreationFailure, UninjectableTypeException {
+  void shouldConstructFactoryWithGenericMethodAndGenericResult() throws BindingException, InstanceCreationFailure, BadQualifiedTypeException {
     Injectable injectable = create(FactoryD.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryD.class::isAssignableFrom);
@@ -150,7 +150,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldInstantiateTypeViaFactory() throws BindingException, UninjectableTypeException {
+  void shouldInstantiateTypeViaFactory() throws BindingException, BadQualifiedTypeException {
     DefaultInstanceResolver instanceResolver = InstanceResolvers.createWithConsistencyPolicy();
     InjectableStore store = instanceResolver.getStore();
 
@@ -173,7 +173,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
     assertThat(product1).isNotEqualTo(product3);
   }
 
-  private Injectable create(Type type) throws BindingException, UninjectableTypeException {
+  private Injectable create(Type type) throws BindingException, BadQualifiedTypeException {
     TypeAnalysis<Context> analysis = extension.analyze(type);
 
     if(analysis.isNegative()) {

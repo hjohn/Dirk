@@ -1,13 +1,13 @@
 package hs.ddif.core.config.standard;
 
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.UninjectableTypeException;
+import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
-import hs.ddif.core.util.Types;
 
 import java.util.List;
 import java.util.Set;
@@ -30,8 +30,8 @@ public class DefaultInjectableTest {
   private final Binding binding3 = mock(Binding.class);
 
   @Test
-  void constructorShouldAcceptValidParameters() throws UninjectableTypeException, InstanceCreationFailure {
-    Injectable injectable = new DefaultInjectable(String.class, Set.of(), List.of(), Annotations.of(Singleton.class), null, injections -> 5);
+  void constructorShouldAcceptValidParameters() throws InstanceCreationFailure, BadQualifiedTypeException {
+    Injectable injectable = new DefaultInjectable(new QualifiedType(String.class), List.of(), Annotations.of(Singleton.class), null, injections -> 5);
 
     assertThat(injectable.createInstance(List.of())).isEqualTo(5);
     assertThat(injectable.getType()).isEqualTo(String.class);
@@ -40,7 +40,7 @@ public class DefaultInjectableTest {
     assertThat(injectable.getBindings()).isEmpty();
     assertThat(injectable.toString()).isEqualTo("Injectable[java.lang.String]");
 
-    injectable = new DefaultInjectable(TypeUtils.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class)), List.of(binding1, binding2, binding3), null, null, injections -> 6);
+    injectable = new DefaultInjectable(new QualifiedType(TypeUtils.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class))), List.of(binding1, binding2, binding3), null, null, injections -> 6);
 
     assertThat(injectable.createInstance(List.of())).isEqualTo(6);
     assertThat(injectable.getType()).isEqualTo(TypeUtils.parameterize(Supplier.class, String.class));
@@ -52,48 +52,28 @@ public class DefaultInjectableTest {
 
   @Test
   void constructorShouldRejectBadParameters() {
-    assertThatThrownBy(() -> new DefaultInjectable(null, Set.of(Annotations.of(Red.class)), List.of(), Annotations.of(Singleton.class), null, injections -> 5))
+    assertThatThrownBy(() -> new DefaultInjectable(null, List.of(), Annotations.of(Singleton.class), null, injections -> 5))
       .isExactlyInstanceOf(IllegalArgumentException.class)
-      .hasMessage("type cannot be null")
+      .hasMessage("qualifiedType cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable(String.class, null, List.of(), Annotations.of(Singleton.class), null, injections -> 5))
-      .isExactlyInstanceOf(IllegalArgumentException.class)
-      .hasMessage("qualifiers cannot be null")
-      .hasNoCause();
-
-    assertThatThrownBy(() -> new DefaultInjectable(String.class, Set.of(Annotations.of(Red.class)), null, Annotations.of(Singleton.class), null, injections -> 5))
+    assertThatThrownBy(() -> new DefaultInjectable(new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), null, Annotations.of(Singleton.class), null, injections -> 5))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("bindings cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable(String.class, Set.of(Annotations.of(Red.class)), List.of(), Annotations.of(Singleton.class), null, null))
+    assertThatThrownBy(() -> new DefaultInjectable(new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), Annotations.of(Singleton.class), null, null))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("objectFactory cannot be null")
-      .hasNoCause();
-
-    assertThatThrownBy(() -> new DefaultInjectable(void.class, Set.of(Annotations.of(Red.class)), List.of(), Annotations.of(Singleton.class), null, injections -> 5))
-      .isExactlyInstanceOf(UninjectableTypeException.class)
-      .hasMessage("[void] is not an injectable type")
-      .hasNoCause();
-
-    assertThatThrownBy(() -> new DefaultInjectable(List.class, Set.of(Annotations.of(Red.class)), List.of(), Annotations.of(Singleton.class), null, injections -> 5))
-      .isExactlyInstanceOf(UninjectableTypeException.class)
-      .hasMessage("[interface java.util.List] has unresolvable type variables")
-      .hasNoCause();
-
-    assertThatThrownBy(() -> new DefaultInjectable(Types.wildcardExtends(String.class), Set.of(Annotations.of(Red.class)), List.of(), Annotations.of(Singleton.class), null, injections -> 5))
-      .isExactlyInstanceOf(UninjectableTypeException.class)
-      .hasMessage("[? extends java.lang.String] has unresolvable type variables")
       .hasNoCause();
   }
 
   @Test
-  void equalsAndHashCodeShouldRespectContract() throws UninjectableTypeException {
+  void equalsAndHashCodeShouldRespectContract() throws BadQualifiedTypeException {
     EqualsVerifier
       .forClass(DefaultInjectable.class)
-      .withNonnullFields("type", "qualifiers")
-      .withCachedHashCode("hashCode", "calculateHash", new DefaultInjectable(String.class, Set.of(Annotations.of(Red.class)), List.of(), Annotations.of(Singleton.class), null, injections -> 5))
+      .withNonnullFields("qualifiedType")
+      .withCachedHashCode("hashCode", "calculateHash", new DefaultInjectable(new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), Annotations.of(Singleton.class), null, injections -> 5))
       .withIgnoredFields("bindings", "scope", "objectFactory")
       .verify();
   }

@@ -56,8 +56,8 @@ public class FieldInjectableFactoryTest {
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Field [public java.util.List hs.ddif.core.definition.FieldInjectableFactoryTest$B.d] has unsuitable type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(UninjectableTypeException.class)
-      .hasMessage("[java.util.List<T>] has unresolvable type variables")
+      .isExactlyInstanceOf(BadQualifiedTypeException.class)
+      .hasMessage("[java.util.List<T>] cannot have unresolvable type variables or wild cards")
       .hasNoCause();
   }
 

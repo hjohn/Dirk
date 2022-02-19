@@ -5,7 +5,7 @@ import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.UninjectableTypeException;
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.util.Types;
 
@@ -59,7 +59,7 @@ public class DelegatingClassInjectableFactory implements ClassInjectableFactory 
       try {
         return template.create(analysis);
       }
-      catch(UninjectableTypeException e) {
+      catch(BadQualifiedTypeException e) {
         throw new DefinitionException(cls, "is an unsuitable type", e);
       }
       catch(BindingException e) {

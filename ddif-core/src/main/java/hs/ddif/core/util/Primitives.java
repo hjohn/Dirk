@@ -19,6 +19,7 @@ public class Primitives {
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(long.class, Long.class);
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(float.class, Float.class);
     WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(double.class, Double.class);
+    WRAPPER_CLASS_BY_PRIMITIVE_CLASS.put(void.class, Void.class);
   }
 
   /**

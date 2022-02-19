@@ -3,10 +3,11 @@ package hs.ddif.core.definition;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
-import hs.ddif.core.store.QualifiedType;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a source for an injectable dependency.  Injectables can be
@@ -18,7 +19,34 @@ import java.util.List;
  * full generic type is equal, their qualifiers are equal and they come from the
  * exact same source (same class, same method, same field, etc.)
  */
-public interface Injectable extends QualifiedType {
+public interface Injectable {
+
+  /**
+   * Returns the {@link QualifiedType} which is always fully resolved (no type variables)
+   * and never {@code void}.
+   *
+   * @return a {@link QualifiedType}, never {@code null}
+   */
+  QualifiedType getQualifiedType();
+
+  /**
+   * Returns the {@link Type} which is always fully resolved (no type variables)
+   * and never {@code void}.
+   *
+   * @return the {@link Type}, never {@code null}
+   */
+  default Type getType() {
+    return getQualifiedType().getType();
+  }
+
+  /**
+   * Returns an unmodifiable set of qualifier {@link Annotation}s.
+   *
+   * @return an unmodifiable set of qualifier {@link Annotation}s, never {@code null} and never contains {@code null}s but can be empty
+   */
+  default Set<Annotation> getQualifiers() {
+    return getQualifiedType().getQualifiers();
+  }
 
   /**
    * Returns the {@link Binding}s detected.

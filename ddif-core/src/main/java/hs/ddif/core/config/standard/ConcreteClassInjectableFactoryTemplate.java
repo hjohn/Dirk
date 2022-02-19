@@ -3,8 +3,9 @@ package hs.ddif.core.config.standard;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactory;
+import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.ScopeAnnotations;
-import hs.ddif.core.definition.UninjectableTypeException;
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -61,15 +62,14 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public Injectable create(TypeAnalysis<Type> analysis) throws BindingException, UninjectableTypeException {
+  public Injectable create(TypeAnalysis<Type> analysis) throws BindingException, BadQualifiedTypeException {
     Type type = analysis.getData();
     Class<?> cls = TypeUtils.getRawType(type, null);
     Constructor<?> constructor = BindingProvider.getConstructor(cls);
     List<Binding> bindings = bindingProvider.ofConstructorAndMembers(constructor, cls);
 
     return injectableFactory.create(
-      type,
-      Annotations.findDirectlyMetaAnnotatedAnnotations(cls, QUALIFIER),
+      new QualifiedType(type, Annotations.findDirectlyMetaAnnotatedAnnotations(cls, QUALIFIER)),
       bindings,
       ScopeAnnotations.find(cls),
       null,
