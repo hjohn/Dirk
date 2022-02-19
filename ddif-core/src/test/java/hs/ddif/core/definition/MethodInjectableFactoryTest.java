@@ -57,8 +57,8 @@ public class MethodInjectableFactoryTest {
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Method [public java.util.List hs.ddif.core.definition.MethodInjectableFactoryTest$B.d()] has unsuitable return type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(UninjectableTypeException.class)
-      .hasMessage("[java.util.List<T>] has unresolvable type variables")
+      .isExactlyInstanceOf(BadQualifiedTypeException.class)
+      .hasMessage("[java.util.List<T>] cannot have unresolvable type variables or wild cards")
       .hasNoCause();
   }
 
@@ -68,8 +68,8 @@ public class MethodInjectableFactoryTest {
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Method [void hs.ddif.core.definition.MethodInjectableFactoryTest$A.a()] has unsuitable return type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(UninjectableTypeException.class)
-      .hasMessage("[void] is not an injectable type")
+      .isExactlyInstanceOf(BadQualifiedTypeException.class)
+      .hasMessage("[java.lang.Void] cannot be void or Void")
       .hasNoCause();
   }
 

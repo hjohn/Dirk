@@ -1,5 +1,6 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.definition.bind.Binding;
@@ -25,7 +26,7 @@ public class UnresolvableDependencyExceptionTest {
   private final BindingProvider bindingProvider = new BindingProvider();
 
   @Test
-  void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
+  void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException, BadQualifiedTypeException {
     List<Binding> bindings = classInjectableFactory.create(A.class).getBindings();
     UnresolvableDependencyException e;
 

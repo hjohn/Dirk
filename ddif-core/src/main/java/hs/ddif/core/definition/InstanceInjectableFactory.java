@@ -39,16 +39,15 @@ public class InstanceInjectableFactory {
 
     try {
       return factory.create(
-        instance.getClass(),
-        Set.of(qualifiers),
+        new QualifiedType(instance.getClass(), Set.of(qualifiers)),
         List.of(),
         SINGLETON,
         instance,
         injections -> instance
       );
     }
-    catch(UninjectableTypeException e) {
-      throw new AssertionError(e);
+    catch(BadQualifiedTypeException e) {
+      throw new DefinitionException(e);
     }
   }
 }

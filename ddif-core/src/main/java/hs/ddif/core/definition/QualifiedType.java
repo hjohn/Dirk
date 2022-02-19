@@ -1,8 +1,9 @@
-package hs.ddif.core.store;
+package hs.ddif.core.definition;
 
 import hs.ddif.core.util.Primitives;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,45 +14,57 @@ import java.util.stream.Collectors;
 
 import javax.inject.Qualifier;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
+
 /**
- * Represents a {@link Type} with a set of qualifier {@link Annotation}s.
+ * Represents a fully resolved {@link Type} with a set of qualifier {@link Annotation}s.
  */
-public final class Key {
-  private final Set<Annotation> qualifiers;
+public final class QualifiedType {
   private final Type type;
+  private final Set<Annotation> qualifiers;
 
   /**
    * Constructs a new instance.
    *
    * @param type a {@link Type}, cannot be {@code null}
    * @param qualifiers a collection of qualifier {@link Annotation}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @throws BadQualifiedTypeException when the given type or qualifiers are not suitable for injection
    */
-  public Key(Type type, Collection<Annotation> qualifiers) {
+  public QualifiedType(Type type, Collection<Annotation> qualifiers) throws BadQualifiedTypeException {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
     if(qualifiers == null) {
       throw new IllegalArgumentException("qualifiers cannot be null");
     }
-    if(!qualifiers.stream().allMatch(Key::isQualifier)) {
-      throw new IllegalArgumentException("qualifiers must all be annotations annotated with @Qualifier: " + qualifiers);
-    }
 
     this.type = Primitives.toBoxed(type);
     this.qualifiers = Collections.unmodifiableSet(new HashSet<>(qualifiers));
+
+    if((!(type instanceof Class) && !(type instanceof ParameterizedType)) || TypeUtils.containsTypeVariables(type)) {
+      throw new BadQualifiedTypeException("[" + this + "] cannot have unresolvable type variables or wild cards");
+    }
+    if(type == void.class || type == Void.class) {
+      throw new BadQualifiedTypeException("[" + this + "] cannot be void or Void");
+    }
+    if(!qualifiers.stream().allMatch(QualifiedType::isQualifier)) {
+      throw new BadQualifiedTypeException("[" + this + "] cannot have qualifier annotations not annotated with @Qualifier");
+    }
   }
 
   /**
    * Constructs a new instance.
    *
    * @param type a {@link Type}, cannot be {@code null}
+   * @throws BadQualifiedTypeException when the given type or qualifiers are not suitable for injection
    */
-  public Key(Type type) {
+  public QualifiedType(Type type) throws BadQualifiedTypeException {
     this(type, Set.of());
   }
 
   /**
-   * Returns the {@link Type}.
+   * Returns the {@link Type}. The type is always fully resolved (no type variables)
+   * and never {@code void}.
    *
    * @return the {@link Type}, never {@code null}
    */
@@ -87,12 +100,12 @@ public final class Key {
       return false;
     }
 
-    Key other = (Key)obj;
+    QualifiedType other = (QualifiedType)obj;
 
-    if(!qualifiers.equals(other.qualifiers)) {
+    if(!type.equals(other.type)) {
       return false;
     }
-    if(!type.equals(other.type)) {
+    if(!qualifiers.equals(other.qualifiers)) {
       return false;
     }
 

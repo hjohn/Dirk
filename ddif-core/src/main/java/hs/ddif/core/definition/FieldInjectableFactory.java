@@ -68,15 +68,14 @@ public class FieldInjectableFactory {
 
     try {
       return injectableFactory.create(
-        type,
-        Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER),
+        new QualifiedType(type, Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER)),
         bindingProvider.ofField(field, ownerType),
         ScopeAnnotations.find(field),
         field,  // for proper discrimination, the exact field should also be taken into account, next to its generic type
         new FieldObjectFactory(field)
       );
     }
-    catch(UninjectableTypeException e) {
+    catch(BadQualifiedTypeException e) {
       throw new DefinitionException(field, "has unsuitable type", e);
     }
   }

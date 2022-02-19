@@ -3,8 +3,8 @@ package hs.ddif.core;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.DefinitionException;
-import hs.ddif.core.definition.UninjectableTypeException;
 import hs.ddif.core.inject.store.CyclicDependencyException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.store.DuplicateKeyException;
@@ -101,8 +101,8 @@ public class ProducesAnnotationTest {
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Method [void hs.ddif.core.ProducesAnnotationTest$BadFactory3.create()] has unsuitable return type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(UninjectableTypeException.class)
-      .hasMessage("[void] is not an injectable type")
+      .isExactlyInstanceOf(BadQualifiedTypeException.class)
+      .hasMessage("[java.lang.Void] cannot be void or Void")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));
@@ -114,8 +114,8 @@ public class ProducesAnnotationTest {
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericProduces.create()] has unsuitable return type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(UninjectableTypeException.class)
-      .hasMessage("[java.util.ArrayList<T>] has unresolvable type variables")
+      .isExactlyInstanceOf(BadQualifiedTypeException.class)
+      .hasMessage("[java.util.ArrayList<T>] cannot have unresolvable type variables or wild cards")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));
@@ -127,8 +127,8 @@ public class ProducesAnnotationTest {
       .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericFactory1.create()] has unsuitable return type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(UninjectableTypeException.class)
-      .hasMessage("[java.util.ArrayList<T>] has unresolvable type variables")
+      .isExactlyInstanceOf(BadQualifiedTypeException.class)
+      .hasMessage("[java.util.ArrayList<T>] cannot have unresolvable type variables or wild cards")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));

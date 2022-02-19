@@ -3,7 +3,8 @@ package hs.ddif.core.inject.store;
 import hs.ddif.annotations.Opt;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.UninjectableTypeException;
+import hs.ddif.core.definition.QualifiedType;
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.InstanceFactories;
 import hs.ddif.core.instantiation.InstantiatorFactory;
@@ -28,7 +29,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
   private final Random rnd = new Random(4);
 
   @Test
-  void largeGraphTest() throws UninjectableTypeException {
+  void largeGraphTest() throws BadQualifiedTypeException {
     InstantiatorFactory instantiatorFactory = InstanceFactories.create();
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create();
@@ -51,8 +52,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
       }
 
       Injectable injectable = new DefaultInjectable(
-        classes.get(rnd.nextInt(classes.size())),
-        Set.of(Annotations.named("instance-" + i)),
+        new QualifiedType(classes.get(rnd.nextInt(classes.size())), Set.of(Annotations.named("instance-" + i))),
         bindings,
         annotation,
         null,

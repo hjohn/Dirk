@@ -1,27 +1,24 @@
 package hs.ddif.core.store;
 
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.injection.Injection;
 
 import java.lang.annotation.Annotation;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 public class Injectables {
 
-  public static Injectable create() {
+  public static Injectable create() throws BadQualifiedTypeException {
+    QualifiedType qualifiedType = new QualifiedType(String.class);
+
     return new Injectable() {
 
       @Override
-      public Class<?> getType() {
-        return String.class;
-      }
-
-      @Override
-      public Set<Annotation> getQualifiers() {
-        return Collections.emptySet();
+      public QualifiedType getQualifiedType() {
+        return qualifiedType;
       }
 
       @Override
