@@ -1,8 +1,5 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.config.standard.DefaultInjectable;
-import hs.ddif.core.definition.bind.BindingProvider;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MethodInjectableFactoryTest {
-  private final BindingProvider bindingProvider = new BindingProvider();
-  private final MethodInjectableFactory factory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
+  private final MethodInjectableFactory factory = InjectableFactories.forMethod();
 
   @Test
   void createShouldRejectNullMethod() {
@@ -55,7 +51,7 @@ public class MethodInjectableFactoryTest {
   void createShouldRejectMethodWithUnresolvableTypeVariables() {
     assertThatThrownBy(() -> factory.create(B.class.getDeclaredMethod("d"), B.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public java.util.List hs.ddif.core.definition.MethodInjectableFactoryTest$B.d()] has unsuitable return type")
+      .hasMessage("Method [public java.util.List hs.ddif.core.definition.MethodInjectableFactoryTest$B.d()] has unsuitable type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BadQualifiedTypeException.class)
       .hasMessage("[java.util.List<T>] cannot have unresolvable type variables or wild cards")
@@ -66,7 +62,7 @@ public class MethodInjectableFactoryTest {
   void createShouldRejectVoidMethod() {
     assertThatThrownBy(() -> factory.create(A.class.getDeclaredMethod("a"), A.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [void hs.ddif.core.definition.MethodInjectableFactoryTest$A.a()] has unsuitable return type")
+      .hasMessage("Method [void hs.ddif.core.definition.MethodInjectableFactoryTest$A.a()] has unsuitable type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BadQualifiedTypeException.class)
       .hasMessage("[java.lang.Void] cannot be void or Void")

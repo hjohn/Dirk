@@ -3,7 +3,6 @@ package hs.ddif.core.config;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
-import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.FieldInjectableFactory;
@@ -11,7 +10,6 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.definition.bind.BindingException;
-import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
@@ -34,11 +32,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class AutoDiscoveringGathererTest {
-  private final BindingProvider bindingProvider = new BindingProvider();
   private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
+  private final FieldInjectableFactory fieldInjectableFactory = InjectableFactories.forField();
+  private final MethodInjectableFactory methodInjectableFactory = InjectableFactories.forMethod();
 
   /*
    * Note: the produced Sets by the gatherer in these tests could be incomplete or contain multiple

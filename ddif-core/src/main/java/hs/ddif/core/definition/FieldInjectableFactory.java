@@ -2,16 +2,13 @@ package hs.ddif.core.definition;
 
 import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.instantiation.factory.FieldObjectFactory;
-import hs.ddif.core.util.Annotations;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.inject.Qualifier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -20,18 +17,16 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * owner {@link Type}.
  */
 public class FieldInjectableFactory {
-  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
-
   private final BindingProvider bindingProvider;
-  private final InjectableFactory injectableFactory;
+  private final AnnotatedInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
-   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
+   * @param injectableFactory a {@link AnnotatedInjectableFactory}, cannot be {@code null}
    */
-  public FieldInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
+  public FieldInjectableFactory(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
@@ -66,17 +61,6 @@ public class FieldInjectableFactory {
       throw new DefinitionException(field, "cannot be annotated with Inject");
     }
 
-    try {
-      return injectableFactory.create(
-        new QualifiedType(type, Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER)),
-        bindingProvider.ofField(field, ownerType),
-        ScopeAnnotations.find(field),
-        field,  // for proper discrimination, the exact field should also be taken into account, next to its generic type
-        new FieldObjectFactory(field)
-      );
-    }
-    catch(BadQualifiedTypeException e) {
-      throw new DefinitionException(field, "has unsuitable type", e);
-    }
+    return injectableFactory.create(type, field, bindingProvider.ofField(field, ownerType), new FieldObjectFactory(field));
   }
 }

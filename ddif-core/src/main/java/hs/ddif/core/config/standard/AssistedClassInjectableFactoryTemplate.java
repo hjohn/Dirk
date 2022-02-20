@@ -1,12 +1,10 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.annotations.Argument;
+import hs.ddif.core.definition.AnnotatedInjectableFactory;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.InjectableFactory;
-import hs.ddif.core.definition.QualifiedType;
-import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -23,7 +21,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -38,7 +35,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -99,19 +95,18 @@ import net.bytebuddy.matcher.ElementMatchers;
  */
 public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFactoryTemplate<AssistedClassInjectableFactoryTemplate.Context> {
   private static final Map<Type, Injectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
-  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
   private static final Annotation INJECT = Annotations.of(Inject.class);
 
   private final BindingProvider bindingProvider;
-  private final InjectableFactory injectableFactory;
+  private final AnnotatedInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
-   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
+   * @param injectableFactory a {@link AnnotatedInjectableFactory}, cannot be {@code null}
    */
-  public AssistedClassInjectableFactoryTemplate(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
+  public AssistedClassInjectableFactoryTemplate(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
@@ -145,7 +140,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public Injectable create(TypeAnalysis<Context> analysis) throws BindingException, BadQualifiedTypeException {
+  public Injectable create(TypeAnalysis<Context> analysis) throws BindingException {
     Type type = analysis.getData().type;
     Injectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
 
@@ -159,13 +154,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     Constructor<?> factoryConstructor = BindingProvider.getConstructor(implementedFactoryClass);
     List<Binding> factoryBindings = bindingProvider.ofConstructorAndMembers(factoryConstructor, implementedFactoryClass);
 
-    factoryInjectable = injectableFactory.create(
-      new QualifiedType(implementedFactoryClass, Annotations.findDirectlyMetaAnnotatedAnnotations(Types.raw(type), QUALIFIER)),
-      factoryBindings,
-      Annotations.of(Singleton.class),
-      null,
-      new ClassObjectFactory(factoryConstructor)
-    );
+    factoryInjectable = injectableFactory.create(implementedFactoryClass, implementedFactoryClass, factoryBindings, new ClassObjectFactory(factoryConstructor));
 
     PRODUCER_INJECTABLES.put(type, factoryInjectable);
 
@@ -183,6 +172,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
 
     Builder<?> builder = new ByteBuddy()
       .subclass(type, ConstructorStrategy.Default.IMITATE_SUPER_CLASS.withInheritedAnnotations())
+      .annotateType(Types.raw(type).getDeclaredAnnotations())
       .method(ElementMatchers.returns(productType).and(ElementMatchers.isAbstract()))
       .intercept(MethodDelegation.to(interceptor));
 
@@ -219,7 +209,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
         String name = parameter == null ? determineArgumentName(annotation, (Field)accessibleObject) : determineArgumentName(parameter);
 
         if(name == null) {
-          throw new DefinitionException((Member)accessibleObject, "unable to determine argument name for parameter [" + parameter + "]; specify one with @Argument or compile classes with parameter name information");
+          throw new DefinitionException(accessibleObject, "unable to determine argument name for parameter [" + parameter + "]; specify one with @Argument or compile classes with parameter name information");
         }
 
         parameterBindings.put(name, binding);

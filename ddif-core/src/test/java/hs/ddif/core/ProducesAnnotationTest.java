@@ -99,7 +99,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectVoidProducesMethod() {
     assertThatThrownBy(() -> injector.register(BadFactory3.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [void hs.ddif.core.ProducesAnnotationTest$BadFactory3.create()] has unsuitable return type")
+      .hasMessage("Method [void hs.ddif.core.ProducesAnnotationTest$BadFactory3.create()] has unsuitable type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BadQualifiedTypeException.class)
       .hasMessage("[java.lang.Void] cannot be void or Void")
@@ -112,7 +112,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectProducesMethodWithUnresolvedTypeVariables() {
     assertThatThrownBy(() -> injector.register(GenericProduces.class))  // GenericProduces has a Produces method with a type variable T which is not provided
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericProduces.create()] has unsuitable return type")
+      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericProduces.create()] has unsuitable type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BadQualifiedTypeException.class)
       .hasMessage("[java.util.ArrayList<T>] cannot have unresolvable type variables or wild cards")
@@ -125,7 +125,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectClassWithUnresolvedTypeVariables() {
     assertThatThrownBy(() -> injector.register(GenericFactory1.class))  // GenericFactory1 has a type variable T which is not provided
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericFactory1.create()] has unsuitable return type")
+      .hasMessage("Method [public java.util.ArrayList hs.ddif.core.ProducesAnnotationTest$GenericFactory1.create()] has unsuitable type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BadQualifiedTypeException.class)
       .hasMessage("[java.util.ArrayList<T>] cannot have unresolvable type variables or wild cards")

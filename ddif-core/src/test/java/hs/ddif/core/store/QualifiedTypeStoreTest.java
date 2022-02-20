@@ -7,7 +7,6 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
-import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;
@@ -43,10 +42,9 @@ public class QualifiedTypeStoreTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation BIG = Annotations.of(Big.class);
 
-  private final BindingProvider bindingProvider = new BindingProvider();
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = InjectableFactories.forMethod();
+  private final FieldInjectableFactory fieldInjectableFactory = InjectableFactories.forField();
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
   private QualifiedTypeStore<Injectable> store;

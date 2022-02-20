@@ -2,7 +2,6 @@ package hs.ddif.core.config.standard;
 
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -24,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConcreteClassInjectableFactoryTemplateTest {
   private BindingProvider bindingProvider = new BindingProvider();
-  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new);
+  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, new DefaultAnnotatedInjectableFactory());
 
   @Test
   void shouldFailPreconditionWhenReturnTypeIsAbstract() {
@@ -32,7 +31,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldCreateInjectableForValidClass() throws BindingException, BadQualifiedTypeException {
+  void shouldCreateInjectableForValidClass() throws BindingException {
     Injectable injectable = create(B.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(new Key(String.class));
@@ -41,7 +40,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldCreateInjectableWithQualifiersAndScope() throws BindingException, BadQualifiedTypeException {
+  void shouldCreateInjectableWithQualifiersAndScope() throws BindingException {
     Injectable injectable = create(C.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
@@ -53,7 +52,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
     );
   }
 
-  private Injectable create(Type type) throws BindingException, BadQualifiedTypeException {
+  private Injectable create(Type type) throws BindingException {
     TypeAnalysis<Type> analysis = extension.analyze(type);
 
     if(analysis.isNegative()) {

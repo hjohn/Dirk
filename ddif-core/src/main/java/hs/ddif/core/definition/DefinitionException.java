@@ -1,7 +1,7 @@
 package hs.ddif.core.definition;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
@@ -16,43 +16,22 @@ public class DefinitionException extends RuntimeException {
   /**
    * Constructs a new instance.
    *
-   * @param cls a {@link Class} involved in the definition problem, cannot be {@code null}
+   * @param element an {@link AnnotatedElement} involved in the definition problem, cannot be {@code null}
    * @param message a message describing the problem, cannot be {@code null}
    * @param cause an underlying cause of the problem, can be {@code null}
    */
-  public DefinitionException(Class<?> cls, String message, Throwable cause) {
-    super("[" + Objects.requireNonNull(cls) + "] " + Objects.requireNonNull(message), cause);
+  public DefinitionException(AnnotatedElement element, String message, Throwable cause) {
+    super(describe(Objects.requireNonNull(element)) + " " + Objects.requireNonNull(message), cause);
   }
 
   /**
    * Constructs a new instance.
    *
-   * @param cls a {@link Class} involved in the definition problem, cannot be {@code null}
+   * @param element an {@link AnnotatedElement} involved in the definition problem, cannot be {@code null}
    * @param message a message describing the problem, cannot be {@code null}
    */
-  public DefinitionException(Class<?> cls, String message) {
-    this(cls, message, null);
-  }
-
-  /**
-   * Constructs a new instance.
-   *
-   * @param member a {@link Member} involved in the definition problem, cannot be {@code null}
-   * @param message a message describing the problem, cannot be {@code null}
-   * @param cause an underlying cause of the problem, can be {@code null}
-   */
-  public DefinitionException(Member member, String message, Throwable cause) {
-    super(describe(Objects.requireNonNull(member)) + " " + Objects.requireNonNull(message), cause);
-  }
-
-  /**
-   * Constructs a new instance.
-   *
-   * @param member a {@link Member} involved in the definition problem, cannot be {@code null}
-   * @param message a message describing the problem, cannot be {@code null}
-   */
-  public DefinitionException(Member member, String message) {
-    this(member, message, null);
+  public DefinitionException(AnnotatedElement element, String message) {
+    this(element, message, null);
   }
 
   /**
@@ -74,7 +53,10 @@ public class DefinitionException extends RuntimeException {
     super(Objects.requireNonNull(message), cause);
   }
 
-  private static String describe(Member member) {
-    return (member instanceof Method ? "Method" : member instanceof Field ? "Field" : "Constructor") + " [" + member + "]";
+  private static String describe(AnnotatedElement element) {
+    return (element instanceof Method ? "Method "
+      : element instanceof Field ? "Field "
+      : element instanceof Class ? ""
+      : "Constructor ") + "[" + element + "]";
   }
 }

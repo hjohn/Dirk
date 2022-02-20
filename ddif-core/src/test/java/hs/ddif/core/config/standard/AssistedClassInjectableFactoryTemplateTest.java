@@ -6,7 +6,6 @@ import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InstanceInjectableFactory;
-import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -36,10 +35,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AssistedClassInjectableFactoryTemplateTest {
   private BindingProvider bindingProvider = new BindingProvider();
-  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, DefaultInjectable::new);
+  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, new DefaultAnnotatedInjectableFactory());
 
   @Test
-  void shouldConstructSimpleFactory() throws BindingException, BadQualifiedTypeException {
+  void shouldConstructSimpleFactory() throws BindingException {
     Injectable injectable = create(FactoryA.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryA.class::isAssignableFrom);
@@ -48,11 +47,11 @@ public class AssistedClassInjectableFactoryTemplateTest {
       new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
-    assertThat(injectable.getScope()).isEqualTo(Annotations.of(Singleton.class));
+    assertThat(injectable.getScope()).isNull();
   }
 
   @Test
-  void shouldConstructFactoryWithQualifiers() throws BindingException, BadQualifiedTypeException {
+  void shouldConstructFactoryWithQualifiers() throws BindingException {
     Injectable injectable = create(FactoryB.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryB.class::isAssignableFrom);
@@ -65,7 +64,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldConstructFactoryWithDependencies() throws BindingException, BadQualifiedTypeException {
+  void shouldConstructFactoryWithDependencies() throws BindingException {
     Injectable injectable = create(FactoryC.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryC.class::isAssignableFrom);
@@ -77,11 +76,11 @@ public class AssistedClassInjectableFactoryTemplateTest {
       new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
-    assertThat(injectable.getScope()).isEqualTo(Annotations.of(Singleton.class));
+    assertThat(injectable.getScope()).isNull();
   }
 
   @Test
-  void shouldConstructFactoryWithGenericMethodAndGenericResult() throws BindingException, InstanceCreationFailure, BadQualifiedTypeException {
+  void shouldConstructFactoryWithGenericMethodAndGenericResult() throws BindingException, InstanceCreationFailure {
     Injectable injectable = create(FactoryD.class);
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryD.class::isAssignableFrom);
@@ -150,7 +149,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
   }
 
   @Test
-  void shouldInstantiateTypeViaFactory() throws BindingException, BadQualifiedTypeException {
+  void shouldInstantiateTypeViaFactory() throws BindingException {
     DefaultInstanceResolver instanceResolver = InstanceResolvers.createWithConsistencyPolicy();
     InjectableStore store = instanceResolver.getStore();
 
@@ -173,7 +172,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
     assertThat(product1).isNotEqualTo(product3);
   }
 
-  private Injectable create(Type type) throws BindingException, BadQualifiedTypeException {
+  private Injectable create(Type type) throws BindingException {
     TypeAnalysis<Context> analysis = extension.analyze(type);
 
     if(analysis.isNegative()) {
@@ -208,7 +207,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
     }
   }
 
-  @Red
+  @Red @Singleton
   public interface FactoryB {
     Product create(@Argument("x") Integer a, @Argument("y") Integer b);
 
@@ -227,6 +226,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
     public abstract Product create(Integer x, Integer y);
   }
 
+  @Singleton
   public interface FactoryD {
     <X> GenericProduct<X> create(Class<X> cls, String brand);
   }
