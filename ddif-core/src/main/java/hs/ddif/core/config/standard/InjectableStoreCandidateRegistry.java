@@ -1,7 +1,8 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.core.api.CandidateRegistry;
-import hs.ddif.core.config.gather.Gatherer;
+import hs.ddif.core.config.discovery.Discoverer;
+import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.inject.store.InjectableStore;
 
@@ -14,19 +15,19 @@ import java.util.List;
  */
 public class InjectableStoreCandidateRegistry implements CandidateRegistry {
   private final InjectableStore store;
-  private final Gatherer gatherer;
+  private final DiscovererFactory discovererFactory;
   private final InstanceInjectableFactory instanceInjectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param store an {@link InjectableStore}, cannot be {@code null}
-   * @param gatherer a {@link Gatherer}, cannot be {@code null}
+   * @param discovererFactory a {@link DiscovererFactory}, cannot be {@code null}
    * @param instanceInjectableFactory an {@link InstanceInjectableFactory}, cannot be {@code null}
    */
-  public InjectableStoreCandidateRegistry(InjectableStore store, Gatherer gatherer, InstanceInjectableFactory instanceInjectableFactory) {
+  public InjectableStoreCandidateRegistry(InjectableStore store, DiscovererFactory discovererFactory, InstanceInjectableFactory instanceInjectableFactory) {
     this.store = store;
-    this.gatherer = gatherer;
+    this.discovererFactory = discovererFactory;
     this.instanceInjectableFactory = instanceInjectableFactory;
   }
 
@@ -47,7 +48,7 @@ public class InjectableStoreCandidateRegistry implements CandidateRegistry {
 
   @Override
   public void registerInstance(Object instance, Annotation... qualifiers) {
-    store.putAll(gatherer.gather(store, instanceInjectableFactory.create(instance, qualifiers)));
+    store.putAll(discovererFactory.create(store, instanceInjectableFactory.create(instance, qualifiers)).discover());
   }
 
   @Override
@@ -62,14 +63,36 @@ public class InjectableStoreCandidateRegistry implements CandidateRegistry {
 
   @Override
   public void removeInstance(Object instance) {
-    store.removeAll(gatherer.gather(store, instanceInjectableFactory.create(instance)));
+    store.removeAll(discovererFactory.create(store, instanceInjectableFactory.create(instance)).discover());
   }
 
   private void registerInternal(List<Type> types) {
-    store.putAll(gatherer.gather(store, types));
+    Discoverer discoverer = discovererFactory.create(store, types);
+
+    try {
+      store.putAll(discoverer.discover());
+    }
+    catch(Exception e) {
+      if(!discoverer.getProblems().isEmpty()) {
+        e.addSuppressed(new DiscoveryException(discoverer.getProblems()));
+      }
+
+      throw e;
+    }
   }
 
   private void removeInternal(List<Type> types) {
-    store.removeAll(gatherer.gather(store, types));
+    Discoverer discoverer = discovererFactory.create(store, types);
+
+    try {
+      store.removeAll(discoverer.discover());
+    }
+    catch(Exception e) {
+      if(!discoverer.getProblems().isEmpty()) {
+        e.addSuppressed(new DiscoveryException(discoverer.getProblems()));
+      }
+
+      throw e;
+    }
   }
 }

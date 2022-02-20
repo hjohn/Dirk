@@ -1,7 +1,7 @@
 package hs.ddif.core.config.standard;
 
-import hs.ddif.core.config.gather.DiscoveryFailure;
-import hs.ddif.core.config.gather.Gatherer;
+import hs.ddif.core.config.discovery.Discoverer;
+import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
@@ -20,19 +20,27 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * An implementation of {@link Gatherer} which optionally does auto discovery
+ * An implementation of {@link DiscovererFactory} which optionally does auto discovery
  * through bindings when gathering injectables for a {@link Type}.
  */
-public class AutoDiscoveringGatherer implements Gatherer {
-  private static final Logger LOGGER = Logger.getLogger(AutoDiscoveringGatherer.class.getName());
+public class DefaultDiscovererFactory implements DiscovererFactory {
+  private static final Discoverer EMPTY = new Discoverer() {
+    @Override
+    public Set<Injectable> discover() {
+      return Set.of();
+    }
+
+    @Override
+    public List<String> getProblems() {
+      return List.of();
+    }
+  };
 
   /**
-   * Allows simple extensions to a {@link AutoDiscoveringGatherer}.
+   * Allows simple extensions to a {@link DefaultDiscovererFactory}.
    */
   public interface Extension {
 
@@ -59,40 +67,33 @@ public class AutoDiscoveringGatherer implements Gatherer {
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
    * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
    */
-  public AutoDiscoveringGatherer(boolean autoDiscovery, List<Extension> extensions, ClassInjectableFactory classInjectableFactory) {
+  public DefaultDiscovererFactory(boolean autoDiscovery, List<Extension> extensions, ClassInjectableFactory classInjectableFactory) {
     this.autoDiscovery = autoDiscovery;
     this.extensions = extensions;
     this.classInjectableFactory = classInjectableFactory;
   }
 
   @Override
-  public Set<Injectable> gather(Resolver<Injectable> resolver, List<Type> types) {  // used during normal registration
-    Executor<DefinitionException> executor = new Executor<>(resolver, DefinitionException::new);
-
-    return executor.execute(types.stream().map(Key::new).collect(Collectors.toList()));
+  public Discoverer create(Resolver<Injectable> resolver, List<Type> types) {  // used during normal registration
+    return new SimpleDiscoverer(resolver, types.stream().map(Key::new).collect(Collectors.toList()));
   }
 
   @Override
-  public Set<Injectable> gather(Resolver<Injectable> resolver, Injectable injectable) {  // used for registering instances
-    Executor<DefinitionException> executor = new Executor<>(resolver, DefinitionException::new);
-
-    return executor.execute(injectable);
+  public Discoverer create(Resolver<Injectable> resolver, Injectable injectable) {  // used for registering instances
+    return new SimpleDiscoverer(resolver, injectable);
   }
 
   @Override
-  public Set<Injectable> gather(Resolver<Injectable> resolver, Key key) throws DiscoveryFailure {  // used during instantiation
+  public Discoverer create(Resolver<Injectable> resolver, Key key) {  // used during instantiation
     if(!autoDiscovery || !resolver.resolve(key).isEmpty()) {
-      return Set.of();
+      return EMPTY;
     }
 
-    Executor<DiscoveryFailure> executor = new Executor<>(resolver, DiscoveryFailure::new);
-
-    return executor.execute(List.of(key));
+    return new SimpleDiscoverer(resolver, List.of(key));
   }
 
-  class Executor<T extends Exception> {
+  private class SimpleDiscoverer implements Discoverer {
     private final QualifiedTypeStore<Injectable> tempStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
-    private final IncludingResolver includingResolver;
 
     /**
      * When auto discovery is on, keeps track of unresolved bindings. A linked hash set
@@ -109,38 +110,33 @@ public class AutoDiscoveringGatherer implements Gatherer {
     private final Map<Key, Key> via = new HashMap<>();
     private final Set<Type> visitedTypes = new HashSet<>();
     private final Set<Type> visitTypes = new HashSet<>();
-    private final BiFunction<String, Exception, T> exceptionFactory;
+    private final List<String> encounteredProblems = new ArrayList<>();
 
-    Executor(Resolver<Injectable> resolver, BiFunction<String, Exception, T> exceptionFactory) {
+    private final IncludingResolver includingResolver;
+
+    SimpleDiscoverer(Resolver<Injectable> resolver, List<Key> keys) {
       this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
-      this.exceptionFactory = exceptionFactory;
-    }
 
-    Set<Injectable> execute(List<Key> keys) throws T {
       for(Key key : keys) {
         visitTypes.add(key.getType());
         requiredKeys.add(key);
       }
-
-      return gather();
     }
 
-    Set<Injectable> execute(Injectable injectable) throws T {
+    SimpleDiscoverer(Resolver<Injectable> resolver, Injectable injectable) {
+      this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
+
       tempStore.put(injectable);
       visitTypes.add(injectable.getType());
-
-      return gather();
     }
 
-    private String toChain(Key key) {
-      if(via.containsKey(key)) {
-        return toChain(via.get(key)) + " -> [" + key + "]";
-      }
-
-      return "Path [" + key + "]";
+    @Override
+    public List<String> getProblems() {
+      return encounteredProblems;
     }
 
-    private Set<Injectable> gather() throws T {
+    @Override
+    public Set<Injectable> discover() {
 
       /*
        * Discover new injectables via various mechanisms, in a very specific order.
@@ -224,9 +220,9 @@ public class AutoDiscoveringGatherer implements Gatherer {
       return addInjectables(extensionDiscoveries);
     }
 
-    private boolean discoverInputTypes() throws T {
+    private boolean discoverInputTypes() {
       List<Injectable> injectables = new ArrayList<>();
-      T throwable = null;
+      DefinitionException throwable = null;
 
       for(Key key : requiredKeys) {
         boolean alreadyDerived = tempStore.contains(key);  // was this key already derived through another mechanism?
@@ -243,11 +239,10 @@ public class AutoDiscoveringGatherer implements Gatherer {
         catch(Exception e) {
           if(!alreadyDerived) {  // if creation failed but it was derived through other means, ignore the exception, this is acceptable as it is not ambiguous
             if(throwable == null) {
-              throwable = exceptionFactory.apply(toChain(key) + ": " + e.getMessage(), e);
+              throwable = new DefinitionException("Exception occurred during discovery via path: " + toChain(key), null);
             }
-            else {
-              throwable.addSuppressed(new DefinitionException(toChain(key) + ": " + e.getMessage(), e));
-            }
+
+            throwable.addSuppressed(e);
           }
         }
       }
@@ -273,7 +268,7 @@ public class AutoDiscoveringGatherer implements Gatherer {
             return addInjectables(List.of(attemptCreateInjectable(binding)));
           }
           catch(Exception e) {
-            LOGGER.info("Auto discovery of binding unsuccessful: " + binding + ": " + e.getMessage());
+            encounteredProblems.add("Auto discovery of binding unsuccessful: " + binding + ": " + e.getMessage());
           }
         }
       }
@@ -302,6 +297,14 @@ public class AutoDiscoveringGatherer implements Gatherer {
       }
 
       return injectable;
+    }
+
+    private String toChain(Key key) {
+      if(via.containsKey(key)) {
+        return toChain(via.get(key)) + " -> [" + key + "]";
+      }
+
+      return "[" + key + "]";
     }
   }
 

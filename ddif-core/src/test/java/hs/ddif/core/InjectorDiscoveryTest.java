@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.config.gather.DiscoveryFailure;
+import hs.ddif.core.config.discovery.DiscoveryFailure;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
@@ -82,16 +82,25 @@ public class InjectorDiscoveryTest {
   public void shouldThrowBindingExceptionWhenAddingClassWithoutConstructorMatch() {
     assertThatThrownBy(() -> injector.getInstance(SampleWithoutConstructorMatch.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Path [hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] cannot be injected")
+      .hasMessage("[hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] instantiation failed because auto discovery was unable to resolve all dependencies; found: []")
+      .hasNoSuppressedExceptions()
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DiscoveryFailure.class)
-      .hasMessage("Path [hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] cannot be injected")
+      .hasMessage("[hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] instantiation failed because auto discovery was unable to resolve all dependencies; found: []")
+      .hasNoSuppressedExceptions()
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] cannot be injected")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] cannot be injected")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
+          .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 

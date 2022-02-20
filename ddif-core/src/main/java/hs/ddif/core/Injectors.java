@@ -1,15 +1,15 @@
 package hs.ddif.core;
 
 import hs.ddif.core.config.ListTypeExtension;
-import hs.ddif.core.config.ProducesGathererExtension;
-import hs.ddif.core.config.ProviderGathererExtension;
+import hs.ddif.core.config.ProducesExtension;
+import hs.ddif.core.config.ProviderExtension;
 import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
-import hs.ddif.core.config.gather.Gatherer;
+import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.scope.WeakSingletonScopeResolver;
 import hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplate;
-import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
+import hs.ddif.core.config.standard.DefaultDiscovererFactory;
 import hs.ddif.core.config.standard.ConcreteClassInjectableFactoryTemplate;
 import hs.ddif.core.config.standard.DefaultAnnotatedInjectableFactory;
 import hs.ddif.core.config.standard.DefaultInjectable;
@@ -108,13 +108,13 @@ public class Injectors {
     return new ScopeResolverManager(extendedScopeResolvers);
   }
 
-  private static Gatherer createGatherer(ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory, boolean autoDiscovery) {
-    List<AutoDiscoveringGatherer.Extension> extensions = List.of(
-      new ProviderGathererExtension(methodInjectableFactory),
-      new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory)
+  private static DiscovererFactory createGatherer(ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory, boolean autoDiscovery) {
+    List<DefaultDiscovererFactory.Extension> extensions = List.of(
+      new ProviderExtension(methodInjectableFactory),
+      new ProducesExtension(methodInjectableFactory, fieldInjectableFactory)
     );
 
-    return new AutoDiscoveringGatherer(autoDiscovery, extensions, classInjectableFactory);
+    return new DefaultDiscovererFactory(autoDiscovery, extensions, classInjectableFactory);
   }
 
   private static ClassInjectableFactory createClassInjectableFactory(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {

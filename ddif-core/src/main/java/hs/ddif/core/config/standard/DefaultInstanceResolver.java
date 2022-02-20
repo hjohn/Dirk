@@ -2,8 +2,9 @@ package hs.ddif.core.config.standard;
 
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.config.gather.DiscoveryFailure;
-import hs.ddif.core.config.gather.Gatherer;
+import hs.ddif.core.config.discovery.Discoverer;
+import hs.ddif.core.config.discovery.DiscovererFactory;
+import hs.ddif.core.config.discovery.DiscoveryFailure;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.instantiation.InstantiationContext;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
  */
 public class DefaultInstanceResolver implements InstanceResolver {
   private final InjectableStore store;
-  private final Gatherer gatherer;
+  private final DiscovererFactory discovererFactory;
   private final InstantiationContext instantiationContext;
   private final InstantiatorFactory instantiatorFactory;
 
@@ -35,13 +36,13 @@ public class DefaultInstanceResolver implements InstanceResolver {
    * Constructs a new instance.
    *
    * @param store an {@link InjectableStore}, cannot be {@code null}
-   * @param gatherer a {@link Gatherer}, cannot be {@code null}
+   * @param discovererFactory a {@link DiscovererFactory}, cannot be {@code null}
    * @param instantiationContext an {@link InstantiationContext}, cannot be {@code null}
    * @param instantiatorFactory an {@link InstantiatorFactory}, cannot be {@code null}
    */
-  public DefaultInstanceResolver(InjectableStore store, Gatherer gatherer, InstantiationContext instantiationContext, InstantiatorFactory instantiatorFactory) {
+  public DefaultInstanceResolver(InjectableStore store, DiscovererFactory discovererFactory, InstantiationContext instantiationContext, InstantiatorFactory instantiatorFactory) {
     this.store = store;
-    this.gatherer = gatherer;
+    this.discovererFactory = discovererFactory;
     this.instantiationContext = instantiationContext;
     this.instantiatorFactory = instantiatorFactory;
   }
@@ -104,15 +105,24 @@ public class DefaultInstanceResolver implements InstanceResolver {
 
   private <T> T getInstance(Key key) throws NoSuchInstance, MultipleInstances, InstanceCreationFailure {
     Instantiator<T> instanceFactory = instantiatorFactory.getInstantiator(key, null);
-    Set<Injectable> gatheredInjectables = gatherer.gather(store, instanceFactory.getKey());
+    Discoverer discoverer = discovererFactory.create(store, instanceFactory.getKey());
+    Set<Injectable> gatheredInjectables = Set.of();
 
-    if(!gatheredInjectables.isEmpty()) {
-      try {
+    try {
+      gatheredInjectables = discoverer.discover();
+
+      if(!gatheredInjectables.isEmpty()) {
         store.putAll(gatheredInjectables);
       }
-      catch(Exception e) {
-        throw new DiscoveryFailure(key, "instantiation failed because auto discovery was unable to resolve all dependencies; found: " + gatheredInjectables.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()), e);
+    }
+    catch(Exception e) {
+      DiscoveryFailure f = new DiscoveryFailure(key, "instantiation failed because auto discovery was unable to resolve all dependencies; found: " + gatheredInjectables.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()), e);
+
+      if(!discoverer.getProblems().isEmpty()) {
+        f.addSuppressed(new DiscoveryException(discoverer.getProblems()));
       }
+
+      throw f;
     }
 
     try {

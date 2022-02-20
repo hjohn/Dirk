@@ -304,16 +304,17 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenRemovingInterface() {
     assertThatThrownBy(() -> injector.remove(SimpleInterface.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [hs.ddif.core.test.injectables.SimpleInterface]: [interface hs.ddif.core.test.injectables.SimpleInterface] cannot be injected; failures:\n"
-        + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.test.injectables.SimpleInterface\n"
-        + " - Type cannot be abstract: interface hs.ddif.core.test.injectables.SimpleInterface"
-      )
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[interface hs.ddif.core.test.injectables.SimpleInterface] cannot be injected; failures:\n"
-        + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.test.injectables.SimpleInterface\n"
-        + " - Type cannot be abstract: interface hs.ddif.core.test.injectables.SimpleInterface"
-      )
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.test.injectables.SimpleInterface]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[interface hs.ddif.core.test.injectables.SimpleInterface] cannot be injected; failures:\n"
+            + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.test.injectables.SimpleInterface\n"
+            + " - Type cannot be abstract: interface hs.ddif.core.test.injectables.SimpleInterface"
+          )
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 
@@ -388,10 +389,14 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenRegisteringInterface() {
     assertThatThrownBy(() -> injector.register(List.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [java.util.List]: [interface java.util.List] cannot have unresolvable type variables: [E]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[interface java.util.List] cannot have unresolvable type variables: [E]")
+      .hasMessage("Exception occurred during discovery via path: [java.util.List]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[interface java.util.List] cannot have unresolvable type variables: [E]")
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 
@@ -580,13 +585,17 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenFinalFieldAnnotatedWithInject() throws SecurityException {
     assertThatThrownBy(() -> injector.register(FieldInjectionSampleWithAnnotatedFinalField.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField]: [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be injected")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be injected")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be injected")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
+          .hasMessage("Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 
@@ -608,13 +617,17 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenMultipleConstructorsAnnotatedWithInject() {
     assertThatThrownBy(() -> injector.register(ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors]: [class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot be injected")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot be injected")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot be injected")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
+          .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 
