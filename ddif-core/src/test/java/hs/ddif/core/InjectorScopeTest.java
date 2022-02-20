@@ -5,6 +5,7 @@ import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.inject.store.ScopeConflictException;
+import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.test.scope.TestScope;
@@ -42,6 +43,9 @@ public class InjectorScopeTest {
 
       assertThatThrownBy(() -> injector.getInstance(TestScopedBean.class))
         .isExactlyInstanceOf(InstanceCreationException.class)
+        .hasMessage("[class hs.ddif.core.InjectorScopeTest$TestScopedBean] could not be created")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(InstanceCreationFailure.class)
         .hasMessage("[class hs.ddif.core.InjectorScopeTest$TestScopedBean] could not be created")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(OutOfScopeException.class)
