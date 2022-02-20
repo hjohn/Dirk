@@ -1,10 +1,12 @@
 package hs.ddif.core.config.standard;
 
+import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
+import hs.ddif.core.scope.ScopeResolverManager;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
@@ -22,8 +24,10 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConcreteClassInjectableFactoryTemplateTest {
+  private static final ScopeResolverManager SCOPE_RESOLVER_MANAGER = new ScopeResolverManager(new SingletonScopeResolver());
+
   private BindingProvider bindingProvider = new BindingProvider();
-  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, new DefaultAnnotatedInjectableFactory());
+  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, new DefaultAnnotatedInjectableFactory(SCOPE_RESOLVER_MANAGER));
 
   @Test
   void shouldFailPreconditionWhenReturnTypeIsAbstract() {
@@ -35,7 +39,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
     Injectable injectable = create(B.class);
 
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(new Key(String.class));
-    assertThat(injectable.getScope()).isNull();
+    assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER_MANAGER.getScopeResolver(null));
     assertThat(injectable.getQualifiers()).isEmpty();
   }
 
@@ -46,7 +50,7 @@ public class ConcreteClassInjectableFactoryTemplateTest {
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
       new Key(String.class), new Key(Integer.class), new Key(Double.class, List.of(Annotations.of(Big.class)))
     );
-    assertThat(injectable.getScope()).isEqualTo(Annotations.of(Singleton.class));
+    assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER_MANAGER.getScopeResolver(Annotations.of(Singleton.class)));
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(
       Annotations.of(Red.class), Annotations.of(Green.class)
     );

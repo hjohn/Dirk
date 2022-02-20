@@ -11,9 +11,10 @@ import javax.inject.Scope;
 public interface ScopeResolver {
 
   /**
-   * Returns the annotation this resolver handles.
+   * Returns the annotation this resolver handles. Returns {@code null} when
+   * the handler handles unscoped injectables.
    *
-   * @return the annotation this resolver handles, never {@code null}
+   * @return the annotation this resolver handles, can be {@code null}
    */
   Class<? extends Annotation> getScopeAnnotationClass();
 

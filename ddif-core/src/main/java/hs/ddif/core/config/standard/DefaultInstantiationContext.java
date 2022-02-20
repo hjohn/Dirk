@@ -3,7 +3,6 @@ package hs.ddif.core.config.standard;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
-import hs.ddif.core.inject.store.ScopeResolverManager;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
@@ -30,19 +29,16 @@ public class DefaultInstantiationContext implements InstantiationContext {
 
   private final Resolver<Injectable> resolver;
   private final InstantiatorBindingMap instantiatorBindingMap;
-  private final ScopeResolverManager scopeResolverManager;
 
   /**
    * Constructs a new instance.
    *
    * @param instantiatorBindingMap an {@link InstantiatorBindingMap}, cannot be {@code null}
    * @param resolver a {@link Resolver}, cannot be {@code null}
-   * @param scopeResolverManager a {@link ScopeResolver}, cannot be {@code null}
    */
-  public DefaultInstantiationContext(Resolver<Injectable> resolver, InstantiatorBindingMap instantiatorBindingMap, ScopeResolverManager scopeResolverManager) {
+  public DefaultInstantiationContext(Resolver<Injectable> resolver, InstantiatorBindingMap instantiatorBindingMap) {
     this.resolver = resolver;
     this.instantiatorBindingMap = instantiatorBindingMap;
-    this.scopeResolverManager = scopeResolverManager;
   }
 
   @Override
@@ -86,7 +82,7 @@ public class DefaultInstantiationContext implements InstantiationContext {
   }
 
   private <T> T createInstance(Injectable injectable, boolean allowOutOfScope) throws InstanceCreationFailure {
-    ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(injectable.getScope());
+    ScopeResolver scopeResolver = injectable.getScopeResolver();
 
     try {
       if(!allowOutOfScope || scopeResolver.isScopeActive()) {

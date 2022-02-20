@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class UnresolvableDependencyExceptionTest {
-  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
+  private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();
   private final BindingProvider bindingProvider = new BindingProvider();
 
   @Test

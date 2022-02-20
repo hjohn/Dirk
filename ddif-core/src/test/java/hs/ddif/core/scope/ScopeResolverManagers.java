@@ -1,8 +1,7 @@
-package hs.ddif.core.inject.store;
+package hs.ddif.core.scope;
 
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.scope.WeakSingletonScopeResolver;
-import hs.ddif.core.scope.ScopeResolver;
 
 import java.util.stream.Stream;
 

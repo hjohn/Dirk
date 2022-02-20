@@ -21,10 +21,10 @@ import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
-import hs.ddif.core.inject.store.ScopeResolverManager;
 import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.TypeExtension;
 import hs.ddif.core.scope.ScopeResolver;
+import hs.ddif.core.scope.ScopeResolverManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,16 +47,17 @@ public class Injectors {
    * @return an {@link Injector}, never {@code null}
    */
   public static Injector autoDiscovering(ScopeResolver... scopeResolvers) {
+    SingletonScopeResolver singletonScopeResolver = new SingletonScopeResolver();
+    ScopeResolverManager scopeResolverManager = createScopeResolverManager(singletonScopeResolver, scopeResolvers);
+    AnnotatedInjectableFactory injectableFactory = new DefaultAnnotatedInjectableFactory(scopeResolverManager);
     BindingProvider bindingProvider = new BindingProvider();
-    AnnotatedInjectableFactory injectableFactory = new DefaultAnnotatedInjectableFactory();
     ClassInjectableFactory classInjectableFactory = createClassInjectableFactory(bindingProvider, injectableFactory);
     MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, injectableFactory);
     FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
+    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new, singletonScopeResolver);
 
     return new Injector(
       createInstantiatorBindingMap(),
-      createScopeResolverManager(scopeResolvers),
       instanceInjectableFactory,
       createGatherer(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, true)
     );
@@ -70,16 +71,17 @@ public class Injectors {
    * @return an {@link Injector}, never {@code null}
    */
   public static Injector manual(ScopeResolver... scopeResolvers) {
+    SingletonScopeResolver singletonScopeResolver = new SingletonScopeResolver();
+    ScopeResolverManager scopeResolverManager = createScopeResolverManager(singletonScopeResolver, scopeResolvers);
+    AnnotatedInjectableFactory injectableFactory = new DefaultAnnotatedInjectableFactory(scopeResolverManager);
     BindingProvider bindingProvider = new BindingProvider();
-    AnnotatedInjectableFactory injectableFactory = new DefaultAnnotatedInjectableFactory();
     ClassInjectableFactory classInjectableFactory = createClassInjectableFactory(bindingProvider, injectableFactory);
     MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, injectableFactory);
     FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
+    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new, singletonScopeResolver);
 
     return new Injector(
       createInstantiatorBindingMap(),
-      createScopeResolverManager(scopeResolvers),
       instanceInjectableFactory,
       createGatherer(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, false)
     );
@@ -99,8 +101,8 @@ public class Injectors {
     return new InstantiatorFactory(typeExtensions);
   }
 
-  private static ScopeResolverManager createScopeResolverManager(ScopeResolver... scopeResolvers) {
-    ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {new SingletonScopeResolver(), new WeakSingletonScopeResolver()};
+  private static ScopeResolverManager createScopeResolverManager(SingletonScopeResolver singletonScopeResolver, ScopeResolver... scopeResolvers) {
+    ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {singletonScopeResolver, new WeakSingletonScopeResolver()};
     ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
 
     return new ScopeResolverManager(extendedScopeResolvers);

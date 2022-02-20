@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FieldInjectableFactoryTest {
-  private final FieldInjectableFactory factory = InjectableFactories.forField();
+  private final FieldInjectableFactory factory = new InjectableFactories().forField();
 
   @Test
   void createShouldRejectNullField() {

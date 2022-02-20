@@ -1,6 +1,5 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
@@ -42,10 +41,11 @@ public class QualifiedTypeStoreTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation BIG = Annotations.of(Big.class);
 
-  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final MethodInjectableFactory methodInjectableFactory = InjectableFactories.forMethod();
-  private final FieldInjectableFactory fieldInjectableFactory = InjectableFactories.forField();
-  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
+  private final InjectableFactories injectableFactories = new InjectableFactories();
+  private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
+  private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
+  private final FieldInjectableFactory fieldInjectableFactory = injectableFactories.forField();
+  private final InstanceInjectableFactory instanceInjectableFactory = injectableFactories.forInstance();
 
   private QualifiedTypeStore<Injectable> store;
 

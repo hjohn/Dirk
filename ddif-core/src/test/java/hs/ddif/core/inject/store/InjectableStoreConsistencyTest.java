@@ -6,6 +6,7 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.instantiation.InstanceFactories;
 import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.scope.UnknownScopeException;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
 import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
@@ -26,11 +27,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class InjectableStoreConsistencyTest {
-  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
+  private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();
 
   private InstantiatorFactory instantiatorFactory = InstanceFactories.create();
   private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-  private ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create();
 
   private Injectable a = classInjectableFactory.create(A.class);
   private Injectable b = classInjectableFactory.create(B.class);
@@ -47,7 +47,7 @@ public class InjectableStoreConsistencyTest {
   private Injectable n = classInjectableFactory.create(N.class);
   private Injectable o = classInjectableFactory.create(O.class);
 
-  private InjectableStore store = new InjectableStore(instantiatorBindingMap, scopeResolverManager);
+  private InjectableStore store = new InjectableStore(instantiatorBindingMap);
 
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {

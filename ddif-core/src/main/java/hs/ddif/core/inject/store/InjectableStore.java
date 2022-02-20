@@ -3,7 +3,6 @@ package hs.ddif.core.inject.store;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.Instantiator;
-import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
@@ -30,7 +29,6 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  */
 public class InjectableStore implements Resolver<Injectable> {
   private final InstantiatorBindingMap instantiatorBindingMap;
-  private final ScopeResolverManager scopeResolverManager;
 
   /**
    * Structure keeping track of {@link Key}s used in bindings that must be available
@@ -56,11 +54,9 @@ public class InjectableStore implements Resolver<Injectable> {
    * Constructs a new instance.
    *
    * @param instantiatorBindingMap an {@link InstantiatorBindingMap}, cannot be {@code null}
-   * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
    */
-  public InjectableStore(InstantiatorBindingMap instantiatorBindingMap, ScopeResolverManager scopeResolverManager) {
+  public InjectableStore(InstantiatorBindingMap instantiatorBindingMap) {
     this.instantiatorBindingMap = instantiatorBindingMap;
-    this.scopeResolverManager = scopeResolverManager;
   }
 
   @Override
@@ -92,11 +88,6 @@ public class InjectableStore implements Resolver<Injectable> {
     qualifiedTypeStore.putAll(injectables);
 
     try {
-      // Check if scopes are known:
-      for(Injectable injectable : injectables) {
-        ensureScopeIsKnown(injectable);
-      }
-
       addInstanceFactories(injectables);  // modifies structure but must be done before checking for required bindings
 
       try {
@@ -166,11 +157,9 @@ public class InjectableStore implements Resolver<Injectable> {
     }
   }
 
-  private void removeScopedInstances(Collection<Injectable> injectables) {
+  private static void removeScopedInstances(Collection<Injectable> injectables) {
     for(Injectable injectable : injectables) {
-      ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(injectable.getScope());
-
-      scopeResolver.remove(injectable);
+      injectable.getScopeResolver().remove(injectable);
     }
   }
 
@@ -242,19 +231,11 @@ public class InjectableStore implements Resolver<Injectable> {
      * thrown instead.
      */
 
-    Annotation dependencyScopeAnnotation = dependentInjectable.getScope();
-    Annotation injectableScopeAnnotation = injectable.getScope();
+    Class<?> dependencyScopeAnnotation = dependentInjectable.getScopeResolver().getScopeAnnotationClass();
+    Class<?> injectableScopeAnnotation = injectable.getScopeResolver().getScopeAnnotationClass();
 
     if(isNarrowerScope(injectableScopeAnnotation, dependencyScopeAnnotation)) {
       throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getType());
-    }
-  }
-
-  private void ensureScopeIsKnown(Injectable injectable) {
-    Annotation scope = injectable.getScope();
-
-    if(scope != null && !scopeResolverManager.isRegisteredScope(scope.annotationType())) {
-      throw new UnknownScopeException("Unknown scope " + scope + ": " + injectable);
     }
   }
 
@@ -318,7 +299,7 @@ public class InjectableStore implements Resolver<Injectable> {
     }
   }
 
-  private static boolean isNarrowerScope(Annotation scope, Annotation dependencyScope) {
+  private static boolean isNarrowerScope(Class<?> scope, Class<?> dependencyScope) {
     if(scope == null) {
       return false;
     }
@@ -327,7 +308,7 @@ public class InjectableStore implements Resolver<Injectable> {
       return true;
     }
 
-    return !dependencyScope.annotationType().equals(Singleton.class) && !scope.annotationType().equals(dependencyScope.annotationType());
+    return !dependencyScope.equals(Singleton.class) && !scope.equals(dependencyScope);
   }
 
   /**

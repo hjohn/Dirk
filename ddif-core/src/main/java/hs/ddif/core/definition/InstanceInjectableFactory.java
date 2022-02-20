@@ -1,28 +1,27 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.util.Annotations;
+import hs.ddif.core.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Singleton;
-
 /**
  * Constructs {@link Injectable}s for a given object instance.
  */
 public class InstanceInjectableFactory {
-  private static final Annotation SINGLETON = Annotations.of(Singleton.class);
-
   private final InjectableFactory factory;
+  private final ScopeResolver scopeResolver;
 
   /**
    * Constructs a new instance.
    *
    * @param factory a {@link InjectableFactory}, cannot be {@code null}
+   * @param scopeResolver a {@link ScopeResolver}, cannot be {@code null}
    */
-  public InstanceInjectableFactory(InjectableFactory factory) {
+  public InstanceInjectableFactory(InjectableFactory factory, ScopeResolver scopeResolver) {
     this.factory = factory;
+    this.scopeResolver = scopeResolver;
   }
 
   /**
@@ -41,7 +40,7 @@ public class InstanceInjectableFactory {
       return factory.create(
         new QualifiedType(instance.getClass(), Set.of(qualifiers)),
         List.of(),
-        SINGLETON,
+        scopeResolver,
         instance,
         injections -> instance
       );

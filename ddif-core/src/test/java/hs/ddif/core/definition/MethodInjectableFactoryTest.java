@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MethodInjectableFactoryTest {
-  private final MethodInjectableFactory factory = InjectableFactories.forMethod();
+  private final MethodInjectableFactory factory = new InjectableFactories().forMethod();
 
   @Test
   void createShouldRejectNullMethod() {
