@@ -6,6 +6,7 @@ import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
+import hs.ddif.core.config.gather.DiscoveryFailure;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.InjectableFactories;
@@ -16,6 +17,7 @@ import hs.ddif.core.inject.store.InstantiatorBindingMap;
 import hs.ddif.core.instantiation.InstanceFactories;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.domain.MultipleInstances;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.scope.AbstractScopeResolver;
@@ -151,6 +153,9 @@ public class DefaultInstanceResolverTest {
         .isExactlyInstanceOf(InstanceCreationException.class)
         .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$D] could not be created")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(InstanceCreationFailure.class)
+        .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$D] could not be created")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(OutOfScopeException.class)
         .hasMessage("Scope not active: interface hs.ddif.core.config.standard.DefaultInstanceResolverTest$TestScoped for: Injectable[hs.ddif.core.config.standard.DefaultInstanceResolverTest$D]")
         .hasNoCause();
@@ -178,6 +183,9 @@ public class DefaultInstanceResolverTest {
     void getInstancesShouldThrowExceptionWhenInstantiationFails() {
       assertThatThrownBy(() -> instanceResolver.getInstances(H.class))
         .isExactlyInstanceOf(InstanceCreationException.class)
+        .hasMessage("Method [hs.ddif.core.config.standard.DefaultInstanceResolverTest$H hs.ddif.core.config.standard.DefaultInstanceResolverTest$B.createH()] call failed")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(InstanceCreationFailure.class)
         .hasMessage("Method [hs.ddif.core.config.standard.DefaultInstanceResolverTest$H hs.ddif.core.config.standard.DefaultInstanceResolverTest$B.createH()] call failed")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(InvocationTargetException.class)
@@ -216,6 +224,9 @@ public class DefaultInstanceResolverTest {
         .isExactlyInstanceOf(InstanceCreationException.class)
         .hasMessage("Method [hs.ddif.core.config.standard.DefaultInstanceResolverTest$H hs.ddif.core.config.standard.DefaultInstanceResolverTest$B.createH()] call failed")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(InstanceCreationFailure.class)
+        .hasMessage("Method [hs.ddif.core.config.standard.DefaultInstanceResolverTest$H hs.ddif.core.config.standard.DefaultInstanceResolverTest$B.createH()] call failed")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(InvocationTargetException.class)
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(RuntimeException.class)
@@ -247,6 +258,9 @@ public class DefaultInstanceResolverTest {
         .isExactlyInstanceOf(InstanceCreationException.class)
         .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(DiscoveryFailure.class)
+        .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(DefinitionException.class)
         .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
         .hasNoCause();
@@ -256,6 +270,11 @@ public class DefaultInstanceResolverTest {
     void getInstanceShouldThrowExceptionWhenDiscoveryFails() {
       assertThatThrownBy(() -> instanceResolver.getInstance(J.class))
         .isExactlyInstanceOf(InstanceCreationException.class)
+        .hasMessage("Path [hs.ddif.core.config.standard.DefaultInstanceResolverTest$J]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be injected; failures:\n"
+          + " - Type cannot be abstract: class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J"
+        )
+        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+        .isExactlyInstanceOf(DiscoveryFailure.class)
         .hasMessage("Path [hs.ddif.core.config.standard.DefaultInstanceResolverTest$J]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be injected; failures:\n"
           + " - Type cannot be abstract: class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J"
         )

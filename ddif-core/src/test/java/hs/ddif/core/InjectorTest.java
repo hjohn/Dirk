@@ -8,6 +8,7 @@ import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
+import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.DuplicateKeyException;
 import hs.ddif.core.store.NoSuchKeyException;
@@ -745,6 +746,9 @@ public class InjectorTest {
       .isExactlyInstanceOf(InstanceCreationException.class)
       .hasMessage("Method [private void hs.ddif.core.InjectorTest$BeanWithBadPostConstruct.postConstruct()] call failed for PostConstruct")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(InstanceCreationFailure.class)
+      .hasMessage("Method [private void hs.ddif.core.InjectorTest$BeanWithBadPostConstruct.postConstruct()] call failed for PostConstruct")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InvocationTargetException.class)
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(NullPointerException.class)
@@ -914,9 +918,15 @@ public class InjectorTest {
       .isExactlyInstanceOf(InstanceCreationException.class)
       .hasMessage("Method [void hs.ddif.core.InjectorTest$BadPostConstruct.postConstruct()] call failed for PostConstruct")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(InstanceCreationFailure.class)
+      .hasMessage("Method [void hs.ddif.core.InjectorTest$BadPostConstruct.postConstruct()] call failed for PostConstruct")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InvocationTargetException.class)
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InstanceCreationException.class)
+      .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in @PostConstruct method!)")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(InstanceCreationFailure.class)
       .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in @PostConstruct method!)")
       .hasNoCause();
   }
