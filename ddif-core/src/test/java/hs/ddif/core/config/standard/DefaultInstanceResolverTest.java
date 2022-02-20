@@ -13,8 +13,6 @@ import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
-import hs.ddif.core.inject.store.ScopeResolverManager;
-import hs.ddif.core.inject.store.ScopeResolverManagers;
 import hs.ddif.core.instantiation.InstanceFactories;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.InstantiatorFactory;
@@ -22,6 +20,8 @@ import hs.ddif.core.instantiation.domain.MultipleInstances;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.scope.AbstractScopeResolver;
 import hs.ddif.core.scope.OutOfScopeException;
+import hs.ddif.core.scope.ScopeResolverManager;
+import hs.ddif.core.scope.ScopeResolverManagers;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
 
@@ -61,11 +61,12 @@ public class DefaultInstanceResolverTest {
   private final InstantiatorFactory instantiatorFactory = InstanceFactories.create();
   private final InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);
-  private final InjectableStore store = new InjectableStore(instantiatorBindingMap, scopeResolverManager);
-  private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, scopeResolverManager);
-  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final MethodInjectableFactory methodInjectableFactory = InjectableFactories.forMethod();
-  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
+  private final InjectableStore store = new InjectableStore(instantiatorBindingMap);
+  private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
+  private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager);
+  private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
+  private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
+  private final InstanceInjectableFactory instanceInjectableFactory = injectableFactories.forInstance();
 
   private String currentScope;
 

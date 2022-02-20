@@ -33,9 +33,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class AutoDiscoveringGathererTest {
   private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
-  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final FieldInjectableFactory fieldInjectableFactory = InjectableFactories.forField();
-  private final MethodInjectableFactory methodInjectableFactory = InjectableFactories.forMethod();
+  private final InjectableFactories injectableFactories = new InjectableFactories();
+  private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
+  private final FieldInjectableFactory fieldInjectableFactory = injectableFactories.forField();
+  private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
 
   /*
    * Note: the produced Sets by the gatherer in these tests could be incomplete or contain multiple

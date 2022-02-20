@@ -3,6 +3,7 @@ package hs.ddif.core.definition;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -56,11 +57,11 @@ public interface Injectable {
   List<Binding> getBindings();
 
   /**
-   * Returns the scope of this {@link Injectable}.
+   * Returns the {@link ScopeResolver} of this {@link Injectable}.
    *
-   * @return the scope of this {@link Injectable}, can be {@code null}
+   * @return the {@link ScopeResolver} of this {@link Injectable}, never {@code null}
    */
-  Annotation getScope();
+  ScopeResolver getScopeResolver();
 
   /**
    * Creates an instance.

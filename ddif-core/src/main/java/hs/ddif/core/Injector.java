@@ -9,7 +9,6 @@ import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
-import hs.ddif.core.inject.store.ScopeResolverManager;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.scope.ScopeResolver;
 
@@ -61,13 +60,12 @@ public class Injector implements InstanceResolver, CandidateRegistry {
    * Constructs a new instance.
    *
    * @param instantiatorBindingMap an {@link InstantiatorBindingMap}, cannot be {@code null}
-   * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
    * @param instanceInjectableFactory a {@link InstanceInjectableFactory}, cannot be {@code null}
    * @param gatherer a {@link Gatherer}, cannot be {@code null}
    */
-  Injector(InstantiatorBindingMap instantiatorBindingMap, ScopeResolverManager scopeResolverManager, InstanceInjectableFactory instanceInjectableFactory, Gatherer gatherer) {
-    InjectableStore store = new InjectableStore(instantiatorBindingMap, scopeResolverManager);
-    InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, scopeResolverManager);
+  Injector(InstantiatorBindingMap instantiatorBindingMap, InstanceInjectableFactory instanceInjectableFactory, Gatherer gatherer) {
+    InjectableStore store = new InjectableStore(instantiatorBindingMap);
+    InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
 
     this.registry = new InjectableStoreCandidateRegistry(store, gatherer, instanceInjectableFactory);
     this.instanceResolver = new DefaultInstanceResolver(store, gatherer, instantiationContext, instantiatorBindingMap.getInstantiatorFactory());

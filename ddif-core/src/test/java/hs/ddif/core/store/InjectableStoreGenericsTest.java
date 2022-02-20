@@ -1,6 +1,5 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactories;
@@ -21,9 +20,10 @@ import org.junit.rules.ExpectedException;
 import static org.junit.Assert.assertTrue;
 
 public class InjectableStoreGenericsTest {
-  private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final MethodInjectableFactory methodInjectableFactory =  InjectableFactories.forMethod();
-  private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
+  private final InjectableFactories injectableFactories = new InjectableFactories();
+  private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
+  private final MethodInjectableFactory methodInjectableFactory =  injectableFactories.forMethod();
+  private final InstanceInjectableFactory instanceInjectableFactory = injectableFactories.forInstance();
 
   private QualifiedTypeStore<Injectable> store;
 

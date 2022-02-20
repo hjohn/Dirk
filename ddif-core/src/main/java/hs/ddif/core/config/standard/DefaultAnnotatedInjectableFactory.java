@@ -8,12 +8,14 @@ import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.ScopeAnnotations;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.injection.ObjectFactory;
+import hs.ddif.core.scope.ScopeResolverManager;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Qualifier;
 
@@ -25,13 +27,24 @@ import javax.inject.Qualifier;
 public class DefaultAnnotatedInjectableFactory implements AnnotatedInjectableFactory {
   private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
 
+  private final ScopeResolverManager scopeResolverManager;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
+   */
+  public DefaultAnnotatedInjectableFactory(ScopeResolverManager scopeResolverManager) {
+    this.scopeResolverManager = Objects.requireNonNull(scopeResolverManager, "scopeResolverManager cannot be null");
+  }
+
   @Override
   public Injectable create(Type type, AnnotatedElement element, List<Binding> bindings, ObjectFactory objectFactory) {
     try {
       return new DefaultInjectable(
         new QualifiedType(type, Annotations.findDirectlyMetaAnnotatedAnnotations(element, QUALIFIER)),
         bindings,
-        ScopeAnnotations.find(element),
+        scopeResolverManager.getScopeResolver(ScopeAnnotations.find(element)),
         element,
         objectFactory
       );

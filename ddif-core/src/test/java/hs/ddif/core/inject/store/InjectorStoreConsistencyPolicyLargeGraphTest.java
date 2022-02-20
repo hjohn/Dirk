@@ -1,13 +1,15 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.DefaultInjectable;
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
-import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.InstanceFactories;
 import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
@@ -21,7 +23,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,12 +33,11 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
   void largeGraphTest() throws BadQualifiedTypeException {
     InstantiatorFactory instantiatorFactory = InstanceFactories.create();
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-    ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create();
-    InjectableStore store = new InjectableStore(instantiatorBindingMap, scopeResolverManager);
+    InjectableStore store = new InjectableStore(instantiatorBindingMap);
     List<Injectable> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
-    Singleton annotation = Annotations.of(Singleton.class);
+    ScopeResolver scopeResolver = new SingletonScopeResolver();
 
     for(int i = 0; i < 10000; i++) {
       store.checkInvariants();
@@ -54,7 +54,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
       Injectable injectable = new DefaultInjectable(
         new QualifiedType(classes.get(rnd.nextInt(classes.size())), Set.of(Annotations.named("instance-" + i))),
         bindings,
-        annotation,
+        scopeResolver,
         null,
         injections -> null
       );

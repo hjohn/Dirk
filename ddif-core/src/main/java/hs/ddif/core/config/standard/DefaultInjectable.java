@@ -6,8 +6,8 @@ import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
 import hs.ddif.core.instantiation.injection.ObjectFactory;
+import hs.ddif.core.scope.ScopeResolver;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +20,7 @@ import java.util.Objects;
 public final class DefaultInjectable implements Injectable {
   private final QualifiedType qualifiedType;
   private final List<Binding> bindings;
-  private final Annotation scope;
+  private final ScopeResolver scopeResolver;
   private final Object discriminator;
   private final ObjectFactory objectFactory;
   private final int hashCode;
@@ -30,16 +30,19 @@ public final class DefaultInjectable implements Injectable {
    *
    * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
    * @param bindings a list of {@link Binding}s, cannot be {@code null} or contain {@code null}s, but can be empty
-   * @param scope a scope {@link Annotation}, can be {@code null}
+   * @param scopeResolver a {@link ScopeResolver}, cannot be {@code null}
    * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
    * @param objectFactory an {@link ObjectFactory}, cannot be {@code null}
    */
-  public DefaultInjectable(QualifiedType qualifiedType, List<Binding> bindings, Annotation scope, Object discriminator, ObjectFactory objectFactory) {
+  public DefaultInjectable(QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, ObjectFactory objectFactory) {
     if(qualifiedType == null) {
       throw new IllegalArgumentException("qualifiedType cannot be null");
     }
     if(bindings == null) {
       throw new IllegalArgumentException("bindings cannot be null");
+    }
+    if(scopeResolver == null) {
+      throw new IllegalArgumentException("scopeResolver cannot be null");
     }
     if(objectFactory == null) {
       throw new IllegalArgumentException("objectFactory cannot be null");
@@ -47,7 +50,7 @@ public final class DefaultInjectable implements Injectable {
 
     this.qualifiedType = qualifiedType;
     this.bindings = Collections.unmodifiableList(new ArrayList<>(bindings));
-    this.scope = scope;
+    this.scopeResolver = scopeResolver;
     this.discriminator = discriminator;
     this.objectFactory = objectFactory;
     this.hashCode = calculateHash();
@@ -68,8 +71,8 @@ public final class DefaultInjectable implements Injectable {
   }
 
   @Override
-  public Annotation getScope() {
-    return scope;
+  public ScopeResolver getScopeResolver() {
+    return scopeResolver;
   }
 
   @Override

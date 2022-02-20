@@ -1,17 +1,20 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.annotations.Argument;
+import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplate.Context;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.InstanceInjectableFactory;
+import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.scope.ScopeResolver;
+import hs.ddif.core.scope.ScopeResolverManager;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
@@ -34,8 +37,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AssistedClassInjectableFactoryTemplateTest {
+  private static final ScopeResolver SINGLETON_SCOPE_RESOLVER = new SingletonScopeResolver();
+  private static final ScopeResolverManager SCOPE_RESOLVER_MANAGER = new ScopeResolverManager(SINGLETON_SCOPE_RESOLVER);
+
   private BindingProvider bindingProvider = new BindingProvider();
-  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, new DefaultAnnotatedInjectableFactory());
+  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, new DefaultAnnotatedInjectableFactory(SCOPE_RESOLVER_MANAGER));
 
   @Test
   void shouldConstructSimpleFactory() throws BindingException {
@@ -47,7 +53,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
       new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
-    assertThat(injectable.getScope()).isNull();
+    assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER_MANAGER.getScopeResolver(null));
   }
 
   @Test
@@ -60,7 +66,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
       new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class));
-    assertThat(injectable.getScope()).isEqualTo(Annotations.of(Singleton.class));
+    assertThat(injectable.getScopeResolver()).isEqualTo(SINGLETON_SCOPE_RESOLVER);
   }
 
   @Test
@@ -76,7 +82,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
       new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
-    assertThat(injectable.getScope()).isNull();
+    assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER_MANAGER.getScopeResolver(null));
   }
 
   @Test
@@ -88,7 +94,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
       new Key(TypeUtils.parameterize(Provider.class, Integer.class))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
-    assertThat(injectable.getScope()).isEqualTo(Annotations.of(Singleton.class));
+    assertThat(injectable.getScopeResolver()).isEqualTo(SINGLETON_SCOPE_RESOLVER);
 
     /*
      * Test if factory actually works
@@ -152,10 +158,11 @@ public class AssistedClassInjectableFactoryTemplateTest {
   void shouldInstantiateTypeViaFactory() throws BindingException {
     DefaultInstanceResolver instanceResolver = InstanceResolvers.createWithConsistencyPolicy();
     InjectableStore store = instanceResolver.getStore();
+    InjectableFactories injectableFactories = new InjectableFactories();
 
     store.putAll(List.of(
-      new InstanceInjectableFactory(DefaultInjectable::new).create("Red", Annotations.of(Red.class)),
-      new InstanceInjectableFactory(DefaultInjectable::new).create("Green", Annotations.of(Green.class)),
+      injectableFactories.forInstance().create("Red", Annotations.of(Red.class)),
+      injectableFactories.forInstance().create("Green", Annotations.of(Green.class)),
       create(FactoryA.class)
     ));
 

@@ -3,6 +3,7 @@ package hs.ddif.core.definition;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.scope.TestScope;
+import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
 
 import java.lang.reflect.Type;
@@ -22,7 +23,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ClassInjectableFactoryTest {
-  private final ClassInjectableFactory factory = InjectableFactories.forClass();
+  private final InjectableFactories injectableFactories = new InjectableFactories();
+  private final ClassInjectableFactory factory = injectableFactories.forClass();
 
   @Test
   public void createShouldAcceptValidParameters() throws Exception {
@@ -30,7 +32,7 @@ public class ClassInjectableFactoryTest {
 
     assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
-    assertEquals(SimpleClass.class.getAnnotation(Singleton.class), injectable.getScope());
+    assertEquals(injectableFactories.getScopeResolver(Annotations.of(Singleton.class)), injectable.getScopeResolver());
     assertThat(injectable.getBindings()).hasSize(0);
     assertTrue(injectable.createInstance(Bindings.resolve(injectable.getBindings())) instanceof SimpleClass);
 
@@ -38,7 +40,7 @@ public class ClassInjectableFactoryTest {
 
     assertEquals(ClassWithDependencies.class, injectable.getType());
     assertEquals(Collections.singleton(ClassWithDependencies.class.getAnnotation(Red.class)), injectable.getQualifiers());
-    assertNull(injectable.getScope());
+    assertEquals(injectableFactories.getScopeResolver(null), injectable.getScopeResolver());
     assertThat(injectable.getBindings()).hasSize(4);
 
     ClassWithDependencies instance = (ClassWithDependencies)injectable.createInstance(Bindings.resolve(injectable.getBindings(), 2, 4L, null, "a string"));

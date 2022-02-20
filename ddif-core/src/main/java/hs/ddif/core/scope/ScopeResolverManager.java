@@ -1,6 +1,4 @@
-package hs.ddif.core.inject.store;
-
-import hs.ddif.core.scope.ScopeResolver;
+package hs.ddif.core.scope;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
@@ -11,7 +9,6 @@ import java.util.concurrent.Callable;
  * Manages {@link ScopeResolver}s.
  */
 public class ScopeResolverManager {
-  private static final ScopeResolver NULL_SCOPE_RESOLVER = new NullScopeResolver();
 
   /**
    * Map containing {@link ScopeResolver}s.
@@ -27,6 +24,8 @@ public class ScopeResolverManager {
     for(ScopeResolver scopeResolver : scopeResolvers) {
       scopeResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
     }
+
+    scopeResolversByAnnotation.put(null, new NullScopeResolver());
   }
 
   /**
@@ -36,23 +35,19 @@ public class ScopeResolverManager {
    * @return a {@link ScopeResolver}, never {@code null}
    */
   public ScopeResolver getScopeResolver(Annotation scope) {
-    return scopeResolversByAnnotation.getOrDefault(scope == null ? null : scope.annotationType(), NULL_SCOPE_RESOLVER);
-  }
+    ScopeResolver scopeResolver = scopeResolversByAnnotation.get(scope == null ? null : scope.annotationType());
 
-  /**
-   * Checks whether the given scope is known.
-   *
-   * @param scope a scope to check, cannot be {@code null}
-   * @return {@code true} if the scope is known, otherwise {@code false}
-   */
-  public boolean isRegisteredScope(Class<? extends Annotation> scope) {
-    return scopeResolversByAnnotation.containsKey(scope);
+    if(scopeResolver == null) {
+      throw new UnknownScopeException("Unknown scope encountered: " + scope);
+    }
+
+    return scopeResolver;
   }
 
   private static class NullScopeResolver implements ScopeResolver {
     @Override
     public Class<? extends Annotation> getScopeAnnotationClass() {
-      throw new UnsupportedOperationException();
+      return null;
     }
 
     @Override

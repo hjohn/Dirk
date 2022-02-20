@@ -13,8 +13,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProducesGathererExtensionTest {
-  private final MethodInjectableFactory methodInjectableFactory = InjectableFactories.forMethod();
-  private final FieldInjectableFactory fieldInjectableFactory = InjectableFactories.forField();
+  private final InjectableFactories injectableFactories = new InjectableFactories();
+  private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
+  private final FieldInjectableFactory fieldInjectableFactory = injectableFactories.forField();
 
   private ProducesGathererExtension extension = new ProducesGathererExtension(methodInjectableFactory, fieldInjectableFactory);
 

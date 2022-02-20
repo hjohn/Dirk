@@ -1,6 +1,5 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.util.Annotations;
 
 import java.util.List;
@@ -13,7 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class InstanceInjectableFactoryTest {
-  private final InstanceInjectableFactory factory = new InstanceInjectableFactory(DefaultInjectable::new);
+  private final InjectableFactories injectableFactories = new InjectableFactories();
+  private final InstanceInjectableFactory factory = injectableFactories.forInstance();
 
   @Test
   void createShouldRejectNullField() {
@@ -29,7 +29,7 @@ public class InstanceInjectableFactoryTest {
 
     assertThat(injectable.getType()).isEqualTo(String.class);
     assertThat(injectable.getBindings()).isEmpty();
-    assertThat(injectable.getScope()).isEqualTo(Annotations.of(Singleton.class));
+    assertThat(injectable.getScopeResolver()).isEqualTo(injectableFactories.getScopeResolver(Annotations.of(Singleton.class)));
     assertThat(injectable.createInstance(List.of())).isEqualTo("Hello World");
   }
 }
