@@ -19,7 +19,7 @@ import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertTrue;
 
-public class InjectableStoreGenericsTest {
+public class QualifiedTypeStoreGenericsTest {
   private final InjectableFactories injectableFactories = new InjectableFactories();
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
   private final MethodInjectableFactory methodInjectableFactory =  injectableFactories.forMethod();
