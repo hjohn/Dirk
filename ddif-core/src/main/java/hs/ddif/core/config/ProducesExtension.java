@@ -1,7 +1,7 @@
 package hs.ddif.core.config;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.core.config.standard.AutoDiscoveringGatherer;
+import hs.ddif.core.config.standard.DefaultDiscovererFactory;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
@@ -23,7 +23,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * Extension which looks for members annotated with {@link Produces}, and if found creates
  * {@link Injectable}s for them.
  */
-public class ProducesGathererExtension implements AutoDiscoveringGatherer.Extension {
+public class ProducesExtension implements DefaultDiscovererFactory.Extension {
   private final MethodInjectableFactory methodInjectableFactory;
   private final FieldInjectableFactory fieldInjectableFactory;
 
@@ -33,7 +33,7 @@ public class ProducesGathererExtension implements AutoDiscoveringGatherer.Extens
    * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
    * @param fieldInjectableFactory a {@link FieldInjectableFactory}, cannot be {@code null}
    */
-  public ProducesGathererExtension(MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
+  public ProducesExtension(MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
     this.methodInjectableFactory = methodInjectableFactory;
     this.fieldInjectableFactory = fieldInjectableFactory;
   }

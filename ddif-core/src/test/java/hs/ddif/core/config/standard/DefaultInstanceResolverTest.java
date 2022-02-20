@@ -6,7 +6,7 @@ import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.api.MultipleInstancesException;
 import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.config.gather.DiscoveryFailure;
+import hs.ddif.core.config.discovery.DiscoveryFailure;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.InjectableFactories;
@@ -74,8 +74,8 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreIsEmpty {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), classInjectableFactory);
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, gatherer, instantiationContext, instantiatorFactory);
+    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), classInjectableFactory);
+    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
 
     @Test
     void shouldThrowExceptionWhenGettingSingleInstance() {
@@ -94,8 +94,8 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreNotEmpty {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), classInjectableFactory);
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, gatherer, instantiationContext, instantiatorFactory);
+    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), classInjectableFactory);
+    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
 
     {
       try {
@@ -237,8 +237,8 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreEmptyAndAutoDiscoveryIsActive {
-    private final AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(true, List.of(), classInjectableFactory);
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, gatherer, instantiationContext, instantiatorFactory);
+    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(true, List.of(), classInjectableFactory);
+    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
 
     @Test
     void getInstancesShouldNeverDiscoverTypes() {
@@ -256,13 +256,22 @@ public class DefaultInstanceResolverTest {
     void getInstanceShouldNotDiscoverTypesWithQualifiers() {
       assertThatThrownBy(() -> instanceResolver.getInstance(A.class, Red.class))
         .isExactlyInstanceOf(InstanceCreationException.class)
-        .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
+        .hasMessage("[@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] instantiation failed because auto discovery was unable to resolve all dependencies; found: []")
+        .hasNoSuppressedExceptions()
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(DiscoveryFailure.class)
-        .hasMessage("Path [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
+        .hasMessage("[@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] instantiation failed because auto discovery was unable to resolve all dependencies; found: []")
+        .hasNoSuppressedExceptions()
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(DefinitionException.class)
-        .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
+        .hasMessage("Exception occurred during discovery via path: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
+        .satisfies(throwable -> {
+          assertThat(throwable.getSuppressed()).hasSize(1);
+          assertThat(throwable.getSuppressed()[0])
+            .isExactlyInstanceOf(DefinitionException.class)
+            .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.config.standard.DefaultInstanceResolverTest$A]")
+            .hasNoCause();
+        })
         .hasNoCause();
     }
 
@@ -270,19 +279,24 @@ public class DefaultInstanceResolverTest {
     void getInstanceShouldThrowExceptionWhenDiscoveryFails() {
       assertThatThrownBy(() -> instanceResolver.getInstance(J.class))
         .isExactlyInstanceOf(InstanceCreationException.class)
-        .hasMessage("Path [hs.ddif.core.config.standard.DefaultInstanceResolverTest$J]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be injected; failures:\n"
-          + " - Type cannot be abstract: class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J"
-        )
+        .hasMessage("[hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] instantiation failed because auto discovery was unable to resolve all dependencies; found: []")
+        .hasNoSuppressedExceptions()
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(DiscoveryFailure.class)
-        .hasMessage("Path [hs.ddif.core.config.standard.DefaultInstanceResolverTest$J]: [class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be injected; failures:\n"
-          + " - Type cannot be abstract: class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J"
-        )
+        .hasMessage("[hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] instantiation failed because auto discovery was unable to resolve all dependencies; found: []")
+        .hasNoSuppressedExceptions()
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(DefinitionException.class)
-        .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be injected; failures:\n"
-          + " - Type cannot be abstract: class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J"
-        )
+        .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.config.standard.DefaultInstanceResolverTest$J]")
+        .satisfies(throwable -> {
+          assertThat(throwable.getSuppressed()).hasSize(1);
+          assertThat(throwable.getSuppressed()[0])
+            .isExactlyInstanceOf(DefinitionException.class)
+            .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be injected; failures:\n"
+              + " - Type cannot be abstract: class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J"
+            )
+            .hasNoCause();
+        })
         .hasNoCause();
     }
   }

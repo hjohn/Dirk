@@ -105,10 +105,14 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithMultipleAbstractMethods() {
     assertThatThrownBy(() -> injector.register(ProducerWithMultipleAbtractMethods.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessageStartingWith("Path [hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods]: [class hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods] cannot be injected; failures:")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessageStartingWith("[class hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods] cannot be injected; failures:")
+      .hasMessageStartingWith("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessageStartingWith("[class hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods] cannot be injected; failures:")
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 
@@ -124,10 +128,14 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithIllegalReturnType() {
     assertThatThrownBy(() -> injector.register(ProducerWithIncorrectReturnType.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectReturnType]: [interface hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectReturnType] cannot have unresolvable type variables: [T]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[interface hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectReturnType] cannot have unresolvable type variables: [T]")
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectReturnType]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[interface hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectReturnType] cannot have unresolvable type variables: [T]")
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 
@@ -139,10 +147,14 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithIncorrectParameterCount() {
     assertThatThrownBy(() -> injector.register(ProducerWithIncorrectParameterCount.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterCount]: Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterCount hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterCount.create(java.lang.Double)] should have 0 argument(s) of types: {}")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterCount hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterCount.create(java.lang.Double)] should have 0 argument(s) of types: {}")
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterCount]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterCount hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterCount.create(java.lang.Double)] should have 0 argument(s) of types: {}")
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 
@@ -159,10 +171,14 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithIncorrectParameterType() {
     assertThatThrownBy(() -> injector.register(ProducerWithIncorrectParameterType.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterType]: Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterType hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterType.create(java.lang.Double)] has argument [java.lang.Double text] with name 'text' that should be of type [class java.lang.String] but was: class java.lang.Double")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterType hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterType.create(java.lang.Double)] has argument [java.lang.Double text] with name 'text' that should be of type [class java.lang.String] but was: class java.lang.Double")
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterType]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterType hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterType.create(java.lang.Double)] has argument [java.lang.Double text] with name 'text' that should be of type [class java.lang.String] but was: class java.lang.Double")
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 
@@ -181,10 +197,14 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithIncorrectParameter() {
     assertThatThrownBy(() -> injector.register(ProducerWithIncorrectParameter.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Path [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameter]: Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameter hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameter.create(java.lang.String)] is missing required argument with name: incorrect")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameter hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameter.create(java.lang.String)] is missing required argument with name: incorrect")
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameter]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameter hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameter.create(java.lang.String)] is missing required argument with name: incorrect")
+          .hasNoCause();
+      })
       .hasNoCause();
   }
 

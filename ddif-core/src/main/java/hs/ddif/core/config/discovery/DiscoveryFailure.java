@@ -1,4 +1,4 @@
-package hs.ddif.core.config.gather;
+package hs.ddif.core.config.discovery;
 
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.store.Key;

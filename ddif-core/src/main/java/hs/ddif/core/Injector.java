@@ -2,7 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.core.api.InstanceResolver;
-import hs.ddif.core.config.gather.Gatherer;
+import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.standard.DefaultInstanceResolver;
 import hs.ddif.core.config.standard.DefaultInstantiationContext;
 import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
@@ -61,14 +61,14 @@ public class Injector implements InstanceResolver, CandidateRegistry {
    *
    * @param instantiatorBindingMap an {@link InstantiatorBindingMap}, cannot be {@code null}
    * @param instanceInjectableFactory a {@link InstanceInjectableFactory}, cannot be {@code null}
-   * @param gatherer a {@link Gatherer}, cannot be {@code null}
+   * @param discovererFactory a {@link DiscovererFactory}, cannot be {@code null}
    */
-  Injector(InstantiatorBindingMap instantiatorBindingMap, InstanceInjectableFactory instanceInjectableFactory, Gatherer gatherer) {
+  Injector(InstantiatorBindingMap instantiatorBindingMap, InstanceInjectableFactory instanceInjectableFactory, DiscovererFactory discovererFactory) {
     InjectableStore store = new InjectableStore(instantiatorBindingMap);
     InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
 
-    this.registry = new InjectableStoreCandidateRegistry(store, gatherer, instanceInjectableFactory);
-    this.instanceResolver = new DefaultInstanceResolver(store, gatherer, instantiationContext, instantiatorBindingMap.getInstantiatorFactory());
+    this.registry = new InjectableStoreCandidateRegistry(store, discovererFactory, instanceInjectableFactory);
+    this.instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorBindingMap.getInstantiatorFactory());
   }
 
   /**

@@ -16,19 +16,19 @@ public class InstanceResolvers {
     InstantiatorFactory instantiatorFactory = InstanceFactories.create();
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap);
-    AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), FACTORY);
+    DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), FACTORY);
     DefaultInstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
 
-    return new DefaultInstanceResolver(store, gatherer, instantiationContext, instantiatorFactory);
+    return new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
   }
 
   public static DefaultInstanceResolver createWithConsistencyPolicy() {
-    AutoDiscoveringGatherer gatherer = new AutoDiscoveringGatherer(false, List.of(), FACTORY);
+    DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), FACTORY);
     InstantiatorFactory instantiatorFactory = InstanceFactories.create();
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap);
     DefaultInstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
 
-    return new DefaultInstanceResolver(store, gatherer, instantiationContext, instantiatorFactory);
+    return new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
   }
 }
