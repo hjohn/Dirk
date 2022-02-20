@@ -11,7 +11,6 @@ import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
-import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
 import hs.ddif.core.inject.store.ScopeResolverManager;
@@ -64,9 +63,8 @@ public class DefaultInstanceResolverTest {
   private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);
   private final InjectableStore store = new InjectableStore(instantiatorBindingMap, scopeResolverManager);
   private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, scopeResolverManager);
-  private final BindingProvider bindingProvider = new BindingProvider();
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory = InjectableFactories.forMethod();
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
   private String currentScope;

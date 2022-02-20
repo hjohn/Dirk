@@ -2,16 +2,13 @@ package hs.ddif.core.definition;
 
 import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.instantiation.factory.MethodObjectFactory;
-import hs.ddif.core.util.Annotations;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.inject.Qualifier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -20,18 +17,16 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * owner {@link Type}.
  */
 public class MethodInjectableFactory {
-  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
-
   private final BindingProvider bindingProvider;
-  private final InjectableFactory injectableFactory;
+  private final AnnotatedInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
-   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
+   * @param injectableFactory a {@link AnnotatedInjectableFactory}, cannot be {@code null}
    */
-  public MethodInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
+  public MethodInjectableFactory(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
@@ -66,17 +61,6 @@ public class MethodInjectableFactory {
       throw new DefinitionException(method, "cannot be annotated with Inject");
     }
 
-    try {
-      return injectableFactory.create(
-        new QualifiedType(returnType, Annotations.findDirectlyMetaAnnotatedAnnotations(method, QUALIFIER)),
-        bindingProvider.ofMethod(method, ownerType),
-        ScopeAnnotations.find(method),
-        method,  // for proper discrimination, the exact method should also be taken into account, next to its generic type
-        new MethodObjectFactory(method)
-      );
-    }
-    catch(BadQualifiedTypeException e) {
-      throw new DefinitionException(method, "has unsuitable return type", e);
-    }
+    return injectableFactory.create(returnType, method, bindingProvider.ofMethod(method, ownerType), new MethodObjectFactory(method));
   }
 }

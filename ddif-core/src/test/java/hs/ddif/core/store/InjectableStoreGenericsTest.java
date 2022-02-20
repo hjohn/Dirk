@@ -6,7 +6,6 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
-import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.util.TypeReference;
 
 import java.io.Serializable;
@@ -22,9 +21,8 @@ import org.junit.rules.ExpectedException;
 import static org.junit.Assert.assertTrue;
 
 public class InjectableStoreGenericsTest {
-  private final BindingProvider bindingProvider = new BindingProvider();
   private final ClassInjectableFactory classInjectableFactory = InjectableFactories.forClass();
-  private final MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, DefaultInjectable::new);
+  private final MethodInjectableFactory methodInjectableFactory =  InjectableFactories.forMethod();
   private final InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(DefaultInjectable::new);
 
   private QualifiedTypeStore<Injectable> store;

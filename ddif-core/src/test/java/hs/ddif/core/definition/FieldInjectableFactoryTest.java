@@ -1,8 +1,5 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.config.standard.DefaultInjectable;
-import hs.ddif.core.definition.bind.BindingProvider;
-
 import java.util.List;
 
 import javax.inject.Inject;
@@ -15,8 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FieldInjectableFactoryTest {
-  private final BindingProvider bindingProvider = new BindingProvider();
-  private final FieldInjectableFactory factory = new FieldInjectableFactory(bindingProvider, DefaultInjectable::new);
+  private final FieldInjectableFactory factory = InjectableFactories.forField();
 
   @Test
   void createShouldRejectNullField() {

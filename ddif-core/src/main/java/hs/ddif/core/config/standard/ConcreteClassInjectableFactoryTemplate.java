@@ -1,26 +1,18 @@
 package hs.ddif.core.config.standard;
 
+import hs.ddif.core.definition.AnnotatedInjectableFactory;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.InjectableFactory;
-import hs.ddif.core.definition.QualifiedType;
-import hs.ddif.core.definition.ScopeAnnotations;
-import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.instantiation.factory.ClassObjectFactory;
-import hs.ddif.core.util.Annotations;
+import hs.ddif.core.util.Types;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.List;
-
-import javax.inject.Qualifier;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Template to construct {@link Injectable}s for concrete classes.
@@ -33,26 +25,25 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * </ul>
  */
 public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFactoryTemplate<Type> {
-  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
   private static final TypeAnalysis<Type> FAILURE_ABSTRACT = TypeAnalysis.negative("Type cannot be abstract: %1$s");
 
   private final BindingProvider bindingProvider;
-  private final InjectableFactory injectableFactory;
+  private final AnnotatedInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
-   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
+   * @param injectableFactory a {@link AnnotatedInjectableFactory}, cannot be {@code null}
    */
-  public ConcreteClassInjectableFactoryTemplate(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
+  public ConcreteClassInjectableFactoryTemplate(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
 
   @Override
   public TypeAnalysis<Type> analyze(Type type) {
-    Class<?> cls = TypeUtils.getRawType(type, null);
+    Class<?> cls = Types.raw(type);
 
     if(Modifier.isAbstract(cls.getModifiers())) {
       return FAILURE_ABSTRACT;
@@ -62,18 +53,12 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public Injectable create(TypeAnalysis<Type> analysis) throws BindingException, BadQualifiedTypeException {
+  public Injectable create(TypeAnalysis<Type> analysis) throws BindingException {
     Type type = analysis.getData();
-    Class<?> cls = TypeUtils.getRawType(type, null);
+    Class<?> cls = Types.raw(type);
     Constructor<?> constructor = BindingProvider.getConstructor(cls);
     List<Binding> bindings = bindingProvider.ofConstructorAndMembers(constructor, cls);
 
-    return injectableFactory.create(
-      new QualifiedType(type, Annotations.findDirectlyMetaAnnotatedAnnotations(cls, QUALIFIER)),
-      bindings,
-      ScopeAnnotations.find(cls),
-      null,
-      new ClassObjectFactory(constructor)
-    );
+    return injectableFactory.create(type, cls, bindings, new ClassObjectFactory(constructor));
   }
 }
