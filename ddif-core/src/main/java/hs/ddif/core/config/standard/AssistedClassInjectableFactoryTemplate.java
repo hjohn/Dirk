@@ -125,6 +125,9 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     if(factoryMethod == null) {
       return TypeAnalysis.negative("Type must have a single abstract method to qualify for assisted injection: %1$s");
     }
+    if(factoryMethod.getParameterCount() == 0) {
+      return TypeAnalysis.negative("Factory method must have at least one parameter to qualify for assisted injection: %1$s");
+    }
 
     Type returnType = TypeUtils.unrollVariables(TypeUtils.getTypeArguments(type, factoryMethod.getDeclaringClass()), factoryMethod.getGenericReturnType());
     Class<?> returnClass = Types.raw(returnType);

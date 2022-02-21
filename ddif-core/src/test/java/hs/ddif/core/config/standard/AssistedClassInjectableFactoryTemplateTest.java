@@ -24,6 +24,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.util.List;
+import java.util.function.Function;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -124,9 +125,17 @@ public class AssistedClassInjectableFactoryTemplateTest {
 
   @Test
   void shouldFailPreconditionWhenReturnTypeIsAbstract() {
+    ParameterizedType connectionProvider = TypeUtils.parameterize(Function.class, String.class, Connection.class);
+
+    assertThat(extension.analyze(connectionProvider).getUnsuitableReason(connectionProvider)).isEqualTo("Factory method cannot return an abstract type: public abstract java.lang.Object java.util.function.Function.apply(java.lang.Object) in: java.util.function.Function<java.lang.String, java.sql.Connection>");
+    assertThat(extension.analyze(BadFactoryE.class).getUnsuitableReason(BadFactoryE.class)).isEqualTo("Factory method cannot return an abstract type: public abstract hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$BadFactoryA hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$BadFactoryE.create(java.lang.Integer,java.lang.Integer) in: interface hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$BadFactoryE");
+  }
+
+  @Test
+  void shouldFailPreconditionWhenFactoryMethodHasNoParameters() {
     ParameterizedType connectionProvider = TypeUtils.parameterize(Provider.class, Connection.class);
 
-    assertThat(extension.analyze(connectionProvider).getUnsuitableReason(connectionProvider)).isEqualTo("Factory method cannot return an abstract type: public abstract java.lang.Object javax.inject.Provider.get() in: javax.inject.Provider<java.sql.Connection>");
+    assertThat(extension.analyze(connectionProvider).getUnsuitableReason(connectionProvider)).isEqualTo("Factory method must have at least one parameter to qualify for assisted injection: javax.inject.Provider<java.sql.Connection>");
     assertThat(extension.analyze(BadFactoryE.class).getUnsuitableReason(BadFactoryE.class)).isEqualTo("Factory method cannot return an abstract type: public abstract hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$BadFactoryA hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$BadFactoryE.create(java.lang.Integer,java.lang.Integer) in: interface hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$BadFactoryE");
   }
 
