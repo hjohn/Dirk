@@ -6,6 +6,7 @@ import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.MethodInjectableFactory;
+import hs.ddif.core.util.Types;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -41,26 +42,28 @@ public class ProducesInjectableExtension implements InjectableExtension {
   @Override
   public List<Injectable> getDerived(Type type) {
     List<Injectable> injectables = new ArrayList<>();
-    Class<?> injectableClass = TypeUtils.getRawType(type, null);
+    Class<?> injectableClass = Types.raw(type);
 
-    for(Method method : MethodUtils.getMethodsListWithAnnotation(injectableClass, Produces.class, true, true)) {
-      Type providedType = method.getGenericReturnType();
+    if(injectableClass != null) {
+      for(Method method : MethodUtils.getMethodsListWithAnnotation(injectableClass, Produces.class, true, true)) {
+        Type providedType = method.getGenericReturnType();
 
-      if(TypeUtils.getRawType(providedType, null) == Provider.class) {
-        throw new DefinitionException(method, "cannot have a return type with a nested Provider");
+        if(TypeUtils.getRawType(providedType, null) == Provider.class) {
+          throw new DefinitionException(method, "cannot have a return type with a nested Provider");
+        }
+
+        injectables.add(methodInjectableFactory.create(method, type));
       }
 
-      injectables.add(methodInjectableFactory.create(method, type));
-    }
+      for(Field field : FieldUtils.getFieldsListWithAnnotation(injectableClass, Produces.class)) {
+        Type providedType = field.getGenericType();
 
-    for(Field field : FieldUtils.getFieldsListWithAnnotation(injectableClass, Produces.class)) {
-      Type providedType = field.getGenericType();
+        if(TypeUtils.getRawType(providedType, null) == Provider.class) {
+          throw new DefinitionException(field, "cannot be of a type with a nested Provider");
+        }
 
-      if(TypeUtils.getRawType(providedType, null) == Provider.class) {
-        throw new DefinitionException(field, "cannot be of a type with a nested Provider");
+        injectables.add(fieldInjectableFactory.create(field, type));
       }
-
-      injectables.add(fieldInjectableFactory.create(field, type));
     }
 
     return injectables;
