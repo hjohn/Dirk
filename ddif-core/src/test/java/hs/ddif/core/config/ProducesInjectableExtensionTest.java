@@ -12,12 +12,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ProducesExtensionTest {
+public class ProducesInjectableExtensionTest {
   private final InjectableFactories injectableFactories = new InjectableFactories();
   private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
   private final FieldInjectableFactory fieldInjectableFactory = injectableFactories.forField();
 
-  private ProducesExtension extension = new ProducesExtension(methodInjectableFactory, fieldInjectableFactory);
+  private ProducesInjectableExtension extension = new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory);
 
   @Test
   void shouldFindProducesAnnotatedMethods() throws NoSuchMethodException, SecurityException, NoSuchFieldException {

@@ -1,6 +1,6 @@
 package hs.ddif.core.config;
 
-import hs.ddif.core.config.standard.DefaultDiscovererFactory;
+import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.MethodInjectableFactory;
@@ -16,7 +16,7 @@ import javax.inject.Provider;
  * This extension detects if a class implements {@link Provider} and registers
  * and additional injectable for the type the provider provides.
  */
-public class ProviderExtension implements DefaultDiscovererFactory.Extension {
+public class ProviderInjectableExtension implements InjectableExtension {
   private final MethodInjectableFactory methodInjectableFactory;
 
   /**
@@ -24,7 +24,7 @@ public class ProviderExtension implements DefaultDiscovererFactory.Extension {
    *
    * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
    */
-  public ProviderExtension(MethodInjectableFactory methodInjectableFactory) {
+  public ProviderInjectableExtension(MethodInjectableFactory methodInjectableFactory) {
     this.methodInjectableFactory = methodInjectableFactory;
   }
 

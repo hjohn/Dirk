@@ -1,8 +1,8 @@
 package hs.ddif.core;
 
 import hs.ddif.core.config.ListTypeExtension;
-import hs.ddif.core.config.ProducesExtension;
-import hs.ddif.core.config.ProviderExtension;
+import hs.ddif.core.config.ProducesInjectableExtension;
+import hs.ddif.core.config.ProviderInjectableExtension;
 import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
 import hs.ddif.core.config.discovery.DiscovererFactory;
@@ -14,6 +14,7 @@ import hs.ddif.core.config.standard.ConcreteClassInjectableFactoryTemplate;
 import hs.ddif.core.config.standard.DefaultAnnotatedInjectableFactory;
 import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.config.standard.DelegatingClassInjectableFactory;
+import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.AnnotatedInjectableFactory;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
@@ -59,7 +60,7 @@ public class Injectors {
     return new Injector(
       createInstantiatorBindingMap(),
       instanceInjectableFactory,
-      createGatherer(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, true)
+      createDiscoveryFactory(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, true)
     );
   }
 
@@ -83,7 +84,7 @@ public class Injectors {
     return new Injector(
       createInstantiatorBindingMap(),
       instanceInjectableFactory,
-      createGatherer(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, false)
+      createDiscoveryFactory(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, false)
     );
   }
 
@@ -108,13 +109,13 @@ public class Injectors {
     return new ScopeResolverManager(extendedScopeResolvers);
   }
 
-  private static DiscovererFactory createGatherer(ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory, boolean autoDiscovery) {
-    List<DefaultDiscovererFactory.Extension> extensions = List.of(
-      new ProviderExtension(methodInjectableFactory),
-      new ProducesExtension(methodInjectableFactory, fieldInjectableFactory)
+  private static DiscovererFactory createDiscoveryFactory(ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory, boolean autoDiscovery) {
+    List<InjectableExtension> injectableExtensions = List.of(
+      new ProviderInjectableExtension(methodInjectableFactory),
+      new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory)
     );
 
-    return new DefaultDiscovererFactory(autoDiscovery, extensions, classInjectableFactory);
+    return new DefaultDiscovererFactory(autoDiscovery, injectableExtensions, classInjectableFactory);
   }
 
   private static ClassInjectableFactory createClassInjectableFactory(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {
