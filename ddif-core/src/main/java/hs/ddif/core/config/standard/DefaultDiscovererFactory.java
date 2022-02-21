@@ -39,37 +39,20 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
     }
   };
 
-  /**
-   * Allows simple extensions to a {@link DefaultDiscovererFactory}.
-   */
-  public interface Extension {
-
-    /**
-     * Returns zero or more {@link Injectable}s which are derived from the
-     * given {@link Type}. For example, the given type could have special
-     * annotations which supply further injectables. These in turn could require
-     * dependencies (as parameters) that may need to be auto discovered first.
-     *
-     * @param type a {@link Type} use as base for derivation, never {@code null}
-     * @return a list of {@link Injectable}, never {@code null} and never contains {@code null}s
-     */
-    List<Injectable> getDerived(Type type);
-  }
-
   private final boolean autoDiscovery;
-  private final List<Extension> extensions;
+  private final List<InjectableExtension> injectableExtensions;
   private final ClassInjectableFactory classInjectableFactory;
 
   /**
    * Constructs a new instance.
    *
-   * @param extensions a list of {@link Extension}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param injectableExtensions a list of {@link InjectableExtension}s, cannot be {@code null} or contain {@code null}s but can be empty
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
    * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
    */
-  public DefaultDiscovererFactory(boolean autoDiscovery, List<Extension> extensions, ClassInjectableFactory classInjectableFactory) {
+  public DefaultDiscovererFactory(boolean autoDiscovery, List<InjectableExtension> injectableExtensions, ClassInjectableFactory classInjectableFactory) {
     this.autoDiscovery = autoDiscovery;
-    this.extensions = extensions;
+    this.injectableExtensions = injectableExtensions;
     this.classInjectableFactory = classInjectableFactory;
   }
 
@@ -209,8 +192,8 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
 
       for(Type type : visitTypes) {
         if(visitedTypes.add(type)) {
-          for(Extension extension : extensions) {
-            extensionDiscoveries.addAll(extension.getDerived(type));  // extension don't necessarily resolve the type examined; they might though through for example a static producer which produces itself
+          for(InjectableExtension injectableExtension : injectableExtensions) {
+            extensionDiscoveries.addAll(injectableExtension.getDerived(type));  // extension don't necessarily resolve the type examined; they might though through for example a static producer which produces itself
           }
         }
       }
