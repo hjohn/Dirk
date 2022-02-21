@@ -7,6 +7,7 @@ import hs.ddif.core.instantiation.injection.ObjectFactory;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,6 +76,9 @@ public class ClassObjectFactory implements ObjectFactory {
   }
 
   private static void injectInstance(Object instance, List<Injection> injections) throws InstanceCreationFailure {
+    Object[] values = null;
+    int parameterIndex = 0;
+
     for(Injection injection : injections) {
       AccessibleObject accessibleObject = injection.getTarget();
 
@@ -90,6 +94,27 @@ public class ClassObjectFactory implements ObjectFactory {
         }
         catch(Exception e) {
           throw new InstanceCreationFailure(field, "inject failed", e);
+        }
+      }
+      else if(accessibleObject instanceof Method) {
+        Method method = (Method)accessibleObject;
+
+        if(values == null) {
+          values = new Object[method.getParameterCount()];
+        }
+
+        values[parameterIndex++] = injection.getValue();
+
+        if(parameterIndex == method.getParameterCount()) {
+          try {
+            method.invoke(instance, values);
+          }
+          catch(Exception e) {
+            throw new InstanceCreationFailure(method, "inject failed", e);
+          }
+
+          values = null;
+          parameterIndex = 0;
         }
       }
     }

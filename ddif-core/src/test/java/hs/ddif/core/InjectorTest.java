@@ -600,6 +600,77 @@ public class InjectorTest {
   }
 
   /*
+   * Setter injection
+   */
+
+  @Test
+  public void shouldInjectSetters() {
+    injector.register(List.of(A.class, B.class, C.class, D.class));
+
+    A instance = injector.getInstance(A.class);
+
+    assertThat(instance.b).isInstanceOf(B.class);
+    assertThat(instance.t).isInstanceOf(C.class);
+    assertThat(instance.d).isInstanceOf(D.class);
+  }
+
+  public static class A extends G<C> {
+    D d;
+    String e;
+
+    @Inject
+    A fluentSetD(D d) {
+      this.d = d;
+
+      return this;
+    }
+  }
+
+  public static class B {
+  }
+
+  public static class C {
+  }
+
+  public static class D {
+  }
+
+  static class G<T> {
+    T t;
+    B b;
+
+    @Inject
+    private void setter(B b, T t) {
+      this.b = b;
+      this.t = t;
+    }
+  }
+
+  @Test
+  public void shouldRejectSetterWithoutParameters() {
+    assertThatThrownBy(() -> injector.register(BadA.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.InjectorTest$BadA]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.InjectorTest$BadA] cannot be injected")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
+          .hasMessage("Method [void hs.ddif.core.InjectorTest$BadA.setNothing()] of [class hs.ddif.core.InjectorTest$BadA] must have parameters")
+          .hasNoCause();
+      })
+      .hasNoCause();
+  }
+
+  public static class BadA {
+    @Inject
+    void setNothing() {
+    }
+  }
+
+  /*
    * Constructor Injection
    */
 
