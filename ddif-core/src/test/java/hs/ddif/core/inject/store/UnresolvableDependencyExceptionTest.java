@@ -36,7 +36,7 @@ public class UnresolvableDependencyExceptionTest {
       Collections.emptySet()
     );
 
-    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Integer] required for Parameter 1 of [");
+    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Integer] required for Parameter 1 [class java.lang.Integer] of [");
 
     e = new UnresolvableDependencyException(
       new Key(Double.class, Set.of(Annotations.of(Red.class))),
@@ -54,7 +54,7 @@ public class UnresolvableDependencyExceptionTest {
       Collections.emptySet()
     );
 
-    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Long] required for Parameter 0 of [");
+    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Long] required for Parameter 0 [class java.lang.Long] of [");
   }
 
   static class A {

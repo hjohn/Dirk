@@ -49,7 +49,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectFactoryWithUnresolvableProducerDependencies() {
     UnresolvableDependencyException e = assertThrows(UnresolvableDependencyException.class, () -> injector.register(SimpleFactory1.class));
 
-    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Integer] required for Parameter 0 of [");
+    assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Integer] required for Parameter 0 [class java.lang.Integer] of [");
     assertFalse(injector.contains(Object.class));
   }
 

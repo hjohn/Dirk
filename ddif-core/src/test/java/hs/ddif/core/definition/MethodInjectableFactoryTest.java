@@ -102,7 +102,7 @@ public class MethodInjectableFactoryTest {
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
-      "Parameter 0 of [public static java.lang.String hs.ddif.core.definition.MethodInjectableFactoryTest$C.e(hs.ddif.core.definition.MethodInjectableFactoryTest$D)]"
+      "Parameter 0 [class hs.ddif.core.definition.MethodInjectableFactoryTest$D] of [public static java.lang.String hs.ddif.core.definition.MethodInjectableFactoryTest$C.e(hs.ddif.core.definition.MethodInjectableFactoryTest$D)]"
     );
 
     assertEquals("Hello D", injectable.createInstance(Bindings.resolve(injectable.getBindings(), new D())));
