@@ -288,14 +288,21 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptAbstractProducerWithNoParametersWhichNeedsNoFurtherConstruction() {
-    injector.register(AbstractProducerWithNoParameters.class);
-
-    AbstractProducerWithNoParameters producer = injector.getInstance(AbstractProducerWithNoParameters.class);
-
-    TestTargetWithAbstactProducerAndNoParameters target = producer.create();
-
-    assertEquals("abc2", target.text);
+  public void registerShouldRejectAbstractProducerWithNoParameters() {
+    assertThatThrownBy(() -> injector.register(AbstractProducerWithNoParameters.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$AbstractProducerWithNoParameters]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[class hs.ddif.core.AssistedInjectionTest$AbstractProducerWithNoParameters] cannot be injected; failures:\n"
+            + " - Factory method must have at least one parameter to qualify for assisted injection: class hs.ddif.core.AssistedInjectionTest$AbstractProducerWithNoParameters\n"
+            + " - Type cannot be abstract: class hs.ddif.core.AssistedInjectionTest$AbstractProducerWithNoParameters"
+          )
+          .hasNoCause();
+      })
+      .hasNoCause();
   }
 
   public static class TestTargetWithAbstactProducerAndNoParameters {
@@ -312,14 +319,21 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptInterfaceProducerWithNoParametersWhichNeedsNoFurtherConstruction() {
-    injector.register(InterfaceProducerWithNoParameters.class);
-
-    InterfaceProducerWithNoParameters producer = injector.getInstance(InterfaceProducerWithNoParameters.class);
-
-    TestTargetWithInterfaceProducerAndNoParameters target = producer.create();
-
-    assertEquals("abc2", target.text);
+  public void registerShouldRejectInterfaceProducerWithNoParameters() {
+    assertThatThrownBy(() -> injector.register(InterfaceProducerWithNoParameters.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$InterfaceProducerWithNoParameters]")
+      .satisfies(throwable -> {
+        assertThat(throwable.getSuppressed()).hasSize(1);
+        assertThat(throwable.getSuppressed()[0])
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("[interface hs.ddif.core.AssistedInjectionTest$InterfaceProducerWithNoParameters] cannot be injected; failures:\n"
+            + " - Factory method must have at least one parameter to qualify for assisted injection: interface hs.ddif.core.AssistedInjectionTest$InterfaceProducerWithNoParameters\n"
+            + " - Type cannot be abstract: interface hs.ddif.core.AssistedInjectionTest$InterfaceProducerWithNoParameters"
+          )
+          .hasNoCause();
+      })
+      .hasNoCause();
   }
 
   @Test
