@@ -92,6 +92,16 @@ public class BindingProvider {
         }
       }
 
+      for(Method method : currentInjectableClass.getDeclaredMethods()) {
+        if(method.isAnnotationPresent(Inject.class)) {
+          if(method.getParameterCount() == 0) {
+            throw new BindingException(cls, method, "must have parameters");
+          }
+
+          bindings.addAll(ofExecutable(method, cls));
+        }
+      }
+
       currentInjectableClass = currentInjectableClass.getSuperclass();
     }
 
