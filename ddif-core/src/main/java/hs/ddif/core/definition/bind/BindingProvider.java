@@ -72,7 +72,7 @@ public class BindingProvider {
     Map<TypeVariable<?>, Type> typeArguments = null;
 
     while(currentInjectableClass != null) {
-      for(final Field field : currentInjectableClass.getDeclaredFields()) {
+      for(Field field : currentInjectableClass.getDeclaredFields()) {
         if(field.isAnnotationPresent(Inject.class)) {
           if(Modifier.isFinal(field.getModifiers())) {
             throw new BindingException(cls, field, "cannot be final");
@@ -110,7 +110,14 @@ public class BindingProvider {
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
    */
   public List<Binding> ofMethod(Method method, Type ownerType) {
-    return ofExecutable(method, ownerType);
+    List<Binding> bindings = ofExecutable(method, ownerType);
+
+    if(!Modifier.isStatic(method.getModifiers())) {
+      // For a non-static method, the class itself is also a required binding:
+      bindings.add(ownerBinding(ownerType));
+    }
+
+    return bindings;
   }
 
   /**
@@ -178,18 +185,19 @@ public class BindingProvider {
   }
 
   private static List<Binding> ofExecutable(Executable executable, Type ownerType) {
+    Type[] params = executable.getGenericParameterTypes();
     Parameter[] parameters = executable.getParameters();
     List<Binding> bindings = new ArrayList<>();
+    Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(ownerType, executable.getDeclaringClass());
 
-    for(int i = 0; i < parameters.length; i++) {
-      Type type = parameters[i].getParameterizedType();
-
-      bindings.add(new DefaultBinding(new Key(type, Annotations.findDirectlyMetaAnnotatedAnnotations(parameters[i], QUALIFIER)), executable, parameters[i]));
+    if(typeArguments == null) {
+      throw new IllegalArgumentException("ownerType must be assignable to declaring class: " + ownerType + "; declaring class: " + executable.getDeclaringClass());
     }
 
-    if(!Modifier.isStatic(executable.getModifiers()) && executable instanceof Method) {
-      // For a non-static method, the class itself is also a required binding:
-      bindings.add(ownerBinding(ownerType));
+    for(int i = 0; i < parameters.length; i++) {
+      Type type = TypeUtils.unrollVariables(typeArguments, params[i]);
+
+      bindings.add(new DefaultBinding(new Key(type, Annotations.findDirectlyMetaAnnotatedAnnotations(parameters[i], QUALIFIER)), executable, parameters[i]));
     }
 
     return bindings;
@@ -266,7 +274,9 @@ public class BindingProvider {
     @Override
     public String toString() {
       if(accessibleObject instanceof Executable) {
-        return "Parameter " + Arrays.asList(((Executable)accessibleObject).getParameters()).indexOf(parameter) + " of [" + accessibleObject + "]";
+        int index = Arrays.asList(((Executable)accessibleObject).getParameters()).indexOf(parameter);
+
+        return "Parameter " + index + " [" + key.getType() + "] of [" + accessibleObject + "]";
       }
       else if(accessibleObject != null) {
         return "Field [" + (getKey().getQualifiers().isEmpty() ? "" : getKey().getQualifiers().stream().map(Object::toString).collect(Collectors.joining(" ")) + " ") + ((Field)accessibleObject).toGenericString() + "]";
