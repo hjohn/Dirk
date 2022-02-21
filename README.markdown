@@ -8,7 +8,7 @@ Dynamic Dependency Injection Framework
 
 A light-weight framework that allows you to use standard JSR-330 javax.inject
 Annotations to create instances of objects, even when they're dynamically loaded at
-runtime.  This framework will allow you to package your classes in separate JAR's,
+runtime. This framework will allow you to package your classes in separate JAR's,
 load them at runtime, and have them injected with dependencies or serve as dependencies
 for other classes.
 
@@ -26,20 +26,20 @@ the above class:
     }
 
 This framework differs from most standard DI frameworks in that dependencies can be
-added and removed at runtime.  The used Injector will make sure that dependencies can
+added and removed at runtime. The used Injector will make sure that dependencies can
 be satisfied and will refuse to add or remove classes when it would result in broken
 dependencies.
 
 For example, if a class registered with an Injector instance needs a `PaymentProvider`,
 then attempting to remove the only matching `PaymentProvider` from the Injector will
-fail.  Likewise, registering a class that needs a `PaymentProvider` would fail when no
+fail. Likewise, registering a class that needs a `PaymentProvider` would fail when no
 class is registered that could provide one.
 
 Other than those restrictions, the Injector is free to be modified at runtime in any
 way that is desired.
 
 You may ask if dependencies are enforced in such a way, how would it ever be possible
-to depend on something that a dynamically loaded class offers?  This can be achieved by
+to depend on something that a dynamically loaded class offers? This can be achieved by
 using optional dependencies and by using Collection dependencies.
 
 An example of a Collection dependency:
@@ -50,7 +50,7 @@ An example of a Collection dependency:
     }
 
 If there are no books registered with the Injector, it will simply inject an
-empty collection.  However, if at creation time of the BookShop instance there are
+empty collection. However, if at creation time of the BookShop instance there are
 books registered those will all get injected.
 
 To make this dependency even more dynamic, it can be wrapped in a `Provider` (see
@@ -68,25 +68,41 @@ will look for all registered books, even ones that were added or removed after t
 ## Features
 
 * Supports all JSR-330 annotations
+  * `@Inject`, `@Qualifier`, `@Named`, `@Scope`, `@Singleton`
 * Light-weight, very few dependencies
 * Inject classes with dependencies, even if loaded at runtime
-  * Field and constructor injection
-  * Assisted injection with the `@Producer` and `@Parameter` annotations
+  * Constructor, Field and Setter injection
+  * Assisted injection using any qualified SAM class or interface
   * Optional injection with the `@Opt` annotation or any `@Nullable` annotation
   * Scoping of injectables with the `ScopeResolver` interface
-  * Injection of generic types
+  * Injection of generic types (for example `List<? extends Number>`)
   * Injection of collections containing all matching dependencies, if any
+    * Backed by `TypeExtension` interface, easily extended for special handling of other types
 * Injection candidates can be supplied by:
+  * Direct registration of types and instances
   * Scanning packages or jars for annotated classes using `ComponentScanner`
   * Auto discovery of dependencies not explicitly registered
   * Producer methods or fields annotated with the `@Produces` annotation
-  * JSR-330 providers 
+  * JSR-330 providers
+* Highly extendable:
+  * `TypeExtension`s allow for handling special types at injection points:
+    * Support is available for `Provider`, `List` and `Set`
+    * Easily create support for, for example, `Optional`, `Supplier` or `Map`
+    * Coming soon: support for CDI's `Instance`
+  * `InjectableExtension`s allow for discovering additional injectables based on interfaces or annotations:
+    * Support for `@Produces` via `ProducesInjectableExtension`
+    * Support for classes extending `Provider` is available via `ProviderInjectableExtension`
+* Very configurable:
+  * See `Injectors` class for examples of how to configure a custom `Injector`
+  * Can be configured to work like CDI or Spring (work in progress)
+    * Select which annotations trigger injection
+    * Add additional qualifiers automatically (like `@Default` or `@Any`)
 
 ## Requirements
 * Java Runtime Environment 8+ installed
 
 # Getting started
-A basic example will be used to illustrate how this framework works.  We start with
+A basic example will be used to illustrate how this framework works. We start with
 a class that needs some dependencies injected:
 
     public class BookShop {
@@ -103,7 +119,7 @@ a class that needs some dependencies injected:
 To have this class injected, we'll need to create an Injector and configure it
 properly:
 
-    Injector injector = new Injector();
+    Injector injector = Injectors.manual();
 
     injector.register(CreditCardPaymentProcessor.class);
     injector.register(BookShop.class);
@@ -149,15 +165,15 @@ concrete classes that have a public default constructor or have exactly one cons
 
 In order to discover dependencies automatically, we have to create the Injector slightly differently:
 
-    Injector injector = new Injector(true);
+    Injector injector = Injectors.autoDiscovering();
 
 Now we can get an instance of `BookShop` without any further dependencies needing to be registered:
 
     BookShop bookShop = injector.getInstance(BookShop.class);
 
-Under the hood, the Injector will notice there is no `BookShop` injection candidate registered.  However,
+Under the hood, the Injector will notice there is no `BookShop` injection candidate registered. However,
 by analyzing the `BookShop` class it sees that it can be instantiated with a Constructor that requires a
-`CreditCardPaymentProcessor` -- unfortunately, there is also no `CreditCardPaymentProcessor` registered.  The
+`CreditCardPaymentProcessor` -- unfortunately, there is also no `CreditCardPaymentProcessor` registered. The
 Injector then recursively analyzes the `CreditCardPaymentProcessor` class, and registers this class with
 itself as it noticed that it can be simply instantiated with a default constructor.
 
@@ -167,29 +183,34 @@ Injector, and an instance is returned.
 ## Assisted Injection
 
 Assisted injection makes it possible to automatically create a factory for a class that will inject known
-dependencies automatically while allowing you to supply additional parameters of your own. To indicate that
-a specific class needs a factory annotate it with `@Producer` and indicate which injections it requires
-should be parameters:
+dependencies automatically while allowing you to supply additional arguments of your own. An abstract class
+or interface needs to be supplied with a single abstract method (SAM type) that returns the correct type.
+This type will serve as the factory that can be injected. Secondly the product of the factory should have its
+supplied arguments annotated with `@Argument` while its dependencies will be injected as usual.
 
-    @Producer(CarFactory.class)
+An example Product with a dependency on `Engine` and a user supplied argument `wheelCount`:
+
     public class Car {
         @Inject
-        public Car(Engine engine, @Parameter int wheelCount) { ... }
+        public Car(Engine engine, @Argument int wheelCount) { ... }
     }
 
 Next create an interface with a single method with only the parameters you wish to supply.  The injector
-will automatically implement it:
+will automatically implement it. Note that the name of the parameter `wheelCount` must match the name in
+the Product `Car`. Classes should be compiled with parameter name information in order to discover these
+names at runtime; alternatively the `@Argument` annotation can be used to supply these manually.
 
     interface CarFactory {
         Car createCar(int wheelCount);
     }
 
-The interface can now be injected anywhere you wish to create a `Car` instance:
+The factory interface can now be injected anywhere you wish to create a `Car` instance. Only `wheelCount`
+needs to be supplied, while `engine` gets injected as usual:
 
     public class Garage {
         @Inject
         public Garage(CarFactory factory) {
-            factory.createCar(5);
+            Car car = factory.createCar(5);
         }
     }
 
@@ -269,9 +290,9 @@ Or:
     }
 
 Note that for non-static producer methods or fields, an instance of the declaring class must be available or
-created on demand. It is not possible for the declaring class to be directly or indirectly dependent on
+can be created on demand. It is not possible for the declaring class to be directly or indirectly dependent on
 something one of its fields or methods produces as this would be a circular dependency. Declare the relevant
-producer `static` or use providers to avoid this.
+producer `static` or use the `Provider` interface to avoid this.
 
 ## Optional dependencies
 
@@ -280,10 +301,10 @@ is supported) or the `Opt` annotation provided by this project. When such a depe
 it will not be injected if the required dependency is not available. For example:
 
     @Inject @Nullable @Named("database.user") private String user;
-    @Inject @Nullable @Named("database.timeout") private Integer timeout = 1000;
+    @Inject @Opt @Named("database.timeout") private int timeout = 1000;
 
 In the above example, `user` will be left `null` and `timeout` will be left `1000` if the corresponding
-dependency is unavailable. Note that at this time primitive types are not supported as dependencies.
+dependency is unavailable.
 
 ## Scoping
 
@@ -336,7 +357,7 @@ For example, given a `ScopeResolver`:
 
 ... and an injector constructed with the above `ScopeResolver`:
 
-    Injector injector = new Injector(new TestScopeResolver());
+    Injector injector = Injectors.manual(new TestScopeResolver());
 
     injector.register(Car.class);
 
@@ -377,25 +398,6 @@ will be thrown:
 
     Car car = injector.getInstance(Car.class);  // throws exception
 
-### `@WeakSingleton`
-
-This is a special case of the `@Singleton` annotation. The injector will create a weak reference to these
-singletons to allow garbage collection if only the injector refers to the instance. If garbage
-collection occurred, and a new instance of the singleton is needed, it will be created again.
-
-The weak singletons are primarily useful to be able to unload classes without having to destroy the injector.
-When dynamically loading jars containing classes that are registered with an injector, it will be impossible
-to unload these classes later if they are annotated with `@Singleton`.  Instead, `@WeakSingleton` should be
-used here so that when these classes are no longer needed they can be completely unloaded.
-
-# Open issues
-
-* No method injection support
-* Only `java.util.Set` and `java.util.List` are currently supported for collection injection
-* Collection injection conflicts with injecting classes that extend a collection interface
-* Many Qualifiers on a single class (10+) will probably cause issues, some kind of limit needs to be enforced to
-  prevent this, or the issue needs to be addressed with a better solution
-
 # BSD License
 
 Copyright (c) 2013-2021, John Hendrikx
@@ -429,9 +431,3 @@ https://commons.apache.org/proper/commons-lang/
 
 License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)  
 https://bytebuddy.net/
-
-### DirectedGraph and TopologicalSort
-
-by Keith Schwarz  
-License: Public Domain  
-http://www.keithschwarz.com/interesting/
