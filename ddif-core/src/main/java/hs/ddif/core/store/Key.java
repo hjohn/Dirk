@@ -11,8 +11,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Qualifier;
-
 /**
  * Represents a {@link Type} with a set of qualifier {@link Annotation}s.
  */
@@ -32,9 +30,6 @@ public final class Key {
     }
     if(qualifiers == null) {
       throw new IllegalArgumentException("qualifiers cannot be null");
-    }
-    if(!qualifiers.stream().allMatch(Key::isQualifier)) {
-      throw new IllegalArgumentException("qualifiers must all be annotations annotated with @Qualifier: " + qualifiers);
     }
 
     this.type = Primitives.toBoxed(type);
@@ -97,9 +92,5 @@ public final class Key {
     }
 
     return true;
-  }
-
-  private static boolean isQualifier(Annotation annotation) {
-    return annotation.annotationType().getAnnotation(Qualifier.class) != null;
   }
 }

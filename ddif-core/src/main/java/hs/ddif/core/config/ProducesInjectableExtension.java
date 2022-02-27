@@ -2,7 +2,6 @@ package hs.ddif.core.config;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.standard.InjectableExtension;
-import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.MethodInjectableFactory;
@@ -14,11 +13,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Provider;
-
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Extension which looks for members annotated with {@link Produces}, and if found creates
@@ -46,22 +42,10 @@ public class ProducesInjectableExtension implements InjectableExtension {
 
     if(injectableClass != null) {
       for(Method method : MethodUtils.getMethodsListWithAnnotation(injectableClass, Produces.class, true, true)) {
-        Type providedType = method.getGenericReturnType();
-
-        if(TypeUtils.getRawType(providedType, null) == Provider.class) {
-          throw new DefinitionException(method, "cannot have a return type with a nested Provider");
-        }
-
         injectables.add(methodInjectableFactory.create(method, type));
       }
 
       for(Field field : FieldUtils.getFieldsListWithAnnotation(injectableClass, Produces.class)) {
-        Type providedType = field.getGenericType();
-
-        if(TypeUtils.getRawType(providedType, null) == Provider.class) {
-          throw new DefinitionException(field, "cannot be of a type with a nested Provider");
-        }
-
         injectables.add(fieldInjectableFactory.create(field, type));
       }
     }

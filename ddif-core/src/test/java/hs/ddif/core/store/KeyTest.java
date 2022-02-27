@@ -7,8 +7,6 @@ import hs.ddif.core.util.Annotations;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.inject.Singleton;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
@@ -44,11 +42,6 @@ public class KeyTest {
     assertThatThrownBy(() -> new Key(String.class, null))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("qualifiers cannot be null")
-      .hasNoCause();
-
-    assertThatThrownBy(() -> new Key(String.class, Set.of(Annotations.of(Singleton.class))))
-      .isExactlyInstanceOf(IllegalArgumentException.class)
-      .hasMessage("qualifiers must all be annotations annotated with @Qualifier: [@javax.inject.Singleton()]")
       .hasNoCause();
   }
 

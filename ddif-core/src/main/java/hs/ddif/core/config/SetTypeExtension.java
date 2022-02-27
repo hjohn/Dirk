@@ -4,12 +4,14 @@ import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.TypeExtension;
+import hs.ddif.core.instantiation.TypeTrait;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Types;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.TypeVariable;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +24,7 @@ import java.util.Set;
  */
 public class SetTypeExtension<T> implements TypeExtension<Set<T>> {
   private static final TypeVariable<?> TYPE_VARIABLE = Set.class.getTypeParameters()[0];
+  private static final Set<TypeTrait> NONE = EnumSet.noneOf(TypeTrait.class);
 
   @Override
   public Instantiator<Set<T>> create(InstantiatorFactory factory, Key key, AnnotatedElement element) {
@@ -42,13 +45,8 @@ public class SetTypeExtension<T> implements TypeExtension<Set<T>> {
       }
 
       @Override
-      public boolean requiresAtLeastOne() {
-        return false;
-      }
-
-      @Override
-      public boolean requiresAtMostOne() {
-        return false;
+      public Set<TypeTrait> getTypeTraits() {
+        return NONE;
       }
     };
   }

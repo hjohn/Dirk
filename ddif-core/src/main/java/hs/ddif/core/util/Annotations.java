@@ -12,8 +12,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Named;
-
 import io.leangen.geantyref.TypeFactory;
 
 /**
@@ -49,16 +47,6 @@ public class Annotations {
    */
   public static <A extends Annotation> A of(Class<A> annotationClass) {
     return of(annotationClass, Map.of());
-  }
-
-  /**
-   * Convenience method for creating {@link Named} annotations.
-   *
-   * @param name a name for the {@link Named} annotation, cannot be {@code null}
-   * @return a {@link Named} annotation, never {@code null}
-   */
-  public static Annotation named(String name) {
-    return of(Named.class, Map.of("value", name));
   }
 
   /**

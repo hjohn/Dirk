@@ -29,9 +29,10 @@ public class ScopeResolverManager {
   }
 
   /**
-   * Return the {@link ScopeResolver} for the given scope {@link Annotation}.
+   * Return the {@link ScopeResolver} for the given scope {@link Annotation}. The given
+   * scope can be {@code null} in which case no scope is assumed.
    *
-   * @param scope a scope {@link Annotation}, cannot be {@code null}
+   * @param scope a scope {@link Annotation}, can be {@code null}
    * @return a {@link ScopeResolver}, never {@code null}
    */
   public ScopeResolver getScopeResolver(Annotation scope) {

@@ -8,8 +8,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
@@ -18,15 +16,15 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  */
 public class FieldInjectableFactory {
   private final BindingProvider bindingProvider;
-  private final AnnotatedInjectableFactory injectableFactory;
+  private final InjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
-   * @param injectableFactory a {@link AnnotatedInjectableFactory}, cannot be {@code null}
+   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
    */
-  public FieldInjectableFactory(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {
+  public FieldInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
@@ -56,9 +54,6 @@ public class FieldInjectableFactory {
 
     if(type == null) {
       throw new DefinitionException(field, "is of unresolvable type");
-    }
-    if(field.isAnnotationPresent(Inject.class)) {
-      throw new DefinitionException(field, "cannot be annotated with Inject");
     }
 
     return injectableFactory.create(type, field, bindingProvider.ofField(field, ownerType), new FieldObjectFactory(field));

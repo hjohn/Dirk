@@ -1,12 +1,14 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.annotations.Argument;
+import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplate.Context;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactories;
+import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -25,10 +27,12 @@ import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Provider;
+import javax.inject.Qualifier;
+import javax.inject.Scope;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -38,11 +42,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AssistedClassInjectableFactoryTemplateTest {
-  private static final ScopeResolver SINGLETON_SCOPE_RESOLVER = new SingletonScopeResolver();
+  private static final ScopeResolver SINGLETON_SCOPE_RESOLVER = new SingletonScopeResolver(Annotations.of(Singleton.class));
   private static final ScopeResolverManager SCOPE_RESOLVER_MANAGER = new ScopeResolverManager(SINGLETON_SCOPE_RESOLVER);
+  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Annotations.of(Inject.class), Annotations.of(Qualifier.class), Annotations.of(Scope.class));
 
-  private BindingProvider bindingProvider = new BindingProvider();
-  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, new DefaultAnnotatedInjectableFactory(SCOPE_RESOLVER_MANAGER));
+  private BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
+  private AssistedClassInjectableFactoryTemplate extension = new AssistedClassInjectableFactoryTemplate(bindingProvider, new DefaultInjectableFactory(SCOPE_RESOLVER_MANAGER, ANNOTATION_STRATEGY), Annotations.of(Inject.class), Supplier.class, Supplier::get);
 
   @Test
   void shouldConstructSimpleFactory() throws BindingException {
@@ -50,8 +55,8 @@ public class AssistedClassInjectableFactoryTemplateTest {
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryA.class::isAssignableFrom);
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
-      new Key(TypeUtils.parameterize(Provider.class, String.class), List.of(Annotations.of(Red.class))),
-      new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
+      new Key(TypeUtils.parameterize(Supplier.class, String.class), List.of(Annotations.of(Red.class))),
+      new Key(TypeUtils.parameterize(Supplier.class, TypeUtils.parameterize(Supplier.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
     assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER_MANAGER.getScopeResolver(null));
@@ -63,8 +68,8 @@ public class AssistedClassInjectableFactoryTemplateTest {
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryB.class::isAssignableFrom);
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
-      new Key(TypeUtils.parameterize(Provider.class, String.class), List.of(Annotations.of(Red.class))),
-      new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
+      new Key(TypeUtils.parameterize(Supplier.class, String.class), List.of(Annotations.of(Red.class))),
+      new Key(TypeUtils.parameterize(Supplier.class, TypeUtils.parameterize(Supplier.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class));
     assertThat(injectable.getScopeResolver()).isEqualTo(SINGLETON_SCOPE_RESOLVER);
@@ -79,8 +84,8 @@ public class AssistedClassInjectableFactoryTemplateTest {
       new Key(A.class),
       new Key(B.class),
       new Key(C.class),
-      new Key(TypeUtils.parameterize(Provider.class, String.class), List.of(Annotations.of(Red.class))),
-      new Key(TypeUtils.parameterize(Provider.class, TypeUtils.parameterize(Provider.class, String.class)), List.of(Annotations.of(Green.class)))
+      new Key(TypeUtils.parameterize(Supplier.class, String.class), List.of(Annotations.of(Red.class))),
+      new Key(TypeUtils.parameterize(Supplier.class, TypeUtils.parameterize(Supplier.class, String.class)), List.of(Annotations.of(Green.class)))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
     assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER_MANAGER.getScopeResolver(null));
@@ -92,7 +97,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
 
     assertThat((Class<?>)injectable.getType()).matches(FactoryD.class::isAssignableFrom);
     assertThat(injectable.getBindings()).extracting(Binding::getKey).containsExactlyInAnyOrder(
-      new Key(TypeUtils.parameterize(Provider.class, Integer.class))
+      new Key(TypeUtils.parameterize(Supplier.class, Integer.class))
     );
     assertThat(injectable.getQualifiers()).isEmpty();
     assertThat(injectable.getScopeResolver()).isEqualTo(SINGLETON_SCOPE_RESOLVER);
@@ -101,7 +106,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
      * Test if factory actually works
      */
 
-    Provider<Integer> integerProvider = () -> 15;
+    Supplier<Integer> integerProvider = () -> 15;
     FactoryD factory = (FactoryD)injectable.createInstance(List.of(new Injection(injectable.getBindings().get(0).getAccessibleObject(), integerProvider)));
 
     GenericProduct<Car> product = factory.create(Car.class, "Meryota");
@@ -133,9 +138,9 @@ public class AssistedClassInjectableFactoryTemplateTest {
 
   @Test
   void shouldFailPreconditionWhenFactoryMethodHasNoParameters() {
-    ParameterizedType connectionProvider = TypeUtils.parameterize(Provider.class, Connection.class);
+    ParameterizedType connectionProvider = TypeUtils.parameterize(Supplier.class, Connection.class);
 
-    assertThat(extension.analyze(connectionProvider).getUnsuitableReason(connectionProvider)).isEqualTo("Factory method must have at least one parameter to qualify for assisted injection: javax.inject.Provider<java.sql.Connection>");
+    assertThat(extension.analyze(connectionProvider).getUnsuitableReason(connectionProvider)).isEqualTo("Factory method must have at least one parameter to qualify for assisted injection: java.util.function.Supplier<java.sql.Connection>");
     assertThat(extension.analyze(BadFactoryE.class).getUnsuitableReason(BadFactoryE.class)).isEqualTo("Factory method cannot return an abstract type: public abstract hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$BadFactoryA hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$BadFactoryE.create(java.lang.Integer,java.lang.Integer) in: interface hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplateTest$BadFactoryE");
   }
 
@@ -165,7 +170,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
 
   @Test
   void shouldInstantiateTypeViaFactory() throws BindingException {
-    DefaultInstanceResolver instanceResolver = InstanceResolvers.createWithConsistencyPolicy();
+    DefaultInstanceResolver instanceResolver = InstanceResolvers.create();
     InjectableStore store = instanceResolver.getStore();
     InjectableFactories injectableFactories = new InjectableFactories();
 
@@ -206,7 +211,7 @@ public class AssistedClassInjectableFactoryTemplateTest {
     private final String dependencyRed;
     private final Integer x;
 
-    @Inject @Green Provider<String> dependencyGreen;
+    @Inject @Green Supplier<String> dependencyGreen;
     @Inject @Argument private Integer y;
 
     String result;

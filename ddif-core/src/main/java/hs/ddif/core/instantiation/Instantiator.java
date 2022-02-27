@@ -5,6 +5,8 @@ import hs.ddif.core.instantiation.domain.MultipleInstances;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.Key;
 
+import java.util.Set;
+
 /**
  * Produces instances of type {@code T} using a given {@link Key}. The type produced
  * is not necessarily the same type as the key specifies but could be a wrapper that
@@ -48,34 +50,9 @@ public interface Instantiator<T> {
   T getInstance(InstantiationContext context) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance;
 
   /**
-   * Indicates that the instance produced is a provider which will only resolve the
-   * key upon use. This allows for an indirection that will allow avoiding a circular
-   * dependency during the construction of instances.
+   * Returns the {@link TypeTrait}s of this {@link Instantiator}.
    *
-   * <p>Note that this does not allow for the key to be completely unavailable in
-   * the underlying store unless this instantiator does not require at least one match.
-   * In other words, a lazy dependency allows to break a circular dependency during
-   * instantiation, but not during registration.
-   *
-   * @return {@code true} if the provided value is lazily resolved, otherwise {@code false}
+   * @return a set of {@link TypeTrait}, never {@code null} or contains {@code null}, but can be empty
    */
-  default boolean isLazy() {
-    return false;
-  }
-
-  /**
-   * Indicates that this instantiator requires at least one dependency matching the key
-   * to be available.
-   *
-   * @return {@code true} if at least one dependency matching the key must be available, otherwise {@code false}
-   */
-  boolean requiresAtLeastOne();
-
-  /**
-   * Indicates that this instantiator requires at most one dependency matching the key
-   * to be available.
-   *
-   * @return {@code true} if at most one dependency matching the key must be available, otherwise {@code false}
-   */
-  boolean requiresAtMostOne();
+  Set<TypeTrait> getTypeTraits();
 }

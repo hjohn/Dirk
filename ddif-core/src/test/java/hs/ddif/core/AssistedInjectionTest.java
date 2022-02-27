@@ -12,9 +12,9 @@ import hs.ddif.core.util.Annotations;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -436,7 +436,7 @@ public class AssistedInjectionTest {
   }
 
   public static class ComplicatedProduct {
-    @Inject private @Green Provider<List<Integer>> numbers;
+    @Inject private @Green Supplier<List<Integer>> numbers;
     @Inject private @Red Set<Integer> multipliers;
     @Inject @Argument private int offset;
 

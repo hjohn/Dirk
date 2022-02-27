@@ -4,16 +4,25 @@ import hs.ddif.core.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
+import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 
-import javax.inject.Singleton;
-
 /**
- * Scope resolver for the {@link Singleton} scope.
+ * Scope resolver for singleton scope.
  */
 public class SingletonScopeResolver implements ScopeResolver {
   private final Map<Object, Object> singletons = new WeakHashMap<>();
+  private final Class<? extends Annotation> singletonAnnotation;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param singleton a singleton {@link Annotation} to use, cannot be {@code null}
+   */
+  public SingletonScopeResolver(Annotation singleton) {
+    this.singletonAnnotation = Objects.requireNonNull(singleton, "singleton cannot be null").annotationType();
+  }
 
   @Override
   public boolean isScopeActive() {
@@ -36,11 +45,16 @@ public class SingletonScopeResolver implements ScopeResolver {
 
   @Override
   public Class<? extends Annotation> getScopeAnnotationClass() {
-    return Singleton.class;
+    return singletonAnnotation;
   }
 
   @Override
   public void remove(Object object) {
     singletons.remove(object);
+  }
+
+  @Override
+  public boolean isSingletonScope() {
+    return true;
   }
 }

@@ -9,21 +9,22 @@ import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
+import hs.ddif.core.instantiation.DefaultInstantiatorFactory;
 import hs.ddif.core.instantiation.InstantiationContext;
+import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.instantiation.TypeExtensionStore;
 import hs.ddif.core.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
-import javax.inject.Provider;
-
-// TODO JSR-330: Named without value is treated differently ... some use field name, others default to empty?
 /**
  * An injector provides instances of classes or interfaces which have been registered with
  * it or which can be auto discovered (if enabled). Each instance returned is injected with
- * further dependencies if any of its fields or constructors are annotated with {@link javax.inject.Inject}.<p>
+ * further dependencies if any of its fields or constructors are annotated with an inject annotation.<p>
  *
  * The potential candidates for injection can be registered with the injector in various ways,
  * for example by providing classes or existing instances. These candidates are called "injectables".
@@ -45,11 +46,11 @@ import javax.inject.Provider;
  * <h2>Scoping</h2>
  *
  * An injector may return existing instances or new instances depending on the scope of the injectable.
- * The two most common scopes are {@link javax.inject.Singleton}, which returns the same instance each time and
+ * The two most common scopes are singleton, which returns the same instance each time and
  * unscoped, which returns a new instance each time. Custom scopes can be supported by this injector
  * by providing a {@link ScopeResolver} during construction. Note that instances registered directly
  * are always treated as singletons as the injector has no way of creating these itself. If an
- * instance is complicated to construct, consider registering a {@link Provider} or a class containing
+ * instance is complicated to construct, consider registering a provider or a class containing
  * {@link hs.ddif.annotations.Produces} annotated methods or fields.
  */
 public class Injector implements InstanceResolver, CandidateRegistry {
@@ -59,16 +60,18 @@ public class Injector implements InstanceResolver, CandidateRegistry {
   /**
    * Constructs a new instance.
    *
-   * @param instantiatorBindingMap an {@link InstantiatorBindingMap}, cannot be {@code null}
+   * @param typeExtensionStore a {@link TypeExtensionStore}, cannot be {@code null}
    * @param instanceInjectableFactory a {@link InstanceInjectableFactory}, cannot be {@code null}
    * @param discovererFactory a {@link DiscovererFactory}, cannot be {@code null}
    */
-  Injector(InstantiatorBindingMap instantiatorBindingMap, InstanceInjectableFactory instanceInjectableFactory, DiscovererFactory discovererFactory) {
-    InjectableStore store = new InjectableStore(instantiatorBindingMap);
+  public Injector(TypeExtensionStore typeExtensionStore, DiscovererFactory discovererFactory, InstanceInjectableFactory instanceInjectableFactory) {
+    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
+    InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(Objects.requireNonNull(instantiatorFactory, "instantiatorFactory cannot be null"));
+    InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
     InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
 
     this.registry = new InjectableStoreCandidateRegistry(store, discovererFactory, instanceInjectableFactory);
-    this.instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorBindingMap.getInstantiatorFactory());
+    this.instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
   }
 
   /**

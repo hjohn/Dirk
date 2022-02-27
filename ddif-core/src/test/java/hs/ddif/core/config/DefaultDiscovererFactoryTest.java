@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayNameGeneration;
@@ -31,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class DefaultDiscovererFactoryTest {
-  private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
+  private final QualifiedTypeStore<Injectable> store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), t -> true);
   private final InjectableFactories injectableFactories = new InjectableFactories();
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
   private final FieldInjectableFactory fieldInjectableFactory = injectableFactories.forField();
@@ -58,14 +57,6 @@ public class DefaultDiscovererFactoryTest {
           methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
           fieldInjectableFactory.create(B.class.getDeclaredField("e"), B.class)
         );
-      }
-
-      @Test
-      void shouldRejectNestedProvider() {
-        assertThatThrownBy(() -> gatherer.create(store, classInjectableFactory.create(Bad_P.class)).discover())
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Method [javax.inject.Provider hs.ddif.core.config.DefaultDiscovererFactoryTest$Bad_P.oops()] cannot have a return type with a nested Provider")
-          .hasNoCause();
       }
     }
 
@@ -425,15 +416,6 @@ public class DefaultDiscovererFactoryTest {
    */
   public static class Bad_H {
     @Produces static Bad_H h = new Bad_H();
-  }
-
-  /**
-   * Bad because it uses a nested Provider.
-   */
-  public static class Bad_P {
-    @Produces Provider<Provider<String>> oops() {
-      return null;
-    }
   }
 
   interface I {

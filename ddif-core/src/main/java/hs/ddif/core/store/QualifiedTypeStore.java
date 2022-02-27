@@ -15,12 +15,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import javax.inject.Provider;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -47,8 +47,20 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
    */
   private final Function<T, Key> keyExtractor;
 
-  public QualifiedTypeStore(Function<T, Key> keyExtractor) {
-    this.keyExtractor = keyExtractor;
+  /**
+   * Predicate which determines what types to store.
+   */
+  private final Predicate<Class<?>> classFilter;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param keyExtractor a {@link Function} to extract a {@link Key} from a type {@code T}, cannot be {@code null}
+   * @param classFilter a {@link Predicate} to filter classes that should not be stored, cannot be {@code null}
+   */
+  public QualifiedTypeStore(Function<T, Key> keyExtractor, Predicate<Class<?>> classFilter) {
+    this.keyExtractor = Objects.requireNonNull(keyExtractor, "keyExtractor cannot be null");
+    this.classFilter = Objects.requireNonNull(classFilter, "classFilter cannot be null");
   }
 
   @Override
@@ -260,15 +272,20 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
   }
 
   private void putInternal(T qualifiedType) {
-    try {
-      Key key = keyExtractor.apply(qualifiedType);
+    Key key = keyExtractor.apply(qualifiedType);
+    Class<?> raw = Types.raw(key.getType());
 
-      for(Class<?> type : Types.getSuperTypes(TypeUtils.getRawType(key.getType(), null))) {
-        if(type != Provider.class) {
-          register(type, null, qualifiedType);
+    if(!classFilter.test(raw)) {
+      throw new FilteredKeyException(key, qualifiedType);
+    }
+
+    try {
+      for(Class<?> cls : Types.getSuperTypes(raw)) {
+        if(classFilter.test(cls)) {
+          register(cls, null, qualifiedType);
 
           for(Annotation qualifier : key.getQualifiers()) {
-            register(type, qualifier, qualifiedType);
+            register(cls, qualifier, qualifiedType);
           }
         }
       }
@@ -279,15 +296,20 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
   }
 
   private void removeInternal(T qualifiedType) {
-    try {
-      Key key = keyExtractor.apply(qualifiedType);
+    Key key = keyExtractor.apply(qualifiedType);
+    Class<?> raw = Types.raw(key.getType());
 
-      for(Class<?> type : Types.getSuperTypes(TypeUtils.getRawType(key.getType(), null))) {
-        if(type != Provider.class) {
-          unregister(type, null, qualifiedType);
+    if(!classFilter.test(raw)) {
+      throw new FilteredKeyException(key, qualifiedType);
+    }
+
+    try {
+      for(Class<?> cls : Types.getSuperTypes(raw)) {
+        if(classFilter.test(cls)) {
+          unregister(cls, null, qualifiedType);
 
           for(Annotation qualifier : key.getQualifiers()) {
-            unregister(type, qualifier, qualifiedType);
+            unregister(cls, qualifier, qualifiedType);
           }
         }
       }

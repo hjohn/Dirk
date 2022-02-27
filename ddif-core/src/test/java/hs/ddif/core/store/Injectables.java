@@ -7,11 +7,14 @@ import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.injection.Injection;
 import hs.ddif.core.scope.ScopeResolver;
+import hs.ddif.core.util.Annotations;
 
 import java.util.List;
 
+import javax.inject.Singleton;
+
 public class Injectables {
-  private static final SingletonScopeResolver SINGLETON_SCOPE_RESOLVER = new SingletonScopeResolver();
+  private static final SingletonScopeResolver SINGLETON_SCOPE_RESOLVER = new SingletonScopeResolver(Annotations.of(Singleton.class));
 
   public static Injectable create() throws BadQualifiedTypeException {
     QualifiedType qualifiedType = new QualifiedType(String.class);

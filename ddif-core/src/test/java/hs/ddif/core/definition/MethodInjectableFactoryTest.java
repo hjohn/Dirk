@@ -73,7 +73,7 @@ public class MethodInjectableFactoryTest {
   void createShouldRejectMethodAnnotatedWithInject() {
     assertThatThrownBy(() -> factory.create(A.class.getDeclaredMethod("c"), A.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [java.lang.String hs.ddif.core.definition.MethodInjectableFactoryTest$A.c()] cannot be annotated with Inject")
+      .hasMessage("Method [java.lang.String hs.ddif.core.definition.MethodInjectableFactoryTest$A.c()] should not have an inject annotation, but found: [@javax.inject.Inject()]")
       .hasNoCause();
   }
 

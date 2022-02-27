@@ -1,6 +1,7 @@
 package hs.ddif.core.definition.bind;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
@@ -13,6 +14,8 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Qualifier;
+import javax.inject.Scope;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.groups.Tuple;
@@ -26,7 +29,7 @@ public class BindingProviderTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation GREEN = Annotations.of(Green.class);
 
-  private BindingProvider bindingProvider = new BindingProvider();
+  private BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Annotations.of(Inject.class), Annotations.of(Qualifier.class), Annotations.of(Scope.class)));
 
   @Test
   public void ofMembersShouldBindToGenericFieldInSubclass() throws Exception {
@@ -87,19 +90,19 @@ public class BindingProviderTest {
 
   @Test
   public void getConstructorShouldFindInjectAnnotatedConstructor() throws Exception {
-    assertThat(BindingProvider.getConstructor(ClassA.class))
+    assertThat(bindingProvider.getConstructor(ClassA.class))
       .isEqualTo(ClassA.class.getDeclaredConstructor(ClassB.class));
   }
 
   @Test
   public void getConstructorShouldFindDefaultConstructor() throws Exception {
-    assertThat(BindingProvider.getConstructor(ClassB.class))
+    assertThat(bindingProvider.getConstructor(ClassB.class))
       .isEqualTo(ClassB.class.getConstructor());
   }
 
   @Test
   public void getConstructorShouldRejectClassWithoutPublicDefaultConstructor() {
-    assertThatThrownBy(() -> BindingProvider.getConstructor(ClassC.class))
+    assertThatThrownBy(() -> bindingProvider.getConstructor(ClassC.class))
       .isExactlyInstanceOf(BindingException.class)
       .hasMessage("[class hs.ddif.core.definition.bind.BindingProviderTest$ClassC] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .hasNoCause();
@@ -107,7 +110,7 @@ public class BindingProviderTest {
 
   @Test
   public void getConstructorShouldRejectClassWithMultipleAnnotatedConstructors() {
-    assertThatThrownBy(() -> BindingProvider.getConstructor(ClassD.class))
+    assertThatThrownBy(() -> bindingProvider.getConstructor(ClassD.class))
       .isExactlyInstanceOf(BindingException.class)
       .hasMessage("[class hs.ddif.core.definition.bind.BindingProviderTest$ClassD] cannot have multiple Inject annotated constructors")
       .hasNoCause();

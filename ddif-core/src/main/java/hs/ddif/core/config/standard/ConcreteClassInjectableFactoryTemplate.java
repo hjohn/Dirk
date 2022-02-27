@@ -1,6 +1,6 @@
 package hs.ddif.core.config.standard;
 
-import hs.ddif.core.definition.AnnotatedInjectableFactory;
+import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
@@ -28,15 +28,15 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   private static final TypeAnalysis<Type> FAILURE_ABSTRACT = TypeAnalysis.negative("Type cannot be abstract: %1$s");
 
   private final BindingProvider bindingProvider;
-  private final AnnotatedInjectableFactory injectableFactory;
+  private final InjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
-   * @param injectableFactory a {@link AnnotatedInjectableFactory}, cannot be {@code null}
+   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
    */
-  public ConcreteClassInjectableFactoryTemplate(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {
+  public ConcreteClassInjectableFactoryTemplate(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
@@ -56,7 +56,7 @@ public class ConcreteClassInjectableFactoryTemplate implements ClassInjectableFa
   public Injectable create(TypeAnalysis<Type> analysis) throws BindingException {
     Type type = analysis.getData();
     Class<?> cls = Types.raw(type);
-    Constructor<?> constructor = BindingProvider.getConstructor(cls);
+    Constructor<?> constructor = bindingProvider.getConstructor(cls);
     List<Binding> bindings = bindingProvider.ofConstructorAndMembers(constructor, cls);
 
     return injectableFactory.create(type, cls, bindings, new ClassObjectFactory(constructor));

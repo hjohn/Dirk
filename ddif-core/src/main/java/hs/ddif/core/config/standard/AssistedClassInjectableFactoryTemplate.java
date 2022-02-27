@@ -1,7 +1,7 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.annotations.Argument;
-import hs.ddif.core.definition.AnnotatedInjectableFactory;
+import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
@@ -12,7 +12,6 @@ import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.factory.ClassObjectFactory;
 import hs.ddif.core.instantiation.injection.Injection;
 import hs.ddif.core.instantiation.injection.ObjectFactory;
-import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Primitives;
 import hs.ddif.core.util.Types;
 
@@ -31,11 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -85,7 +81,7 @@ import net.bytebuddy.matcher.ElementMatchers;
  *
  * <h2>Scopes and Qualifiers</h2>
  *
- * The factory always has {@link Singleton} scope, while the product has no scope.
+ * The factory method can be annotated with a scope, while the product always has no scope.
  * This means that each invocation of the factory method will yield a new product
  * instance.
  *
@@ -95,18 +91,28 @@ import net.bytebuddy.matcher.ElementMatchers;
  */
 public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFactoryTemplate<AssistedClassInjectableFactoryTemplate.Context> {
   private static final Map<Type, Injectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
-  private static final Annotation INJECT = Annotations.of(Inject.class);
 
+  private final Annotation inject;
+  private final Class<?> providerClass;
+  private final Function<Object, Object> providerGetter;
   private final BindingProvider bindingProvider;
-  private final AnnotatedInjectableFactory injectableFactory;
+  private final InjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
+   * @param <P> the type of the provider class used
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
-   * @param injectableFactory a {@link AnnotatedInjectableFactory}, cannot be {@code null}
+   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
+   * @param inject an inject {@link Annotation} to use for generated classes, cannot be {@code null}
+   * @param providerClass a provider {@link Class} to subclass for generated classes, cannot be {@code null}
+   * @param providerGetter a getter {@link Function} of the given provider class, cannot be {@code null}
    */
-  public AssistedClassInjectableFactoryTemplate(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {
+  @SuppressWarnings("unchecked")
+  public <P> AssistedClassInjectableFactoryTemplate(BindingProvider bindingProvider, InjectableFactory injectableFactory, Annotation inject, Class<P> providerClass, Function<P, Object> providerGetter) {
+    this.inject = inject;
+    this.providerClass = providerClass;
+    this.providerGetter = (Function<Object, Object>)providerGetter;
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
@@ -154,7 +160,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     Method factoryMethod = analysis.getData().factoryMethod;
     Class<?> implementedFactoryClass = generateFactoryClass(type, factoryMethod);
 
-    Constructor<?> factoryConstructor = BindingProvider.getConstructor(implementedFactoryClass);
+    Constructor<?> factoryConstructor = bindingProvider.getConstructor(implementedFactoryClass);
     List<Binding> factoryBindings = bindingProvider.ofConstructorAndMembers(factoryConstructor, implementedFactoryClass);
 
     factoryInjectable = injectableFactory.create(implementedFactoryClass, implementedFactoryClass, factoryBindings, new ClassObjectFactory(factoryConstructor));
@@ -167,7 +173,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   private Class<?> generateFactoryClass(Type type, Method factoryMethod) throws BindingException {
     Class<?> productType = factoryMethod.getReturnType();
     Constructor<?> productConstructor = bindingProvider.getAnnotatedConstructor(productType);
-    Interceptor interceptor = new Interceptor(productConstructor, factoryMethod);
+    Interceptor interceptor = new Interceptor(productConstructor, factoryMethod, providerGetter);
 
     /*
      * Construct ByteBuddy builder:
@@ -200,12 +206,12 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
         if(parameter != null) {
           annotations = new ArrayList<>(annotations);
 
-          annotations.add(INJECT);
+          annotations.add(inject);
         }
 
         providerFieldNames.add(fieldName);
         builder = builder
-          .defineField(fieldName, TypeUtils.parameterize(Provider.class, binding.getType()), Visibility.PRIVATE)
+          .defineField(fieldName, TypeUtils.parameterize(providerClass, binding.getType()), Visibility.PRIVATE)
           .annotateField(annotations);
       }
       else {
@@ -278,11 +284,13 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     private final ObjectFactory objectFactory;
     private final List<InjectionTemplate> templates = new ArrayList<>();
     private final Method factoryMethod;
+    private final Function<Object, Object> providerGetter;
 
     private List<String> factoryParameterNames;
 
-    Interceptor(Constructor<?> productConstructor, Method factoryMethod) {
+    Interceptor(Constructor<?> productConstructor, Method factoryMethod, Function<Object, Object> providerGetter) {
       this.factoryMethod = factoryMethod;
+      this.providerGetter = providerGetter;
       this.objectFactory = new ClassObjectFactory(productConstructor);
     }
 
@@ -326,8 +334,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
       List<Injection> injections = new ArrayList<>();
 
       for(InjectionTemplate template : templates) {
-        @SuppressWarnings("unchecked")
-        Object value = template.field == null ? parameters.get(template.parameterName) : ((Provider<Object>)template.field.get(factoryInstance)).get();
+        Object value = template.field == null ? parameters.get(template.parameterName) : providerGetter.apply(template.field.get(factoryInstance));
 
         injections.add(new Injection(template.accessibleObject, value));
       }

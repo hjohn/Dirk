@@ -59,11 +59,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Provider;
+import javax.inject.Named;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -75,9 +77,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isA;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -146,7 +148,7 @@ public class InjectorTest {
   @Test
   public void shouldGetBeanWithOptionalDependencyWhenProviderReturnsNull() {
     injector.register(BeanWithOptionalDependency.class);
-    injector.registerInstance(new Provider<UnavailableBean>() {
+    injector.registerInstance(new Supplier<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
         return null;
@@ -245,7 +247,7 @@ public class InjectorTest {
 
   @Test  // @Nullable annotation on Provider is just ignored as it makes no sense for Providers
   public void shouldGetBeanWithOptionalProviderDependency() {
-    injector.registerInstance(new Provider<UnavailableBean>() {
+    injector.registerInstance(new Supplier<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
         return null;  // this provider breaks its contract
@@ -275,7 +277,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenGettingUnavailableBean() {
-    injector.registerInstance(new Provider<UnavailableBean>() {
+    injector.registerInstance(new Supplier<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
         return null;
@@ -336,7 +338,7 @@ public class InjectorTest {
 
   @Test
   public void shouldBeAbleToRemoveProviderWhichIsOnlyOptionallyDependedOn() {
-    Provider<UnavailableBean> provider = new Provider<>() {
+    Supplier<UnavailableBean> provider = new Supplier<>() {
       @Override
       public UnavailableBean get() {
         return new UnavailableBean();
@@ -372,8 +374,8 @@ public class InjectorTest {
 
   @Test
   public void shouldRegisterSameStringInstancesWithDifferentQualifiers() {
-    injector.registerInstance("a", Annotations.named("name-1"));
-    injector.registerInstance("a", Annotations.named("name-2"));
+    injector.registerInstance("a", Annotations.of(Named.class, Map.of("value", "name-1")));
+    injector.registerInstance("a", Annotations.of(Named.class, Map.of("value", "name-2")));
   }
 
   @Test
@@ -703,12 +705,12 @@ public class InjectorTest {
   }
 
   /*
-   * Provider use
+   * Instance tests
    */
 
   @Test
   public void shouldRegisterAndUseProvider() {
-    injector.registerInstance(new Provider<String>() {
+    injector.registerInstance(new Supplier<String>() {
       @Override
       public String get() {
         return "a string";
@@ -720,7 +722,7 @@ public class InjectorTest {
 
   @Test
   public void shouldRemoveProvider() {
-    Provider<String> provider = new Provider<>() {
+    Supplier<String> provider = new Supplier<>() {
       @Override
       public String get() {
         return "a string";
@@ -733,7 +735,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRegisteringProviderWouldViolateSingularDependencies() {
-    assertThrows(ViolatesSingularDependencyException.class, () -> injector.registerInstance(new Provider<SimpleChildBean>() {
+    assertThrows(ViolatesSingularDependencyException.class, () -> injector.registerInstance(new Supplier<SimpleChildBean>() {
       @Override
       public SimpleChildBean get() {
         return new SimpleChildBean();
@@ -743,14 +745,14 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingSimilarButNotSameProvider() {
-    injector.registerInstance(new Provider<String>() {
+    injector.registerInstance(new Supplier<String>() {
       @Override
       public String get() {
         return "a string";
       }
     });
 
-    assertThrows(NoSuchKeyException.class, () -> injector.removeInstance(new Provider<String>() {
+    assertThrows(NoSuchKeyException.class, () -> injector.removeInstance(new Supplier<String>() {
       @Override
       public String get() {
         return "a string";
@@ -760,7 +762,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingProviderByClass() {
-    injector.registerInstance(new Provider<String>() {
+    injector.registerInstance(new Supplier<String>() {
       @Override
       public String get() {
         return "a string";
@@ -842,7 +844,7 @@ public class InjectorTest {
   @Test
   @Disabled("This test is no longer valid; Providers are injected directly now (no indirection that could check their result) and so null instances can be part of the results if a Provider breaks its contract.")
   public void getInstancesShouldSilentlyIgnoreProvidersThatReturnNull() {
-    injector.registerInstance(new Provider<String>() {
+    injector.registerInstance(new Supplier<String>() {
       @Override
       public String get() {
         return null;
@@ -853,7 +855,7 @@ public class InjectorTest {
   }
 
   public static class BeanWithBadPostConstruct {
-    private Provider<BeanDependentOnBeanWithBadPostConstruct> provider;
+    private Supplier<BeanDependentOnBeanWithBadPostConstruct> provider;
 
     @PostConstruct
     private void postConstruct() {
@@ -869,14 +871,14 @@ public class InjectorTest {
   interface SomeInterface {
   }
 
-  interface SomeInterfaceProvider extends Provider<SomeInterface> {
+  interface SomeInterfaceProvider extends Supplier<SomeInterface> {
   }
 
   static class Bean1 implements SomeInterface {
     @Inject public Bean1() {}
   }
 
-  static class Bean2 implements Provider<SomeInterface> {
+  static class Bean2 implements Supplier<SomeInterface> {
     @Inject public Bean2() {}
 
     @Override
@@ -902,7 +904,7 @@ public class InjectorTest {
   }
 
   public static class BeanThatNeedsProviderOfSomeInterface {
-    @Inject Provider<SomeInterface> someInterface;
+    @Inject Supplier<SomeInterface> someInterface;
 
     public BeanThatNeedsProviderOfSomeInterface() {}
 
@@ -912,7 +914,7 @@ public class InjectorTest {
   }
 
   public static class BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider {
-    @Inject Provider<Bean3> bean3;
+    @Inject Supplier<Bean3> bean3;
 
     public BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider() {}
 
@@ -986,7 +988,7 @@ public class InjectorTest {
   }
 
   public static class BadPostConstruct {
-    @Inject Provider<BadPostConstruct> provider;
+    @Inject Supplier<BadPostConstruct> provider;
 
     @PostConstruct
     void postConstruct() {

@@ -14,9 +14,11 @@ import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
-import hs.ddif.core.instantiation.InstanceFactories;
+import hs.ddif.core.instantiation.DefaultInstantiatorFactory;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.instantiation.TypeExtensionStore;
+import hs.ddif.core.instantiation.TypeExtensionStores;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.domain.MultipleInstances;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
@@ -31,7 +33,9 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Map;
 
+import javax.inject.Named;
 import javax.inject.Scope;
 import javax.inject.Singleton;
 
@@ -60,10 +64,11 @@ public class DefaultInstanceResolverTest {
     }
   };
 
-  private final InstantiatorFactory instantiatorFactory = InstanceFactories.create();
+  private final TypeExtensionStore typeExtensionStore = TypeExtensionStores.create();
+  private final InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
   private final InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);
-  private final InjectableStore store = new InjectableStore(instantiatorBindingMap);
+  private final InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
   private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
   private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager);
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
@@ -107,7 +112,7 @@ public class DefaultInstanceResolverTest {
           classInjectableFactory.create(F.class),
           classInjectableFactory.create(G.class),
           instanceInjectableFactory.create("red", Annotations.of(Red.class)),
-          instanceInjectableFactory.create("green", Annotations.named("green")),
+          instanceInjectableFactory.create("green", Annotations.of(Named.class, Map.of("value", "green"))),
           methodInjectableFactory.create(B.class.getDeclaredMethod("createH"), B.class),
           methodInjectableFactory.create(B.class.getDeclaredMethod("createI"), B.class),
           classInjectableFactory.create(K.class)

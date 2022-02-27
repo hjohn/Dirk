@@ -12,8 +12,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Qualifier;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
@@ -46,9 +44,6 @@ public final class QualifiedType {
     }
     if(type == void.class || type == Void.class) {
       throw new BadQualifiedTypeException("[" + this + "] cannot be void or Void");
-    }
-    if(!qualifiers.stream().allMatch(QualifiedType::isQualifier)) {
-      throw new BadQualifiedTypeException("[" + this + "] cannot have qualifier annotations not annotated with @Qualifier");
     }
   }
 
@@ -110,9 +105,5 @@ public final class QualifiedType {
     }
 
     return true;
-  }
-
-  private static boolean isQualifier(Annotation annotation) {
-    return annotation.annotationType().getAnnotation(Qualifier.class) != null;
   }
 }

@@ -1,5 +1,6 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.InjectableFactories;
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Qualifier;
+import javax.inject.Scope;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
@@ -23,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class UnresolvableDependencyExceptionTest {
   private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();
-  private final BindingProvider bindingProvider = new BindingProvider();
+  private final BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Annotations.of(Inject.class), Annotations.of(Qualifier.class), Annotations.of(Scope.class)));
 
   @Test
   void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException, BadQualifiedTypeException {

@@ -8,7 +8,7 @@ import java.lang.reflect.Type;
 /**
  * Thrown when a {@link Class} or instance which is being registered with an Injector
  * is not setup correctly for injection.  This can occur for example when multiple constructors
- * are annotated with {@link javax.inject.Inject} or final fields are annotated as such.
+ * are annotated with an inject annotation or final fields are annotated as such.
  */
 public class BindingException extends Exception {
 
