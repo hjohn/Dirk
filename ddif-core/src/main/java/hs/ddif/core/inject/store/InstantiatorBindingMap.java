@@ -3,14 +3,17 @@ package hs.ddif.core.inject.store;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.instantiation.TypeTrait;
+import hs.ddif.core.store.Key;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Maps {@link Binding}s to their associated {@link Instantiator}s.
  */
-public class InstantiatorBindingMap {
+public class InstantiatorBindingMap implements BoundInstantiatorProvider, BindingManager {
 
   /**
    * Maps bindings to instantiators. A binding is mostly unique but
@@ -33,22 +36,7 @@ public class InstantiatorBindingMap {
     this.instantiatorFactory = instantiatorFactory;
   }
 
-  /**
-   * Returns the {@link InstantiatorFactory} used by this map.
-   *
-   * @return an {@link InstantiatorFactory} used by this map, never {@code null}
-   */
-  public InstantiatorFactory getInstantiatorFactory() {
-    return instantiatorFactory;
-  }
-
-  /**
-   * Find an {@link Instantiator} associated with the given {@link Binding}.
-   *
-   * @param <T> the expected type
-   * @param binding a {@link Binding}, cannot be {@code null}
-   * @return an {@link Instantiator} or {@code null} if the binding matched none
-   */
+  @Override
   public <T> Instantiator<T> getInstantiator(Binding binding) {
     Reference<Instantiator<?>> reference = instantiators.get(binding);
 
@@ -62,11 +50,17 @@ public class InstantiatorBindingMap {
     return referent;
   }
 
-  /**
-   * Associates a {@link Binding} with an {@link Instantiator}.
-   *
-   * @param binding a {@link Binding} to associate, cannot be {@code null}
-   */
+  @Override
+  public Key getSearchKey(Binding binding) {
+    return getInstantiator(binding).getKey();
+  }
+
+  @Override
+  public Set<TypeTrait> getTypeTraits(Binding binding) {
+    return getInstantiator(binding).getTypeTraits();
+  }
+
+  @Override
   public void addBinding(Binding binding) {
     Reference<Instantiator<?>> ref = instantiators.get(binding);
 
@@ -78,11 +72,7 @@ public class InstantiatorBindingMap {
     }
   }
 
-  /**
-   * Removes a {@link Binding} from the map.
-   *
-   * @param binding a {@link Binding} to remove, cannot be {@code null}
-   */
+  @Override
   public void removeBinding(Binding binding) {
     Reference<Instantiator<?>> ref = instantiators.get(binding);
 
@@ -116,5 +106,4 @@ public class InstantiatorBindingMap {
       return --count == 0;
     }
   }
-
 }

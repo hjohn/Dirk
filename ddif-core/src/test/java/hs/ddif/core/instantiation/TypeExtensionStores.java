@@ -1,26 +1,25 @@
 package hs.ddif.core.instantiation;
 
+import hs.ddif.core.SupplierTypeExtension;
 import hs.ddif.core.config.ListTypeExtension;
-import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
-import javax.inject.Provider;
+public class TypeExtensionStores {
 
-public class InstanceFactories {
-
-  public static InstantiatorFactory create() {
+  public static TypeExtensionStore create() {
     Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
 
     typeExtensions.put(List.class, new ListTypeExtension<>());
     typeExtensions.put(Set.class, new SetTypeExtension<>());
-    typeExtensions.put(Provider.class, new ProviderTypeExtension<>());
+    typeExtensions.put(Supplier.class, new SupplierTypeExtension<>());
 
-    return new InstantiatorFactory(typeExtensions);
+    return new TypeExtensionStore(typeExtensions);
   }
 }
 

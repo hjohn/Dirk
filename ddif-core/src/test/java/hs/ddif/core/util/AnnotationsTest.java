@@ -56,14 +56,6 @@ public class AnnotationsTest {
   }
 
   @Nested
-  class When_named_IsCalled {
-    @Test
-    void shouldCreatedNamedAnnotation() throws NoSuchFieldException, SecurityException {
-      assertThat(Annotations.named("me")).isEqualTo(A.class.getDeclaredField("named").getAnnotation(Named.class));
-    }
-  }
-
-  @Nested
   class When_findAnnotations_IsCalled {
 
     @Test

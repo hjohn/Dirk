@@ -32,7 +32,7 @@ public class QualifiedTypeStoreGenericsTest {
 
   @Before
   public void before() {
-    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
+    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), cls -> true);
   }
 
   /**

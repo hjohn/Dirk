@@ -4,13 +4,16 @@ import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.TypeExtension;
+import hs.ddif.core.instantiation.TypeTrait;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Types;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.TypeVariable;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Type extension for {@link Instantiator}s that gather all matching injectables
@@ -20,6 +23,7 @@ import java.util.List;
  */
 public class ListTypeExtension<T> implements TypeExtension<List<T>> {
   private static final TypeVariable<?> TYPE_VARIABLE = List.class.getTypeParameters()[0];
+  private static final Set<TypeTrait> NONE = EnumSet.noneOf(TypeTrait.class);
 
   @Override
   public Instantiator<List<T>> create(InstantiatorFactory factory, Key key, AnnotatedElement element) {
@@ -40,13 +44,8 @@ public class ListTypeExtension<T> implements TypeExtension<List<T>> {
       }
 
       @Override
-      public boolean requiresAtLeastOne() {
-        return false;
-      }
-
-      @Override
-      public boolean requiresAtMostOne() {
-        return false;
+      public Set<TypeTrait> getTypeTraits() {
+        return NONE;
       }
     };
   }

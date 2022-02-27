@@ -1,7 +1,6 @@
-package hs.ddif.core.config;
+package hs.ddif.jsr330;
 
 import hs.ddif.core.config.standard.InjectableExtension;
-import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.util.Types;
@@ -13,8 +12,8 @@ import java.util.List;
 import javax.inject.Provider;
 
 /**
- * This extension detects if a class implements {@link Provider} and registers
- * and additional injectable for the type the provider provides.
+ * This extension detects if a class implements the {@link Provider} interface and registers
+ * an additional injectable for the type the provider provides.
  */
 public class ProviderInjectableExtension implements InjectableExtension {
   private final MethodInjectableFactory methodInjectableFactory;
@@ -35,11 +34,6 @@ public class ProviderInjectableExtension implements InjectableExtension {
     if(cls != null && Provider.class.isAssignableFrom(cls) && !cls.isInterface()) {
       try {
         Method method = cls.getMethod("get");
-        Type providedType = method.getGenericReturnType();
-
-        if(Types.raw(providedType) == Provider.class) {
-          throw new DefinitionException(method, "cannot have a return type with a nested Provider");
-        }
 
         return List.of(methodInjectableFactory.create(method, type));
       }

@@ -1,8 +1,10 @@
 package hs.ddif.core.config.standard;
 
+import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.definition.ClassInjectableFactoryTemplate.TypeAnalysis;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -17,6 +19,8 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Qualifier;
+import javax.inject.Scope;
 import javax.inject.Singleton;
 
 import org.junit.jupiter.api.Test;
@@ -24,10 +28,11 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConcreteClassInjectableFactoryTemplateTest {
-  private static final ScopeResolverManager SCOPE_RESOLVER_MANAGER = new ScopeResolverManager(new SingletonScopeResolver());
+  private static final ScopeResolverManager SCOPE_RESOLVER_MANAGER = new ScopeResolverManager(new SingletonScopeResolver(Annotations.of(Singleton.class)));
+  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Annotations.of(Inject.class), Annotations.of(Qualifier.class), Annotations.of(Scope.class));
 
-  private BindingProvider bindingProvider = new BindingProvider();
-  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, new DefaultAnnotatedInjectableFactory(SCOPE_RESOLVER_MANAGER));
+  private BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
+  private ConcreteClassInjectableFactoryTemplate extension = new ConcreteClassInjectableFactoryTemplate(bindingProvider, new DefaultInjectableFactory(SCOPE_RESOLVER_MANAGER, ANNOTATION_STRATEGY));
 
   @Test
   void shouldFailPreconditionWhenReturnTypeIsAbstract() {

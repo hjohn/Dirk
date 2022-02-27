@@ -1,9 +1,7 @@
 package hs.ddif.core.definition.bind;
 
 import hs.ddif.core.store.Key;
-import hs.ddif.core.util.Annotations;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -20,16 +18,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Qualifier;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Provides {@link Binding}s for constructors, methods and fields.
  */
 public class BindingProvider {
-  private static final Annotation QUALIFIER = Annotations.of(Qualifier.class);
+  private final AnnotationStrategy annotationStrategy;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param annotationStrategy an {@link AnnotationStrategy}, cannot be {@code null}
+   */
+  public BindingProvider(AnnotationStrategy annotationStrategy) {
+    this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy cannot be null");
+  }
 
   /**
    * Returns all bindings for the given {@link Constructor} and all member bindings
@@ -73,9 +77,13 @@ public class BindingProvider {
 
     while(currentInjectableClass != null) {
       for(Field field : currentInjectableClass.getDeclaredFields()) {
-        if(field.isAnnotationPresent(Inject.class)) {
+        if(annotationStrategy.isInjectAnnotated(field)) {
           if(Modifier.isFinal(field.getModifiers())) {
             throw new BindingException(cls, field, "cannot be final");
+          }
+
+          if(!annotationStrategy.getScopes(field).isEmpty()) {
+            throw new BindingException(cls, field, "should not be annotated with a scope annotation when it is annotated with an inject annotation: " + annotationStrategy.getScopes(field));
           }
 
           if(typeArguments == null) {
@@ -88,12 +96,12 @@ public class BindingProvider {
 
           Type type = TypeUtils.unrollVariables(typeArguments, field.getGenericType());
 
-          bindings.add(new DefaultBinding(new Key(type, Annotations.findDirectlyMetaAnnotatedAnnotations(field, QUALIFIER)), field, null));
+          bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(field)), field, null));
         }
       }
 
       for(Method method : currentInjectableClass.getDeclaredMethods()) {
-        if(method.isAnnotationPresent(Inject.class)) {
+        if(annotationStrategy.isInjectAnnotated(method)) {
           if(method.getParameterCount() == 0) {
             throw new BindingException(cls, method, "must have parameters");
           }
@@ -166,16 +174,16 @@ public class BindingProvider {
    * @return a {@link Constructor} suitable for injection, never {@code null}
    * @throws BindingException when an exception occurred while creating a binding
    */
-  public static Constructor<?> getConstructor(Class<?> cls) throws BindingException {
+  public Constructor<?> getConstructor(Class<?> cls) throws BindingException {
     return getConstructor(cls, false);
   }
 
-  private static Constructor<?> getConstructor(Class<?> cls, boolean annotatedOnly) throws BindingException {
+  private Constructor<?> getConstructor(Class<?> cls, boolean annotatedOnly) throws BindingException {
     Constructor<?> suitableConstructor = null;
     Constructor<?> defaultConstructor = null;
 
     for(Constructor<?> constructor : cls.getDeclaredConstructors()) {
-      if(constructor.isAnnotationPresent(Inject.class)) {
+      if(annotationStrategy.isInjectAnnotated(constructor)) {
         if(suitableConstructor != null) {
           throw new BindingException(cls, "cannot have multiple Inject annotated constructors");
         }
@@ -194,7 +202,7 @@ public class BindingProvider {
     return suitableConstructor == null ? defaultConstructor : suitableConstructor;
   }
 
-  private static List<Binding> ofExecutable(Executable executable, Type ownerType) {
+  private List<Binding> ofExecutable(Executable executable, Type ownerType) {
     Type[] params = executable.getGenericParameterTypes();
     Parameter[] parameters = executable.getParameters();
     List<Binding> bindings = new ArrayList<>();
@@ -207,7 +215,7 @@ public class BindingProvider {
     for(int i = 0; i < parameters.length; i++) {
       Type type = TypeUtils.unrollVariables(typeArguments, params[i]);
 
-      bindings.add(new DefaultBinding(new Key(type, Annotations.findDirectlyMetaAnnotatedAnnotations(parameters[i], QUALIFIER)), executable, parameters[i]));
+      bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(parameters[i])), executable, parameters[i]));
     }
 
     return bindings;

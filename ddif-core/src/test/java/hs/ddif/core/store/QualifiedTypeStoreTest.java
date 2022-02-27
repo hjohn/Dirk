@@ -18,12 +18,14 @@ import hs.ddif.core.util.Types;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.RandomAccess;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
+import javax.inject.Named;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.Before;
@@ -51,7 +53,7 @@ public class QualifiedTypeStoreTest {
 
   @Before
   public void before() {
-    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
+    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), cls -> Supplier.class != cls);
   }
 
   @Test
@@ -77,18 +79,18 @@ public class QualifiedTypeStoreTest {
 
   @Test
   public void shouldStoreWithQualifier() {
-    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-a")));
-    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-b")));
-    store.put(instanceInjectableFactory.create("c", Annotations.named("parameter-c")));
-    store.put(instanceInjectableFactory.create("d", Annotations.named("parameter-c")));
-    store.put(instanceInjectableFactory.create("f", Annotations.named("parameter-e")));
+    store.put(instanceInjectableFactory.create("a", named("parameter-a")));
+    store.put(instanceInjectableFactory.create("a", named("parameter-b")));
+    store.put(instanceInjectableFactory.create("c", named("parameter-c")));
+    store.put(instanceInjectableFactory.create("d", named("parameter-c")));
+    store.put(instanceInjectableFactory.create("f", named("parameter-e")));
 
     assertThat(store.resolve(new Key(String.class))).hasSize(5);
-    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-a"))))).hasSize(1);
-    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-b"))))).hasSize(1);
-    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-c"))))).hasSize(2);
-    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-d"))))).hasSize(0);
-    assertThat(store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-e"))))).hasSize(1);
+    assertThat(store.resolve(new Key(String.class, Set.of(named("parameter-a"))))).hasSize(1);
+    assertThat(store.resolve(new Key(String.class, Set.of(named("parameter-b"))))).hasSize(1);
+    assertThat(store.resolve(new Key(String.class, Set.of(named("parameter-c"))))).hasSize(2);
+    assertThat(store.resolve(new Key(String.class, Set.of(named("parameter-d"))))).hasSize(0);
+    assertThat(store.resolve(new Key(String.class, Set.of(named("parameter-e"))))).hasSize(1);
   }
 
   @Test
@@ -103,9 +105,9 @@ public class QualifiedTypeStoreTest {
 
   @Test
   public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() {
-    store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a")));
+    store.put(instanceInjectableFactory.create(new String("a"), named("parameter-a")));
 
-    assertThatThrownBy(() -> store.put(instanceInjectableFactory.create(new String("a"), Annotations.named("parameter-a"))))
+    assertThatThrownBy(() -> store.put(instanceInjectableFactory.create(new String("a"), named("parameter-a"))))
       .isExactlyInstanceOf(DuplicateKeyException.class)
       .hasMessage("[@javax.inject.Named(value=parameter-a) java.lang.String] is already present")
       .hasNoCause();
@@ -113,19 +115,19 @@ public class QualifiedTypeStoreTest {
 
   @Test
   public void shouldRemoveWithQualifier() {
-    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-a")));
-    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-b")));
-    store.put(instanceInjectableFactory.create("c", Annotations.named("parameter-c")));
+    store.put(instanceInjectableFactory.create("a", named("parameter-a")));
+    store.put(instanceInjectableFactory.create("a", named("parameter-b")));
+    store.put(instanceInjectableFactory.create("c", named("parameter-c")));
 
-    store.remove(instanceInjectableFactory.create("a", Annotations.named("parameter-a")));
-    store.remove(instanceInjectableFactory.create("a", Annotations.named("parameter-b")));
-    store.remove(instanceInjectableFactory.create("c", Annotations.named("parameter-c")));
+    store.remove(instanceInjectableFactory.create("a", named("parameter-a")));
+    store.remove(instanceInjectableFactory.create("a", named("parameter-b")));
+    store.remove(instanceInjectableFactory.create("c", named("parameter-c")));
   }
 
   private void setupStore() {
-    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-a")));
-    store.put(instanceInjectableFactory.create("a", Annotations.named("parameter-b"), Annotations.of(Red.class)));
-    store.put(instanceInjectableFactory.create("c", Annotations.named("parameter-c")));
+    store.put(instanceInjectableFactory.create("a", named("parameter-a")));
+    store.put(instanceInjectableFactory.create("a", named("parameter-b"), Annotations.of(Red.class)));
+    store.put(instanceInjectableFactory.create("c", named("parameter-c")));
     store.put(instanceInjectableFactory.create(4L));
     store.put(instanceInjectableFactory.create(2));
     store.put(instanceInjectableFactory.create(6L, Annotations.of(Red.class)));
@@ -150,7 +152,7 @@ public class QualifiedTypeStoreTest {
     assertEquals(3, store.resolve(new Key(String.class)).size());
 
     // All Strings with a specific annotation
-    assertEquals(1, store.resolve(new Key(String.class, Set.of(Annotations.named("parameter-b")))).size());
+    assertEquals(1, store.resolve(new Key(String.class, Set.of(named("parameter-b")))).size());
 
     // All Numbers
     assertEquals(4, store.resolve(new Key(Number.class)).size());
@@ -267,10 +269,10 @@ public class QualifiedTypeStoreTest {
 
     assertTrue(store.contains(new Key(StringProvider.class)));
 
-    // Ensure lookup by Provider is not possible:
-    assertFalse(store.contains(new Key(TypeUtils.parameterize(Provider.class, String.class))));
-    assertFalse(store.contains(new Key(new TypeReference<Provider<String>>() {}.getType())));
-    assertFalse(store.contains(new Key(new TypeReference<Provider<Long>>() {}.getType())));
+    // Ensure lookup by a filtered type is not possible:
+    assertFalse(store.contains(new Key(TypeUtils.parameterize(Supplier.class, String.class))));
+    assertFalse(store.contains(new Key(new TypeReference<Supplier<String>>() {}.getType())));
+    assertFalse(store.contains(new Key(new TypeReference<Supplier<Long>>() {}.getType())));
   }
 
   @Test
@@ -338,10 +340,10 @@ public class QualifiedTypeStoreTest {
     G injection3;
   }
 
-  interface StringProviderInterface extends Provider<String> {
+  interface StringProviderInterface extends Supplier<String> {
   }
 
-  public static class StringProvider implements Provider<String> {
+  public static class StringProvider implements Supplier<String> {
     @Override
     public String get() {
       return "string";
@@ -368,5 +370,9 @@ public class QualifiedTypeStoreTest {
   }
 
   public interface Z {
+  }
+
+  private static Annotation named(String name) {
+    return Annotations.of(Named.class, Map.of("value", name));
   }
 }

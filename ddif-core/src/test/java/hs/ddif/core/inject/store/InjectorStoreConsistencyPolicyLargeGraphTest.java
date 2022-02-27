@@ -2,13 +2,15 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
-import hs.ddif.core.config.standard.DefaultInjectable;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.InstanceFactories;
+import hs.ddif.core.instantiation.DefaultInstantiatorFactory;
 import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.instantiation.TypeExtensionStore;
+import hs.ddif.core.instantiation.TypeExtensionStores;
+import hs.ddif.core.instantiation.injection.Injection;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
@@ -18,11 +20,14 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.junit.jupiter.api.Test;
 
@@ -31,13 +36,14 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
   @Test
   void largeGraphTest() throws BadQualifiedTypeException {
-    InstantiatorFactory instantiatorFactory = InstanceFactories.create();
+    TypeExtensionStore typeExtensionStore = TypeExtensionStores.create();
+    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-    InjectableStore store = new InjectableStore(instantiatorBindingMap);
+    InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
     List<Injectable> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
-    ScopeResolver scopeResolver = new SingletonScopeResolver();
+    ScopeResolver scopeResolver = new SingletonScopeResolver(Annotations.of(Singleton.class));
 
     for(int i = 0; i < 10000; i++) {
       store.checkInvariants();
@@ -51,13 +57,29 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
         bindings.add(new SimpleBinding(new Key(target.getType(), target.getQualifiers())));
       }
 
-      Injectable injectable = new DefaultInjectable(
-        new QualifiedType(classes.get(rnd.nextInt(classes.size())), Set.of(Annotations.named("instance-" + i))),
-        bindings,
-        scopeResolver,
-        null,
-        injections -> null
-      );
+      QualifiedType qualifiedType = new QualifiedType(classes.get(rnd.nextInt(classes.size())), Set.of(Annotations.of(Named.class, Map.of("value", "instance-" + i))));
+
+      Injectable injectable = new Injectable() {
+        @Override
+        public QualifiedType getQualifiedType() {
+          return qualifiedType;
+        }
+
+        @Override
+        public List<Binding> getBindings() {
+          return bindings;
+        }
+
+        @Override
+        public ScopeResolver getScopeResolver() {
+          return scopeResolver;
+        }
+
+        @Override
+        public Object createInstance(List<Injection> injections) {
+          return null;
+        }
+      };
 
       store.putAll(List.of(injectable));
 

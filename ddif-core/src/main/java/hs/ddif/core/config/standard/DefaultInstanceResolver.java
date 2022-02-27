@@ -104,8 +104,8 @@ public class DefaultInstanceResolver implements InstanceResolver {
   }
 
   private <T> T getInstance(Key key) throws NoSuchInstance, MultipleInstances, InstanceCreationFailure {
-    Instantiator<T> instanceFactory = instantiatorFactory.getInstantiator(key, null);
-    Discoverer discoverer = discovererFactory.create(store, instanceFactory.getKey());
+    Instantiator<T> instantiator = instantiatorFactory.getInstantiator(key, null);
+    Discoverer discoverer = discovererFactory.create(store, instantiator.getKey());
     Set<Injectable> gatheredInjectables = Set.of();
 
     try {
@@ -126,7 +126,7 @@ public class DefaultInstanceResolver implements InstanceResolver {
     }
 
     try {
-      return instanceFactory.getInstance(instantiationContext);
+      return instantiator.getInstance(instantiationContext);
     }
     catch(Exception e) {
       if(!gatheredInjectables.isEmpty()) {

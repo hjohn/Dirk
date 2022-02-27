@@ -6,6 +6,9 @@ import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.Key;
 
 import java.lang.reflect.AnnotatedElement;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * Type extension for {@link Instantiator}s which attempt to directly create or
@@ -15,10 +18,12 @@ import java.lang.reflect.AnnotatedElement;
  * @param <T> the instantiated type
  */
 public class DirectTypeExtension<T> implements TypeExtension<T> {
+  private static final Set<TypeTrait> REQUIRES_AT_MOST_ONE = Collections.unmodifiableSet(EnumSet.of(TypeTrait.REQUIRES_AT_MOST_ONE));
+  private static final Set<TypeTrait> REQUIRES_EXACTLY_ONE = Collections.unmodifiableSet(EnumSet.of(TypeTrait.REQUIRES_AT_MOST_ONE, TypeTrait.REQUIRES_AT_LEAST_ONE));
 
   @Override
   public Instantiator<T> create(InstantiatorFactory factory, Key key, AnnotatedElement element) {
-    boolean optional = TypeExtension.isOptional(element);
+    Set<TypeTrait> typeTraits = TypeExtension.isOptional(element) ? REQUIRES_AT_MOST_ONE : REQUIRES_EXACTLY_ONE;
 
     return new Instantiator<>() {
       @Override
@@ -31,7 +36,7 @@ public class DirectTypeExtension<T> implements TypeExtension<T> {
         T instance = context.create(key);
 
         if(instance == null) {
-          if(optional) {
+          if(!typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE)) {
             return null;
           }
 
@@ -42,13 +47,8 @@ public class DirectTypeExtension<T> implements TypeExtension<T> {
       }
 
       @Override
-      public boolean requiresAtLeastOne() {
-        return !optional;
-      }
-
-      @Override
-      public boolean requiresAtMostOne() {
-        return true;
+      public Set<TypeTrait> getTypeTraits() {
+        return typeTraits;
       }
     };
   }

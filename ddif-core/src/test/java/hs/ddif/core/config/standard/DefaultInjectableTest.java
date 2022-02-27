@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import javax.inject.Singleton;
+
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +27,7 @@ import static org.mockito.Mockito.mock;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class DefaultInjectableTest {
-  private static final ScopeResolver SCOPE_RESOLVER = new SingletonScopeResolver();
+  private static final ScopeResolver SCOPE_RESOLVER = new SingletonScopeResolver(Annotations.of(Singleton.class));
 
   private final Binding binding1 = mock(Binding.class);
   private final Binding binding2 = mock(Binding.class);

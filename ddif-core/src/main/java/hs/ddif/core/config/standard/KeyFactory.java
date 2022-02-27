@@ -8,8 +8,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Qualifier;
-
 /**
  * Creates {@link Key}s based on a {@link Type} and an array of untyped qualifier annotations.
  */
@@ -19,8 +17,7 @@ public class KeyFactory {
    * Constructs a new instance. This takes an optional array of qualifiers. Qualifiers
    * can be {@link Annotation} instances or {@link Class}&lt;? extends Annotation&gt; instances.
    *
-   * <p>Annotations which are not meta-annotated with {@link Qualifier}s will be rejected,
-   * as will any parameter that cannot be converted to an annotation.
+   * <p>Parameters that cannot be converted to an annotation will be rejected.
    *
    * @param type a {@link Type}, cannot be {@code null}
    * @param qualifiers an optional array of parameters that can be converted to qualifiers

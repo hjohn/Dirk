@@ -1,27 +1,27 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.scope.ScopeResolver;
-
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 
 /**
  * Constructs {@link Injectable}s for a given object instance.
  */
 public class InstanceInjectableFactory {
   private final InjectableFactory factory;
-  private final ScopeResolver scopeResolver;
+  private final Annotation singleton;
 
   /**
    * Constructs a new instance.
    *
    * @param factory a {@link InjectableFactory}, cannot be {@code null}
-   * @param scopeResolver a {@link ScopeResolver}, cannot be {@code null}
+   * @param singleton a singleton {@link AnnotatedElement} to use, cannot be {@code null}
    */
-  public InstanceInjectableFactory(InjectableFactory factory, ScopeResolver scopeResolver) {
-    this.factory = factory;
-    this.scopeResolver = scopeResolver;
+  public InstanceInjectableFactory(InjectableFactory factory, Annotation singleton) {
+    this.factory = Objects.requireNonNull(factory, "factory cannot be null");
+    this.singleton = Objects.requireNonNull(singleton, "singleton cannot be null");
   }
 
   /**
@@ -36,17 +36,60 @@ public class InstanceInjectableFactory {
       throw new IllegalArgumentException("instance cannot be null");
     }
 
-    try {
-      return factory.create(
-        new QualifiedType(instance.getClass(), Set.of(qualifiers)),
-        List.of(),
-        scopeResolver,
-        instance,
-        injections -> instance
-      );
+    Annotation[] extendedQualifiers = Arrays.copyOf(qualifiers, qualifiers.length + 1);
+
+    extendedQualifiers[extendedQualifiers.length - 1] = singleton;
+
+    return factory.create(
+      instance.getClass(),
+      new FakeAnnotatedElement(instance, extendedQualifiers),
+      List.of(),
+      injections -> instance
+    );
+  }
+
+  private static class FakeAnnotatedElement implements AnnotatedElement {
+    private final Object instance;
+    private final Annotation[] qualifiers;
+
+    FakeAnnotatedElement(Object instance, Annotation... qualifiers) {
+      this.instance = instance;
+      this.qualifiers = qualifiers;
     }
-    catch(BadQualifiedTypeException e) {
-      throw new DefinitionException(e);
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+      return (T)Arrays.stream(qualifiers).filter(q -> q.annotationType().equals(annotationClass)).findFirst().orElse(null);
+    }
+
+    @Override
+    public Annotation[] getAnnotations() {
+      return qualifiers.clone();
+    }
+
+    @Override
+    public Annotation[] getDeclaredAnnotations() {
+      return qualifiers.clone();
+    }
+
+    @Override
+    public int hashCode() {
+      return instance.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if(this == obj) {
+        return true;
+      }
+      if(obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+
+      FakeAnnotatedElement other = (FakeAnnotatedElement)obj;
+
+      return Objects.equals(instance, other.instance);
     }
   }
 }

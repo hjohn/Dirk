@@ -4,8 +4,10 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactories;
-import hs.ddif.core.instantiation.InstanceFactories;
+import hs.ddif.core.instantiation.DefaultInstantiatorFactory;
 import hs.ddif.core.instantiation.InstantiatorFactory;
+import hs.ddif.core.instantiation.TypeExtensionStore;
+import hs.ddif.core.instantiation.TypeExtensionStores;
 import hs.ddif.core.scope.UnknownScopeException;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
@@ -13,9 +15,9 @@ import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Nested;
@@ -29,7 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class InjectableStoreConsistencyTest {
   private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();
 
-  private InstantiatorFactory instantiatorFactory = InstanceFactories.create();
+  private TypeExtensionStore typeExtensionStore = TypeExtensionStores.create();
+  private InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
   private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
 
   private Injectable a = classInjectableFactory.create(A.class);
@@ -47,7 +50,7 @@ public class InjectableStoreConsistencyTest {
   private Injectable n = classInjectableFactory.create(N.class);
   private Injectable o = classInjectableFactory.create(O.class);
 
-  private InjectableStore store = new InjectableStore(instantiatorBindingMap);
+  private InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
 
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {
@@ -251,7 +254,7 @@ public class InjectableStoreConsistencyTest {
 
   public static class C {
     @Inject B b;
-    @Inject @Opt Provider<D> d;  // not a circular dependency, and not required
+    @Inject @Opt Supplier<D> d;  // not a circular dependency, and not required
   }
 
   public static class D {
@@ -287,8 +290,8 @@ public class InjectableStoreConsistencyTest {
   }
 
   public static class M {
-    @Inject Provider<N> n;
-    @Inject @Opt Provider<O> o;
+    @Inject Supplier<N> n;
+    @Inject @Opt Supplier<O> o;
   }
 
   public static class N {

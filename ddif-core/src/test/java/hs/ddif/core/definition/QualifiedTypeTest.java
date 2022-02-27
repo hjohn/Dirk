@@ -48,11 +48,6 @@ public class QualifiedTypeTest {
       .hasMessage("qualifiers cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new QualifiedType(String.class, Set.of(Annotations.of(Singleton.class))))
-      .isExactlyInstanceOf(BadQualifiedTypeException.class)
-      .hasMessage("[@javax.inject.Singleton() java.lang.String] cannot have qualifier annotations not annotated with @Qualifier")
-      .hasNoCause();
-
     assertThatThrownBy(() -> new QualifiedType(void.class, Set.of(Annotations.of(Singleton.class))))
       .isExactlyInstanceOf(BadQualifiedTypeException.class)
       .hasMessage("[@javax.inject.Singleton() java.lang.Void] cannot be void or Void")

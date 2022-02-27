@@ -61,7 +61,7 @@ public class FieldInjectableFactoryTest {
   void createShouldRejectFieldAnnotatedWithInject() {
     assertThatThrownBy(() -> factory.create(A.class.getDeclaredField("c"), A.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Field [java.lang.String hs.ddif.core.definition.FieldInjectableFactoryTest$A.c] cannot be annotated with Inject")
+      .hasMessage("Field [java.lang.String hs.ddif.core.definition.FieldInjectableFactoryTest$A.c] should not have an inject annotation, but found: [@javax.inject.Inject()]")
       .hasNoCause();
   }
 

@@ -3,10 +3,8 @@ package hs.ddif.core.scope;
 import java.lang.annotation.Annotation;
 import java.util.concurrent.Callable;
 
-import javax.inject.Scope;
-
 /**
- * Handles resolving of types with a specific {@link Scope} annotation.
+ * Handles resolving of types with a specific scope annotation.
  */
 public interface ScopeResolver {
 
@@ -43,4 +41,13 @@ public interface ScopeResolver {
    * @param key an {@link Object} (suitable as a key for use in a map), cannot be {@code null}
    */
   void remove(Object key);
+
+  /**
+   * Checks if this scope resolver represents a singleton scope.
+   *
+   * @return {@code true} if this scope resolver represents a singleton scope, otherwise {@code false}
+   */
+  default boolean isSingletonScope() {
+    return false;
+  }
 }

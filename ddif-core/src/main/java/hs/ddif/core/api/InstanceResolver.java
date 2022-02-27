@@ -9,8 +9,8 @@ import java.util.function.Predicate;
  *
  * <p>All methods support filtering by qualifier annotation, by providing either an {@link java.lang.annotation.Annotation}
  * instance (obtainable via {@link hs.ddif.core.util.Annotations#of(Class)}) or by providing a
- * {@link Class} instance of &lt;? extends Annotation&gt;. Annotations must be be {@link javax.inject.Qualifier}
- * annotations or they will be rejected.
+ * {@link Class} instance of &lt;? extends Annotation&gt;. Annotations should be qualifier annotations or
+ * no matches will be found.
  *
  * <p>Methods that can return multiple instances also support a {@link Predicate} of {@link Type} to allow
  * custom filtering.

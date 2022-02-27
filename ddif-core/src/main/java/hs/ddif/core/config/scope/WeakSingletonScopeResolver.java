@@ -47,4 +47,9 @@ public class WeakSingletonScopeResolver implements ScopeResolver {
   public void remove(Object object) {
     singletons.remove(object);
   }
+
+  @Override
+  public boolean isSingletonScope() {
+    return true;
+  }
 }

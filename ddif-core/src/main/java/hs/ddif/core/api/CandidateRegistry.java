@@ -16,7 +16,7 @@ import java.util.List;
  * any given candidate when certain annotations or interfaces are implemented. For
  * example, registering a candidate which has {@link hs.ddif.annotations.Produces} annotated
  * members will also register the types produced. The same could apply to candidates
- * implementing the {@link javax.inject.Provider} interface.
+ * implementing a provider interface.
  */
 public interface CandidateRegistry {
 
@@ -58,7 +58,7 @@ public interface CandidateRegistry {
 
   /**
    * Registers an instance, and all its derived candidates if any, as a
-   * {@link javax.inject.Singleton} if it would not cause existing registered
+   * singleton if it would not cause existing registered
    * types to have ambiguous dependencies as a result.<p>
    *
    * If registering this instance would result in ambiguous dependencies for

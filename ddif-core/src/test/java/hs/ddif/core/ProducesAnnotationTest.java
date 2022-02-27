@@ -8,6 +8,7 @@ import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.inject.store.CyclicDependencyException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.store.DuplicateKeyException;
+import hs.ddif.core.store.FilteredKeyException;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
@@ -17,9 +18,9 @@ import hs.ddif.core.util.TypeReference;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -79,7 +80,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectBadlyAnnotatedProducesField() {
     assertThatThrownBy(() -> injector.register(BadFactory1.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Field [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory1.size] cannot be annotated with Inject")
+      .hasMessage("Field [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory1.size] should not have an inject annotation, but found: [@javax.inject.Inject()]")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));
@@ -89,7 +90,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectBadlyAnnotatedProducesMethod() {
     assertThatThrownBy(() -> injector.register(BadFactory2.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory2.create(java.lang.Double)] cannot be annotated with Inject")
+      .hasMessage("Method [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory2.create(java.lang.Double)] should not have an inject annotation, but found: [@javax.inject.Inject()]")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));
@@ -443,13 +444,13 @@ public class ProducesAnnotationTest {
     }
   }
 
-  public static class CrossDependentFactory implements Provider<Truck> {
+  public static class CrossDependentFactory {
     @Produces
     public Phone createPhone(Truck truck) {  // requires a Truck, which is produced in the same class
       return new Phone("truck-phone: " + truck);
     }
 
-    @Override
+    @Produces
     public Truck get() {
       return new Truck(2525);
     }
@@ -657,9 +658,9 @@ public class ProducesAnnotationTest {
     }
   }
 
-  public static class BusProvider implements Provider<Bus> {
+  public static class BusProvider {
 
-    @Override
+    @Produces
     public Bus get() {
       return new Bus();
     }
@@ -726,6 +727,48 @@ public class ProducesAnnotationTest {
     @Produces String text = "Hi";
     @Produces Phone createPhone(String text) {
       return new Phone(text);
+    }
+  }
+
+  @Test
+  public void shouldRejectRegisteringClassWithProducerProducingExactTypeProvidedByATypeExtension() {
+    assertThatThrownBy(() -> injector.register(P.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(FilteredKeyException.class)
+      .hasNoCause();
+  }
+
+  @Test
+  public void shouldAllowRegisteringClassWithProducerProducingSubtypeProvidedByATypeExtension() {
+    injector.register(R.class);
+
+    assertNotNull(injector.getInstance(R.class));
+    assertNotNull(injector.getInstance(S.class));
+    assertNotNull(injector.getInstance(Q.class));
+  }
+
+  public static class P {
+    @Produces
+    Supplier<Q> create() {
+      return () -> new Q();
+    }
+  }
+
+  static class Q {
+  }
+
+  public static class R {
+    @Produces
+    S create() {
+      return new S();
+    }
+  }
+
+  static class S implements Supplier<Q> {
+    @Override
+    public Q get() {
+      return new Q();
     }
   }
 }

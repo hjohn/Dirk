@@ -5,9 +5,9 @@ import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -118,13 +118,13 @@ public class InjectorGenericsTest {
 
   public static class InjectableWithConverterProviders {
     @Inject
-    private Provider<Converter<String, Integer>> stringToIntConverter;
+    private Supplier<Converter<String, Integer>> stringToIntConverter;
 
     @Inject
-    private Provider<Converter<Integer, String>> intToStringConverter;
+    private Supplier<Converter<Integer, String>> intToStringConverter;
 
     @Inject
-    private Provider<Converter<String, List<String>>> stringToStringListConverter;
+    private Supplier<Converter<String, List<String>>> stringToStringListConverter;
 
     public Integer convertToInt(String s) {
       return stringToIntConverter.get().convert(s);

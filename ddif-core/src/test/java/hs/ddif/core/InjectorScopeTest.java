@@ -11,10 +11,10 @@ import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.test.scope.TestScope;
 
 import java.lang.annotation.Annotation;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -175,7 +175,7 @@ public class InjectorScopeTest {
           assertThat(throwable.getSuppressed()).hasSize(1);
           assertThat(throwable.getSuppressed()[0])
             .isExactlyInstanceOf(DefinitionException.class)
-            .hasMessage("[class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@javax.inject.Singleton(), @hs.ddif.core.test.scope.TestScope()]")
+            .hasMessage("[class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@hs.ddif.core.test.scope.TestScope(), @javax.inject.Singleton()]")
             .hasNoCause();
         })
         .hasNoCause();
@@ -281,15 +281,15 @@ public class InjectorScopeTest {
   }
 
   public static class PrototypeBeanDependantOnXProvider {
-    @Inject Provider<X> xProvider;
+    @Inject Supplier<X> xProvider;
   }
 
   @Singleton
   public static class SingletonBeanDependentOnXProvider {
-    @Inject Provider<X> xProvider;
+    @Inject Supplier<X> xProvider;
   }
 
-  public static class XProvider implements Provider<X> {  // A provider by default is assumed to provide a new bean everytime (the most narrow scope, or prototype scope)
+  public static class XProvider implements Supplier<X> {  // A provider by default is assumed to provide a new bean everytime (the most narrow scope, or prototype scope)
     @Override
     public X get() {
       return null;

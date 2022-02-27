@@ -1,8 +1,11 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.Instantiator;
+import hs.ddif.core.instantiation.TypeTrait;
+import hs.ddif.core.scope.ScopeResolver;
+import hs.ddif.core.store.FilteredKeyException;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
@@ -16,10 +19,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-
-import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 
@@ -28,7 +30,9 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * only injectables that can be fully resolved.
  */
 public class InjectableStore implements Resolver<Injectable> {
-  private final InstantiatorBindingMap instantiatorBindingMap;
+  private static final Class<Object> SINGLETON = Object.class;
+
+  private final BindingManager bindingManager;
 
   /**
    * Structure keeping track of {@link Key}s used in bindings that must be available
@@ -48,15 +52,17 @@ public class InjectableStore implements Resolver<Injectable> {
   /**
    * Underlying store to which calls are delegated.
    */
-  private final QualifiedTypeStore<Injectable> qualifiedTypeStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()));
+  private final QualifiedTypeStore<Injectable> qualifiedTypeStore;
 
   /**
    * Constructs a new instance.
    *
-   * @param instantiatorBindingMap an {@link InstantiatorBindingMap}, cannot be {@code null}
+   * @param bindingManager an {@link BindingManager}, cannot be {@code null}
+   * @param extendedTypes a set of {@link Class} for which type extensions are in use, cannot be {@code null} or contain {@code null} but can be empty
    */
-  public InjectableStore(InstantiatorBindingMap instantiatorBindingMap) {
-    this.instantiatorBindingMap = instantiatorBindingMap;
+  public InjectableStore(BindingManager bindingManager, Set<Class<?>> extendedTypes) {
+    this.bindingManager = Objects.requireNonNull(bindingManager, "bindingManager cannot be null");
+    this.qualifiedTypeStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), cls -> !extendedTypes.contains(cls));
   }
 
   @Override
@@ -74,6 +80,13 @@ public class InjectableStore implements Resolver<Injectable> {
     return qualifiedTypeStore.resolve(key);
   }
 
+  /**
+   * Checks if there is an {@link Injectable} associated with the given {@link Key} in the store.
+   *
+   * @param key the {@link Key}, cannot be {@code null}
+   * @return {@code true} if there was an {@link Injectable} associated with the given {@link Key},
+   *   otherwise {@code false}
+   */
   public boolean contains(Key key) {
     return qualifiedTypeStore.contains(key);
   }
@@ -85,7 +98,12 @@ public class InjectableStore implements Resolver<Injectable> {
    * @param injectables a collection of {@link Injectable}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
   public synchronized void putAll(Collection<Injectable> injectables) {
-    qualifiedTypeStore.putAll(injectables);
+    try {
+      qualifiedTypeStore.putAll(injectables);
+    }
+    catch(FilteredKeyException e) {
+      throw new DefinitionException("[" + e.getInjectable() + "] cannot be registered as its type conflicts with a TypeExtension for " + Types.raw(e.getKey().getType()), e);
+    }
 
     try {
       addInstanceFactories(injectables);  // modifies structure but must be done before checking for required bindings
@@ -144,7 +162,7 @@ public class InjectableStore implements Resolver<Injectable> {
   private void addInstanceFactories(Collection<Injectable> injectables) {
     for(Injectable injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        instantiatorBindingMap.addBinding(binding);
+        bindingManager.addBinding(binding);
       }
     }
   }
@@ -152,7 +170,7 @@ public class InjectableStore implements Resolver<Injectable> {
   private void removeInstanceFactories(Collection<Injectable> injectables) {
     for(Injectable injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        instantiatorBindingMap.removeBinding(binding);
+        bindingManager.removeBinding(binding);
       }
     }
   }
@@ -166,10 +184,10 @@ public class InjectableStore implements Resolver<Injectable> {
   private Optional<Violation> addInjectables(Collection<Injectable> injectables) {
     for(Injectable injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        Instantiator<?> instantiator = instantiatorBindingMap.getInstantiator(binding);
-        Key key = instantiator.getKey();
+        Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
+        Key key = bindingManager.getSearchKey(binding);
 
-        addTarget(key, instantiator.requiresAtLeastOne(), instantiator.requiresAtMostOne(), injectables);
+        addTarget(key, typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE), typeTraits.contains(TypeTrait.REQUIRES_AT_MOST_ONE), injectables);
       }
     }
 
@@ -179,10 +197,10 @@ public class InjectableStore implements Resolver<Injectable> {
   private Optional<Violation> removeInjectables(Collection<Injectable> injectables) {
     for(Injectable injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        Instantiator<?> instantiator = instantiatorBindingMap.getInstantiator(binding);
-        Key key = instantiator.getKey();
+        Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
+        Key key = bindingManager.getSearchKey(binding);
 
-        removeTarget(key, instantiator.requiresAtLeastOne(), instantiator.requiresAtMostOne());
+        removeTarget(key, typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE), typeTraits.contains(TypeTrait.REQUIRES_AT_MOST_ONE));
       }
     }
 
@@ -196,21 +214,19 @@ public class InjectableStore implements Resolver<Injectable> {
      */
 
     for(Binding binding : injectable.getBindings()) {
-      Instantiator<?> instantiator = instantiatorBindingMap.getInstantiator(binding);
-      boolean requiresAtLeastOne = instantiator.requiresAtLeastOne();
-      boolean requiresAtMostOne = instantiator.requiresAtMostOne();
+      Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
 
-      if(requiresAtMostOne) {
-        Key key = instantiator.getKey();
+      if(typeTraits.contains(TypeTrait.REQUIRES_AT_MOST_ONE)) {
+        Key key = bindingManager.getSearchKey(binding);
         Set<Injectable> injectables = qualifiedTypeStore.resolve(key);
 
         // The binding is a single binding, if there are more than one matches it is ambiguous, and if there is no match then it must be optional
-        if(injectables.size() > 1 || (requiresAtLeastOne && injectables.size() < 1)) {
+        if(injectables.size() > 1 || (typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE) && injectables.size() < 1)) {
           throw new UnresolvableDependencyException(key, binding, injectables);
         }
 
         // Check scope only for non lazy bindings. Lazy ones that inject a Provider can be used anywhere.
-        if(!instantiator.isLazy() && !injectables.isEmpty()) {
+        if(!typeTraits.contains(TypeTrait.LAZY) && !injectables.isEmpty()) {
           Injectable dependency = injectables.iterator().next();  // Previous check ensures there is only a single element in the set
 
           ensureBindingScopeIsValid(injectable, dependency);
@@ -231,10 +247,13 @@ public class InjectableStore implements Resolver<Injectable> {
      * thrown instead.
      */
 
-    Class<?> dependencyScopeAnnotation = dependentInjectable.getScopeResolver().getScopeAnnotationClass();
-    Class<?> injectableScopeAnnotation = injectable.getScopeResolver().getScopeAnnotationClass();
+    ScopeResolver dependentScopeResolver = dependentInjectable.getScopeResolver();
+    ScopeResolver injectableScopeResolver = injectable.getScopeResolver();
 
-    if(isNarrowerScope(injectableScopeAnnotation, dependencyScopeAnnotation)) {
+    Class<?> dependendentScopeAnnotation = dependentScopeResolver.isSingletonScope() ? SINGLETON : dependentScopeResolver.getScopeAnnotationClass();
+    Class<?> injectableScopeAnnotation = injectableScopeResolver.isSingletonScope() ? SINGLETON : injectableScopeResolver.getScopeAnnotationClass();
+
+    if(isNarrowerScope(injectableScopeAnnotation, dependendentScopeAnnotation)) {
       throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getType());
     }
   }
@@ -259,9 +278,9 @@ public class InjectableStore implements Resolver<Injectable> {
         visiting.add(injectable);
 
         for(Binding binding : injectable.getBindings()) {
-          Instantiator<?> instantiator = instantiatorBindingMap.getInstantiator(binding);
+          Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
 
-          if(!instantiator.isLazy()) {
+          if(!typeTraits.contains(TypeTrait.LAZY)) {
             Key key = binding.getKey();
 
             for(Injectable boundInjectable : qualifiedTypeStore.resolve(key)) {
@@ -308,7 +327,7 @@ public class InjectableStore implements Resolver<Injectable> {
       return true;
     }
 
-    return !dependencyScope.equals(Singleton.class) && !scope.equals(dependencyScope);
+    return !dependencyScope.equals(SINGLETON) && !scope.equals(dependencyScope);
   }
 
   /**

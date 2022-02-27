@@ -2,7 +2,7 @@ package hs.ddif.core.config.standard;
 
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.inject.store.InstantiatorBindingMap;
+import hs.ddif.core.inject.store.BoundInstantiatorProvider;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
@@ -28,17 +28,17 @@ public class DefaultInstantiationContext implements InstantiationContext {
   private static final Logger LOGGER = Logger.getLogger(DefaultInstantiationContext.class.getName());
 
   private final Resolver<Injectable> resolver;
-  private final InstantiatorBindingMap instantiatorBindingMap;
+  private final BoundInstantiatorProvider boundInstantiatorProvider;
 
   /**
    * Constructs a new instance.
    *
-   * @param instantiatorBindingMap an {@link InstantiatorBindingMap}, cannot be {@code null}
    * @param resolver a {@link Resolver}, cannot be {@code null}
+   * @param boundInstantiatorProvider an {@link BoundInstantiatorProvider}, cannot be {@code null}
    */
-  public DefaultInstantiationContext(Resolver<Injectable> resolver, InstantiatorBindingMap instantiatorBindingMap) {
+  public DefaultInstantiationContext(Resolver<Injectable> resolver, BoundInstantiatorProvider boundInstantiatorProvider) {
     this.resolver = resolver;
-    this.instantiatorBindingMap = instantiatorBindingMap;
+    this.boundInstantiatorProvider = boundInstantiatorProvider;
   }
 
   @Override
@@ -116,7 +116,7 @@ public class DefaultInstantiationContext implements InstantiationContext {
     List<Injection> injections = new ArrayList<>();
 
     for(Binding binding : injectable.getBindings()) {
-      Instantiator<T> instantiator = instantiatorBindingMap.getInstantiator(binding);
+      Instantiator<T> instantiator = boundInstantiatorProvider.getInstantiator(binding);
 
       injections.add(new Injection(binding.getAccessibleObject(), instantiator.getInstance(this)));
     }

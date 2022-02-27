@@ -1,12 +1,13 @@
 package hs.ddif.core.test.injectables;
 
+import java.util.function.Supplier;
+
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 public class BeanWithProviderWithoutMatch {
 
   @Inject
-  private Provider<SimpleBean> simpleBeanProvider;
+  private Supplier<SimpleBean> simpleBeanProvider;
 
   public SimpleBean getSimpleBean() {
     return simpleBeanProvider.get();

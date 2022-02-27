@@ -8,8 +8,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
@@ -18,15 +16,15 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  */
 public class MethodInjectableFactory {
   private final BindingProvider bindingProvider;
-  private final AnnotatedInjectableFactory injectableFactory;
+  private final InjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
-   * @param injectableFactory a {@link AnnotatedInjectableFactory}, cannot be {@code null}
+   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
    */
-  public MethodInjectableFactory(BindingProvider bindingProvider, AnnotatedInjectableFactory injectableFactory) {
+  public MethodInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
   }
@@ -56,9 +54,6 @@ public class MethodInjectableFactory {
 
     if(returnType == null) {
       throw new DefinitionException(method, "has unresolvable return type");
-    }
-    if(method.isAnnotationPresent(Inject.class)) {
-      throw new DefinitionException(method, "cannot be annotated with Inject");
     }
 
     return injectableFactory.create(returnType, method, bindingProvider.ofMethod(method, ownerType), new MethodObjectFactory(method));

@@ -17,7 +17,7 @@ import java.util.Objects;
 /**
  * An implementation of {@link Injectable}.
  */
-public final class DefaultInjectable implements Injectable {
+final class DefaultInjectable implements Injectable {
   private final QualifiedType qualifiedType;
   private final List<Binding> bindings;
   private final ScopeResolver scopeResolver;
@@ -34,7 +34,7 @@ public final class DefaultInjectable implements Injectable {
    * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
    * @param objectFactory an {@link ObjectFactory}, cannot be {@code null}
    */
-  public DefaultInjectable(QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, ObjectFactory objectFactory) {
+  DefaultInjectable(QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, ObjectFactory objectFactory) {
     if(qualifiedType == null) {
       throw new IllegalArgumentException("qualifiedType cannot be null");
     }

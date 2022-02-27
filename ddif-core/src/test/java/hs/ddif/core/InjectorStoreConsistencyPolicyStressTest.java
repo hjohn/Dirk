@@ -11,9 +11,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.junit.jupiter.api.Test;
 
@@ -131,7 +131,7 @@ public class InjectorStoreConsistencyPolicyStressTest {
 
   public static class C {
     @Inject B b;
-    @Inject @Opt Provider<D> d;  // not a circular dependency, and not required
+    @Inject @Opt Supplier<D> d;  // not a circular dependency, and not required
   }
 
   public static class D implements Z {
@@ -157,7 +157,7 @@ public class InjectorStoreConsistencyPolicyStressTest {
   }
 
   public static class J {
-    @Inject Provider<Z> h;
+    @Inject Supplier<Z> h;
   }
 
   public static class K implements Z {
