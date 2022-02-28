@@ -31,7 +31,7 @@ public class PluginSingletonTest {
   public void shouldLoadAndUnloadPluginWithPluginSingleton() {
     Injector injector = Injectors.autoDiscovering();
 
-    PluginManager pluginManager = new PluginManager(injector.getCandidateRegistry());
+    PluginManager pluginManager = new PluginManager(new DefaultComponentScannerFactory(), injector.getCandidateRegistry());
 
     for(int i = 0; i < 5; i++) {
       Plugin plugin = pluginManager.loadPluginAndScan(PLUGIN_URL);

@@ -9,10 +9,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
-
-import org.reflections.Reflections;
 
 /**
  * Manages {@link Plugin}s, registering them with a {@link CandidateRegistry} when
@@ -21,20 +20,19 @@ import org.reflections.Reflections;
 public class PluginManager {
   private static final Logger LOGGER = Logger.getLogger(PluginManager.class.getName());
 
+  private final ComponentScannerFactory componentScannerFactory;
   private final CandidateRegistry baseRegistry;  // the registry to add the plugin classes to, but also may contain required dependencies
 
   /**
    * Constructs a new instance. A {@link CandidateRegistry} must be provided where
    * types part of a {@link Plugin} can be registered and unregistered.
    *
+   * @param componentScannerFactory a {@link ComponentScannerFactory}, cannot be {@code null}
    * @param registry a {@link CandidateRegistry}, cannot be {@code null}
    */
-  public PluginManager(CandidateRegistry registry) {
-    if(registry == null) {
-      throw new IllegalArgumentException("registry cannot be null");
-    }
-
-    this.baseRegistry = registry;
+  public PluginManager(ComponentScannerFactory componentScannerFactory, CandidateRegistry registry) {
+    this.componentScannerFactory = Objects.requireNonNull(componentScannerFactory, "componentScannerFactory cannot be null");
+    this.baseRegistry = Objects.requireNonNull(registry, "registry cannot be null");
   }
 
   /**
@@ -49,7 +47,7 @@ public class PluginManager {
 
     LOGGER.fine("Scanning packages: " + Arrays.toString(packageNamePrefixes));
 
-    return new PluginLoader(ComponentScanner.createReflections(packageNamePrefixes), classLoader)
+    return new PluginLoader(componentScannerFactory.create(packageNamePrefixes), classLoader)
       .loadPlugin(Arrays.toString(packageNamePrefixes));
   }
 
@@ -65,7 +63,7 @@ public class PluginManager {
 
     LOGGER.fine("Scanning Plugin at: " + Arrays.toString(urls));
 
-    return new PluginLoader(ComponentScanner.createReflections(urls), classLoader).loadPlugin(Arrays.toString(urls));
+    return new PluginLoader(componentScannerFactory.create(urls), classLoader).loadPlugin(Arrays.toString(urls));
   }
 
   /**
@@ -152,16 +150,16 @@ public class PluginManager {
   }
 
   private class PluginLoader {
-    private final Reflections reflections;
+    private final ComponentScanner componentScanner;
     private final ClassLoader classLoader;
 
-    PluginLoader(Reflections reflections, ClassLoader classLoader) {
-      this.reflections = reflections;
+    PluginLoader(ComponentScanner componentScanner, ClassLoader classLoader) {
+      this.componentScanner = componentScanner;
       this.classLoader = classLoader;
     }
 
     Plugin loadPlugin(String pluginName) {
-      List<Type> types = ComponentScanner.findComponentTypes(reflections, classLoader);
+      List<Type> types = componentScanner.findComponentTypes(classLoader);
 
       LOGGER.fine("Registering types: " + types);
 

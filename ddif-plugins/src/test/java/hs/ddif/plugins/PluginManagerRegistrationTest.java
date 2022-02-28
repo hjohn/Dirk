@@ -31,7 +31,9 @@ public class PluginManagerRegistrationTest {
 
     injector.registerInstance("{jsonconfig}", CONFIGURATION);
 
-    ComponentScanner.scan(injector.getCandidateRegistry(), "hs.ddif.plugins.test.project");
+    ComponentScanner scanner = new DefaultComponentScannerFactory().create("hs.ddif.plugins.test.project");
+
+    scanner.scan(injector.getCandidateRegistry());
 
     assertNotNull(injector.getInstance(TestDatabase.class));
     assertNotNull(injector.getInstance(TestStatement.class));
@@ -46,13 +48,15 @@ public class PluginManagerRegistrationTest {
 
     injector.registerInstance("{jsonconfig}", CONFIGURATION);
 
-    assertThatThrownBy(() -> ComponentScanner.scan(injector.getCandidateRegistry(), "hs.ddif.plugins.test.project"))
+    ComponentScanner scanner = new DefaultComponentScannerFactory().create("hs.ddif.plugins.test.project");
+
+    assertThatThrownBy(() -> scanner.scan(injector.getCandidateRegistry()))
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
       .hasNoCause();
 
     injector.register(TestAutoDiscoverableDependency.class);
 
-    ComponentScanner.scan(injector.getCandidateRegistry(), "hs.ddif.plugins.test.project");
+    scanner.scan(injector.getCandidateRegistry());
 
     assertNotNull(injector.getInstance(TestDatabase.class));
     assertNotNull(injector.getInstance(TestStatement.class));
