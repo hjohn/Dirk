@@ -28,16 +28,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class QualifiedTypeStoreTest {
   private static final Annotation RED = Annotations.of(Red.class);
@@ -51,8 +51,8 @@ public class QualifiedTypeStoreTest {
 
   private QualifiedTypeStore<Injectable> store;
 
-  @Before
-  public void before() {
+  @BeforeEach
+  public void beforeEach() {
     this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), cls -> Supplier.class != cls);
   }
 
@@ -204,14 +204,16 @@ public class QualifiedTypeStoreTest {
     assertEquals(3, store.resolve(new Key(Object.class, Set.of(RED))).size());
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void putShouldThrowExceptionWhenInjectableIsNull() {
-    store.put(null);
+    assertThatThrownBy(() -> store.put(null))
+      .isExactlyInstanceOf(NullPointerException.class);
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void removeShouldThrowExceptionWhenInjectableIsNull() {
-    store.remove(null);
+    assertThatThrownBy(() -> store.remove(null))
+      .isExactlyInstanceOf(NullPointerException.class);
   }
 
   @Test

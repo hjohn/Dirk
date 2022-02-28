@@ -9,21 +9,17 @@ import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class InjectorGenericsTest {
   private Injector injector;
 
-  @Rule @SuppressWarnings("deprecation")
-  public ExpectedException thrown = ExpectedException.none();
-
-  @Before
-  public void before() {
+  @BeforeEach
+  public void beforeEach() {
     injector = Injectors.manual();
   }
 
@@ -88,9 +84,8 @@ public class InjectorGenericsTest {
     injector.register(StringToStringListConverter.class);
     injector.register(InjectableWithConverters.class);
 
-    thrown.expect(ViolatesSingularDependencyException.class);
-
-    injector.remove(StringToIntConverter.class);
+    assertThatThrownBy(() -> injector.remove(StringToIntConverter.class))
+      .isExactlyInstanceOf(ViolatesSingularDependencyException.class);
   }
 
   public static class InjectableWithConverters {

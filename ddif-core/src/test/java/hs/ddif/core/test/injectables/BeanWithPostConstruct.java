@@ -3,7 +3,7 @@ package hs.ddif.core.test.injectables;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class BeanWithPostConstruct extends ParentBeanWithPostConstruct {
   @Inject private String test;
