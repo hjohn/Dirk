@@ -44,7 +44,7 @@ public class PluginManagerTest {
   @BeforeEach
   public void beforeEach() {
     injector = Injectors.autoDiscovering();
-    pluginManager = new PluginManager(injector.getCandidateRegistry());
+    pluginManager = new PluginManager(new DefaultComponentScannerFactory(), injector.getCandidateRegistry());
 
     injector.register(BeanWithTextProviders.class);
   }
