@@ -1,7 +1,6 @@
 package hs.ddif.plugins;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.api.CandidateRegistry;
 
 import java.lang.reflect.Modifier;
@@ -59,7 +58,7 @@ public class ComponentScanner {
   static List<Type> findComponentTypes(Reflections reflections, ClassLoader classLoader) {
     return
       reflections.get(
-        Scanners.TypesAnnotated.with(Named.class, Singleton.class, WeakSingleton.class)
+        Scanners.TypesAnnotated.with(Named.class, Singleton.class)
           .add(
             Scanners.FieldsAnnotated.with(Inject.class, Produces.class)
               .add(Scanners.MethodsAnnotated.with(Inject.class, Produces.class))
