@@ -284,9 +284,7 @@ public class DefaultInstanceResolverTest {
           assertThat(throwable.getSuppressed()).hasSize(1);
           assertThat(throwable.getSuppressed()[0])
             .isExactlyInstanceOf(DefinitionException.class)
-            .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be injected; failures:\n"
-              + " - Type cannot be abstract: class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J"
-            )
+            .hasMessage("[class hs.ddif.core.config.standard.DefaultInstanceResolverTest$J] cannot be abstract")
             .hasNoCause();
         })
         .hasNoCause();

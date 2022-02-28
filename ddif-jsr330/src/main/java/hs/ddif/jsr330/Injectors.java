@@ -1,17 +1,15 @@
 package hs.ddif.jsr330;
 
 import hs.ddif.core.Injector;
+import hs.ddif.core.config.AssistedInjectableExtension;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.ListTypeExtension;
 import hs.ddif.core.config.ProducesInjectableExtension;
 import hs.ddif.core.config.SetTypeExtension;
 import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
-import hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplate;
-import hs.ddif.core.config.standard.ConcreteClassInjectableFactoryTemplate;
 import hs.ddif.core.config.standard.DefaultDiscovererFactory;
 import hs.ddif.core.config.standard.DefaultInjectableFactory;
-import hs.ddif.core.config.standard.DelegatingClassInjectableFactory;
 import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
@@ -59,15 +57,11 @@ public class Injectors {
     SingletonScopeResolver singletonScopeResolver = new SingletonScopeResolver(SINGLETON);
     ScopeResolverManager scopeResolverManager = createScopeResolverManager(singletonScopeResolver, scopeResolvers);
     InjectableFactory injectableFactory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY);
-    BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
-    ClassInjectableFactory classInjectableFactory = createClassInjectableFactory(bindingProvider, injectableFactory);
-    MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, injectableFactory);
-    FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, SINGLETON);
 
     return new Injector(
       createTypeExtensionStore(),
-      createDiscoveryFactory(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, true),
+      createDiscoveryFactory(injectableFactory, true),
       instanceInjectableFactory
     );
   }
@@ -83,15 +77,11 @@ public class Injectors {
     SingletonScopeResolver singletonScopeResolver = new SingletonScopeResolver(SINGLETON);
     ScopeResolverManager scopeResolverManager = createScopeResolverManager(singletonScopeResolver, scopeResolvers);
     InjectableFactory injectableFactory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY);
-    BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
-    ClassInjectableFactory classInjectableFactory = createClassInjectableFactory(bindingProvider, injectableFactory);
-    MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, injectableFactory);
-    FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, SINGLETON);
 
     return new Injector(
       createTypeExtensionStore(),
-      createDiscoveryFactory(classInjectableFactory, methodInjectableFactory, fieldInjectableFactory, false),
+      createDiscoveryFactory(injectableFactory, false),
       instanceInjectableFactory
     );
   }
@@ -113,20 +103,19 @@ public class Injectors {
     return new ScopeResolverManager(extendedScopeResolvers);
   }
 
-  private static DiscovererFactory createDiscoveryFactory(ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory, boolean autoDiscovery) {
+  private static DiscovererFactory createDiscoveryFactory(InjectableFactory injectableFactory, boolean autoDiscovery) {
+    BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
+    ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(bindingProvider, injectableFactory);
+    MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, injectableFactory);
+    FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
+
     List<InjectableExtension> injectableExtensions = List.of(
       new ProviderInjectableExtension(methodInjectableFactory),
-      new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory)
+      new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory),
+      new AssistedInjectableExtension(bindingProvider, injectableFactory, INJECT, Provider.class, Provider::get)
     );
 
     return new DefaultDiscovererFactory(autoDiscovery, injectableExtensions, classInjectableFactory);
-  }
-
-  private static ClassInjectableFactory createClassInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
-    return new DelegatingClassInjectableFactory(List.of(
-      new AssistedClassInjectableFactoryTemplate(bindingProvider, injectableFactory, INJECT, Provider.class, Provider::get),
-      new ConcreteClassInjectableFactoryTemplate(bindingProvider, injectableFactory)
-    ));
   }
 }
 

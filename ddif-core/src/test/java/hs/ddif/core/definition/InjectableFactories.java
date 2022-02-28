@@ -2,9 +2,7 @@ package hs.ddif.core.definition;
 
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
-import hs.ddif.core.config.standard.ConcreteClassInjectableFactoryTemplate;
 import hs.ddif.core.config.standard.DefaultInjectableFactory;
-import hs.ddif.core.config.standard.DelegatingClassInjectableFactory;
 import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.scope.ScopeResolver;
@@ -12,7 +10,6 @@ import hs.ddif.core.scope.ScopeResolverManager;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Qualifier;
@@ -44,7 +41,7 @@ public class InjectableFactories {
   }
 
   public ClassInjectableFactory forClass() {
-    return new DelegatingClassInjectableFactory(List.of(new ConcreteClassInjectableFactoryTemplate(BINDING_PROVIDER, factory)));
+    return new ClassInjectableFactory(BINDING_PROVIDER, factory);
   }
 
   public FieldInjectableFactory forField() {

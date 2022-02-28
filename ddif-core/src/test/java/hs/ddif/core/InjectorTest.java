@@ -309,10 +309,7 @@ public class InjectorTest {
         assertThat(throwable.getSuppressed()).hasSize(1);
         assertThat(throwable.getSuppressed()[0])
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[interface hs.ddif.core.test.injectables.SimpleInterface] cannot be injected; failures:\n"
-            + " - Type must have a single abstract method to qualify for assisted injection: interface hs.ddif.core.test.injectables.SimpleInterface\n"
-            + " - Type cannot be abstract: interface hs.ddif.core.test.injectables.SimpleInterface"
-          )
+          .hasMessage("[interface hs.ddif.core.test.injectables.SimpleInterface] cannot be abstract")
           .hasNoCause();
       })
       .hasNoCause();
@@ -394,7 +391,7 @@ public class InjectorTest {
         assertThat(throwable.getSuppressed()).hasSize(1);
         assertThat(throwable.getSuppressed()[0])
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[interface java.util.List] cannot have unresolvable type variables: [E]")
+          .hasMessage("[interface java.util.List] cannot be abstract")
           .hasNoCause();
       })
       .hasNoCause();
@@ -590,7 +587,7 @@ public class InjectorTest {
         assertThat(throwable.getSuppressed()).hasSize(1);
         assertThat(throwable.getSuppressed()[0])
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be injected")
+          .hasMessage("[class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] could not be bound")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
@@ -655,7 +652,7 @@ public class InjectorTest {
         assertThat(throwable.getSuppressed()).hasSize(1);
         assertThat(throwable.getSuppressed()[0])
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.InjectorTest$BadA] cannot be injected")
+          .hasMessage("[class hs.ddif.core.InjectorTest$BadA] could not be bound")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("Method [void hs.ddif.core.InjectorTest$BadA.setNothing()] of [class hs.ddif.core.InjectorTest$BadA] must have parameters")
@@ -693,7 +690,7 @@ public class InjectorTest {
         assertThat(throwable.getSuppressed()).hasSize(1);
         assertThat(throwable.getSuppressed()[0])
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot be injected")
+          .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] could not be bound")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
