@@ -24,12 +24,6 @@
     <!-- Test -->
     <dependency>
       <groupId>com.github.hjohn.ddif</groupId>
-      <artifactId>ddif-core</artifactId>
-      <version>${revision}</version>
-      <type>test-jar</type>
-    </dependency>
-    <dependency>
-      <groupId>com.github.hjohn.ddif</groupId>
       <artifactId>ddif-test-util</artifactId>
       <version>${revision}</version>
       <scope>test</scope>

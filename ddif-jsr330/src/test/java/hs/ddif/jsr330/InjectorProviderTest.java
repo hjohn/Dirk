@@ -10,12 +10,10 @@ import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.DuplicateKeyException;
 import hs.ddif.core.store.FilteredKeyException;
-import hs.ddif.core.test.qualifiers.Big;
-import hs.ddif.core.test.qualifiers.Green;
-import hs.ddif.core.test.qualifiers.Red;
-import hs.ddif.core.test.qualifiers.Small;
 import hs.ddif.core.util.Annotations;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +21,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -656,5 +655,25 @@ public class InjectorProviderTest {
     public SimpleBean getSimpleBean() {
       return simpleBeanProvider.get();
     }
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Qualifier
+  @interface Red {
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Qualifier
+  @interface Green {
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Qualifier
+  @interface Big {
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Qualifier
+  @interface Small {
   }
 }
