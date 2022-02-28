@@ -13,8 +13,8 @@ import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.qualifiers.Small;
-import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
 import hs.ddif.core.util.TypeReference;
+import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.ArrayList;
 import java.util.List;

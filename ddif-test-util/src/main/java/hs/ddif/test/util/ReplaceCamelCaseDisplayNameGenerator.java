@@ -1,4 +1,4 @@
-package hs.ddif.core.util;
+package hs.ddif.test.util;
 
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;

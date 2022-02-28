@@ -28,7 +28,12 @@
       <version>${revision}</version>
       <type>test-jar</type>
     </dependency>
-
+    <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-test-util</artifactId>
+      <version>${revision}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>

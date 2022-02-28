@@ -11,7 +11,7 @@ import hs.ddif.core.instantiation.TypeExtensionStores;
 import hs.ddif.core.scope.UnknownScopeException;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
-import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
+import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.List;
 import java.util.Set;

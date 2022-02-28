@@ -35,6 +35,11 @@
 
     <!-- Test -->
     <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-test-util</artifactId>
+      <version>${revision}</version>
+    </dependency>
+    <dependency>
       <groupId>com.tngtech.archunit</groupId>
       <artifactId>archunit-junit5</artifactId>
       <scope>test</scope>
