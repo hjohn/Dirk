@@ -4,16 +4,15 @@ import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.ProducesInjectableExtension;
 import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
-import hs.ddif.core.config.scope.WeakSingletonScopeResolver;
 import hs.ddif.core.config.standard.AssistedClassInjectableFactoryTemplate;
 import hs.ddif.core.config.standard.ConcreteClassInjectableFactoryTemplate;
-import hs.ddif.core.config.standard.DefaultInjectableFactory;
 import hs.ddif.core.config.standard.DefaultDiscovererFactory;
+import hs.ddif.core.config.standard.DefaultInjectableFactory;
 import hs.ddif.core.config.standard.DelegatingClassInjectableFactory;
 import hs.ddif.core.config.standard.InjectableExtension;
-import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
+import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.definition.bind.AnnotationStrategy;
@@ -92,7 +91,7 @@ public class Injectors {
   }
 
   private static ScopeResolverManager createScopeResolverManager(SingletonScopeResolver singletonScopeResolver, ScopeResolver... scopeResolvers) {
-    ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {singletonScopeResolver, new WeakSingletonScopeResolver()};
+    ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {singletonScopeResolver};
     ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
 
     return new ScopeResolverManager(extendedScopeResolvers);

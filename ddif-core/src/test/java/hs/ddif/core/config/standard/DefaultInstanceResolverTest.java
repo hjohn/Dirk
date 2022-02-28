@@ -1,7 +1,6 @@
 package hs.ddif.core.config.standard;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.annotations.WeakSingleton;
 import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.api.InstanceResolver;
 import hs.ddif.core.api.MultipleInstancesException;
@@ -47,7 +46,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -139,17 +137,6 @@ public class DefaultInstanceResolverTest {
       assertFalse(instanceResolver.getInstance(A.class).equals(instanceResolver.getInstance(A.class)));
       assertTrue(instanceResolver.getInstance(B.class).equals(instanceResolver.getInstance(B.class)));
       assertTrue(instanceResolver.getInstance(C.class).equals(instanceResolver.getInstance(C.class)));
-    }
-
-    @Test
-    void weakSingletongsShouldBeGCd() {
-      int hash1 = instanceResolver.getInstance(C.class).hashCode();
-
-      System.gc();
-
-      int hash2 = instanceResolver.getInstance(C.class).hashCode();
-
-      assertNotEquals(hash1, hash2);
     }
 
     @Test
@@ -332,7 +319,7 @@ public class DefaultInstanceResolverTest {
     }
   }
 
-  @WeakSingleton
+  @Singleton
   public static class C {
   }
 
