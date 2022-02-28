@@ -1,10 +1,10 @@
 package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.Injectors;
 import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
+import hs.ddif.jsr330.Injectors;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
 import hs.ddif.test.plugin.TextStyler;

@@ -1,8 +1,8 @@
 package hs.ddif.plugins;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.Injectors;
 import hs.ddif.core.api.InstanceCreationException;
+import hs.ddif.jsr330.Injectors;
 import hs.ddif.test.plugin.Database;
 
 import java.net.MalformedURLException;
