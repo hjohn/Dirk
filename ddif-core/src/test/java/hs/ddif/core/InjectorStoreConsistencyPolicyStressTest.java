@@ -17,9 +17,9 @@ import javax.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InjectorStoreConsistencyPolicyStressTest {
   private final Random rnd = new Random(4);
@@ -103,16 +103,16 @@ public class InjectorStoreConsistencyPolicyStressTest {
         }
 
         if(actual.contains(type)) {
-          assertTrue("Expected " + type, contains);
+          assertTrue(contains, "Expected " + type);
         }
         else {
-          assertFalse("Did not expect " + type, contains);
+          assertFalse(contains, "Did not expect " + type);
         }
       }
     }
 
-    assertTrue("Expected 20%+ succesful calls", successes > total / 5);
-    assertTrue("Expected 10+ cyclic exceptions (attempts to register D)", cyclics > 10);
+    assertTrue(successes > total / 5, "Expected 20%+ succesful calls");
+    assertTrue(cyclics > 10, "Expected 10+ cyclic exceptions (attempts to register D)");
     assertEquals(Set.of(D.class), classesNeverRegistered, "All classes except D must be registered at some point, but weren't: " + classesNeverRegistered);
   }
 

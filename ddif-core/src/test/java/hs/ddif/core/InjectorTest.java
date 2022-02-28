@@ -75,11 +75,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.isA;
-import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -683,7 +681,7 @@ public class InjectorTest {
     ConstructorInjectionSample instance = injector.getInstance(ConstructorInjectionSample.class);
 
     assertNotNull(instance);
-    assertThat(instance.getInjectedValue(), isA(SimpleBean.class));
+    assertThat(instance.getInjectedValue()).isInstanceOf(SimpleBean.class);
   }
 
   @Test

@@ -12,12 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class QualifiedTypeStoreGenericsTest {
   private final InjectableFactories injectableFactories = new InjectableFactories();
@@ -27,11 +25,8 @@ public class QualifiedTypeStoreGenericsTest {
 
   private QualifiedTypeStore<Injectable> store;
 
-  @Rule @SuppressWarnings("deprecation")
-  public ExpectedException thrown = ExpectedException.none();
-
-  @Before
-  public void before() {
+  @BeforeEach
+  public void beforeEach() {
     this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), cls -> true);
   }
 
