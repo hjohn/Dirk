@@ -24,6 +24,7 @@
     <module>ddif-test-api</module>
     <module>ddif-test-plugin</module>
     <module>ddif-test-plugin-singleton</module>
+    <module>ddif-test-util</module>
   </modules>
 
   <properties>

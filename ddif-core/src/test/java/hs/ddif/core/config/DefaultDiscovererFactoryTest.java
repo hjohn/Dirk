@@ -13,7 +13,7 @@ import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
-import hs.ddif.core.util.ReplaceCamelCaseDisplayNameGenerator;
+import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.List;
 import java.util.Set;
