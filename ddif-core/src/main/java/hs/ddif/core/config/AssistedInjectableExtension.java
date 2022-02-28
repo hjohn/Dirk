@@ -1,10 +1,11 @@
-package hs.ddif.core.config.standard;
+package hs.ddif.core.config;
 
 import hs.ddif.annotations.Argument;
-import hs.ddif.core.definition.InjectableFactory;
-import hs.ddif.core.definition.ClassInjectableFactoryTemplate;
+import hs.ddif.annotations.Assisted;
+import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -19,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -47,49 +49,10 @@ import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.matcher.ElementMatchers;
 
 /**
- * Template to construct {@link Injectable}s from abstract types to
- * provide support for assisted injection.
- *
- * <p>Assisted injection automatically creates a Factory which produces a Product.
- *
- * <p>Suitable candidates for products are regular concrete classes which may have
- * dependencies of their own and a number of arguments which must be supplied
- * at construction time. For example:
- *
- * <pre>
- * class Vehicle {
- *     {@literal @}Inject
- *     Vehicle(
- *         Engine engine,  // supplied by injector
- *         {@literal @}Argument int numberOfWheels  // supplied as argument
- *     ) { ... }
- * }</pre>
- *
- * <p>Suitable candidates for factories are abstract types with a single unimplemented
- * method which returns a suitable product class. Any arguments the factory method
- * accepts must exactly match the arguments the product class needs. A matching
- * factory for the above example would be:
- *
- * <pre>
- * interface VehicleFactory {
- *     Vehicle createVehicle(int numberOfWheels);
- * }</pre>
- *
- * Note that the name of the arguments can only be retrieved with reflection if
- * the classes are compiled with parameter name information. The {@link Argument}
- * annotation can be used to specify names explicitly or to override them.
- *
- * <h2>Scopes and Qualifiers</h2>
- *
- * The factory method can be annotated with a scope, while the product always has no scope.
- * This means that each invocation of the factory method will yield a new product
- * instance.
- *
- * <p>Factories can have qualifiers at the type level. These will be taken into
- * account when injecting the factory at a target site. Products never have any
- * qualifiers.
+ * Extension which provides implementations {@link Assisted} annotated abstract classes or interfaces.
+ * The types must have a single abstract method with a concrete, non primitive return type.
  */
-public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFactoryTemplate<AssistedClassInjectableFactoryTemplate.Context> {
+public class AssistedInjectableExtension implements InjectableExtension {
   private static final Map<Type, Injectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
 
   private final Annotation inject;
@@ -109,7 +72,7 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
    * @param providerGetter a getter {@link Function} of the given provider class, cannot be {@code null}
    */
   @SuppressWarnings("unchecked")
-  public <P> AssistedClassInjectableFactoryTemplate(BindingProvider bindingProvider, InjectableFactory injectableFactory, Annotation inject, Class<P> providerClass, Function<P, Object> providerGetter) {
+  public <P> AssistedInjectableExtension(BindingProvider bindingProvider, InjectableFactory injectableFactory, Annotation inject, Class<P> providerClass, Function<P, Object> providerGetter) {
     this.inject = inject;
     this.providerClass = providerClass;
     this.providerGetter = (Function<Object, Object>)providerGetter;
@@ -118,46 +81,49 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
   }
 
   @Override
-  public TypeAnalysis<Context> analyze(Type type) {
-    Injectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
+  public List<Injectable> getDerived(Type type) {
+    Class<?> factoryClass = Types.raw(type);
 
-    if(factoryInjectable != null) {
-      return TypeAnalysis.positive(new Context(type, null));
+    if(!factoryClass.isAnnotationPresent(Assisted.class)) {
+      return List.of();
     }
 
-    Class<?> factoryClass = Types.raw(type);
     Method factoryMethod = findFactoryMethod(factoryClass);
 
     if(factoryMethod == null) {
-      return TypeAnalysis.negative("Type must have a single abstract method to qualify for assisted injection: %1$s");
-    }
-    if(factoryMethod.getParameterCount() == 0) {
-      return TypeAnalysis.negative("Factory method must have at least one parameter to qualify for assisted injection: %1$s");
+      throw new DefinitionException(factoryClass, "must have a single abstract method to qualify for assisted injection");
     }
 
     Type returnType = TypeUtils.unrollVariables(TypeUtils.getTypeArguments(type, factoryMethod.getDeclaringClass()), factoryMethod.getGenericReturnType());
+
+    if(returnType == null) {
+      throw new DefinitionException(factoryMethod, "must not have unresolvable type variables to qualify for assisted injection: " + Arrays.toString(factoryClass.getTypeParameters()));
+    }
+
     Class<?> returnClass = Types.raw(returnType);
 
     if(returnClass.isPrimitive()) {
-      return TypeAnalysis.negative("Factory method cannot return a primitive type: %2$s in: %1$s", factoryMethod);
+      throw new DefinitionException(factoryMethod, "must not return a primitive type to qualify for assisted injection");
     }
     if(Modifier.isAbstract(returnClass.getModifiers())) {
-      return TypeAnalysis.negative("Factory method cannot return an abstract type: %2$s in: %1$s", factoryMethod);
+      throw new DefinitionException(factoryMethod, "must return a concrete type to qualify for assisted injection");
     }
 
-    return TypeAnalysis.positive(new Context(type, factoryMethod));
+    try {
+      return List.of(create(type, factoryMethod));
+    }
+    catch(BindingException e) {
+      throw new DefinitionException(factoryClass, "or its product [" + returnType + "] could not be bound", e);
+    }
   }
 
-  @Override
-  public Injectable create(TypeAnalysis<Context> analysis) throws BindingException {
-    Type type = analysis.getData().type;
+  public Injectable create(Type type, Method factoryMethod) throws BindingException {
     Injectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
 
     if(factoryInjectable != null) {
       return factoryInjectable;
     }
 
-    Method factoryMethod = analysis.getData().factoryMethod;
     Class<?> implementedFactoryClass = generateFactoryClass(type, factoryMethod);
 
     Constructor<?> factoryConstructor = bindingProvider.getConstructor(implementedFactoryClass);
@@ -179,9 +145,11 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
      * Construct ByteBuddy builder:
      */
 
+    List<Annotation> declaredAnnotations = Arrays.stream(Types.raw(type).getDeclaredAnnotations()).filter(a -> !a.annotationType().equals(Assisted.class)).collect(Collectors.toList());
+
     Builder<?> builder = new ByteBuddy()
       .subclass(type, ConstructorStrategy.Default.IMITATE_SUPER_CLASS.withInheritedAnnotations())
-      .annotateType(Types.raw(type).getDeclaredAnnotations())
+      .annotateType(declaredAnnotations)
       .method(ElementMatchers.returns(productType).and(ElementMatchers.isAbstract()))
       .intercept(MethodDelegation.to(interceptor));
 
@@ -197,11 +165,11 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
       Binding binding = productBindings.get(i);
       Parameter parameter = binding.getParameter();
       AccessibleObject accessibleObject = binding.getAccessibleObject();
-      Argument annotation = parameter == null ? accessibleObject.getAnnotation(Argument.class) : parameter.getAnnotation(Argument.class);
+      Argument annotation = binding.getAnnotatedElement().getAnnotation(Argument.class);
 
       if(annotation == null) {
-        List<Annotation> annotations = Arrays.asList(parameter == null ? accessibleObject.getAnnotations() : parameter.getAnnotations());
-        String fieldName = "__binding" + i + "__";
+        List<Annotation> annotations = Arrays.asList(binding.getAnnotatedElement().getAnnotations());
+        String fieldName = "__binding" + i + "__" + toString(binding) + "__";
 
         if(parameter != null) {
           annotations = new ArrayList<>(annotations);
@@ -252,6 +220,23 @@ public class AssistedClassInjectableFactoryTemplate implements ClassInjectableFa
     interceptor.initialize(parameterBindings, productBindings, providerFields);
 
     return cls;
+  }
+
+  public String toString(Binding binding) {
+    AccessibleObject accessibleObject = binding.getAccessibleObject();
+    Parameter parameter = binding.getParameter();
+
+    if(accessibleObject instanceof Executable) {
+      int index = Arrays.asList(((Executable)accessibleObject).getParameters()).indexOf(parameter);
+      String name = accessibleObject instanceof Method ? "Method_" + ((Method)accessibleObject).getName() : "Constructor";
+
+      return name + "_Parameter_" + index;
+    }
+    else if(accessibleObject instanceof Field) {
+      return "Field_" + ((Field)accessibleObject).getName();
+    }
+
+    return "OwnerClass";
   }
 
   private static List<Field> createProviderFields(Class<?> cls, List<String> providerFieldNames) {

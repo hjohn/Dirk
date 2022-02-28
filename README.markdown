@@ -184,9 +184,10 @@ Injector, and an instance is returned.
 
 Assisted injection makes it possible to automatically create a factory for a class that will inject known
 dependencies automatically while allowing you to supply additional arguments of your own. An abstract class
-or interface needs to be supplied with a single abstract method (SAM type) that returns the correct type.
-This type will serve as the factory that can be injected. Secondly the product of the factory should have its
-supplied arguments annotated with `@Argument` while its dependencies will be injected as usual.
+or interface needs to be supplied annotated with the `@Assisted` annotation.  It also must have a single 
+abstract method (SAM type) that returns the correct type. This type will serve as the factory that can be 
+injected. Secondly the product of the factory should have its supplied arguments annotated with `@Argument` 
+while its dependencies will be injected as usual.
 
 An example Product with a dependency on `Engine` and a user supplied argument `wheelCount`:
 
@@ -200,6 +201,7 @@ will automatically implement it. Note that the name of the parameter `wheelCount
 the Product `Car`. Classes should be compiled with parameter name information in order to discover these
 names at runtime; alternatively the `@Argument` annotation can be used to supply these manually.
 
+    @Assisted
     interface CarFactory {
         Car createCar(int wheelCount);
     }

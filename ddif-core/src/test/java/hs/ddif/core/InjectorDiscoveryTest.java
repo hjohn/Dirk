@@ -95,7 +95,7 @@ public class InjectorDiscoveryTest {
         assertThat(throwable.getSuppressed()).hasSize(1);
         assertThat(throwable.getSuppressed()[0])
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] cannot be injected")
+          .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] could not be bound")
           .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
           .isExactlyInstanceOf(BindingException.class)
           .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")

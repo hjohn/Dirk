@@ -1,6 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Argument;
+import hs.ddif.annotations.Assisted;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.bind.BindingException;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class AssistedInjectionTest {
   private Injector injector = Injectors.manual();
@@ -105,56 +107,47 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithMultipleAbstractMethods() {
     assertThatThrownBy(() -> injector.register(ProducerWithMultipleAbtractMethods.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessageStartingWith("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessageStartingWith("[class hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods] cannot be injected; failures:")
-          .hasNoCause();
-      })
+      .hasMessage("[class hs.ddif.core.AssistedInjectionTest$ProducerWithMultipleAbtractMethods] must have a single abstract method to qualify for assisted injection")
       .hasNoCause();
   }
 
-  public static class TestAssistedInjectionClassWithProducerWithMultipleAbtractMethods {
-  }
-
+  @Assisted
   public abstract static class ProducerWithMultipleAbtractMethods {
-    public abstract TestAssistedInjectionClassWithProducerWithMultipleAbtractMethods create();
-    public abstract TestAssistedInjectionClassWithProducerWithMultipleAbtractMethods create2();
+    public abstract TestService create(String input);
+    public abstract TestService create2(String input);
   }
 
   @Test
   public void registerShouldRejectProducerWithIllegalReturnType() {
     assertThatThrownBy(() -> injector.register(ProducerWithIncorrectReturnType.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectReturnType]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[interface hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectReturnType] cannot have unresolvable type variables: [T]")
-          .hasNoCause();
-      })
+      .hasMessage("Method [public abstract java.lang.Object hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectReturnType.create(java.lang.String)] must not have unresolvable type variables to qualify for assisted injection: [T]")
       .hasNoCause();
   }
 
+  @Assisted
   public interface ProducerWithIncorrectReturnType<T> {
-    public abstract T create();
+    public abstract T create(String input);
+  }
+
+  @Test
+  public void registerShouldRejectProducerWithPrimitiveReturnType() {
+    assertThatThrownBy(() -> injector.register(ProducerWithPrimitiveReturnType.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public abstract int hs.ddif.core.AssistedInjectionTest$ProducerWithPrimitiveReturnType.create(java.lang.String)] must not return a primitive type to qualify for assisted injection")
+      .hasNoCause();
+  }
+
+  @Assisted
+  public interface ProducerWithPrimitiveReturnType {
+    public abstract int create(String input);
   }
 
   @Test
   public void registerShouldRejectProducerWithIncorrectParameterCount() {
     assertThatThrownBy(() -> injector.register(ProducerWithIncorrectParameterCount.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterCount]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterCount hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterCount.create(java.lang.Double)] should have 0 argument(s) of types: {}")
-          .hasNoCause();
-      })
+      .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterCount hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterCount.create(java.lang.Double)] should have 0 argument(s) of types: {}")
       .hasNoCause();
   }
 
@@ -163,6 +156,7 @@ public class AssistedInjectionTest {
     public TestAssistedInjectionClassWithProducerWithIncorrectParameterCount() {}
   }
 
+  @Assisted
   public interface ProducerWithIncorrectParameterCount {
     public abstract TestAssistedInjectionClassWithProducerWithIncorrectParameterCount create(Double notNeeded);
   }
@@ -171,14 +165,7 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithIncorrectParameterType() {
     assertThatThrownBy(() -> injector.register(ProducerWithIncorrectParameterType.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterType]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterType hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterType.create(java.lang.Double)] has argument [java.lang.Double text] with name 'text' that should be of type [class java.lang.String] but was: class java.lang.Double")
-          .hasNoCause();
-      })
+      .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameterType hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameterType.create(java.lang.Double)] has argument [java.lang.Double text] with name 'text' that should be of type [class java.lang.String] but was: class java.lang.Double")
       .hasNoCause();
   }
 
@@ -189,6 +176,7 @@ public class AssistedInjectionTest {
     public TestAssistedInjectionClassWithProducerWithIncorrectParameterType() {}
   }
 
+  @Assisted
   public interface ProducerWithIncorrectParameterType {
     public abstract TestAssistedInjectionClassWithProducerWithIncorrectParameterType create(@Argument("text") Double text);
   }
@@ -197,14 +185,7 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithIncorrectParameter() {
     assertThatThrownBy(() -> injector.register(ProducerWithIncorrectParameter.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameter]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameter hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameter.create(java.lang.String)] is missing required argument with name: incorrect")
-          .hasNoCause();
-      })
+      .hasMessage("Method [public abstract hs.ddif.core.AssistedInjectionTest$TestAssistedInjectionClassWithProducerWithIncorrectParameter hs.ddif.core.AssistedInjectionTest$ProducerWithIncorrectParameter.create(java.lang.String)] is missing required argument with name: incorrect")
       .hasNoCause();
   }
 
@@ -215,6 +196,7 @@ public class AssistedInjectionTest {
     public TestAssistedInjectionClassWithProducerWithIncorrectParameter() {}
   }
 
+  @Assisted
   public interface ProducerWithIncorrectParameter {
     public abstract TestAssistedInjectionClassWithProducerWithIncorrectParameter create(@Argument("incorrect") String incorrect);
   }
@@ -288,21 +270,10 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldRejectAbstractProducerWithNoParameters() {
-    assertThatThrownBy(() -> injector.register(AbstractProducerWithNoParameters.class))
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$AbstractProducerWithNoParameters]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.AssistedInjectionTest$AbstractProducerWithNoParameters] cannot be injected; failures:\n"
-            + " - Factory method must have at least one parameter to qualify for assisted injection: class hs.ddif.core.AssistedInjectionTest$AbstractProducerWithNoParameters\n"
-            + " - Type cannot be abstract: class hs.ddif.core.AssistedInjectionTest$AbstractProducerWithNoParameters"
-          )
-          .hasNoCause();
-      })
-      .hasNoCause();
+  public void registerShouldAcceptAbstractProducerWithNoParameters() {
+    injector.register(AbstractProducerWithNoParameters.class);
+
+    assertNotNull(injector.getInstance(AbstractProducerWithNoParameters.class).create());
   }
 
   public static class TestTargetWithAbstactProducerAndNoParameters {
@@ -314,26 +285,16 @@ public class AssistedInjectionTest {
     }
   }
 
+  @Assisted
   public static abstract class AbstractProducerWithNoParameters {
     public abstract TestTargetWithAbstactProducerAndNoParameters create();
   }
 
   @Test
-  public void registerShouldRejectInterfaceProducerWithNoParameters() {
-    assertThatThrownBy(() -> injector.register(InterfaceProducerWithNoParameters.class))
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.AssistedInjectionTest$InterfaceProducerWithNoParameters]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[interface hs.ddif.core.AssistedInjectionTest$InterfaceProducerWithNoParameters] cannot be injected; failures:\n"
-            + " - Factory method must have at least one parameter to qualify for assisted injection: interface hs.ddif.core.AssistedInjectionTest$InterfaceProducerWithNoParameters\n"
-            + " - Type cannot be abstract: interface hs.ddif.core.AssistedInjectionTest$InterfaceProducerWithNoParameters"
-          )
-          .hasNoCause();
-      })
-      .hasNoCause();
+  public void registerShouldAcceptInterfaceProducerWithNoParameters() {
+    injector.register(InterfaceProducerWithNoParameters.class);
+
+    assertNotNull(injector.getInstance(InterfaceProducerWithNoParameters.class).create());
   }
 
   @Test
@@ -344,6 +305,66 @@ public class AssistedInjectionTest {
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
       .hasMessageStartingWith("Missing dependency [hs.ddif.core.AssistedInjectionTest$TestService] required for")
       .hasNoCause();
+  }
+
+  @Test
+  public void shouldRejectProducerWithFinalBinding() {
+    injector.registerInstance(5);
+
+    assertThatThrownBy(() -> injector.register(ProducerWithFinalBinding.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.AssistedInjectionTest$ProducerWithFinalBinding] or its product [class hs.ddif.core.AssistedInjectionTest$Product] could not be bound")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessageStartingWith("Field [final int hs.ddif.core.AssistedInjectionTest$ProducerWithFinalBinding.i] of [class hs.ddif.core.AssistedInjectionTest$ProducerWithFinalBinding$")
+      .hasMessageEndingWith("] cannot be final")
+      .hasNoCause();
+  }
+
+  public static class Product {
+    final String input;
+
+    @Inject
+    public Product(@Argument String input) {
+      this.input = input;
+    }
+  }
+
+  @Assisted
+  public static abstract class ProducerWithFinalBinding {
+    @Inject final int i = 2;  // bad because final
+
+    public abstract Product create(String input);
+  }
+
+  @Test
+  public void shouldRejectProducerProducingProductWithFinalBinding() {
+    injector.registerInstance("bla");
+
+    assertThatThrownBy(() -> injector.register(ProducerWithBadBindings.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("[class hs.ddif.core.AssistedInjectionTest$ProducerWithBadBindings] or its product [class hs.ddif.core.AssistedInjectionTest$BadProduct] could not be bound")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessage("Field [final int hs.ddif.core.AssistedInjectionTest$BadProduct.x] of [class hs.ddif.core.AssistedInjectionTest$BadProduct] cannot be final")
+      .hasNoCause();
+  }
+
+  public static class BadProduct {
+    final String input;
+    @Inject final int x = 5;
+
+    @Inject
+    public BadProduct(@Argument String input) {
+      this.input = input;
+    }
+  }
+
+  @Assisted
+  public static abstract class ProducerWithBadBindings {
+    @Inject String s;
+
+    public abstract BadProduct create(String input);
   }
 
   @Test
@@ -375,6 +396,7 @@ public class AssistedInjectionTest {
     }
   }
 
+  @Assisted
   public interface InterfaceProducerWithNoParameters {
     TestTargetWithInterfaceProducerAndNoParameters create();
   }
@@ -396,10 +418,12 @@ public class AssistedInjectionTest {
     public TestAssistedAbstractSample() {}
   }
 
+  @Assisted
   public interface TestAssistedSampleFactory {
     TestAssistedSample create(@Argument("interval") Integer interval);
   }
 
+  @Assisted
   public static abstract class TestAssistedAbstractSampleFactory {
     @Inject private ValueSupplier valueSupplier;
 
@@ -410,6 +434,7 @@ public class AssistedInjectionTest {
     public abstract TestAssistedAbstractSample create(@Argument("interval") int interval, @Argument("factor") Double factor);
   }
 
+  @Assisted
   public static abstract class TestAssistedAbstractSampleFactoryWithConstructor {
     private ValueSupplier valueSupplier;
 
@@ -450,6 +475,7 @@ public class AssistedInjectionTest {
     }
   }
 
+  @Assisted
   interface ComplicatedProductFactory {
     ComplicatedProduct create(int offset);
   }

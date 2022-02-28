@@ -176,9 +176,7 @@ public class DefaultDiscovererFactoryTest {
             assertThat(throwable.getSuppressed()).hasSize(1);
             assertThat(throwable.getSuppressed()[0])
               .isExactlyInstanceOf(DefinitionException.class)
-              .hasMessage("[interface hs.ddif.core.config.DefaultDiscovererFactoryTest$I] cannot be injected; failures:\n"
-                + " - Type cannot be abstract: interface hs.ddif.core.config.DefaultDiscovererFactoryTest$I"
-              )
+              .hasMessage("[interface hs.ddif.core.config.DefaultDiscovererFactoryTest$I] cannot be abstract")
               .hasNoCause();
           })
           .hasNoCause();
@@ -265,14 +263,14 @@ public class DefaultDiscovererFactoryTest {
             assertThat(throwable.getSuppressed()).hasSize(2);
             assertThat(throwable.getSuppressed()[0])
               .isExactlyInstanceOf(DefinitionException.class)
-              .hasMessage("[class hs.ddif.core.config.DefaultDiscovererFactoryTest$X] cannot be injected")
+              .hasMessage("[class hs.ddif.core.config.DefaultDiscovererFactoryTest$X] could not be bound")
               .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
               .isExactlyInstanceOf(BindingException.class)
               .hasMessage("[class hs.ddif.core.config.DefaultDiscovererFactoryTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
               .hasNoCause();
             assertThat(throwable.getSuppressed()[1])
               .isExactlyInstanceOf(DefinitionException.class)
-              .hasMessage("[class hs.ddif.core.config.DefaultDiscovererFactoryTest$Z] cannot be injected")
+              .hasMessage("[class hs.ddif.core.config.DefaultDiscovererFactoryTest$Z] could not be bound")
               .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
               .isExactlyInstanceOf(BindingException.class)
               .hasMessage("[class hs.ddif.core.config.DefaultDiscovererFactoryTest$Z] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
@@ -287,7 +285,7 @@ public class DefaultDiscovererFactoryTest {
             assertThat(throwable.getSuppressed()).hasSize(1);
             assertThat(throwable.getSuppressed()[0])
               .isExactlyInstanceOf(DefinitionException.class)
-              .hasMessage("[class hs.ddif.core.config.DefaultDiscovererFactoryTest$X] cannot be injected")
+              .hasMessage("[class hs.ddif.core.config.DefaultDiscovererFactoryTest$X] could not be bound")
               .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
               .isExactlyInstanceOf(BindingException.class)
               .hasMessage("[class hs.ddif.core.config.DefaultDiscovererFactoryTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
