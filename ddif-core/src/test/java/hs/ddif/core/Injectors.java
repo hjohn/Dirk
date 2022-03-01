@@ -108,7 +108,7 @@ public class Injectors {
     List<InjectableExtension> injectableExtensions = List.of(
       new ProviderInjectableExtension(PROVIDER_METHOD, methodInjectableFactory),
       new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory),
-      new AssistedInjectableExtension(bindingProvider, injectableFactory, INJECT, Supplier.class, Supplier::get)
+      new AssistedInjectableExtension(bindingProvider, classInjectableFactory, INJECT, Supplier.class, Supplier::get)
     );
 
     return new DefaultDiscovererFactory(autoDiscovery, injectableExtensions, classInjectableFactory);
