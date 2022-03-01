@@ -3,6 +3,7 @@ package hs.ddif.core;
 import hs.ddif.core.config.AssistedInjectableExtension;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.ProducesInjectableExtension;
+import hs.ddif.core.config.ProviderInjectableExtension;
 import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.DefaultDiscovererFactory;
@@ -20,6 +21,7 @@ import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.ScopeResolverManager;
 import hs.ddif.core.util.Annotations;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -38,6 +40,16 @@ public class Injectors {
   private static final Qualifier QUALIFIER = Annotations.of(Qualifier.class);
   private static final Scope SCOPE = Annotations.of(Scope.class);
   private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(INJECT, QUALIFIER, SCOPE);
+  private static final Method PROVIDER_METHOD;
+
+  static {
+    try {
+      PROVIDER_METHOD = Supplier.class.getDeclaredMethod("get");
+    }
+    catch(NoSuchMethodException | SecurityException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 
   /**
    * Creates an {@link Injector} with auto discovery activated and the given
@@ -94,7 +106,7 @@ public class Injectors {
     FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
 
     List<InjectableExtension> injectableExtensions = List.of(
-      new SupplierInjectableExtension(methodInjectableFactory),
+      new ProviderInjectableExtension(PROVIDER_METHOD, methodInjectableFactory),
       new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory),
       new AssistedInjectableExtension(bindingProvider, injectableFactory, INJECT, Supplier.class, Supplier::get)
     );

@@ -34,7 +34,7 @@ public class FieldInjectableFactoryTest {
   void createShouldRejectIncompatibleOwnerType() {
     assertThatThrownBy(() -> factory.create(A.class.getDeclaredField("a"), B.class))
       .isExactlyInstanceOf(IllegalArgumentException.class)
-      .hasMessage("ownerType must be assignable to field's declaring class: class hs.ddif.core.definition.FieldInjectableFactoryTest$B; declaring class: class hs.ddif.core.definition.FieldInjectableFactoryTest$A")
+      .hasMessage("ownerType must be assignable to member's declaring class: class hs.ddif.core.definition.FieldInjectableFactoryTest$B; declaring class: class hs.ddif.core.definition.FieldInjectableFactoryTest$A")
       .hasNoCause();
   }
 
@@ -42,7 +42,7 @@ public class FieldInjectableFactoryTest {
   void createShouldRejectFieldWithUnresolvableReturnType() {
     assertThatThrownBy(() -> factory.create(B.class.getDeclaredField("b"), B.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Field [public java.lang.Object hs.ddif.core.definition.FieldInjectableFactoryTest$B.b] is of unresolvable type")
+      .hasMessage("Field [public java.lang.Object hs.ddif.core.definition.FieldInjectableFactoryTest$B.b] has unresolvable return type")
       .hasNoCause();
   }
 

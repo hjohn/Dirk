@@ -56,7 +56,7 @@ public class ClassInjectableFactory {
       Constructor<?> constructor = bindingProvider.getConstructor(cls);
       List<Binding> bindings = bindingProvider.ofConstructorAndMembers(constructor, cls);
 
-      return injectableFactory.create(type, cls, bindings, new ClassObjectFactory(constructor));
+      return injectableFactory.create(type, null, cls, bindings, new ClassObjectFactory(constructor));
     }
     catch(BindingException e) {
       throw new DefinitionException(cls, "could not be bound", e);

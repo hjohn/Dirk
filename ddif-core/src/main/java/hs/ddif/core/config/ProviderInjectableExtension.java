@@ -1,4 +1,4 @@
-package hs.ddif.jsr330;
+package hs.ddif.core.config;
 
 import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.Injectable;
@@ -9,21 +9,22 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import javax.inject.Provider;
-
 /**
- * This extension detects if a class implements the {@link Provider} interface and registers
+ * This extension detects if a class implements a method of a provider interface and registers
  * an additional injectable for the type the provider provides.
  */
 public class ProviderInjectableExtension implements InjectableExtension {
+  private final Method providerMethod;
   private final MethodInjectableFactory methodInjectableFactory;
 
   /**
    * Constructs a new instance.
    *
+   * @param providerMethod a getter {@link Method} of a provider type, cannot be {@code null}
    * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
    */
-  public ProviderInjectableExtension(MethodInjectableFactory methodInjectableFactory) {
+  public ProviderInjectableExtension(Method providerMethod, MethodInjectableFactory methodInjectableFactory) {
+    this.providerMethod = providerMethod;
     this.methodInjectableFactory = methodInjectableFactory;
   }
 
@@ -31,11 +32,11 @@ public class ProviderInjectableExtension implements InjectableExtension {
   public List<Injectable> getDerived(Type type) {
     Class<?> cls = Types.raw(type);
 
-    if(cls != null && Provider.class.isAssignableFrom(cls) && !cls.isInterface()) {
+    if(cls != null && providerMethod.getDeclaringClass().isAssignableFrom(cls) && !cls.isInterface()) {
       try {
-        Method method = cls.getMethod("get");
+        Method implementingMethod = cls.getMethod(providerMethod.getName());  // can have annotations that interface method does not have
 
-        return List.of(methodInjectableFactory.create(method, type));
+        return List.of(methodInjectableFactory.create(implementingMethod, type));
       }
       catch(NoSuchMethodException | SecurityException e) {
         throw new IllegalStateException(e);
