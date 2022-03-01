@@ -5,10 +5,6 @@ import hs.ddif.core.instantiation.factory.MethodObjectFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.Map;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Constructs {@link Injectable}s for {@link Method}s part of a specific
@@ -44,18 +40,6 @@ public class MethodInjectableFactory {
       throw new IllegalArgumentException("ownerType cannot be null");
     }
 
-    Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(ownerType, method.getDeclaringClass());
-
-    if(typeArguments == null) {
-      throw new IllegalArgumentException("ownerType must be assignable to method's declaring class: " + ownerType + "; declaring class: " + method.getDeclaringClass());
-    }
-
-    Type returnType = TypeUtils.unrollVariables(typeArguments, method.getGenericReturnType());
-
-    if(returnType == null) {
-      throw new DefinitionException(method, "has unresolvable return type");
-    }
-
-    return injectableFactory.create(returnType, method, bindingProvider.ofMethod(method, ownerType), new MethodObjectFactory(method));
+    return injectableFactory.create(ownerType, method, method, bindingProvider.ofMethod(method, ownerType), new MethodObjectFactory(method));
   }
 }

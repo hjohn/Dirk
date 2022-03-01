@@ -9,6 +9,7 @@ import hs.ddif.core.instantiation.injection.ObjectFactory;
 import hs.ddif.core.scope.ScopeResolver;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Objects;
  * An implementation of {@link Injectable}.
  */
 final class DefaultInjectable implements Injectable {
+  private final Type ownerType;
   private final QualifiedType qualifiedType;
   private final List<Binding> bindings;
   private final ScopeResolver scopeResolver;
@@ -28,13 +30,17 @@ final class DefaultInjectable implements Injectable {
   /**
    * Constructs a new instance.
    *
+   * @param ownerType a {@link Type}, cannot be {@code null}
    * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
    * @param bindings a list of {@link Binding}s, cannot be {@code null} or contain {@code null}s, but can be empty
    * @param scopeResolver a {@link ScopeResolver}, cannot be {@code null}
    * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
    * @param objectFactory an {@link ObjectFactory}, cannot be {@code null}
    */
-  DefaultInjectable(QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, ObjectFactory objectFactory) {
+  DefaultInjectable(Type ownerType, QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, ObjectFactory objectFactory) {
+    if(ownerType == null) {
+      throw new IllegalArgumentException("ownerType cannot be null");
+    }
     if(qualifiedType == null) {
       throw new IllegalArgumentException("qualifiedType cannot be null");
     }
@@ -48,6 +54,7 @@ final class DefaultInjectable implements Injectable {
       throw new IllegalArgumentException("objectFactory cannot be null");
     }
 
+    this.ownerType = ownerType;
     this.qualifiedType = qualifiedType;
     this.bindings = Collections.unmodifiableList(new ArrayList<>(bindings));
     this.scopeResolver = scopeResolver;
@@ -57,7 +64,7 @@ final class DefaultInjectable implements Injectable {
   }
 
   private int calculateHash() {
-    return Objects.hash(qualifiedType, discriminator);
+    return Objects.hash(qualifiedType, ownerType, discriminator);
   }
 
   @Override
@@ -97,6 +104,7 @@ final class DefaultInjectable implements Injectable {
     DefaultInjectable other = (DefaultInjectable)obj;
 
     return qualifiedType.equals(other.qualifiedType)
+      && ownerType.equals(other.ownerType)
       && Objects.equals(discriminator, other.discriminator);
   }
 

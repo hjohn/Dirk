@@ -1,9 +1,9 @@
 package hs.ddif.core.config.standard;
 
-import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.definition.bind.Binding;
@@ -12,12 +12,19 @@ import hs.ddif.core.scope.ScopeResolverManager;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * An {@link InjectableFactory} which creates {@link Injectable}s given
@@ -40,7 +47,7 @@ public class DefaultInjectableFactory implements InjectableFactory {
   }
 
   @Override
-  public Injectable create(Type type, AnnotatedElement element, List<Binding> bindings, ObjectFactory objectFactory) {
+  public Injectable create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, ObjectFactory objectFactory) {
     try {
       Set<Annotation> scopes = annotationStrategy.getScopes(element);
 
@@ -51,7 +58,10 @@ public class DefaultInjectableFactory implements InjectableFactory {
         throw new DefinitionException(element, "should not have an inject annotation, but found: " + annotationStrategy.getInjectAnnotations(element).stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()));
       }
 
+      Type type = member == null ? ownerType : extractType(ownerType, member, element);
+
       return new DefaultInjectable(
+        ownerType,
         new QualifiedType(type, annotationStrategy.getQualifiers(element)),
         bindings,
         scopeResolverManager.getScopeResolver(scopes.isEmpty() ? null : scopes.iterator().next()),
@@ -62,5 +72,21 @@ public class DefaultInjectableFactory implements InjectableFactory {
     catch(BadQualifiedTypeException e) {
       throw new DefinitionException(element, "has unsuitable type", e);
     }
+  }
+
+  private static Type extractType(Type ownerType, Member member, AnnotatedElement element) {
+    Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(ownerType, member.getDeclaringClass());
+
+    if(typeArguments == null) {
+      throw new IllegalArgumentException("ownerType must be assignable to member's declaring class: " + ownerType + "; declaring class: " + member.getDeclaringClass());
+    }
+
+    Type returnType = TypeUtils.unrollVariables(typeArguments, member instanceof Method ? ((Method)member).getGenericReturnType() : ((Field)member).getGenericType());
+
+    if(returnType == null) {
+      throw new DefinitionException(element, "has unresolvable return type");
+    }
+
+    return returnType;
   }
 }

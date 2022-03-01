@@ -1,7 +1,8 @@
-package hs.ddif.jsr330;
+package hs.ddif.core.config;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.core.Injector;
+import hs.ddif.core.Injectors;
 import hs.ddif.core.api.InstanceCreationException;
 import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
@@ -9,8 +10,9 @@ import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.NoSuchKeyException;
 
+import java.util.function.Supplier;
+
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -102,7 +104,7 @@ public class ProviderInjectableExtensionInjectorTest {
 
   @Test
   void shouldRejectInjectingNullFromProvider() {
-    Provider<B> providerInstance = new Provider<>() {
+    Supplier<B> providerInstance = new Supplier<>() {
       @Override
       public B get() {
         return null;  // breaks contract to do this
@@ -114,16 +116,16 @@ public class ProviderInjectableExtensionInjectorTest {
 
     assertThatThrownBy(() -> injector.getInstance(C.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("[class hs.ddif.jsr330.ProviderInjectableExtensionInjectorTest$C] could not be created")
+      .hasMessage("[class hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$C] could not be created")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InstanceCreationFailure.class)
-      .hasMessage("[class hs.ddif.jsr330.ProviderInjectableExtensionInjectorTest$C] could not be created")
+      .hasMessage("[class hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$C] could not be created")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(NoSuchInstance.class)
-      .hasMessage("No such instance: [hs.ddif.jsr330.ProviderInjectableExtensionInjectorTest$B]")
+      .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
 
-    Provider<B> provider = injector.getInstance(TypeUtils.parameterize(Provider.class, B.class));
+    Supplier<B> provider = injector.getInstance(TypeUtils.parameterize(Supplier.class, B.class));
 
     /*
      * Providers are always wrapped, so requesting one directly should not
@@ -134,10 +136,10 @@ public class ProviderInjectableExtensionInjectorTest {
 
     assertThatThrownBy(() -> provider.get())
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasMessage("No such instance: [hs.ddif.jsr330.ProviderInjectableExtensionInjectorTest$B]")
+      .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(NoSuchInstance.class)
-      .hasMessage("No such instance: [hs.ddif.jsr330.ProviderInjectableExtensionInjectorTest$B]")
+      .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
 
     injector.register(E.class);
@@ -155,16 +157,16 @@ public class ProviderInjectableExtensionInjectorTest {
 
     assertThatThrownBy(() -> instance.b.get())
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasMessage("No such instance: [hs.ddif.jsr330.ProviderInjectableExtensionInjectorTest$B]")
+      .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(NoSuchInstance.class)
-      .hasMessage("No such instance: [hs.ddif.jsr330.ProviderInjectableExtensionInjectorTest$B]")
+      .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
   }
 
   @Test
   void shouldAllowInjectingNullFromProviderIfOptional() {
-    injector.registerInstance(new Provider<B>() {
+    injector.registerInstance(new Supplier<B>() {
       @Override
       public B get() {
         return null;  // breaks contract to do this
@@ -179,7 +181,7 @@ public class ProviderInjectableExtensionInjectorTest {
     assertThat(instance.b).isNull();
   }
 
-  public static class A implements Provider<B> {
+  public static class A implements Supplier<B> {
     @Override
     public B get() {
       return new B();
@@ -193,7 +195,7 @@ public class ProviderInjectableExtensionInjectorTest {
     @Inject B b;
   }
 
-  public static class D implements Provider<B> {
+  public static class D implements Supplier<B> {
     @Override
     public B get() {
       return new B();
@@ -201,7 +203,7 @@ public class ProviderInjectableExtensionInjectorTest {
   }
 
   public static class E {
-    @Inject Provider<B> b;
+    @Inject Supplier<B> b;
   }
 
   public static class F {

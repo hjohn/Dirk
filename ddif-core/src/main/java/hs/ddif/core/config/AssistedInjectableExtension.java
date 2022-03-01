@@ -129,7 +129,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
     Constructor<?> factoryConstructor = bindingProvider.getConstructor(implementedFactoryClass);
     List<Binding> factoryBindings = bindingProvider.ofConstructorAndMembers(factoryConstructor, implementedFactoryClass);
 
-    factoryInjectable = injectableFactory.create(implementedFactoryClass, implementedFactoryClass, factoryBindings, new ClassObjectFactory(factoryConstructor));
+    factoryInjectable = injectableFactory.create(type, null, implementedFactoryClass, factoryBindings, new ClassObjectFactory(factoryConstructor));
 
     PRODUCER_INJECTABLES.put(type, factoryInjectable);
 

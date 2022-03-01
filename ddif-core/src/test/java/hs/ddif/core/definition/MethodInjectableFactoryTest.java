@@ -35,7 +35,7 @@ public class MethodInjectableFactoryTest {
   void createShouldRejectIncompatibleOwnerType() {
     assertThatThrownBy(() -> factory.create(A.class.getDeclaredMethod("a"), B.class))
       .isExactlyInstanceOf(IllegalArgumentException.class)
-      .hasMessage("ownerType must be assignable to method's declaring class: class hs.ddif.core.definition.MethodInjectableFactoryTest$B; declaring class: class hs.ddif.core.definition.MethodInjectableFactoryTest$A")
+      .hasMessage("ownerType must be assignable to declaring class: class hs.ddif.core.definition.MethodInjectableFactoryTest$B; declaring class: class hs.ddif.core.definition.MethodInjectableFactoryTest$A")
       .hasNoCause();
   }
 

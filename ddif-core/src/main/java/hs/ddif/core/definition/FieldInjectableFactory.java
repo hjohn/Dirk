@@ -5,10 +5,6 @@ import hs.ddif.core.instantiation.factory.FieldObjectFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.Map;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Constructs {@link Injectable}s for {@link Field} values of a specific
@@ -44,18 +40,6 @@ public class FieldInjectableFactory {
       throw new IllegalArgumentException("ownerType cannot be null");
     }
 
-    Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(ownerType, field.getDeclaringClass());
-
-    if(typeArguments == null) {
-      throw new IllegalArgumentException("ownerType must be assignable to field's declaring class: " + ownerType + "; declaring class: " + field.getDeclaringClass());
-    }
-
-    Type type = TypeUtils.unrollVariables(typeArguments, field.getGenericType());
-
-    if(type == null) {
-      throw new DefinitionException(field, "is of unresolvable type");
-    }
-
-    return injectableFactory.create(type, field, bindingProvider.ofField(field, ownerType), new FieldObjectFactory(field));
+    return injectableFactory.create(ownerType, field, field, bindingProvider.ofField(field, ownerType), new FieldObjectFactory(field));
   }
 }

@@ -42,6 +42,7 @@ public class InstanceInjectableFactory {
 
     return factory.create(
       instance.getClass(),
+      null,
       new FakeAnnotatedElement(instance, extendedQualifiers),
       List.of(),
       injections -> instance
