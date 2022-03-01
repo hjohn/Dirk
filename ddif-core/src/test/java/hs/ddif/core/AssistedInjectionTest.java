@@ -313,7 +313,8 @@ public class AssistedInjectionTest {
 
     assertThatThrownBy(() -> injector.register(ProducerWithFinalBinding.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.AssistedInjectionTest$ProducerWithFinalBinding] or its product [class hs.ddif.core.AssistedInjectionTest$Product] could not be bound")
+      .hasMessageStartingWith("[class hs.ddif.core.AssistedInjectionTest$ProducerWithFinalBinding")
+      .hasMessageEndingWith("] could not be bound")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BindingException.class)
       .hasMessageStartingWith("Field [final int hs.ddif.core.AssistedInjectionTest$ProducerWithFinalBinding.i] of [class hs.ddif.core.AssistedInjectionTest$ProducerWithFinalBinding$")
@@ -343,7 +344,7 @@ public class AssistedInjectionTest {
 
     assertThatThrownBy(() -> injector.register(ProducerWithBadBindings.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.AssistedInjectionTest$ProducerWithBadBindings] or its product [class hs.ddif.core.AssistedInjectionTest$BadProduct] could not be bound")
+      .hasMessage("[class hs.ddif.core.AssistedInjectionTest$BadProduct] produced by [class hs.ddif.core.AssistedInjectionTest$ProducerWithBadBindings] could not be bound")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Field [final int hs.ddif.core.AssistedInjectionTest$BadProduct.x] of [class hs.ddif.core.AssistedInjectionTest$BadProduct] cannot be final")

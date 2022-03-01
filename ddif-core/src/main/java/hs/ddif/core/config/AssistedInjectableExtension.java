@@ -3,9 +3,9 @@ package hs.ddif.core.config;
 import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
 import hs.ddif.core.config.standard.InjectableExtension;
+import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.definition.bind.BindingException;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -59,20 +59,20 @@ public class AssistedInjectableExtension implements InjectableExtension {
   private final Class<?> providerClass;
   private final Function<Object, Object> providerGetter;
   private final BindingProvider bindingProvider;
-  private final InjectableFactory injectableFactory;
+  private final ClassInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param <P> the type of the provider class used
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
-   * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
+   * @param injectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
    * @param inject an inject {@link Annotation} to use for generated classes, cannot be {@code null}
    * @param providerClass a provider {@link Class} to subclass for generated classes, cannot be {@code null}
    * @param providerGetter a getter {@link Function} of the given provider class, cannot be {@code null}
    */
   @SuppressWarnings("unchecked")
-  public <P> AssistedInjectableExtension(BindingProvider bindingProvider, InjectableFactory injectableFactory, Annotation inject, Class<P> providerClass, Function<P, Object> providerGetter) {
+  public <P> AssistedInjectableExtension(BindingProvider bindingProvider, ClassInjectableFactory injectableFactory, Annotation inject, Class<P> providerClass, Function<P, Object> providerGetter) {
     this.inject = inject;
     this.providerClass = providerClass;
     this.providerGetter = (Function<Object, Object>)providerGetter;
@@ -82,6 +82,12 @@ public class AssistedInjectableExtension implements InjectableExtension {
 
   @Override
   public List<Injectable> getDerived(Type type) {
+    Injectable injectable = PRODUCER_INJECTABLES.get(type);
+
+    if(injectable != null) {
+      return List.of(injectable);
+    }
+
     Class<?> factoryClass = Types.raw(type);
 
     if(!factoryClass.isAnnotationPresent(Assisted.class)) {
@@ -109,31 +115,20 @@ public class AssistedInjectableExtension implements InjectableExtension {
       throw new DefinitionException(factoryMethod, "must return a concrete type to qualify for assisted injection");
     }
 
-    try {
-      return List.of(create(type, factoryMethod));
-    }
-    catch(BindingException e) {
-      throw new DefinitionException(factoryClass, "or its product [" + returnType + "] could not be bound", e);
-    }
+    return List.of(create(type, factoryMethod));
   }
 
-  public Injectable create(Type type, Method factoryMethod) throws BindingException {
-    Injectable factoryInjectable = PRODUCER_INJECTABLES.get(type);
+  public Injectable create(Type type, Method factoryMethod) {
+    try {
+      Injectable factoryInjectable = injectableFactory.create(generateFactoryClass(type, factoryMethod));
 
-    if(factoryInjectable != null) {
+      PRODUCER_INJECTABLES.put(type, factoryInjectable);
+
       return factoryInjectable;
     }
-
-    Class<?> implementedFactoryClass = generateFactoryClass(type, factoryMethod);
-
-    Constructor<?> factoryConstructor = bindingProvider.getConstructor(implementedFactoryClass);
-    List<Binding> factoryBindings = bindingProvider.ofConstructorAndMembers(factoryConstructor, implementedFactoryClass);
-
-    factoryInjectable = injectableFactory.create(type, null, implementedFactoryClass, factoryBindings, new ClassObjectFactory(factoryConstructor));
-
-    PRODUCER_INJECTABLES.put(type, factoryInjectable);
-
-    return factoryInjectable;
+    catch(BindingException e) {
+      throw new DefinitionException(factoryMethod.getReturnType(), "produced by [" + type + "] could not be bound", e);
+    }
   }
 
   private Class<?> generateFactoryClass(Type type, Method factoryMethod) throws BindingException {
