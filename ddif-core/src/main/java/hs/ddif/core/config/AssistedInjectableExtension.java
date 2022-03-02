@@ -7,19 +7,14 @@ import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.definition.bind.BindingException;
-import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.factory.ClassObjectFactory;
 import hs.ddif.core.instantiation.injection.Injection;
-import hs.ddif.core.instantiation.injection.ObjectFactory;
 import hs.ddif.core.util.Primitives;
 import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -55,29 +50,26 @@ import net.bytebuddy.matcher.ElementMatchers;
 public class AssistedInjectableExtension implements InjectableExtension {
   private static final Map<Type, Injectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
 
+  private final ClassInjectableFactory injectableFactory;
   private final Annotation inject;
   private final Class<?> providerClass;
   private final Function<Object, Object> providerGetter;
-  private final BindingProvider bindingProvider;
-  private final ClassInjectableFactory injectableFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param <P> the type of the provider class used
-   * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
    * @param injectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
    * @param inject an inject {@link Annotation} to use for generated classes, cannot be {@code null}
    * @param providerClass a provider {@link Class} to subclass for generated classes, cannot be {@code null}
    * @param providerGetter a getter {@link Function} of the given provider class, cannot be {@code null}
    */
   @SuppressWarnings("unchecked")
-  public <P> AssistedInjectableExtension(BindingProvider bindingProvider, ClassInjectableFactory injectableFactory, Annotation inject, Class<P> providerClass, Function<P, Object> providerGetter) {
+  public <P> AssistedInjectableExtension(ClassInjectableFactory injectableFactory, Annotation inject, Class<P> providerClass, Function<P, Object> providerGetter) {
+    this.injectableFactory = injectableFactory;
     this.inject = inject;
     this.providerClass = providerClass;
     this.providerGetter = (Function<Object, Object>)providerGetter;
-    this.bindingProvider = bindingProvider;
-    this.injectableFactory = injectableFactory;
   }
 
   @Override
@@ -119,22 +111,17 @@ public class AssistedInjectableExtension implements InjectableExtension {
   }
 
   public Injectable create(Type type, Method factoryMethod) {
-    try {
-      Injectable factoryInjectable = injectableFactory.create(generateFactoryClass(type, factoryMethod));
+    Injectable factoryInjectable = injectableFactory.create(generateFactoryClass(type, factoryMethod));
 
-      PRODUCER_INJECTABLES.put(type, factoryInjectable);
+    PRODUCER_INJECTABLES.put(type, factoryInjectable);
 
-      return factoryInjectable;
-    }
-    catch(BindingException e) {
-      throw new DefinitionException(factoryMethod.getReturnType(), "produced by [" + type + "] could not be bound", e);
-    }
+    return factoryInjectable;
   }
 
-  private Class<?> generateFactoryClass(Type type, Method factoryMethod) throws BindingException {
+  private Class<?> generateFactoryClass(Type type, Method factoryMethod) {
     Class<?> productType = factoryMethod.getReturnType();
-    Constructor<?> productConstructor = bindingProvider.getAnnotatedConstructor(productType);
-    Interceptor interceptor = new Interceptor(productConstructor, factoryMethod, providerGetter);
+    Injectable productInjectable = injectableFactory.create(productType);
+    Interceptor interceptor = new Interceptor(productInjectable, factoryMethod, providerGetter);
 
     /*
      * Construct ByteBuddy builder:
@@ -154,7 +141,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
 
     List<String> providerFieldNames = new ArrayList<>();
     Map<String, Binding> parameterBindings = new HashMap<>();
-    List<Binding> productBindings = bindingProvider.ofConstructorAndMembers(productConstructor, productType);
+    List<Binding> productBindings = productInjectable.getBindings();
 
     for(int i = 0; i < productBindings.size(); i++) {
       Binding binding = productBindings.get(i);
@@ -261,17 +248,17 @@ public class AssistedInjectableExtension implements InjectableExtension {
    * Interceptor for generated subclass of assisted injection factories.
    */
   public static class Interceptor {
-    private final ObjectFactory objectFactory;
+    private final Injectable productInjectable;
     private final List<InjectionTemplate> templates = new ArrayList<>();
     private final Method factoryMethod;
     private final Function<Object, Object> providerGetter;
 
     private List<String> factoryParameterNames;
 
-    Interceptor(Constructor<?> productConstructor, Method factoryMethod, Function<Object, Object> providerGetter) {
+    Interceptor(Injectable productInjectable, Method factoryMethod, Function<Object, Object> providerGetter) {
+      this.productInjectable = productInjectable;
       this.factoryMethod = factoryMethod;
       this.providerGetter = providerGetter;
-      this.objectFactory = new ClassObjectFactory(productConstructor);
     }
 
     void initialize(Map<String, Binding> productArgumentTypes, List<Binding> bindings, List<Field> fields) {
@@ -303,7 +290,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
           parameters.put(factoryParameterNames.get(i), args[i]);
         }
 
-        return objectFactory.createInstance(createInjections(factoryInstance, parameters));
+        return productInjectable.createInstance(createInjections(factoryInstance, parameters));
       }
       catch(Exception e) {
         throw new InstanceCreationFailure(factoryMethod.getReturnType(), "Exception while creating instance", e);
@@ -398,15 +385,5 @@ public class AssistedInjectableExtension implements InjectableExtension {
     }
 
     return annotation != null && !annotation.value().isEmpty() ? annotation.value() : parameter.getName();
-  }
-
-  static class Context {
-    final Type type;
-    final Method factoryMethod;
-
-    Context(Type type, Method factoryMethod) {
-      this.type = type;
-      this.factoryMethod = factoryMethod;
-    }
   }
 }
