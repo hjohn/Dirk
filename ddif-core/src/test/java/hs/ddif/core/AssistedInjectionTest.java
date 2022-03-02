@@ -127,7 +127,7 @@ public class AssistedInjectionTest {
 
   @Assisted
   public interface ProducerWithIncorrectReturnType<T> {
-    public abstract T create(String input);
+    T create(String input);
   }
 
   @Test
@@ -140,7 +140,20 @@ public class AssistedInjectionTest {
 
   @Assisted
   public interface ProducerWithPrimitiveReturnType {
-    public abstract int create(String input);
+    int create(String input);
+  }
+
+  @Test
+  public void registerShouldRejectProducerWithAbstractReturnType() {
+    assertThatThrownBy(() -> injector.register(ProducerWithAbstractReturnType.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public abstract java.lang.Number hs.ddif.core.AssistedInjectionTest$ProducerWithAbstractReturnType.create(java.lang.String)] must return a concrete type to qualify for assisted injection")
+      .hasNoCause();
+  }
+
+  @Assisted
+  public interface ProducerWithAbstractReturnType {
+    Number create(String input);
   }
 
   @Test
@@ -158,7 +171,7 @@ public class AssistedInjectionTest {
 
   @Assisted
   public interface ProducerWithIncorrectParameterCount {
-    public abstract TestAssistedInjectionClassWithProducerWithIncorrectParameterCount create(Double notNeeded);
+    TestAssistedInjectionClassWithProducerWithIncorrectParameterCount create(Double notNeeded);
   }
 
   @Test
@@ -178,7 +191,7 @@ public class AssistedInjectionTest {
 
   @Assisted
   public interface ProducerWithIncorrectParameterType {
-    public abstract TestAssistedInjectionClassWithProducerWithIncorrectParameterType create(@Argument("text") Double text);
+    TestAssistedInjectionClassWithProducerWithIncorrectParameterType create(@Argument("text") Double text);
   }
 
   @Test
@@ -198,7 +211,7 @@ public class AssistedInjectionTest {
 
   @Assisted
   public interface ProducerWithIncorrectParameter {
-    public abstract TestAssistedInjectionClassWithProducerWithIncorrectParameter create(@Argument("incorrect") String incorrect);
+    TestAssistedInjectionClassWithProducerWithIncorrectParameter create(@Argument("incorrect") String incorrect);
   }
 
   @Test
@@ -218,7 +231,7 @@ public class AssistedInjectionTest {
   }
 
   public interface ProducerWithMissingParameterName {
-    public abstract TestAssistedInjectionClassWithProducerWithMissingParameterName create(String incorrect);
+    TestAssistedInjectionClassWithProducerWithMissingParameterName create(String incorrect);
   }
 
   @Test
@@ -240,7 +253,7 @@ public class AssistedInjectionTest {
   }
 
   public interface ProducerForTargetWithConstructor {
-    public abstract TestAssistedInjectionTargetWithConstructorWithMissingParameterName create(@Argument("text") String text);
+    TestAssistedInjectionTargetWithConstructorWithMissingParameterName create(@Argument("text") String text);
   }
 
   @Test
@@ -344,7 +357,7 @@ public class AssistedInjectionTest {
 
     assertThatThrownBy(() -> injector.register(ProducerWithBadBindings.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.AssistedInjectionTest$BadProduct] produced by [class hs.ddif.core.AssistedInjectionTest$ProducerWithBadBindings] could not be bound")
+      .hasMessage("[class hs.ddif.core.AssistedInjectionTest$BadProduct] could not be bound")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Field [final int hs.ddif.core.AssistedInjectionTest$BadProduct.x] of [class hs.ddif.core.AssistedInjectionTest$BadProduct] cannot be final")
