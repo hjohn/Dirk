@@ -1005,10 +1005,10 @@ public class InjectorTest {
       .isExactlyInstanceOf(InvocationTargetException.class)
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in @PostConstruct method!)")
+      .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in setter, initializer or post-construct method?)")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InstanceCreationFailure.class)
-      .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in @PostConstruct method!)")
+      .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in setter, initializer or post-construct method?)")
       .hasNoCause();
   }
 

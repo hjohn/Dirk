@@ -6,6 +6,7 @@ import hs.ddif.core.config.ProducesInjectableExtension;
 import hs.ddif.core.config.ProviderInjectableExtension;
 import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
+import hs.ddif.core.config.standard.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.standard.DefaultDiscovererFactory;
 import hs.ddif.core.config.standard.DefaultInjectableFactory;
 import hs.ddif.core.config.standard.InjectableExtension;
@@ -13,6 +14,7 @@ import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.InstanceInjectableFactory;
+import hs.ddif.core.definition.LifeCycleCallbacksFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -26,6 +28,8 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
 import javax.inject.Scope;
@@ -101,7 +105,8 @@ public class Injectors {
 
   private static DiscovererFactory createDiscoveryFactory(InjectableFactory injectableFactory, boolean autoDiscovery) {
     BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
-    ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(bindingProvider, injectableFactory);
+    LifeCycleCallbacksFactory lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(ANNOTATION_STRATEGY, PostConstruct.class, PreDestroy.class);
+    ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(bindingProvider, injectableFactory, lifeCycleCallbacksFactory);
     MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, injectableFactory);
     FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
 

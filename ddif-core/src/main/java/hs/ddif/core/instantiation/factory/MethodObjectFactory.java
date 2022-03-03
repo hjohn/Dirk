@@ -49,4 +49,9 @@ public class MethodObjectFactory implements ObjectFactory {
       throw new InstanceCreationFailure(method, "call failed", e);
     }
   }
+
+  @Override
+  public void destroyInstance(Object instance, List<Injection> injections) {
+    // TODO Call a corresponding Disposer method belonging to this Producer
+  }
 }

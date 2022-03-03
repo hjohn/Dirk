@@ -9,28 +9,30 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Object factory for concrete classes. This factory use the given {@link Constructor}
  * to construct the associated class, inject it using the given {@link Injection}s and
- * do post construct calls.
+ * do life cycle callbacks using the provided {@link LifeCycleCallbacks} instance.
  */
 public class ClassObjectFactory implements ObjectFactory {
   private static final Set<Object> UNDER_CONSTRUCTION = ConcurrentHashMap.newKeySet();
 
   private final Constructor<?> constructor;
-  private final PostConstructor postConstructor;
+  private final LifeCycleCallbacks lifeCycleCallbacks;
 
   /**
    * Constructs a new instance.
    *
    * @param constructor a {@link Constructor} which produces the required class, cannot be {@code null}
+   * @param lifeCycleCallbacks a {@link LifeCycleCallbacks} instance, cannot be {@code null}
    */
-  public ClassObjectFactory(Constructor<?> constructor) {
-    this.constructor = constructor;
-    this.postConstructor = new PostConstructor(constructor.getDeclaringClass());
+  public ClassObjectFactory(Constructor<?> constructor, LifeCycleCallbacks lifeCycleCallbacks) {
+    this.constructor = Objects.requireNonNull(constructor, "constructor cannot be null");
+    this.lifeCycleCallbacks = Objects.requireNonNull(lifeCycleCallbacks, "lifeCycleCallbacks cannot be null");
 
     constructor.setAccessible(true);
   }
@@ -38,7 +40,7 @@ public class ClassObjectFactory implements ObjectFactory {
   @Override
   public Object createInstance(List<Injection> injections) throws InstanceCreationFailure {
     if(UNDER_CONSTRUCTION.contains(this)) {
-      throw new InstanceCreationFailure(constructor.getDeclaringClass(), "already under construction (dependency creation loop in @PostConstruct method!)");
+      throw new InstanceCreationFailure(constructor.getDeclaringClass(), "already under construction (dependency creation loop in setter, initializer or post-construct method?)");
     }
 
     try {
@@ -48,13 +50,18 @@ public class ClassObjectFactory implements ObjectFactory {
 
       injectInstance(instance, injections);
 
-      postConstructor.call(instance);
+      lifeCycleCallbacks.postConstruct(instance);
 
       return instance;
     }
     finally {
       UNDER_CONSTRUCTION.remove(this);
     }
+  }
+
+  @Override
+  public void destroyInstance(Object instance, List<Injection> injections) {
+    lifeCycleCallbacks.preDestroy(instance);
   }
 
   private Object constructInstance(List<Injection> injections) throws InstanceCreationFailure {

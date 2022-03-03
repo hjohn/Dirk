@@ -88,6 +88,11 @@ final class DefaultInjectable implements Injectable {
   }
 
   @Override
+  public void destroyInstance(Object instance, List<Injection> injections) {
+    objectFactory.destroyInstance(instance, injections);
+  }
+
+  @Override
   public int hashCode() {
     return hashCode;
   }
