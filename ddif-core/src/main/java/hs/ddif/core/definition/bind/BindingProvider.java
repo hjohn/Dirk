@@ -87,7 +87,7 @@ public class BindingProvider {
           }
 
           if(typeArguments == null) {
-            typeArguments = TypeUtils.getTypeArguments(cls, currentInjectableClass);  // pretty sure that you can re-use these even for when are examining fields of a super class later
+            typeArguments = TypeUtils.getTypeArguments(cls, Object.class);  // pretty sure that you can re-use these even for when are examining fields of a super class later
 
             if(typeArguments == null) {
               throw new IllegalArgumentException("ownerType must be assignable to field's declaring class: " + cls + "; declaring class: " + currentInjectableClass);
@@ -104,6 +104,10 @@ public class BindingProvider {
         if(annotationStrategy.isInjectAnnotated(method)) {
           if(method.getParameterCount() == 0) {
             throw new BindingException(cls, method, "must have parameters");
+          }
+
+          if(!annotationStrategy.getScopes(method).isEmpty()) {
+            throw new BindingException(cls, method, "should not be annotated with a scope annotation when it is annotated with an inject annotation: " + annotationStrategy.getScopes(method));
           }
 
           bindings.addAll(ofExecutable(method, cls));

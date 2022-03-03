@@ -33,10 +33,10 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
     if(injectAnnotations == null || injectAnnotations.isEmpty()) {
       throw new IllegalArgumentException("injectAnnotations cannot be null or empty: " + injectAnnotations);
     }
-    if(qualifierAnnotations == null || injectAnnotations.isEmpty()) {
+    if(qualifierAnnotations == null || qualifierAnnotations.isEmpty()) {
       throw new IllegalArgumentException("qualifierAnnotations cannot be null or empty: " + injectAnnotations);
     }
-    if(scopeAnnotations == null || injectAnnotations.isEmpty()) {
+    if(scopeAnnotations == null || scopeAnnotations.isEmpty()) {
       throw new IllegalArgumentException("scopeAnnotations cannot be null or empty: " + injectAnnotations);
     }
 
