@@ -2,6 +2,7 @@ package hs.ddif.core.definition;
 
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
+import hs.ddif.core.config.standard.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.standard.DefaultInjectableFactory;
 import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.definition.bind.BindingProvider;
@@ -11,6 +12,8 @@ import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
 import javax.inject.Scope;
@@ -22,10 +25,12 @@ public class InjectableFactories {
 
   private final ScopeResolverManager scopeResolverManager;
   private final DefaultInjectableFactory factory;
+  private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
 
   public InjectableFactories(ScopeResolverManager scopeResolverManager) {
     this.scopeResolverManager = scopeResolverManager;
     this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY);
+    this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(ANNOTATION_STRATEGY, PostConstruct.class, PreDestroy.class);
   }
 
   public InjectableFactories() {
@@ -41,7 +46,7 @@ public class InjectableFactories {
   }
 
   public ClassInjectableFactory forClass() {
-    return new ClassInjectableFactory(BINDING_PROVIDER, factory);
+    return new ClassInjectableFactory(BINDING_PROVIDER, factory, lifeCycleCallbacksFactory);
   }
 
   public FieldInjectableFactory forField() {

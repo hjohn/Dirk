@@ -20,16 +20,19 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 public class ClassInjectableFactory {
   private final BindingProvider bindingProvider;
   private final InjectableFactory injectableFactory;
+  private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
 
   /**
    * Constructs a new instance.
    *
    * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
    * @param injectableFactory a {@link InjectableFactory}, cannot be {@code null}
+   * @param lifeCycleCallbacksFactory a {@link LifeCycleCallbacksFactory}, cannot be {@code null}
    */
-  public ClassInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory) {
+  public ClassInjectableFactory(BindingProvider bindingProvider, InjectableFactory injectableFactory, LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
     this.bindingProvider = bindingProvider;
     this.injectableFactory = injectableFactory;
+    this.lifeCycleCallbacksFactory = lifeCycleCallbacksFactory;
   }
 
   /**
@@ -56,7 +59,7 @@ public class ClassInjectableFactory {
       Constructor<?> constructor = bindingProvider.getConstructor(cls);
       List<Binding> bindings = bindingProvider.ofConstructorAndMembers(constructor, cls);
 
-      return injectableFactory.create(type, null, cls, bindings, new ClassObjectFactory(constructor));
+      return injectableFactory.create(type, null, cls, bindings, new ClassObjectFactory(constructor, lifeCycleCallbacksFactory.create(cls)));
     }
     catch(BindingException e) {
       throw new DefinitionException(cls, "could not be bound", e);

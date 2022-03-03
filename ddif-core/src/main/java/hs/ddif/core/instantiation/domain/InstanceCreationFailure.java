@@ -8,11 +8,9 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-import javax.annotation.PostConstruct;
-
 /**
  * Thrown when during (post-)construction of a dependency a problem
- * occurs.  Constructors that throw an exception, {@link PostConstruct}s
+ * occurs.  Constructors that throw an exception, setters or post constructors
  * which trigger further dependency construction which eventually need
  * the current object under construction (causing a loop) and so on.
  */

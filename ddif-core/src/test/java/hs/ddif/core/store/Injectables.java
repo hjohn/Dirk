@@ -42,6 +42,11 @@ public class Injectables {
       }
 
       @Override
+      public void destroyInstance(Object instance, List<Injection> injections) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
       public String toString() {
         return "Injectable(String.class)";
       }

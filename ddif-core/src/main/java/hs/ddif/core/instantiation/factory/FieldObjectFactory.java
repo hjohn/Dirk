@@ -33,4 +33,9 @@ public class FieldObjectFactory implements ObjectFactory {
       throw new InstanceCreationFailure(field, "read failed", e);
     }
   }
+
+  @Override
+  public void destroyInstance(Object instance, List<Injection> injections) {
+    // TODO Call a corresponding Disposer method belonging to this Producer
+  }
 }

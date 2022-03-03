@@ -79,6 +79,10 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
         public Object createInstance(List<Injection> injections) {
           return null;
         }
+
+        @Override
+        public void destroyInstance(Object instance, List<Injection> injections) {
+        }
       };
 
       store.putAll(List.of(injectable));
