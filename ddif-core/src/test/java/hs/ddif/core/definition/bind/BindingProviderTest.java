@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
 import javax.inject.Scope;
+import javax.inject.Singleton;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.groups.Tuple;
@@ -37,7 +38,7 @@ public class BindingProviderTest {
 
     assertThat(bindings).extracting(Binding::getAccessibleObject, Binding::getKey).containsExactlyInAnyOrder(
       Tuple.tuple(ClassWithGenericFields.class.getDeclaredField("fieldA"), new Key(String.class)),
-      Tuple.tuple(ClassWithGenericFields.class.getDeclaredField("fieldB"), new Key(Integer.class))
+      Tuple.tuple(ClassWithGenericFields.class.getDeclaredMethod("setterB", Object.class), new Key(Integer.class))
     );
   }
 
@@ -146,10 +147,23 @@ public class BindingProviderTest {
       );
   }
 
+  @Test
+  public void ofMembersShouldRejectScopeAnnotations() {
+    assertThatThrownBy(() -> bindingProvider.ofMembers(ClassG.class))
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessage("Method [void hs.ddif.core.definition.bind.BindingProviderTest$ClassG.setter(int)] of [class hs.ddif.core.definition.bind.BindingProviderTest$ClassG] should not be annotated with a scope annotation when it is annotated with an inject annotation: [@javax.inject.Singleton()]")
+      .hasNoCause();
+  }
+
   @SuppressWarnings("unused")
   private static class ClassWithGenericFields<A, B> {
     @Inject private A fieldA;
-    @Inject private B fieldB;
+    private B fieldB;
+
+    @Inject
+    void setterB(B b) {
+      fieldB = b;
+    }
   }
 
   private static class Subclass extends ClassWithGenericFields<String, Integer> {
@@ -225,5 +239,15 @@ public class BindingProviderTest {
 
   public static class ClassF {
     @Inject final String x = "";
+  }
+
+  public static class ClassG {
+    int a;
+
+    @Inject
+    @Singleton
+    void setter(int a) {
+      this.a = a;
+    }
   }
 }
