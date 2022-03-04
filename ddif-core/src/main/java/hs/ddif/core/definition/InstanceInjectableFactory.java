@@ -1,6 +1,6 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.InjectionContext;
 import hs.ddif.core.instantiation.injection.ObjectFactory;
 
 import java.lang.annotation.Annotation;
@@ -50,12 +50,12 @@ public class InstanceInjectableFactory {
       List.of(),
       new ObjectFactory() {
         @Override
-        public Object createInstance(List<Injection> injections) {
+        public Object createInstance(InjectionContext injectionContext) {
           return instance;
         }
 
         @Override
-        public void destroyInstance(Object instance, List<Injection> injections) {
+        public void destroyInstance(Object instance, InjectionContext injectionContext) {
         }
       }
     );

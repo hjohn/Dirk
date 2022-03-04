@@ -2,6 +2,7 @@ package hs.ddif.core.instantiation.factory;
 
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.InjectionContext;
 import hs.ddif.core.instantiation.injection.ObjectFactory;
 
 import java.lang.reflect.Method;
@@ -28,8 +29,9 @@ public class MethodObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public Object createInstance(List<Injection> injections) throws InstanceCreationFailure {
+  public Object createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
     try {
+      List<Injection> injections = injectionContext.getInjections();
       Object[] values = new Object[injections.size() - (isStatic ? 0 : 1)];  // Parameters for method
       Object instance = null;
       int parameterIndex = 0;
@@ -51,7 +53,7 @@ public class MethodObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public void destroyInstance(Object instance, List<Injection> injections) {
+  public void destroyInstance(Object instance, InjectionContext injectionContext) {
     // TODO Call a corresponding Disposer method belonging to this Producer
   }
 }

@@ -4,7 +4,7 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.InjectionContext;
 import hs.ddif.core.instantiation.injection.ObjectFactory;
 import hs.ddif.core.scope.ScopeResolver;
 
@@ -83,13 +83,13 @@ final class DefaultInjectable implements Injectable {
   }
 
   @Override
-  public Object createInstance(List<Injection> injections) throws InstanceCreationFailure {
-    return objectFactory.createInstance(injections);
+  public Object createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
+    return objectFactory.createInstance(injectionContext);
   }
 
   @Override
-  public void destroyInstance(Object instance, List<Injection> injections) {
-    objectFactory.destroyInstance(instance, injections);
+  public void destroyInstance(Object instance, InjectionContext injectionContext) {
+    objectFactory.destroyInstance(instance, injectionContext);
   }
 
   @Override

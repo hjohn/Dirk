@@ -6,7 +6,7 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.InjectionContext;
 import hs.ddif.core.instantiation.injection.ObjectFactory;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.test.qualifiers.Green;
@@ -37,11 +37,11 @@ public class DefaultInjectableTest {
 
   private final ObjectFactory objectFactory = new ObjectFactory() {
     @Override
-    public void destroyInstance(Object instance, List<Injection> injections) {
+    public void destroyInstance(Object instance, InjectionContext injectionContext) {
     }
 
     @Override
-    public Object createInstance(List<Injection> injections) {
+    public Object createInstance(InjectionContext injectionContext) {
       return 5;
     }
   };
@@ -50,7 +50,7 @@ public class DefaultInjectableTest {
   void constructorShouldAcceptValidParameters() throws InstanceCreationFailure, BadQualifiedTypeException {
     Injectable injectable = new DefaultInjectable(String.class, new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, objectFactory);
 
-    assertThat(injectable.createInstance(List.of())).isEqualTo(5);
+    assertThat(injectable.createInstance(new DefaultInjectionContext(List.of()))).isEqualTo(5);
     assertThat(injectable.getType()).isEqualTo(String.class);
     assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER);
     assertThat(injectable.getQualifiers()).isEmpty();
@@ -59,7 +59,7 @@ public class DefaultInjectableTest {
 
     injectable = new DefaultInjectable(String.class, new QualifiedType(TypeUtils.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class))), List.of(binding1, binding2, binding3), SCOPE_RESOLVER, null, objectFactory);
 
-    assertThat(injectable.createInstance(List.of())).isEqualTo(5);
+    assertThat(injectable.createInstance(new DefaultInjectionContext(List.of()))).isEqualTo(5);
     assertThat(injectable.getType()).isEqualTo(TypeUtils.parameterize(Supplier.class, String.class));
     assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER);
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class), Annotations.of(Green.class));
