@@ -9,6 +9,7 @@ import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.domain.MultipleInstances;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.InjectionContext;
 import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Key;
@@ -121,8 +122,10 @@ public class DefaultInstantiationContext implements InstantiationContext {
       injections.add(new Injection(binding.getAccessibleObject(), instantiator.getInstance(this)));
     }
 
+    InjectionContext injectionContext = new DefaultInjectionContext(injections);
+
     @SuppressWarnings("unchecked")
-    T instance = (T)injectable.createInstance(injections);
+    T instance = (T)injectable.createInstance(injectionContext);
 
     return instance;
   }

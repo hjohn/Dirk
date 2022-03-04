@@ -5,7 +5,7 @@ import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.InjectionContext;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.util.Annotations;
 
@@ -37,12 +37,12 @@ public class Injectables {
       }
 
       @Override
-      public Object createInstance(List<Injection> injections) {
+      public Object createInstance(InjectionContext injectionContext) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public void destroyInstance(Object instance, List<Injection> injections) {
+      public void destroyInstance(Object instance, InjectionContext injectionContext) {
         throw new UnsupportedOperationException();
       }
 

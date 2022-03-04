@@ -10,7 +10,7 @@ import hs.ddif.core.instantiation.DefaultInstantiatorFactory;
 import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.TypeExtensionStore;
 import hs.ddif.core.instantiation.TypeExtensionStores;
-import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.InjectionContext;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
@@ -76,12 +76,12 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
         }
 
         @Override
-        public Object createInstance(List<Injection> injections) {
+        public Object createInstance(InjectionContext injectionContext) {
           return null;
         }
 
         @Override
-        public void destroyInstance(Object instance, List<Injection> injections) {
+        public void destroyInstance(Object instance, InjectionContext injectionContext) {
         }
       };
 

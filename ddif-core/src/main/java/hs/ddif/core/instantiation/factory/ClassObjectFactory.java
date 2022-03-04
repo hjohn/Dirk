@@ -2,6 +2,7 @@ package hs.ddif.core.instantiation.factory;
 
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.InjectionContext;
 import hs.ddif.core.instantiation.injection.ObjectFactory;
 
 import java.lang.reflect.AccessibleObject;
@@ -38,7 +39,7 @@ public class ClassObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public Object createInstance(List<Injection> injections) throws InstanceCreationFailure {
+  public Object createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
     if(UNDER_CONSTRUCTION.contains(this)) {
       throw new InstanceCreationFailure(constructor.getDeclaringClass(), "already under construction (dependency creation loop in setter, initializer or post-construct method?)");
     }
@@ -46,6 +47,7 @@ public class ClassObjectFactory implements ObjectFactory {
     try {
       UNDER_CONSTRUCTION.add(this);
 
+      List<Injection> injections = injectionContext.getInjections();
       Object instance = constructInstance(injections);
 
       injectInstance(instance, injections);
@@ -60,7 +62,7 @@ public class ClassObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public void destroyInstance(Object instance, List<Injection> injections) {
+  public void destroyInstance(Object instance, InjectionContext injectionContext) {
     lifeCycleCallbacks.preDestroy(instance);
   }
 
