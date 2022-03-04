@@ -1,8 +1,7 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.injection.InjectionContext;
+import hs.ddif.core.instantiation.injection.ObjectFactory;
 import hs.ddif.core.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
@@ -22,7 +21,7 @@ import java.util.Set;
  *
  * @param <T> the type of the instances produced
  */
-public interface Injectable<T> {
+public interface Injectable<T> extends ObjectFactory<T> {
 
   /**
    * Returns the {@link QualifiedType} which is always fully resolved (no type variables)
@@ -64,21 +63,4 @@ public interface Injectable<T> {
    * @return the {@link ScopeResolver} of this {@link Injectable}, never {@code null}
    */
   ScopeResolver getScopeResolver();
-
-  /**
-   * Creates an instance.
-   *
-   * @param injectionContext an {@link InjectionContext}, cannot be {@code null}
-   * @return an instance, or {@code null} if it could not be provided
-   * @throws InstanceCreationFailure when instantiation fails
-   */
-  T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure;
-
-  /**
-   * Destroys an instance.
-   *
-   * @param instance an instance, cannot be {@code null}
-   * @param injectionContext an {@link InjectionContext} used to create the instance, cannot be {@code null}
-   */
-  void destroyInstance(T instance, InjectionContext injectionContext);
 }
