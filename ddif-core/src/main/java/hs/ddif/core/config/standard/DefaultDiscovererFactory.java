@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class DefaultDiscovererFactory implements DiscovererFactory {
   private static final Discoverer EMPTY = new Discoverer() {
     @Override
-    public Set<Injectable> discover() {
+    public Set<Injectable<?>> discover() {
       return Set.of();
     }
 
@@ -57,17 +57,17 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
   }
 
   @Override
-  public Discoverer create(Resolver<Injectable> resolver, List<Type> types) {  // used during normal registration
+  public Discoverer create(Resolver<Injectable<?>> resolver, List<Type> types) {  // used during normal registration
     return new SimpleDiscoverer(resolver, types.stream().map(Key::new).collect(Collectors.toList()));
   }
 
   @Override
-  public Discoverer create(Resolver<Injectable> resolver, Injectable injectable) {  // used for registering instances
+  public Discoverer create(Resolver<Injectable<?>> resolver, Injectable<?> injectable) {  // used for registering instances
     return new SimpleDiscoverer(resolver, injectable);
   }
 
   @Override
-  public Discoverer create(Resolver<Injectable> resolver, Key key) {  // used during instantiation
+  public Discoverer create(Resolver<Injectable<?>> resolver, Key key) {  // used during instantiation
     if(!autoDiscovery || !resolver.resolve(key).isEmpty()) {
       return EMPTY;
     }
@@ -76,7 +76,7 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
   }
 
   private class SimpleDiscoverer implements Discoverer {
-    private final QualifiedTypeStore<Injectable> tempStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), t -> true);
+    private final QualifiedTypeStore<Injectable<?>> tempStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), t -> true);
 
     /**
      * When auto discovery is on, keeps track of unresolved bindings. A linked hash set
@@ -97,7 +97,7 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
 
     private final IncludingResolver includingResolver;
 
-    SimpleDiscoverer(Resolver<Injectable> resolver, List<Key> keys) {
+    SimpleDiscoverer(Resolver<Injectable<?>> resolver, List<Key> keys) {
       this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
 
       for(Key key : keys) {
@@ -106,7 +106,7 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
       }
     }
 
-    SimpleDiscoverer(Resolver<Injectable> resolver, Injectable injectable) {
+    SimpleDiscoverer(Resolver<Injectable<?>> resolver, Injectable<?> injectable) {
       this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
 
       tempStore.put(injectable);
@@ -119,7 +119,7 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
     }
 
     @Override
-    public Set<Injectable> discover() {
+    public Set<Injectable<?>> discover() {
 
       /*
        * Discover new injectables via various mechanisms, in a very specific order.
@@ -158,14 +158,14 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
       return tempStore.toSet();
     }
 
-    private boolean addInjectables(List<Injectable> injectables) {
+    private boolean addInjectables(List<Injectable<?>> injectables) {
       if(injectables.isEmpty()) {
         return false;
       }
 
       tempStore.putAll(injectables);
 
-      for(Injectable injectable : injectables) {
+      for(Injectable<?> injectable : injectables) {
         Key injectableKey = new Key(injectable.getType(), injectable.getQualifiers());
 
         visitTypes.add(injectable.getType());
@@ -188,7 +188,7 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
     }
 
     private boolean discoverViaExtensions() {
-      List<Injectable> extensionDiscoveries = new ArrayList<>();
+      List<Injectable<?>> extensionDiscoveries = new ArrayList<>();
 
       for(Type type : visitTypes) {
         if(visitedTypes.add(type)) {
@@ -204,7 +204,7 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
     }
 
     private boolean discoverInputTypes() {
-      List<Injectable> injectables = new ArrayList<>();
+      List<Injectable<?>> injectables = new ArrayList<>();
       DefinitionException throwable = null;
 
       for(Key key : requiredKeys) {
@@ -259,9 +259,9 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
       return false;
     }
 
-    private Injectable attemptCreateInjectable(Key key) {
+    private Injectable<?> attemptCreateInjectable(Key key) {
       Type type = key.getType();
-      Injectable injectable = classInjectableFactory.create(type);
+      Injectable<?> injectable = classInjectableFactory.create(type);
 
       if(!injectable.getQualifiers().containsAll(key.getQualifiers())) {
         throw new DefinitionException(Types.raw(type), "found during auto discovery is missing qualifiers required by: [" + key + "]");
@@ -270,10 +270,10 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
       return injectable;
     }
 
-    private Injectable attemptCreateInjectable(Binding binding) {
+    private Injectable<?> attemptCreateInjectable(Binding binding) {
       Key key = binding.getKey();
       Type type = key.getType();
-      Injectable injectable = classInjectableFactory.create(type);
+      Injectable<?> injectable = classInjectableFactory.create(type);
 
       if(!injectable.getQualifiers().containsAll(key.getQualifiers())) {
         throw new DefinitionException(Types.raw(binding.getType()), "found during auto discovery is missing qualifiers required by: " + binding);
@@ -291,18 +291,18 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
     }
   }
 
-  private static class IncludingResolver implements Resolver<Injectable> {
-    final Resolver<Injectable> base;
-    final Resolver<Injectable> include;
+  private static class IncludingResolver implements Resolver<Injectable<?>> {
+    final Resolver<Injectable<?>> base;
+    final Resolver<Injectable<?>> include;
 
-    IncludingResolver(Resolver<Injectable> base, Resolver<Injectable> include) {
+    IncludingResolver(Resolver<Injectable<?>> base, Resolver<Injectable<?>> include) {
       this.base = base;
       this.include = include;
     }
 
     @Override
-    public Set<Injectable> resolve(Key key) {
-      Set<Injectable> set = new HashSet<>(base.resolve(key));
+    public Set<Injectable<?>> resolve(Key key) {
+      Set<Injectable<?>> set = new HashSet<>(base.resolve(key));
 
       set.addAll(include.resolve(key));
 

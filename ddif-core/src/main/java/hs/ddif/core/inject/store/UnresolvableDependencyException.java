@@ -13,7 +13,7 @@ import java.util.Set;
  */
 public class UnresolvableDependencyException extends InjectorStoreConsistencyException {
   private final Binding binding;
-  private final Set<? extends Injectable> candidates;
+  private final Set<? extends Injectable<?>> candidates;
 
   /**
    * Constructs a new instance.
@@ -22,14 +22,14 @@ public class UnresolvableDependencyException extends InjectorStoreConsistencyExc
    * @param binding a {@link Binding}, cannot be {@code null}
    * @param candidates a set of {@link Injectable}s that were candidates, cannot be {@code null} or empty
    */
-  public UnresolvableDependencyException(Key key, Binding binding, Set<? extends Injectable> candidates) {
+  public UnresolvableDependencyException(Key key, Binding binding, Set<? extends Injectable<?>> candidates) {
     super(formatMessage(key, binding, candidates));
 
     this.binding = binding;
     this.candidates = candidates;
   }
 
-  private static String formatMessage(Key key, Binding binding, Set<? extends Injectable> candidates) {
+  private static String formatMessage(Key key, Binding binding, Set<? extends Injectable<?>> candidates) {
     return (candidates.isEmpty() ? "Missing" : "Multiple candidates for")
       + " dependency [" + key + "]"
       + " required for " + binding
@@ -50,7 +50,7 @@ public class UnresolvableDependencyException extends InjectorStoreConsistencyExc
    *
    * @return the {@link Injectable}s that were candidates, never {@code null} or empty
    */
-  public Set<? extends Injectable> getCandidates() {
+  public Set<? extends Injectable<?>> getCandidates() {
     return candidates;
   }
 }

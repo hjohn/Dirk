@@ -79,14 +79,14 @@ public class MethodInjectableFactoryTest {
 
   @Test
   void createShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
-    Injectable injectable = factory.create(C.class.getMethod("b"), C.class);
+    Injectable<String> injectable = factory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
   }
 
   @Test
   void createShouldReturnCorrectInjectableForNonStaticMethod() throws Exception {
-    Injectable injectable = factory.create(C.class.getMethod("b"), C.class);
+    Injectable<String> injectable = factory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
@@ -98,7 +98,7 @@ public class MethodInjectableFactoryTest {
 
   @Test
   void createShouldReturnCorrectInjectableForStaticMethodWithOneParameter() throws Exception {
-    Injectable injectable = factory.create(C.class.getMethod("e", D.class), C.class);
+    Injectable<String> injectable = factory.create(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(

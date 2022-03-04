@@ -23,7 +23,7 @@ public class QualifiedTypeStoreGenericsTest {
   private final MethodInjectableFactory methodInjectableFactory =  injectableFactories.forMethod();
   private final InstanceInjectableFactory instanceInjectableFactory = injectableFactories.forInstance();
 
-  private QualifiedTypeStore<Injectable> store;
+  private QualifiedTypeStore<Injectable<?>> store;
 
   @BeforeEach
   public void beforeEach() {
@@ -90,7 +90,7 @@ public class QualifiedTypeStoreGenericsTest {
 
   @Test
   public void shouldBeAbleToAddAndRemoveResolvedGenericInterface() throws NoSuchMethodException, SecurityException {
-    Injectable injectable = methodInjectableFactory.create(
+    Injectable<List<String>> injectable = methodInjectableFactory.create(
       SuppliesGenericResolvedInterface.class.getDeclaredMethod("supply"),
       SuppliesGenericResolvedInterface.class
     );

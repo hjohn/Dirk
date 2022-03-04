@@ -28,11 +28,12 @@ public class MethodInjectableFactory {
   /**
    * Creates a new {@link Injectable}.
    *
+   * @param <T> the type of the given method's return type
    * @param method a {@link Method}, cannot be {@code null}
    * @param ownerType the type of the owner of the method, cannot be {@code null} and must match with {@link Method#getDeclaringClass()}
    * @return a new {@link Injectable}, never {@code null}
    */
-  public Injectable create(Method method, Type ownerType) {
+  public <T> Injectable<T> create(Method method, Type ownerType) {
     if(method == null) {
       throw new IllegalArgumentException("method cannot be null");
     }
@@ -40,6 +41,6 @@ public class MethodInjectableFactory {
       throw new IllegalArgumentException("ownerType cannot be null");
     }
 
-    return injectableFactory.create(ownerType, method, method, bindingProvider.ofMethod(method, ownerType), new MethodObjectFactory(method));
+    return injectableFactory.create(ownerType, method, method, bindingProvider.ofMethod(method, ownerType), new MethodObjectFactory<>(method));
   }
 }

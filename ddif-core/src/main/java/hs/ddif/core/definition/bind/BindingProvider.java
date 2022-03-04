@@ -174,19 +174,23 @@ public class BindingProvider {
    * Returns a {@link Constructor} suitable for injection. A public empty
    * constructor is considered suitable if no other constructors are annotated.
    *
+   * @param <T> the class type
    * @param cls a {@link Class}, cannot be {@code null}
    * @return a {@link Constructor} suitable for injection, never {@code null}
    * @throws BindingException when an exception occurred while creating a binding
    */
-  public Constructor<?> getConstructor(Class<?> cls) throws BindingException {
+  public <T> Constructor<T> getConstructor(Class<T> cls) throws BindingException {
     return getConstructor(cls, false);
   }
 
-  private Constructor<?> getConstructor(Class<?> cls, boolean annotatedOnly) throws BindingException {
-    Constructor<?> suitableConstructor = null;
-    Constructor<?> defaultConstructor = null;
+  private <T> Constructor<T> getConstructor(Class<T> cls, boolean annotatedOnly) throws BindingException {
+    Constructor<T> suitableConstructor = null;
+    Constructor<T> defaultConstructor = null;
 
-    for(Constructor<?> constructor : cls.getDeclaredConstructors()) {
+    @SuppressWarnings("unchecked")
+    Constructor<T>[] declaredConstructors = (Constructor<T>[])cls.getDeclaredConstructors();
+
+    for(Constructor<T> constructor : declaredConstructors) {
       if(annotationStrategy.isInjectAnnotated(constructor)) {
         if(suitableConstructor != null) {
           throw new BindingException(cls, "cannot have multiple Inject annotated constructors");

@@ -19,8 +19,10 @@ import java.util.Set;
  * and {@link Object#hashCode()}. Two injectables are considered equal when the
  * full generic type is equal, their qualifiers are equal and they come from the
  * exact same source (same class, same method, same field, etc.)
+ *
+ * @param <T> the type of the instances produced
  */
-public interface Injectable {
+public interface Injectable<T> {
 
   /**
    * Returns the {@link QualifiedType} which is always fully resolved (no type variables)
@@ -70,7 +72,7 @@ public interface Injectable {
    * @return an instance, or {@code null} if it could not be provided
    * @throws InstanceCreationFailure when instantiation fails
    */
-  Object createInstance(InjectionContext injectionContext) throws InstanceCreationFailure;
+  T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure;
 
   /**
    * Destroys an instance.
@@ -78,5 +80,5 @@ public interface Injectable {
    * @param instance an instance, cannot be {@code null}
    * @param injectionContext an {@link InjectionContext} used to create the instance, cannot be {@code null}
    */
-  void destroyInstance(Object instance, InjectionContext injectionContext);
+  void destroyInstance(T instance, InjectionContext injectionContext);
 }

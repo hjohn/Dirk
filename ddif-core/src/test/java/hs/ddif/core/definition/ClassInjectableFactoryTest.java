@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ClassInjectableFactoryTest {
   private final InjectableFactories injectableFactories = new InjectableFactories();
@@ -28,29 +27,28 @@ public class ClassInjectableFactoryTest {
 
   @Test
   public void createShouldAcceptValidParameters() throws Exception {
-    Injectable injectable = factory.create(SimpleClass.class);
+    Injectable<SimpleClass> injectable = factory.create(SimpleClass.class);
 
     assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
     assertEquals(injectableFactories.getScopeResolver(Annotations.of(Singleton.class)), injectable.getScopeResolver());
     assertThat(injectable.getBindings()).hasSize(0);
-    assertTrue(injectable.createInstance(Bindings.resolve(injectable.getBindings())) instanceof SimpleClass);
 
-    injectable = factory.create(ClassWithDependencies.class);
+    Injectable<ClassWithDependencies> injectable2 = factory.create(ClassWithDependencies.class);
 
-    assertEquals(ClassWithDependencies.class, injectable.getType());
-    assertEquals(Collections.singleton(ClassWithDependencies.class.getAnnotation(Red.class)), injectable.getQualifiers());
-    assertEquals(injectableFactories.getScopeResolver(null), injectable.getScopeResolver());
-    assertThat(injectable.getBindings()).hasSize(4);
+    assertEquals(ClassWithDependencies.class, injectable2.getType());
+    assertEquals(Collections.singleton(ClassWithDependencies.class.getAnnotation(Red.class)), injectable2.getQualifiers());
+    assertEquals(injectableFactories.getScopeResolver(null), injectable2.getScopeResolver());
+    assertThat(injectable2.getBindings()).hasSize(4);
 
-    ClassWithDependencies instance = (ClassWithDependencies)injectable.createInstance(Bindings.resolve(injectable.getBindings(), 2, 4L, null, "a string"));
+    ClassWithDependencies instance = injectable2.createInstance(Bindings.resolve(injectable2.getBindings(), 2, 4L, null, "a string"));
 
     assertEquals("a string", instance.s);
     assertEquals(2, instance.a);
     assertEquals(4L, instance.b);
     assertNull(instance.bd);
 
-    instance = (ClassWithDependencies)injectable.createInstance(Bindings.resolve(injectable.getBindings(), 2, 4L, new BigDecimal(5), "a string"));
+    instance = injectable2.createInstance(Bindings.resolve(injectable2.getBindings(), 2, 4L, new BigDecimal(5), "a string"));
 
     assertEquals(new BigDecimal(5), instance.bd);
   }

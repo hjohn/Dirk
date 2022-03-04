@@ -29,7 +29,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * A store for {@link Injectable}s which ensures that it at all times contains
  * only injectables that can be fully resolved.
  */
-public class InjectableStore implements Resolver<Injectable> {
+public class InjectableStore implements Resolver<Injectable<?>> {
   private static final Class<Object> SINGLETON = Object.class;
 
   private final BindingManager bindingManager;
@@ -52,7 +52,7 @@ public class InjectableStore implements Resolver<Injectable> {
   /**
    * Underlying store to which calls are delegated.
    */
-  private final QualifiedTypeStore<Injectable> qualifiedTypeStore;
+  private final QualifiedTypeStore<Injectable<?>> qualifiedTypeStore;
 
   /**
    * Constructs a new instance.
@@ -66,7 +66,7 @@ public class InjectableStore implements Resolver<Injectable> {
   }
 
   @Override
-  public Set<Injectable> resolve(Key key) {
+  public Set<Injectable<?>> resolve(Key key) {
     Map<Key, Node> map = nodes.get(Types.raw(key.getType()));
 
     if(map != null) {
@@ -97,7 +97,7 @@ public class InjectableStore implements Resolver<Injectable> {
    *
    * @param injectables a collection of {@link Injectable}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
-  public synchronized void putAll(Collection<Injectable> injectables) {
+  public synchronized void putAll(Collection<Injectable<?>> injectables) {
     try {
       qualifiedTypeStore.putAll(injectables);
     }
@@ -112,7 +112,7 @@ public class InjectableStore implements Resolver<Injectable> {
         ensureNoCyclicDependencies(injectables);
 
         // Check if the new injectables can have all their required dependencies resolved:
-        for(Injectable injectable : injectables) {
+        for(Injectable<?> injectable : injectables) {
           ensureRequiredBindingsAreAvailable(injectable);
         }
 
@@ -140,7 +140,7 @@ public class InjectableStore implements Resolver<Injectable> {
    *
    * @param injectables a collection of {@link Injectable}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
-  public synchronized void removeAll(Collection<Injectable> injectables) {
+  public synchronized void removeAll(Collection<Injectable<?>> injectables) {
     qualifiedTypeStore.removeAll(injectables);
 
     try {
@@ -159,30 +159,30 @@ public class InjectableStore implements Resolver<Injectable> {
     }
   }
 
-  private void addInstanceFactories(Collection<Injectable> injectables) {
-    for(Injectable injectable : injectables) {
+  private void addInstanceFactories(Collection<Injectable<?>> injectables) {
+    for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
         bindingManager.addBinding(binding);
       }
     }
   }
 
-  private void removeInstanceFactories(Collection<Injectable> injectables) {
-    for(Injectable injectable : injectables) {
+  private void removeInstanceFactories(Collection<Injectable<?>> injectables) {
+    for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
         bindingManager.removeBinding(binding);
       }
     }
   }
 
-  private static void removeScopedInstances(Collection<Injectable> injectables) {
-    for(Injectable injectable : injectables) {
+  private static void removeScopedInstances(Collection<Injectable<?>> injectables) {
+    for(Injectable<?> injectable : injectables) {
       injectable.getScopeResolver().remove(injectable);
     }
   }
 
-  private Optional<Violation> addInjectables(Collection<Injectable> injectables) {
-    for(Injectable injectable : injectables) {
+  private Optional<Violation> addInjectables(Collection<Injectable<?>> injectables) {
+    for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
         Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
         Key key = bindingManager.getSearchKey(binding);
@@ -194,8 +194,8 @@ public class InjectableStore implements Resolver<Injectable> {
     return addSources(injectables);
   }
 
-  private Optional<Violation> removeInjectables(Collection<Injectable> injectables) {
-    for(Injectable injectable : injectables) {
+  private Optional<Violation> removeInjectables(Collection<Injectable<?>> injectables) {
+    for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
         Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
         Key key = bindingManager.getSearchKey(binding);
@@ -207,7 +207,7 @@ public class InjectableStore implements Resolver<Injectable> {
     return removeSources(injectables);
   }
 
-  private void ensureRequiredBindingsAreAvailable(Injectable injectable) {
+  private void ensureRequiredBindingsAreAvailable(Injectable<?> injectable) {
 
     /*
      * Check the created bindings for unresolved or ambiguous dependencies and scope problems:
@@ -218,7 +218,7 @@ public class InjectableStore implements Resolver<Injectable> {
 
       if(typeTraits.contains(TypeTrait.REQUIRES_AT_MOST_ONE)) {
         Key key = bindingManager.getSearchKey(binding);
-        Set<Injectable> injectables = qualifiedTypeStore.resolve(key);
+        Set<Injectable<?>> injectables = qualifiedTypeStore.resolve(key);
 
         // The binding is a single binding, if there are more than one matches it is ambiguous, and if there is no match then it must be optional
         if(injectables.size() > 1 || (typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE) && injectables.size() < 1)) {
@@ -227,7 +227,7 @@ public class InjectableStore implements Resolver<Injectable> {
 
         // Check scope only for non lazy bindings. Lazy ones that inject a Provider can be used anywhere.
         if(!typeTraits.contains(TypeTrait.LAZY) && !injectables.isEmpty()) {
-          Injectable dependency = injectables.iterator().next();  // Previous check ensures there is only a single element in the set
+          Injectable<?> dependency = injectables.iterator().next();  // Previous check ensures there is only a single element in the set
 
           ensureBindingScopeIsValid(injectable, dependency);
         }
@@ -235,7 +235,7 @@ public class InjectableStore implements Resolver<Injectable> {
     }
   }
 
-  private static void ensureBindingScopeIsValid(Injectable injectable, Injectable dependentInjectable) {
+  private static void ensureBindingScopeIsValid(Injectable<?> injectable, Injectable<?> dependentInjectable) {
 
     /*
      * Perform scope check.  Having a dependency on a narrower scoped injectable would mean the injected
@@ -258,14 +258,14 @@ public class InjectableStore implements Resolver<Injectable> {
     }
   }
 
-  private void ensureNoCyclicDependencies(Collection<Injectable> injectables) {
+  private void ensureNoCyclicDependencies(Collection<Injectable<?>> injectables) {
     class CycleDetector {
-      Set<Injectable> input = new HashSet<>(injectables);
-      Set<Injectable> visited = new HashSet<>();
-      List<Injectable> visiting = new ArrayList<>();
+      Set<Injectable<?>> input = new HashSet<>(injectables);
+      Set<Injectable<?>> visited = new HashSet<>();
+      List<Injectable<?>> visiting = new ArrayList<>();
 
-      List<Injectable> hasCycle() {
-        for(Injectable injectable : injectables) {
+      List<Injectable<?>> hasCycle() {
+        for(Injectable<?> injectable : injectables) {
           if(!visited.contains(injectable) && hasCycle(injectable)) {
             return visiting;
           }
@@ -274,7 +274,7 @@ public class InjectableStore implements Resolver<Injectable> {
         return visiting;
       }
 
-      boolean hasCycle(Injectable injectable) {
+      boolean hasCycle(Injectable<?> injectable) {
         visiting.add(injectable);
 
         for(Binding binding : injectable.getBindings()) {
@@ -283,7 +283,7 @@ public class InjectableStore implements Resolver<Injectable> {
           if(!typeTraits.contains(TypeTrait.LAZY)) {
             Key key = binding.getKey();
 
-            for(Injectable boundInjectable : qualifiedTypeStore.resolve(key)) {
+            for(Injectable<?> boundInjectable : qualifiedTypeStore.resolve(key)) {
               if(visiting.contains(boundInjectable)) {
                 return true;
               }
@@ -301,7 +301,7 @@ public class InjectableStore implements Resolver<Injectable> {
       }
     }
 
-    List<Injectable> cycle = new CycleDetector().hasCycle();
+    List<Injectable<?>> cycle = new CycleDetector().hasCycle();
 
     if(!cycle.isEmpty()) {
       throw new CyclicDependencyException(cycle);
@@ -342,10 +342,10 @@ public class InjectableStore implements Resolver<Injectable> {
    * @param sources a collection of sources to add, cannot be {@code null}
    * @return an optional {@link Violation} if one was detected, never {@code null}
    */
-  private Optional<Violation> addSources(Collection<Injectable> sources) {
+  private Optional<Violation> addSources(Collection<Injectable<?>> sources) {
     Violation violation = null;
 
-    for(Injectable source : sources) {
+    for(Injectable<?> source : sources) {
       Type type = source.getType();
       Set<Annotation> qualifiers = source.getQualifiers();
 
@@ -383,10 +383,10 @@ public class InjectableStore implements Resolver<Injectable> {
    * @param sources a collection of sources to remove, cannot be {@code null}
    * @return an optional {@link Violation} if one was detected, never {@code null}
    */
-  private Optional<Violation> removeSources(Collection<Injectable> sources) {
+  private Optional<Violation> removeSources(Collection<Injectable<?>> sources) {
     Violation violation = null;
 
-    for(Injectable source : sources) {
+    for(Injectable<?> source : sources) {
       Type type = source.getType();
       Set<Annotation> qualifiers = source.getQualifiers();
 
@@ -412,16 +412,16 @@ public class InjectableStore implements Resolver<Injectable> {
     return Optional.ofNullable(violation);
   }
 
-  private void addTarget(Key key, boolean minimumOne, boolean maximumOne, Collection<Injectable> sources) {
+  private void addTarget(Key key, boolean minimumOne, boolean maximumOne, Collection<Injectable<?>> sources) {
     Class<?> cls = Types.raw(key.getType());
 
     nodes.computeIfAbsent(cls, k -> new HashMap<>())
       .computeIfAbsent(key, k -> {
         // when a new Key is added, initialise the Node with the current number of candidates that can satisfy it
-        Set<Injectable> candidates = qualifiedTypeStore.resolve(key);
+        Set<Injectable<?>> candidates = qualifiedTypeStore.resolve(key);
         Node node = new Node(candidates);
 
-        for(Injectable source : sources) {
+        for(Injectable<?> source : sources) {
           if(candidates.contains(source)) {
             node.decreaseSources(source);  // exclude candidates that are new; they will get counted when calling #addSources
           }
@@ -477,9 +477,9 @@ public class InjectableStore implements Resolver<Injectable> {
     /**
      * The sources available.
      */
-    final Set<Injectable> sources;
+    final Set<Injectable<?>> sources;
 
-    Node(Set<Injectable> sources) {
+    Node(Set<Injectable<?>> sources) {
       this.sources = new HashSet<>(sources);
     }
 
@@ -499,13 +499,13 @@ public class InjectableStore implements Resolver<Injectable> {
       return references == 0;
     }
 
-    void increaseSources(Injectable source) {
+    void increaseSources(Injectable<?> source) {
       if(!sources.add(source)) {
         throw new AssertionError("Node already contained source: " + source);
       }
     }
 
-    void decreaseSources(Injectable source) {
+    void decreaseSources(Injectable<?> source) {
       if(!sources.remove(source)) {
         throw new AssertionError("Node did not contain source: " + source + "; available: " + sources);
       }

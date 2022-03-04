@@ -38,15 +38,16 @@ public class ClassInjectableFactory {
   /**
    * Attempts to create a new {@link Injectable} from the given {@link Type}.
    *
+   * @param <T> the type of the given type
    * @param type a {@link Type}, cannot be {@code null}
    * @return a {@link Injectable}, never {@code null}
    */
-  public Injectable create(Type type) {
+  public <T> Injectable<T> create(Type type) {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
 
-    Class<?> cls = Types.raw(type);
+    Class<T> cls = Types.raw(type);
 
     if(Modifier.isAbstract(cls.getModifiers())) {
       throw new DefinitionException(cls, "cannot be abstract");
@@ -56,10 +57,10 @@ public class ClassInjectableFactory {
     }
 
     try {
-      Constructor<?> constructor = bindingProvider.getConstructor(cls);
+      Constructor<T> constructor = bindingProvider.getConstructor(cls);
       List<Binding> bindings = bindingProvider.ofConstructorAndMembers(constructor, cls);
 
-      return injectableFactory.create(type, null, cls, bindings, new ClassObjectFactory(constructor, lifeCycleCallbacksFactory.create(cls)));
+      return injectableFactory.create(type, null, cls, bindings, new ClassObjectFactory<>(constructor, lifeCycleCallbacksFactory.create(cls)));
     }
     catch(BindingException e) {
       throw new DefinitionException(cls, "could not be bound", e);

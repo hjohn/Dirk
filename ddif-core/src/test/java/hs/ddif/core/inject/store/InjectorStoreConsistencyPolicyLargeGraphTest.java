@@ -40,7 +40,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
     InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
-    List<Injectable> knownInjectables = new ArrayList<>();
+    List<Injectable<?>> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
     ScopeResolver scopeResolver = new SingletonScopeResolver(Annotations.of(Singleton.class));
@@ -52,14 +52,14 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
       List<Binding> bindings = new ArrayList<>();
 
       for(int j = 0; j < randomBindings; j++) {
-        Injectable target = knownInjectables.get(rnd.nextInt(knownInjectables.size()));
+        Injectable<?> target = knownInjectables.get(rnd.nextInt(knownInjectables.size()));
 
         bindings.add(new SimpleBinding(new Key(target.getType(), target.getQualifiers())));
       }
 
       QualifiedType qualifiedType = new QualifiedType(classes.get(rnd.nextInt(classes.size())), Set.of(Annotations.of(Named.class, Map.of("value", "instance-" + i))));
 
-      Injectable injectable = new Injectable() {
+      Injectable<Object> injectable = new Injectable<>() {
         @Override
         public QualifiedType getQualifiedType() {
           return qualifiedType;

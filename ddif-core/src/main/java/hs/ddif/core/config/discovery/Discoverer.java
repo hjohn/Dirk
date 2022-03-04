@@ -16,7 +16,7 @@ public interface Discoverer {
    *
    * @return a set of {@link Injectable} that were discovered, never {@code null} or contains {@code null} but can be empty
    */
-  Set<Injectable> discover();
+  Set<Injectable<?>> discover();
 
   /**
    * Returns a list of problems encountered during discovery.

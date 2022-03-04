@@ -26,7 +26,7 @@ public class InstanceInjectableFactoryTest {
 
   @Test
   void createShouldReturnInjectable() throws Exception {
-    Injectable injectable = factory.create("Hello World");
+    Injectable<String> injectable = factory.create("Hello World");
 
     assertThat(injectable.getType()).isEqualTo(String.class);
     assertThat(injectable.getBindings()).isEmpty();
