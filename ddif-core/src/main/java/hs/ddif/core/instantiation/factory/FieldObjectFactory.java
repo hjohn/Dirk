@@ -10,8 +10,10 @@ import java.util.List;
 
 /**
  * An {@link ObjectFactory} which reads a field to obtain an instance.
+ *
+ * @param <T> the type of the instances produced
  */
-public class FieldObjectFactory implements ObjectFactory {
+public class FieldObjectFactory<T> implements ObjectFactory<T> {
   private final Field field;
 
   /**
@@ -26,11 +28,14 @@ public class FieldObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public Object createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
+  public T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
     try {
       List<Injection> injections = injectionContext.getInjections();
 
-      return field.get(injections.isEmpty() ? null : injections.get(0).getValue());
+      @SuppressWarnings("unchecked")
+      T instance = (T)field.get(injections.isEmpty() ? null : injections.get(0).getValue());
+
+      return instance;
     }
     catch(Exception e) {
       throw new InstanceCreationFailure(field, "read failed", e);
@@ -38,7 +43,7 @@ public class FieldObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public void destroyInstance(Object instance, InjectionContext injectionContext) {
+  public void destroyInstance(T instance, InjectionContext injectionContext) {
     // TODO Call a corresponding Disposer method belonging to this Producer
   }
 }

@@ -16,10 +16,10 @@ import javax.inject.Singleton;
 public class Injectables {
   private static final SingletonScopeResolver SINGLETON_SCOPE_RESOLVER = new SingletonScopeResolver(Annotations.of(Singleton.class));
 
-  public static Injectable create() throws BadQualifiedTypeException {
+  public static Injectable<Object> create() throws BadQualifiedTypeException {
     QualifiedType qualifiedType = new QualifiedType(String.class);
 
-    return new Injectable() {
+    return new Injectable<>() {
 
       @Override
       public QualifiedType getQualifiedType() {

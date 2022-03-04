@@ -47,7 +47,7 @@ public class DefaultInjectableFactory implements InjectableFactory {
   }
 
   @Override
-  public Injectable create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, ObjectFactory objectFactory) {
+  public <T> Injectable<T> create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, ObjectFactory<T> objectFactory) {
     try {
       Set<Annotation> scopes = annotationStrategy.getScopes(element);
 
@@ -60,7 +60,7 @@ public class DefaultInjectableFactory implements InjectableFactory {
 
       Type type = member == null ? ownerType : extractType(ownerType, member, element);
 
-      return new DefaultInjectable(
+      return new DefaultInjectable<>(
         ownerType,
         new QualifiedType(type, annotationStrategy.getQualifiers(element)),
         bindings,

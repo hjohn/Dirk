@@ -29,7 +29,7 @@ public class ProviderInjectableExtension implements InjectableExtension {
   }
 
   @Override
-  public List<Injectable> getDerived(Type type) {
+  public List<Injectable<?>> getDerived(Type type) {
     Class<?> cls = Types.raw(type);
 
     if(cls != null && providerMethod.getDeclaringClass().isAssignableFrom(cls) && !cls.isInterface()) {

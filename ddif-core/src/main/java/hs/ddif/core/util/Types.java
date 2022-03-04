@@ -63,11 +63,13 @@ public class Types {
    * Gets the raw type of a Java {@link Type}. This works for classes and parameterized
    * types. Returns {@code null} if no raw type can be derived.
    *
+   * @param <T> the expected type
    * @param type a {@link Type}, cannot be {@code null}
    * @return a {@link Class} representing the raw type of the given type, can be {@code null}
    */
-  public static Class<?> raw(Type type) {
-    return TypeUtils.getRawType(type, null);
+  @SuppressWarnings("unchecked")
+  public static <T> Class<T> raw(Type type) {
+    return (Class<T>)TypeUtils.getRawType(type, null);
   }
 
   /**

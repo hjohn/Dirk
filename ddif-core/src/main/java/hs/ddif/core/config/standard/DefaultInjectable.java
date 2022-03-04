@@ -18,13 +18,13 @@ import java.util.Objects;
 /**
  * An implementation of {@link Injectable}.
  */
-final class DefaultInjectable implements Injectable {
+final class DefaultInjectable<T> implements Injectable<T> {
   private final Type ownerType;
   private final QualifiedType qualifiedType;
   private final List<Binding> bindings;
   private final ScopeResolver scopeResolver;
   private final Object discriminator;
-  private final ObjectFactory objectFactory;
+  private final ObjectFactory<T> objectFactory;
   private final int hashCode;
 
   /**
@@ -37,7 +37,7 @@ final class DefaultInjectable implements Injectable {
    * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
    * @param objectFactory an {@link ObjectFactory}, cannot be {@code null}
    */
-  DefaultInjectable(Type ownerType, QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, ObjectFactory objectFactory) {
+  DefaultInjectable(Type ownerType, QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, ObjectFactory<T> objectFactory) {
     if(ownerType == null) {
       throw new IllegalArgumentException("ownerType cannot be null");
     }
@@ -83,12 +83,12 @@ final class DefaultInjectable implements Injectable {
   }
 
   @Override
-  public Object createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
+  public T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
     return objectFactory.createInstance(injectionContext);
   }
 
   @Override
-  public void destroyInstance(Object instance, InjectionContext injectionContext) {
+  public void destroyInstance(T instance, InjectionContext injectionContext) {
     objectFactory.destroyInstance(instance, injectionContext);
   }
 
@@ -106,7 +106,7 @@ final class DefaultInjectable implements Injectable {
       return false;
     }
 
-    DefaultInjectable other = (DefaultInjectable)obj;
+    DefaultInjectable<?> other = (DefaultInjectable<?>)obj;
 
     return qualifiedType.equals(other.qualifiedType)
       && ownerType.equals(other.ownerType)

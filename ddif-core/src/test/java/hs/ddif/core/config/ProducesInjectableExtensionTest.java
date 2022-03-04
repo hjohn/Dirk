@@ -21,7 +21,7 @@ public class ProducesInjectableExtensionTest {
 
   @Test
   void shouldFindProducesAnnotatedMethods() throws NoSuchMethodException, SecurityException, NoSuchFieldException {
-    List<Injectable> injectables = extension.getDerived(A.class);
+    List<Injectable<?>> injectables = extension.getDerived(A.class);
 
     assertThat(injectables).containsExactlyInAnyOrder(
       methodInjectableFactory.create(A.class.getDeclaredMethod("createB"), A.class),

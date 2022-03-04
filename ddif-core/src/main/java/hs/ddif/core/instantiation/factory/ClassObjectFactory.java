@@ -18,11 +18,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * Object factory for concrete classes. This factory use the given {@link Constructor}
  * to construct the associated class, inject it using the given {@link Injection}s and
  * do life cycle callbacks using the provided {@link LifeCycleCallbacks} instance.
+ *
+ * @param <T> the type of the instances produced
  */
-public class ClassObjectFactory implements ObjectFactory {
+public class ClassObjectFactory<T> implements ObjectFactory<T> {
   private static final Set<Object> UNDER_CONSTRUCTION = ConcurrentHashMap.newKeySet();
 
-  private final Constructor<?> constructor;
+  private final Constructor<T> constructor;
   private final LifeCycleCallbacks lifeCycleCallbacks;
 
   /**
@@ -31,7 +33,7 @@ public class ClassObjectFactory implements ObjectFactory {
    * @param constructor a {@link Constructor} which produces the required class, cannot be {@code null}
    * @param lifeCycleCallbacks a {@link LifeCycleCallbacks} instance, cannot be {@code null}
    */
-  public ClassObjectFactory(Constructor<?> constructor, LifeCycleCallbacks lifeCycleCallbacks) {
+  public ClassObjectFactory(Constructor<T> constructor, LifeCycleCallbacks lifeCycleCallbacks) {
     this.constructor = Objects.requireNonNull(constructor, "constructor cannot be null");
     this.lifeCycleCallbacks = Objects.requireNonNull(lifeCycleCallbacks, "lifeCycleCallbacks cannot be null");
 
@@ -39,7 +41,7 @@ public class ClassObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public Object createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
+  public T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
     if(UNDER_CONSTRUCTION.contains(this)) {
       throw new InstanceCreationFailure(constructor.getDeclaringClass(), "already under construction (dependency creation loop in setter, initializer or post-construct method?)");
     }
@@ -48,7 +50,7 @@ public class ClassObjectFactory implements ObjectFactory {
       UNDER_CONSTRUCTION.add(this);
 
       List<Injection> injections = injectionContext.getInjections();
-      Object instance = constructInstance(injections);
+      T instance = constructInstance(injections);
 
       injectInstance(instance, injections);
 
@@ -62,11 +64,11 @@ public class ClassObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public void destroyInstance(Object instance, InjectionContext injectionContext) {
+  public void destroyInstance(T instance, InjectionContext injectionContext) {
     lifeCycleCallbacks.preDestroy(instance);
   }
 
-  private Object constructInstance(List<Injection> injections) throws InstanceCreationFailure {
+  private T constructInstance(List<Injection> injections) throws InstanceCreationFailure {
     try {
       Object[] values = new Object[constructor.getParameterCount()];  // Parameters for constructor
       int parameterIndex = 0;

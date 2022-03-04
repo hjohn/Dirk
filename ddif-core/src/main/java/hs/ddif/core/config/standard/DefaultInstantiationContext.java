@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 public class DefaultInstantiationContext implements InstantiationContext {
   private static final Logger LOGGER = Logger.getLogger(DefaultInstantiationContext.class.getName());
 
-  private final Resolver<Injectable> resolver;
+  private final Resolver<Injectable<?>> resolver;
   private final BoundInstantiatorProvider boundInstantiatorProvider;
 
   /**
@@ -37,14 +37,15 @@ public class DefaultInstantiationContext implements InstantiationContext {
    * @param resolver a {@link Resolver}, cannot be {@code null}
    * @param boundInstantiatorProvider an {@link BoundInstantiatorProvider}, cannot be {@code null}
    */
-  public DefaultInstantiationContext(Resolver<Injectable> resolver, BoundInstantiatorProvider boundInstantiatorProvider) {
+  public DefaultInstantiationContext(Resolver<Injectable<?>> resolver, BoundInstantiatorProvider boundInstantiatorProvider) {
     this.resolver = resolver;
     this.boundInstantiatorProvider = boundInstantiatorProvider;
   }
 
   @Override
   public <T> T create(Key key) throws InstanceCreationFailure, MultipleInstances {
-    Set<Injectable> injectables = resolver.resolve(key);
+    @SuppressWarnings("unchecked")
+    Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
 
     if(injectables.size() > 1) {
       throw new MultipleInstances(key, injectables);
@@ -61,7 +62,10 @@ public class DefaultInstantiationContext implements InstantiationContext {
   public <T> List<T> createAll(Key key, Predicate<Type> typePredicate) throws InstanceCreationFailure {
     List<T> instances = new ArrayList<>();
 
-    for(Injectable injectable : resolver.resolve(key)) {
+    @SuppressWarnings("unchecked")
+    Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
+
+    for(Injectable<T> injectable : injectables) {
       if(typePredicate == null || typePredicate.test(injectable.getType())) {
         T instance = createInstanceInScope(injectable);
 
@@ -74,15 +78,15 @@ public class DefaultInstantiationContext implements InstantiationContext {
     return instances;
   }
 
-  private <T> T createInstance(Injectable injectable) throws InstanceCreationFailure {
+  private <T> T createInstance(Injectable<T> injectable) throws InstanceCreationFailure {
     return createInstance(injectable, false);
   }
 
-  private <T> T createInstanceInScope(Injectable injectable) throws InstanceCreationFailure {
+  private <T> T createInstanceInScope(Injectable<T> injectable) throws InstanceCreationFailure {
     return createInstance(injectable, true);
   }
 
-  private <T> T createInstance(Injectable injectable, boolean allowOutOfScope) throws InstanceCreationFailure {
+  private <T> T createInstance(Injectable<T> injectable, boolean allowOutOfScope) throws InstanceCreationFailure {
     ScopeResolver scopeResolver = injectable.getScopeResolver();
 
     try {
@@ -113,7 +117,7 @@ public class DefaultInstantiationContext implements InstantiationContext {
     }
   }
 
-  private <T> T createInstanceInternal(Injectable injectable) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
+  private <T> T createInstanceInternal(Injectable<T> injectable) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
     List<Injection> injections = new ArrayList<>();
 
     for(Binding binding : injectable.getBindings()) {
@@ -124,9 +128,6 @@ public class DefaultInstantiationContext implements InstantiationContext {
 
     InjectionContext injectionContext = new DefaultInjectionContext(injections);
 
-    @SuppressWarnings("unchecked")
-    T instance = (T)injectable.createInstance(injectionContext);
-
-    return instance;
+    return injectable.createInstance(injectionContext);
   }
 }

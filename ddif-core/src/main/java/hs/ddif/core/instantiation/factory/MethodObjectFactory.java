@@ -11,8 +11,10 @@ import java.util.List;
 
 /**
  * An {@link ObjectFactory} using a method call to obtain an instance.
+ *
+ * @param <T> the type of the instances produced
  */
-public class MethodObjectFactory implements ObjectFactory {
+public class MethodObjectFactory<T> implements ObjectFactory<T> {
   private final Method method;
   private final boolean isStatic;
 
@@ -29,7 +31,7 @@ public class MethodObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public Object createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
+  public T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
     try {
       List<Injection> injections = injectionContext.getInjections();
       Object[] values = new Object[injections.size() - (isStatic ? 0 : 1)];  // Parameters for method
@@ -45,7 +47,10 @@ public class MethodObjectFactory implements ObjectFactory {
         }
       }
 
-      return method.invoke(instance, values);
+      @SuppressWarnings("unchecked")
+      T value = (T)method.invoke(instance, values);
+
+      return value;
     }
     catch(Exception e) {
       throw new InstanceCreationFailure(method, "call failed", e);
@@ -53,7 +58,7 @@ public class MethodObjectFactory implements ObjectFactory {
   }
 
   @Override
-  public void destroyInstance(Object instance, InjectionContext injectionContext) {
+  public void destroyInstance(T instance, InjectionContext injectionContext) {
     // TODO Call a corresponding Disposer method belonging to this Producer
   }
 }

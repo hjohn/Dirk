@@ -49,7 +49,7 @@ public class QualifiedTypeStoreTest {
   private final FieldInjectableFactory fieldInjectableFactory = injectableFactories.forField();
   private final InstanceInjectableFactory instanceInjectableFactory = injectableFactories.forInstance();
 
-  private QualifiedTypeStore<Injectable> store;
+  private QualifiedTypeStore<Injectable<?>> store;
 
   @BeforeEach
   public void beforeEach() {

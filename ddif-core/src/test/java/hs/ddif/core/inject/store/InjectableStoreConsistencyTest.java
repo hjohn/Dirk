@@ -35,20 +35,20 @@ public class InjectableStoreConsistencyTest {
   private InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
   private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
 
-  private Injectable a = classInjectableFactory.create(A.class);
-  private Injectable b = classInjectableFactory.create(B.class);
-  private Injectable c = classInjectableFactory.create(C.class);
-  private Injectable d = classInjectableFactory.create(D.class);
-  private Injectable e = classInjectableFactory.create(E.class);
-  private Injectable f = classInjectableFactory.create(F.class);
-  private Injectable g = classInjectableFactory.create(G.class);
-  private Injectable h = classInjectableFactory.create(H.class);
-  private Injectable i = classInjectableFactory.create(I.class);
-  private Injectable j = classInjectableFactory.create(J.class);
-  private Injectable l = classInjectableFactory.create(L.class);
-  private Injectable m = classInjectableFactory.create(M.class);
-  private Injectable n = classInjectableFactory.create(N.class);
-  private Injectable o = classInjectableFactory.create(O.class);
+  private Injectable<A> a = classInjectableFactory.create(A.class);
+  private Injectable<B> b = classInjectableFactory.create(B.class);
+  private Injectable<C> c = classInjectableFactory.create(C.class);
+  private Injectable<D> d = classInjectableFactory.create(D.class);
+  private Injectable<E> e = classInjectableFactory.create(E.class);
+  private Injectable<F> f = classInjectableFactory.create(F.class);
+  private Injectable<G> g = classInjectableFactory.create(G.class);
+  private Injectable<H> h = classInjectableFactory.create(H.class);
+  private Injectable<I> i = classInjectableFactory.create(I.class);
+  private Injectable<J> j = classInjectableFactory.create(J.class);
+  private Injectable<L> l = classInjectableFactory.create(L.class);
+  private Injectable<M> m = classInjectableFactory.create(M.class);
+  private Injectable<N> n = classInjectableFactory.create(N.class);
+  private Injectable<O> o = classInjectableFactory.create(O.class);
 
   private InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
 

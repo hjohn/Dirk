@@ -23,6 +23,7 @@ public interface InjectableFactory {
    * <p>The scope and qualifiers of the {@link Injectable} are determined from the given
    * annotated element.
    *
+   * @param <T> the type of the instances produced
    * @param ownerType a {@link Type}, cannot be {@code null}
    * @param member a {@link Member} of the ownerType, can be {@code null}
    * @param element an {@link AnnotatedElement} from which to get scope and qualifier annotations, cannot be {@code null}
@@ -32,6 +33,6 @@ public interface InjectableFactory {
    * @throws DefinitionException when the owner type does not own the member; when the injectable's type cannot be determined or is void;
    *   when the annotated element has multiple scope annotations or is inject annotated
    */
-  Injectable create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, ObjectFactory objectFactory);
+  <T> Injectable<T> create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, ObjectFactory<T> objectFactory);
 
 }

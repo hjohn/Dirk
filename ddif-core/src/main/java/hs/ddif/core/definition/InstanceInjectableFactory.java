@@ -30,11 +30,12 @@ public class InstanceInjectableFactory {
   /**
    * Creates a new {@link Injectable}.
    *
+   * @param <T> the type of the given instance
    * @param instance an instance, cannot be {@code null}
    * @param qualifiers an array of qualifier {@link Annotation}s
    * @return a new {@link Injectable}, never {@code null}
    */
-  public Injectable create(Object instance, Annotation... qualifiers) {
+  public <T> Injectable<T> create(T instance, Annotation... qualifiers) {
     if(instance == null) {
       throw new IllegalArgumentException("instance cannot be null");
     }
@@ -48,14 +49,14 @@ public class InstanceInjectableFactory {
       null,
       new FakeAnnotatedElement(instance, extendedQualifiers),
       List.of(),
-      new ObjectFactory() {
+      new ObjectFactory<>() {
         @Override
-        public Object createInstance(InjectionContext injectionContext) {
+        public T createInstance(InjectionContext injectionContext) {
           return instance;
         }
 
         @Override
-        public void destroyInstance(Object instance, InjectionContext injectionContext) {
+        public void destroyInstance(T instance, InjectionContext injectionContext) {
         }
       }
     );

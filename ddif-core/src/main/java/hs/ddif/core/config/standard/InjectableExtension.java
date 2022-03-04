@@ -19,5 +19,5 @@ public interface InjectableExtension {
    * @param type a {@link Type} use as base for derivation, never {@code null}
    * @return a list of {@link Injectable}, never {@code null} and never contains {@code null}s
    */
-  List<Injectable> getDerived(Type type);
+  List<Injectable<?>> getDerived(Type type);
 }

@@ -35,31 +35,31 @@ public class DefaultInjectableTest {
   private final Binding binding2 = mock(Binding.class);
   private final Binding binding3 = mock(Binding.class);
 
-  private final ObjectFactory objectFactory = new ObjectFactory() {
+  private final ObjectFactory<String> objectFactory = new ObjectFactory<>() {
     @Override
-    public void destroyInstance(Object instance, InjectionContext injectionContext) {
+    public void destroyInstance(String instance, InjectionContext injectionContext) {
     }
 
     @Override
-    public Object createInstance(InjectionContext injectionContext) {
-      return 5;
+    public String createInstance(InjectionContext injectionContext) {
+      return "5";
     }
   };
 
   @Test
   void constructorShouldAcceptValidParameters() throws InstanceCreationFailure, BadQualifiedTypeException {
-    Injectable injectable = new DefaultInjectable(String.class, new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, objectFactory);
+    Injectable<String> injectable = new DefaultInjectable<>(String.class, new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, objectFactory);
 
-    assertThat(injectable.createInstance(new DefaultInjectionContext(List.of()))).isEqualTo(5);
+    assertThat(injectable.createInstance(new DefaultInjectionContext(List.of()))).isEqualTo("5");
     assertThat(injectable.getType()).isEqualTo(String.class);
     assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER);
     assertThat(injectable.getQualifiers()).isEmpty();
     assertThat(injectable.getBindings()).isEmpty();
     assertThat(injectable.toString()).isEqualTo("Injectable[java.lang.String]");
 
-    injectable = new DefaultInjectable(String.class, new QualifiedType(TypeUtils.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class))), List.of(binding1, binding2, binding3), SCOPE_RESOLVER, null, objectFactory);
+    injectable = new DefaultInjectable<>(String.class, new QualifiedType(TypeUtils.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class))), List.of(binding1, binding2, binding3), SCOPE_RESOLVER, null, objectFactory);
 
-    assertThat(injectable.createInstance(new DefaultInjectionContext(List.of()))).isEqualTo(5);
+    assertThat(injectable.createInstance(new DefaultInjectionContext(List.of()))).isEqualTo("5");
     assertThat(injectable.getType()).isEqualTo(TypeUtils.parameterize(Supplier.class, String.class));
     assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER);
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class), Annotations.of(Green.class));
@@ -69,27 +69,27 @@ public class DefaultInjectableTest {
 
   @Test
   void constructorShouldRejectBadParameters() {
-    assertThatThrownBy(() -> new DefaultInjectable(null, new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, objectFactory))
+    assertThatThrownBy(() -> new DefaultInjectable<>(null, new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, objectFactory))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("ownerType cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable(String.class, null, List.of(), SCOPE_RESOLVER, null, objectFactory))
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, null, List.of(), SCOPE_RESOLVER, null, objectFactory))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("qualifiedType cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), null, SCOPE_RESOLVER, null, objectFactory))
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), null, SCOPE_RESOLVER, null, objectFactory))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("bindings cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), null, null, objectFactory))
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), null, null, objectFactory))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("scopeResolver cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), SCOPE_RESOLVER, null, null))
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), SCOPE_RESOLVER, null, null))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("objectFactory cannot be null")
       .hasNoCause();
@@ -100,7 +100,7 @@ public class DefaultInjectableTest {
     EqualsVerifier
       .forClass(DefaultInjectable.class)
       .withNonnullFields("qualifiedType", "ownerType")
-      .withCachedHashCode("hashCode", "calculateHash", new DefaultInjectable(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), SCOPE_RESOLVER, null, objectFactory))
+      .withCachedHashCode("hashCode", "calculateHash", new DefaultInjectable<>(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), SCOPE_RESOLVER, null, objectFactory))
       .withIgnoredFields("bindings", "scopeResolver", "objectFactory")
       .verify();
   }

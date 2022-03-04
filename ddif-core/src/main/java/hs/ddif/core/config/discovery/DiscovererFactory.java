@@ -31,7 +31,7 @@ public interface DiscovererFactory {
    * @param injectable a list of {@link Type}s, cannot be {@code null} or contain {@code null}s
    * @return a {@link Discoverer}, never {@code null}
    */
-  Discoverer create(Resolver<Injectable> resolver, Injectable injectable);
+  Discoverer create(Resolver<Injectable<?>> resolver, Injectable<?> injectable);
 
   /**
    * Given a list of {@link Type}s, returns a {@link Discoverer} which will produce
@@ -42,7 +42,7 @@ public interface DiscovererFactory {
    * @param types a list of {@link Type}s, cannot be {@code null} or contain {@code null}s
    * @return a {@link Discoverer}, never {@code null}
    */
-  Discoverer create(Resolver<Injectable> resolver, List<Type> types);
+  Discoverer create(Resolver<Injectable<?>> resolver, List<Type> types);
 
   /**
    * Given a {@link Key}, returns a {@link Discoverer} which will produce an injectable for
@@ -59,5 +59,5 @@ public interface DiscovererFactory {
    * @param key a {@link Key}, cannot be {@code null}
    * @return a {@link Discoverer}, never {@code null}
    */
-  Discoverer create(Resolver<Injectable> resolver, Key key);
+  Discoverer create(Resolver<Injectable<?>> resolver, Key key);
 }

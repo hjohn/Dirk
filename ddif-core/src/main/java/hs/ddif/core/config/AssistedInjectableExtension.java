@@ -49,7 +49,7 @@ import net.bytebuddy.matcher.ElementMatchers;
  * The types must have a single abstract method with a concrete, non primitive return type.
  */
 public class AssistedInjectableExtension implements InjectableExtension {
-  private static final Map<Type, Injectable> PRODUCER_INJECTABLES = new WeakHashMap<>();
+  private static final Map<Type, Injectable<?>> PRODUCER_INJECTABLES = new WeakHashMap<>();
 
   private final ClassInjectableFactory injectableFactory;
   private final Annotation inject;
@@ -74,8 +74,8 @@ public class AssistedInjectableExtension implements InjectableExtension {
   }
 
   @Override
-  public List<Injectable> getDerived(Type type) {
-    Injectable injectable = PRODUCER_INJECTABLES.get(type);
+  public List<Injectable<?>> getDerived(Type type) {
+    Injectable<?> injectable = PRODUCER_INJECTABLES.get(type);
 
     if(injectable != null) {
       return List.of(injectable);
@@ -111,8 +111,8 @@ public class AssistedInjectableExtension implements InjectableExtension {
     return List.of(create(type, factoryMethod));
   }
 
-  public Injectable create(Type type, Method factoryMethod) {
-    Injectable factoryInjectable = injectableFactory.create(generateFactoryClass(type, factoryMethod));
+  public Injectable<?> create(Type type, Method factoryMethod) {
+    Injectable<?> factoryInjectable = injectableFactory.create(generateFactoryClass(type, factoryMethod));
 
     PRODUCER_INJECTABLES.put(type, factoryInjectable);
 
@@ -121,7 +121,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
 
   private Class<?> generateFactoryClass(Type type, Method factoryMethod) {
     Class<?> productType = factoryMethod.getReturnType();
-    Injectable productInjectable = injectableFactory.create(productType);
+    Injectable<?> productInjectable = injectableFactory.create(productType);
     Interceptor interceptor = new Interceptor(productInjectable, factoryMethod, providerGetter);
 
     /*
@@ -249,14 +249,14 @@ public class AssistedInjectableExtension implements InjectableExtension {
    * Interceptor for generated subclass of assisted injection factories.
    */
   public static class Interceptor {
-    private final Injectable productInjectable;
+    private final Injectable<?> productInjectable;
     private final List<InjectionTemplate> templates = new ArrayList<>();
     private final Method factoryMethod;
     private final Function<Object, Object> providerGetter;
 
     private List<String> factoryParameterNames;
 
-    Interceptor(Injectable productInjectable, Method factoryMethod, Function<Object, Object> providerGetter) {
+    Interceptor(Injectable<?> productInjectable, Method factoryMethod, Function<Object, Object> providerGetter) {
       this.productInjectable = productInjectable;
       this.factoryMethod = factoryMethod;
       this.providerGetter = providerGetter;

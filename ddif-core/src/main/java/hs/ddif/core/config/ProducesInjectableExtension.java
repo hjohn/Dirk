@@ -36,8 +36,8 @@ public class ProducesInjectableExtension implements InjectableExtension {
   }
 
   @Override
-  public List<Injectable> getDerived(Type type) {
-    List<Injectable> injectables = new ArrayList<>();
+  public List<Injectable<?>> getDerived(Type type) {
+    List<Injectable<?>> injectables = new ArrayList<>();
     Class<?> injectableClass = Types.raw(type);
 
     if(injectableClass != null) {
