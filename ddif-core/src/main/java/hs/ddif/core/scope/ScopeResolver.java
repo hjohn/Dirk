@@ -1,7 +1,8 @@
 package hs.ddif.core.scope;
 
+import hs.ddif.core.instantiation.injection.Constructable;
+
 import java.lang.annotation.Annotation;
-import java.util.concurrent.Callable;
 
 /**
  * Handles resolving of types with a specific scope annotation.
@@ -24,23 +25,24 @@ public interface ScopeResolver {
   boolean isScopeActive();
 
   /**
-   * Returns an instance of the given type or constructs it using the given object factory.
+   * Returns an instance of the given type or constructing it if needed.
    *
-   * @param <T> the type of the instance
-   * @param key an {@link Object} (suitable as a key for use in a map), cannot be {@code null}
-   * @param objectFactory a {@link Callable} which serves as an object factory, cannot be {@code null}
+   * @param <T> the type of the instances provided by the {@link Constructable}
+   * @param constructable a {@link Constructable} (suitable as a key for use in a map), cannot be {@code null}
+   * @param injectionContext an {@link InjectionContext}, cannot be {@code null}
    * @return an instance of the given type, never {@code null}
    * @throws OutOfScopeException when there is no scope active
    * @throws Exception when the object factory throws an exception
    */
-  <T> T get(Object key, Callable<T> objectFactory) throws OutOfScopeException, Exception;
+  <T> T get(Constructable<T> constructable, InjectionContext injectionContext) throws OutOfScopeException, Exception;
 
   /**
-   * Removes the given object (or key) from this scope resolver.
+   * Removes the {@link Constructable} from this scope resolver.
    *
-   * @param key an {@link Object} (suitable as a key for use in a map), cannot be {@code null}
+   * @param <T> the type of the instances provided by the {@link Constructable}
+   * @param constructable a {@link Constructable} (suitable as a key for use in a map), cannot be {@code null}
    */
-  void remove(Object key);
+  <T> void remove(Constructable<T> constructable);
 
   /**
    * Checks if this scope resolver represents a singleton scope.

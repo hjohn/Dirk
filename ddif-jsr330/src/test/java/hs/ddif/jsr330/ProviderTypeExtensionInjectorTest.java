@@ -1,15 +1,12 @@
 package hs.ddif.jsr330;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.inject.store.ScopeConflictException;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ProviderTypeExtensionInjectorTest {
   private Injector injector = Injectors.manual();
@@ -35,13 +32,11 @@ public class ProviderTypeExtensionInjectorTest {
     injector.register(PrototypeBeanDependantOnX.class);
   }
 
-  // Singleton -> Prototype = ERROR
+  // Singleton -> Prototype = OK
   @Test
   public void shouldThrowExceptionWhenRegisteringSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() {
     injector.registerInstance(new XProvider());
-
-    assertThatThrownBy(() -> injector.register(SingletonBeanDependentOnX.class))
-      .isExactlyInstanceOf(ScopeConflictException.class);
+    injector.register(SingletonBeanDependentOnX.class);
   }
 
   // Singleton -> Provider<Singleton> = OK

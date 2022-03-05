@@ -1,7 +1,7 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.instantiation.injection.InjectionContext;
-import hs.ddif.core.instantiation.injection.ObjectFactory;
+import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.instantiation.injection.Constructable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -49,14 +49,14 @@ public class InstanceInjectableFactory {
       null,
       new FakeAnnotatedElement(instance, extendedQualifiers),
       List.of(),
-      new ObjectFactory<>() {
+      new Constructable<>() {
         @Override
-        public T createInstance(InjectionContext injectionContext) {
+        public T create(List<Injection> injections) {
           return instance;
         }
 
         @Override
-        public void destroyInstance(T instance, InjectionContext injectionContext) {
+        public void destroy(T instance) {
         }
       }
     );

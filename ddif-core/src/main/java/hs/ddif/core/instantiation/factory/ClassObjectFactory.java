@@ -2,8 +2,7 @@ package hs.ddif.core.instantiation.factory;
 
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
-import hs.ddif.core.instantiation.injection.InjectionContext;
-import hs.ddif.core.instantiation.injection.ObjectFactory;
+import hs.ddif.core.instantiation.injection.Constructable;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
@@ -21,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @param <T> the type of the instances produced
  */
-public class ClassObjectFactory<T> implements ObjectFactory<T> {
+public class ClassObjectFactory<T> implements Constructable<T> {
   private static final Set<Object> UNDER_CONSTRUCTION = ConcurrentHashMap.newKeySet();
 
   private final Constructor<T> constructor;
@@ -41,7 +40,7 @@ public class ClassObjectFactory<T> implements ObjectFactory<T> {
   }
 
   @Override
-  public T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
+  public T create(List<Injection> injections) throws InstanceCreationFailure {
     if(UNDER_CONSTRUCTION.contains(this)) {
       throw new InstanceCreationFailure(constructor.getDeclaringClass(), "already under construction (dependency creation loop in setter, initializer or post-construct method?)");
     }
@@ -49,7 +48,6 @@ public class ClassObjectFactory<T> implements ObjectFactory<T> {
     try {
       UNDER_CONSTRUCTION.add(this);
 
-      List<Injection> injections = injectionContext.getInjections();
       T instance = constructInstance(injections);
 
       injectInstance(instance, injections);
@@ -64,7 +62,7 @@ public class ClassObjectFactory<T> implements ObjectFactory<T> {
   }
 
   @Override
-  public void destroyInstance(T instance, InjectionContext injectionContext) {
+  public void destroy(T instance) {
     lifeCycleCallbacks.preDestroy(instance);
   }
 
