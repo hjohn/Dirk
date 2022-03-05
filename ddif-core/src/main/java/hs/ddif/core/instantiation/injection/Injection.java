@@ -8,7 +8,7 @@ import java.lang.reflect.AccessibleObject;
  * owner class when injecting non-static fields or methods.<p>
  *
  * When the target is a method or constructor the order of the injections provided
- * determines the order of the parameters. The target can also be
+ * determines the order of the parameters.
  */
 public class Injection {
   private final AccessibleObject target;
