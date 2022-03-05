@@ -9,9 +9,9 @@
 
   <name>Dynamic Dependency Injection Framework</name>
   <description>
-    A light-weight framework that allows you to use standard JSR-330 javax.inject Annotations to create 
-    instances of objects, even when they're dynamically loaded at runtime. This framework will allow you 
-    to package your classes in seperate JAR's, load them at runtime, and have them injected with 
+    A light-weight framework that allows using inject annotations (such as JSR-330 or Jakarta Annotations)
+    to create instances of objects, even when they're dynamically loaded at runtime. This framework will
+    allow you to package your classes in seperate JAR's, load them at runtime, and have them injected with
     dependencies or serve as dependencies for other classes.
   </description>
   <url>https://github.com/hjohn/hs.ddif</url>
@@ -19,6 +19,7 @@
   <modules>
     <module>ddif-annotations</module>
     <module>ddif-core</module>
+    <module>ddif-jakarta</module>
     <module>ddif-jsr330</module>
     <module>ddif-plugins</module>
     <module>ddif-test-api</module>
@@ -69,6 +70,16 @@
         <groupId>io.leangen.geantyref</groupId>
         <artifactId>geantyref</artifactId>
         <version>1.3.11</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.annotation</groupId>
+        <artifactId>jakarta.annotation-api</artifactId>
+        <version>2.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.inject</groupId>
+        <artifactId>jakarta.inject-api</artifactId>
+        <version>2.0.1</version>
       </dependency>
       <dependency>
         <groupId>javax.annotation</groupId>
