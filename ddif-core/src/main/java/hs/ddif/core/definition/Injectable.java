@@ -24,31 +24,19 @@ import java.util.Set;
 public interface Injectable<T> extends Constructable<T> {
 
   /**
-   * Returns the {@link QualifiedType} which is always fully resolved (no type variables)
-   * and never {@code void}.
-   *
-   * @return a {@link QualifiedType}, never {@code null}
-   */
-  QualifiedType getQualifiedType();
-
-  /**
    * Returns the {@link Type} which is always fully resolved (no type variables)
    * and never {@code void}.
    *
    * @return the {@link Type}, never {@code null}
    */
-  default Type getType() {
-    return getQualifiedType().getType();
-  }
+  Type getType();
 
   /**
    * Returns an unmodifiable set of qualifier {@link Annotation}s.
    *
    * @return an unmodifiable set of qualifier {@link Annotation}s, never {@code null} and never contains {@code null}s but can be empty
    */
-  default Set<Annotation> getQualifiers() {
-    return getQualifiedType().getQualifiers();
-  }
+  Set<Annotation> getQualifiers();
 
   /**
    * Returns the {@link Binding}s detected.
