@@ -106,7 +106,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     }
 
     try {
-      addInstanceFactories(injectables);  // modifies structure but must be done before checking for required bindings
+      addBindings(injectables);  // modifies structure but must be done before checking for required bindings
 
       try {
         ensureNoCyclicDependencies(injectables);
@@ -122,7 +122,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
         });
       }
       catch(Exception e) {
-        removeInstanceFactories(injectables);
+        removeBindings(injectables);
 
         throw e;
       }
@@ -149,7 +149,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
         violation.doThrow();
       });
 
-      removeInstanceFactories(injectables);
+      removeBindings(injectables);
       removeScopedInstances(injectables);
     }
     catch(Exception e) {
@@ -159,7 +159,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     }
   }
 
-  private void addInstanceFactories(Collection<Injectable<?>> injectables) {
+  private void addBindings(Collection<Injectable<?>> injectables) {
     for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
         bindingManager.addBinding(binding);
@@ -167,7 +167,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     }
   }
 
-  private void removeInstanceFactories(Collection<Injectable<?>> injectables) {
+  private void removeBindings(Collection<Injectable<?>> injectables) {
     for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
         bindingManager.removeBinding(binding);
