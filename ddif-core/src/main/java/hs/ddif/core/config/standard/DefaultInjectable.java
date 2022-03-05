@@ -4,8 +4,8 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.injection.InjectionContext;
-import hs.ddif.core.instantiation.injection.ObjectFactory;
+import hs.ddif.core.instantiation.injection.Constructable;
+import hs.ddif.core.instantiation.injection.Injection;
 import hs.ddif.core.scope.ScopeResolver;
 
 import java.lang.reflect.AccessibleObject;
@@ -24,7 +24,7 @@ final class DefaultInjectable<T> implements Injectable<T> {
   private final List<Binding> bindings;
   private final ScopeResolver scopeResolver;
   private final Object discriminator;
-  private final ObjectFactory<T> objectFactory;
+  private final Constructable<T> constructable;
   private final int hashCode;
 
   /**
@@ -35,9 +35,9 @@ final class DefaultInjectable<T> implements Injectable<T> {
    * @param bindings a list of {@link Binding}s, cannot be {@code null} or contain {@code null}s, but can be empty
    * @param scopeResolver a {@link ScopeResolver}, cannot be {@code null}
    * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
-   * @param objectFactory an {@link ObjectFactory}, cannot be {@code null}
+   * @param constructable a {@link Constructable}, cannot be {@code null}
    */
-  DefaultInjectable(Type ownerType, QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, ObjectFactory<T> objectFactory) {
+  DefaultInjectable(Type ownerType, QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, Constructable<T> constructable) {
     if(ownerType == null) {
       throw new IllegalArgumentException("ownerType cannot be null");
     }
@@ -50,8 +50,8 @@ final class DefaultInjectable<T> implements Injectable<T> {
     if(scopeResolver == null) {
       throw new IllegalArgumentException("scopeResolver cannot be null");
     }
-    if(objectFactory == null) {
-      throw new IllegalArgumentException("objectFactory cannot be null");
+    if(constructable == null) {
+      throw new IllegalArgumentException("constructable cannot be null");
     }
 
     this.ownerType = ownerType;
@@ -59,7 +59,7 @@ final class DefaultInjectable<T> implements Injectable<T> {
     this.bindings = Collections.unmodifiableList(new ArrayList<>(bindings));
     this.scopeResolver = scopeResolver;
     this.discriminator = discriminator;
-    this.objectFactory = objectFactory;
+    this.constructable = constructable;
     this.hashCode = calculateHash();
   }
 
@@ -83,13 +83,13 @@ final class DefaultInjectable<T> implements Injectable<T> {
   }
 
   @Override
-  public T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
-    return objectFactory.createInstance(injectionContext);
+  public T create(List<Injection> injections) throws InstanceCreationFailure {
+    return constructable.create(injections);
   }
 
   @Override
-  public void destroyInstance(T instance, InjectionContext injectionContext) {
-    objectFactory.destroyInstance(instance, injectionContext);
+  public void destroy(T instance) {
+    constructable.destroy(instance);
   }
 
   @Override

@@ -1,7 +1,7 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.injection.ObjectFactory;
+import hs.ddif.core.instantiation.injection.Constructable;
 import hs.ddif.core.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
@@ -21,7 +21,7 @@ import java.util.Set;
  *
  * @param <T> the type of the instances produced
  */
-public interface Injectable<T> extends ObjectFactory<T> {
+public interface Injectable<T> extends Constructable<T> {
 
   /**
    * Returns the {@link QualifiedType} which is always fully resolved (no type variables)

@@ -2,18 +2,17 @@ package hs.ddif.core.instantiation.factory;
 
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
-import hs.ddif.core.instantiation.injection.InjectionContext;
-import hs.ddif.core.instantiation.injection.ObjectFactory;
+import hs.ddif.core.instantiation.injection.Constructable;
 
 import java.lang.reflect.Field;
 import java.util.List;
 
 /**
- * An {@link ObjectFactory} which reads a field to obtain an instance.
+ * A {@link Constructable} which reads a field to obtain an instance.
  *
  * @param <T> the type of the instances produced
  */
-public class FieldObjectFactory<T> implements ObjectFactory<T> {
+public class FieldObjectFactory<T> implements Constructable<T> {
   private final Field field;
 
   /**
@@ -28,10 +27,8 @@ public class FieldObjectFactory<T> implements ObjectFactory<T> {
   }
 
   @Override
-  public T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
+  public T create(List<Injection> injections) throws InstanceCreationFailure {
     try {
-      List<Injection> injections = injectionContext.getInjections();
-
       @SuppressWarnings("unchecked")
       T instance = (T)field.get(injections.isEmpty() ? null : injections.get(0).getValue());
 
@@ -43,7 +40,7 @@ public class FieldObjectFactory<T> implements ObjectFactory<T> {
   }
 
   @Override
-  public void destroyInstance(T instance, InjectionContext injectionContext) {
+  public void destroy(T instance) {
     // TODO Call a corresponding Disposer method belonging to this Producer
   }
 }

@@ -1,9 +1,10 @@
 package hs.ddif.core.scope;
 
+import hs.ddif.core.instantiation.injection.Constructable;
+
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  * Manages {@link ScopeResolver}s.
@@ -57,12 +58,12 @@ public class ScopeResolverManager {
     }
 
     @Override
-    public <T> T get(Object key, Callable<T> objectFactory) throws Exception {
-      return objectFactory.call();
+    public <T> T get(Constructable<T> constructable, InjectionContext injectionContext) throws Exception {
+      return constructable.create(injectionContext.getInjections());
     }
 
     @Override
-    public void remove(Object object) {
+    public <T> void remove(Constructable<T> constructable) {
       // does nothing
     }
   }

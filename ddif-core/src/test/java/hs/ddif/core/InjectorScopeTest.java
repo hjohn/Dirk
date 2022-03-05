@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class InjectorScopeTest {
 
@@ -151,14 +152,14 @@ public class InjectorScopeTest {
     }
 
     @Test
-    public void shouldThrowExceptionWhenNarrowScopedBeansAreInjectedIntoBroaderScopedBeans2() {
+    public void shouldAllowInjectingUnscopedInstancesAlways() {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = Injectors.manual(scopeResolver);
 
       injector.register(UnscopedBean.class);
+      injector.register(SomeUserBeanWithTestScope2.class);
 
-      assertThatThrownBy(() -> injector.register(SomeUserBeanWithTestScope2.class))
-        .isExactlyInstanceOf(ScopeConflictException.class);
+      assertNotNull(injector.getInstance(SomeUserBeanWithTestScope2.class));
     }
 
     @Test
@@ -216,15 +217,13 @@ public class InjectorScopeTest {
       injector.register(PrototypeBeanDependantOnX.class);
     }
 
-    // Singleton -> Prototype = ERROR
+    // Singleton -> Prototype = OK
     @Test
-    public void shouldThrowExceptionWhenRegisteringSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() {
+    public void shouldRegisterSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
-
-      assertThatThrownBy(() -> injector.register(SingletonBeanDependentOnX.class))
-        .isExactlyInstanceOf(ScopeConflictException.class);
+      injector.register(SingletonBeanDependentOnX.class);
     }
 
     // Singleton -> Provider<Singleton> = OK
@@ -289,7 +288,7 @@ public class InjectorScopeTest {
     @Inject Supplier<X> xProvider;
   }
 
-  public static class XProvider implements Supplier<X> {  // A provider by default is assumed to provide a new bean everytime (the most narrow scope, or prototype scope)
+  public static class XProvider implements Supplier<X> {  // A provider by default is assumed to provide a new bean every time (the most narrow scope, or prototype scope)
     @Override
     public X get() {
       return null;

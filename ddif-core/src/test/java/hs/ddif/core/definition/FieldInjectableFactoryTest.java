@@ -81,7 +81,7 @@ public class FieldInjectableFactoryTest {
       "Owner Type [class hs.ddif.core.definition.FieldInjectableFactoryTest$C]"
     );
 
-    assertEquals("Bye", injectable.createInstance(Bindings.resolve(injectable.getBindings(), new C())));
+    assertEquals("Bye", injectable.create(Bindings.resolve(injectable.getBindings(), new C())));
   }
 
   @Test
@@ -91,7 +91,7 @@ public class FieldInjectableFactoryTest {
     assertEquals(String.class, injectable.getType());
     assertThat(injectable.getBindings()).isEmpty();
 
-    assertEquals("Hello", injectable.createInstance(Bindings.resolve(injectable.getBindings())));
+    assertEquals("Hello", injectable.create(Bindings.resolve(injectable.getBindings())));
   }
 
   static class A {

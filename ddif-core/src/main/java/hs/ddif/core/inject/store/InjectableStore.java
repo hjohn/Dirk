@@ -319,12 +319,8 @@ public class InjectableStore implements Resolver<Injectable<?>> {
   }
 
   private static boolean isNarrowerScope(Class<?> scope, Class<?> dependencyScope) {
-    if(scope == null) {
+    if(scope == null || dependencyScope == null) {
       return false;
-    }
-
-    if(dependencyScope == null) {
-      return true;
     }
 
     return !dependencyScope.equals(SINGLETON) && !scope.equals(dependencyScope);

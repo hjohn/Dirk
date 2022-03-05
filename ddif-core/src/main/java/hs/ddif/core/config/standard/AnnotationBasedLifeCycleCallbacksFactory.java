@@ -7,6 +7,7 @@ import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.factory.LifeCycleCallbacks;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Comparator;
@@ -100,6 +101,9 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
         try {
           method.setAccessible(true);
           method.invoke(instance);
+        }
+        catch(InvocationTargetException e) {
+          LOGGER.log(Level.WARNING, "Exception thrown by pre-destroy method: " + method, e.getCause());
         }
         catch(Exception e) {
           LOGGER.log(Level.WARNING, "Exception while calling pre-destroy method: " + method, e);

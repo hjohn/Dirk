@@ -2,7 +2,6 @@ package hs.ddif.core.config;
 
 import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
-import hs.ddif.core.config.standard.DefaultInjectionContext;
 import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.DefinitionException;
@@ -291,7 +290,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
           parameters.put(factoryParameterNames.get(i), args[i]);
         }
 
-        return productInjectable.createInstance(new DefaultInjectionContext(createInjections(factoryInstance, parameters)));
+        return productInjectable.create(createInjections(factoryInstance, parameters));
       }
       catch(Exception e) {
         throw new InstanceCreationFailure(factoryMethod.getReturnType(), "Exception while creating instance", e);

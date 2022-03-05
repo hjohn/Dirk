@@ -93,7 +93,7 @@ public class MethodInjectableFactoryTest {
       "Owner Type [class hs.ddif.core.definition.MethodInjectableFactoryTest$C]"
     );
 
-    assertEquals("Bye", injectable.createInstance(Bindings.resolve(injectable.getBindings(), new C())));
+    assertEquals("Bye", injectable.create(Bindings.resolve(injectable.getBindings(), new C())));
   }
 
   @Test
@@ -105,7 +105,7 @@ public class MethodInjectableFactoryTest {
       "Parameter 0 [class hs.ddif.core.definition.MethodInjectableFactoryTest$D] of [public static java.lang.String hs.ddif.core.definition.MethodInjectableFactoryTest$C.e(hs.ddif.core.definition.MethodInjectableFactoryTest$D)]"
     );
 
-    assertEquals("Hello D", injectable.createInstance(Bindings.resolve(injectable.getBindings(), new D())));
+    assertEquals("Hello D", injectable.create(Bindings.resolve(injectable.getBindings(), new D())));
   }
 
   static class A {

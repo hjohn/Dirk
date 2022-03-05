@@ -2,19 +2,18 @@ package hs.ddif.core.instantiation.factory;
 
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.injection.Injection;
-import hs.ddif.core.instantiation.injection.InjectionContext;
-import hs.ddif.core.instantiation.injection.ObjectFactory;
+import hs.ddif.core.instantiation.injection.Constructable;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 
 /**
- * An {@link ObjectFactory} using a method call to obtain an instance.
+ * A {@link Constructable} using a method call to obtain an instance.
  *
  * @param <T> the type of the instances produced
  */
-public class MethodObjectFactory<T> implements ObjectFactory<T> {
+public class MethodObjectFactory<T> implements Constructable<T> {
   private final Method method;
   private final boolean isStatic;
 
@@ -31,9 +30,8 @@ public class MethodObjectFactory<T> implements ObjectFactory<T> {
   }
 
   @Override
-  public T createInstance(InjectionContext injectionContext) throws InstanceCreationFailure {
+  public T create(List<Injection> injections) throws InstanceCreationFailure {
     try {
-      List<Injection> injections = injectionContext.getInjections();
       Object[] values = new Object[injections.size() - (isStatic ? 0 : 1)];  // Parameters for method
       Object instance = null;
       int parameterIndex = 0;
@@ -58,7 +56,7 @@ public class MethodObjectFactory<T> implements ObjectFactory<T> {
   }
 
   @Override
-  public void destroyInstance(T instance, InjectionContext injectionContext) {
+  public void destroy(T instance) {
     // TODO Call a corresponding Disposer method belonging to this Producer
   }
 }

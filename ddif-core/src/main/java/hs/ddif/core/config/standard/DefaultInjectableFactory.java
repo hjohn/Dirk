@@ -7,7 +7,7 @@ import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.injection.ObjectFactory;
+import hs.ddif.core.instantiation.injection.Constructable;
 import hs.ddif.core.scope.ScopeResolverManager;
 
 import java.lang.annotation.Annotation;
@@ -29,7 +29,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 /**
  * An {@link InjectableFactory} which creates {@link Injectable}s given
  * a {@link Type}, an {@link AnnotatedElement}, a list of {@link Binding}s and
- * an {@link ObjectFactory}.
+ * an {@link Constructable}.
  */
 public class DefaultInjectableFactory implements InjectableFactory {
   private final ScopeResolverManager scopeResolverManager;
@@ -47,7 +47,7 @@ public class DefaultInjectableFactory implements InjectableFactory {
   }
 
   @Override
-  public <T> Injectable<T> create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, ObjectFactory<T> objectFactory) {
+  public <T> Injectable<T> create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, Constructable<T> constructable) {
     try {
       Set<Annotation> scopes = annotationStrategy.getScopes(element);
 
@@ -66,7 +66,7 @@ public class DefaultInjectableFactory implements InjectableFactory {
         bindings,
         scopeResolverManager.getScopeResolver(scopes.isEmpty() ? null : scopes.iterator().next()),
         element,
-        objectFactory
+        constructable
       );
     }
     catch(BadQualifiedTypeException e) {
