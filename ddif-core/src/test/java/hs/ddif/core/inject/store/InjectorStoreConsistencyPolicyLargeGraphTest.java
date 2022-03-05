@@ -16,8 +16,10 @@ import hs.ddif.core.store.Key;
 import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -61,8 +63,13 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
       Injectable<Object> injectable = new Injectable<>() {
         @Override
-        public QualifiedType getQualifiedType() {
-          return qualifiedType;
+        public Type getType() {
+          return qualifiedType.getType();
+        }
+
+        @Override
+        public Set<Annotation> getQualifiers() {
+          return qualifiedType.getQualifiers();
         }
 
         @Override

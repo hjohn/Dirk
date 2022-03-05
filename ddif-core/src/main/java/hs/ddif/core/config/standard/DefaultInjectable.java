@@ -8,12 +8,14 @@ import hs.ddif.core.instantiation.injection.Constructable;
 import hs.ddif.core.instantiation.injection.Injection;
 import hs.ddif.core.scope.ScopeResolver;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * An implementation of {@link Injectable}.
@@ -68,8 +70,13 @@ final class DefaultInjectable<T> implements Injectable<T> {
   }
 
   @Override
-  public QualifiedType getQualifiedType() {
-    return qualifiedType;
+  public Type getType() {
+    return qualifiedType.getType();
+  }
+
+  @Override
+  public Set<Annotation> getQualifiers() {
+    return qualifiedType.getQualifiers();
   }
 
   @Override

@@ -9,7 +9,10 @@ import hs.ddif.core.instantiation.injection.Injection;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.util.Annotations;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Singleton;
 
@@ -22,8 +25,13 @@ public class Injectables {
     return new Injectable<>() {
 
       @Override
-      public QualifiedType getQualifiedType() {
-        return qualifiedType;
+      public Type getType() {
+        return qualifiedType.getType();
+      }
+
+      @Override
+      public Set<Annotation> getQualifiers() {
+        return qualifiedType.getQualifiers();
       }
 
       @Override
