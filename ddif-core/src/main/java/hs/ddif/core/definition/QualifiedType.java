@@ -1,6 +1,7 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.core.util.Primitives;
+import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
@@ -11,8 +12,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Represents a fully resolved {@link Type} with a set of qualifier {@link Annotation}s.
@@ -39,7 +38,7 @@ public final class QualifiedType {
     this.type = Primitives.toBoxed(type);
     this.qualifiers = Collections.unmodifiableSet(new HashSet<>(qualifiers));
 
-    if((!(type instanceof Class) && !(type instanceof ParameterizedType)) || TypeUtils.containsTypeVariables(type)) {
+    if((!(type instanceof Class) && !(type instanceof ParameterizedType)) || Types.containsTypeVariables(type)) {
       throw new BadQualifiedTypeException("[" + this + "] cannot have unresolvable type variables or wild cards");
     }
     if(type == void.class || type == Void.class) {

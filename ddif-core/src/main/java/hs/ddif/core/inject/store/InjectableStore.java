@@ -23,8 +23,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
-
 /**
  * A store for {@link Injectable}s which ensures that it at all times contains
  * only injectables that can be fully resolved.
@@ -350,7 +348,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
 
         if(nodesByKeys != null) {
           for(Key key : nodesByKeys.keySet()) {
-            if(TypeUtils.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
+            if(Types.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
               Node node = nodesByKeys.get(key);
 
               node.increaseSources(source);
@@ -391,7 +389,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
 
         if(nodesByKeys != null) {
           for(Key key : nodesByKeys.keySet()) {
-            if(TypeUtils.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
+            if(Types.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
               Node node = nodesByKeys.get(key);
 
               node.decreaseSources(source);

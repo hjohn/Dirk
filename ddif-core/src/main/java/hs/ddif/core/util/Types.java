@@ -1,13 +1,16 @@
 package hs.ddif.core.util;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
@@ -46,6 +49,17 @@ public class Types {
   }
 
   /**
+   * Create a new {@link ParameterizedType} with the given type arguments.
+   *
+   * @param raw a {@link Class} to parameterize, cannot be {@code null}
+   * @param typeArguments an array of type arguments
+   * @return a {@link ParameterizedType}, never {@code null}
+   */
+  public static ParameterizedType parameterize(Class<?> raw, Type... typeArguments) {
+    return TypeUtils.parameterize(raw, typeArguments);
+  }
+
+  /**
    * Creates a new {@link WildcardType} with the given upper bounds. Note that
    * the Java specification does not allow wildcard types with multiple upper
    * bounds to be created in source code, however you can create them
@@ -73,6 +87,16 @@ public class Types {
   }
 
   /**
+   * Checks if any type parameters for the given {@link Type} are bound to variables.
+   *
+   * @param type a {@link Type}, cannot be {@code null}
+   * @return {@code true} if any parameters are bound to variables, otherwise {@code false}
+   */
+  public static boolean containsTypeVariables(Type type) {
+    return TypeUtils.containsTypeVariables(type);
+  }
+
+  /**
    * Gets the {@link Type} of a generic parameter, identified by given by the {@link TypeVariable},
    * of the given {@link Class} when resolved against the given {@link Type}.
    *
@@ -83,5 +107,54 @@ public class Types {
    */
   public static Type getTypeParameter(Type type, Class<?> cls, TypeVariable<?> typeVariable) {
     return TypeUtils.getTypeArguments(type, cls).get(typeVariable);
+  }
+
+  /**
+   * Gets the type arguments of a class/interface based on a subtype.
+   *
+   * <p>This method returns {@code null} if {@code type} is not assignable to
+   * {@code toClass}. It returns an empty map if none of the classes or
+   * interfaces in its inheritance hierarchy specify any type arguments.
+   *
+   * @param type a type from which to determine the type parameters of {@code toClass}, cannot be {@code null}
+   * @param toClass a class whose type parameters are to be determined based on the subtype {@code type}, cannot be {@code null}
+   * @return a map of the type assignments for the type variables in each type in the inheritance hierarchy from {@code type} to {@code toClass} inclusive or {@code null}
+   */
+  public static Map<TypeVariable<?>, Type> getTypeArguments(Type type, Class<?> toClass) {
+    return TypeUtils.getTypeArguments(type, toClass);
+  }
+
+  /**
+   * Get a type representing {@code type} with variable assignments resolved.
+   *
+   * @param typeArguments as from {@link Types#getTypeArguments(Type, Class)}, cannot be {@code null}
+   * @param type a type to unroll variable assignments for, cannot be {@code null}
+   * @return a {@link Type} or {@code null} when not all variables can be resolved
+   */
+  public static Type unrollVariables(Map<TypeVariable<?>, Type> typeArguments, Type type) {  // FIXME rename resolve
+    return TypeUtils.unrollVariables(typeArguments, type);
+  }
+
+  /**
+   * Checks if the subject type may be implicitly cast to the target type
+   * following Java generics rules. If both types are {@link Class} objects, the method
+   * returns the result of {@link ClassUtils#isAssignable(Class, Class)}.
+   *
+   * @param type the subject type to be assigned to the target type, cannot be {@code null}
+   * @param toType the target type, cannot be {@code null}
+   * @return {@code true} if {@code type} is assignable to {@code toType}
+   */
+  public static boolean isAssignable(Type type, Type toType) {
+    return TypeUtils.isAssignable(type, toType);
+  }
+
+  /**
+   * Returns the upper bounds of the given {@link WildcardType}.
+   *
+   * @param type a {@link WildcardType}, cannot be {@code null}
+   * @return a non-empty array containing the upper bounds of the wildcard type, never {@code null}
+   */
+  public static Type[] getUpperBounds(WildcardType type) {
+    return TypeUtils.getImplicitUpperBounds(type);
   }
 }

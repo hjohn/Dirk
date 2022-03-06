@@ -12,8 +12,6 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
-
 /**
  * Factory interface for creating {@link Injectable}s given a {@link Type}.
  */
@@ -52,7 +50,7 @@ public class ClassInjectableFactory {
     if(Modifier.isAbstract(cls.getModifiers())) {
       throw new DefinitionException(cls, "cannot be abstract");
     }
-    if(TypeUtils.containsTypeVariables(type)) {
+    if(Types.containsTypeVariables(type)) {
       throw new DefinitionException(cls, "cannot have unresolvable type variables: " + Arrays.toString(cls.getTypeParameters()));
     }
 

@@ -5,6 +5,7 @@ import hs.ddif.core.definition.LifeCycleCallbacksFactory;
 import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.factory.LifeCycleCallbacks;
+import hs.ddif.core.util.Methods;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -16,8 +17,6 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-
-import org.apache.commons.lang3.reflect.MethodUtils;
 
 /**
  * Implementation of a {@link LifeCycleCallbacksFactory} which determines which life cycle
@@ -55,8 +54,8 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
 
   @Override
   public LifeCycleCallbacks create(Class<?> cls) {
-    List<Method> postConstructMethods = MethodUtils.getMethodsListWithAnnotation(cls, postConstruct, true, true);
-    List<Method> preDestroyMethods = MethodUtils.getMethodsListWithAnnotation(cls, preDestroy, true, true);
+    List<Method> postConstructMethods = Methods.findAnnotated(cls, postConstruct);
+    List<Method> preDestroyMethods = Methods.findAnnotated(cls, preDestroy);
 
     Collections.sort(postConstructMethods, CLASS_HIERARCHY_COMPARATOR);
     Collections.sort(preDestroyMethods, CLASS_HIERARCHY_COMPARATOR.reversed());

@@ -22,8 +22,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
-
 /**
  * Store which keeps track of types {@code T} for which a {@link Key} can be extracted.
  *
@@ -71,7 +69,7 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
 
     if(type instanceof WildcardType) {
       sets = new PriorityQueue<>(comparatorConst);
-      upperBounds = Set.of(TypeUtils.getImplicitUpperBounds((WildcardType)type));
+      upperBounds = Set.of(Types.getUpperBounds((WildcardType)type));
 
       for(Type upperBound : upperBounds) {
         if(addUpperBound(key, sets, Types.raw(upperBound))) {
@@ -366,7 +364,7 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
       for(Iterator<T> iterator = matches.iterator(); iterator.hasNext();) {
         T qualifiedType = iterator.next();
 
-        if(!TypeUtils.isAssignable(keyExtractor.apply(qualifiedType).getType(), type)) {
+        if(!Types.isAssignable(keyExtractor.apply(qualifiedType).getType(), type)) {
           iterator.remove();
         }
       }

@@ -30,8 +30,6 @@ import java.util.WeakHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
-
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType.Builder;
@@ -92,7 +90,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
       throw new DefinitionException(factoryClass, "must have a single abstract method to qualify for assisted injection");
     }
 
-    Type returnType = TypeUtils.unrollVariables(TypeUtils.getTypeArguments(type, factoryMethod.getDeclaringClass()), factoryMethod.getGenericReturnType());
+    Type returnType = Types.unrollVariables(Types.getTypeArguments(type, factoryMethod.getDeclaringClass()), factoryMethod.getGenericReturnType());
 
     if(returnType == null) {
       throw new DefinitionException(factoryMethod, "must not have unresolvable type variables to qualify for assisted injection: " + Arrays.toString(factoryClass.getTypeParameters()));
@@ -161,7 +159,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
 
         providerFieldNames.add(fieldName);
         builder = builder
-          .defineField(fieldName, TypeUtils.parameterize(providerClass, binding.getType()), Visibility.PRIVATE)
+          .defineField(fieldName, Types.parameterize(providerClass, binding.getType()), Visibility.PRIVATE)
           .annotateField(annotations);
       }
       else {
@@ -180,7 +178,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
      * Generate the factory:
      */
 
-    Class<?> factoryClass = TypeUtils.getRawType(type, null);
+    Class<?> factoryClass = Types.raw(type);
     Class<?> cls = builder
       .make()
       .load(getClass().getClassLoader(), ClassLoadingStrategy.UsingLookup.withFallback(() -> {
