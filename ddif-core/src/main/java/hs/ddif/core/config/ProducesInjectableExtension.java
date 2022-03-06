@@ -5,6 +5,8 @@ import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.MethodInjectableFactory;
+import hs.ddif.core.util.Fields;
+import hs.ddif.core.util.Methods;
 import hs.ddif.core.util.Types;
 
 import java.lang.reflect.Field;
@@ -12,9 +14,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.commons.lang3.reflect.MethodUtils;
 
 /**
  * Extension which looks for members annotated with {@link Produces}, and if found creates
@@ -41,11 +40,11 @@ public class ProducesInjectableExtension implements InjectableExtension {
     Class<?> injectableClass = Types.raw(type);
 
     if(injectableClass != null) {
-      for(Method method : MethodUtils.getMethodsListWithAnnotation(injectableClass, Produces.class, true, true)) {
+      for(Method method : Methods.findAnnotated(injectableClass, Produces.class)) {
         injectables.add(methodInjectableFactory.create(method, type));
       }
 
-      for(Field field : FieldUtils.getFieldsListWithAnnotation(injectableClass, Produces.class)) {
+      for(Field field : Fields.findAnnotated(injectableClass, Produces.class)) {
         injectables.add(fieldInjectableFactory.create(field, type));
       }
     }

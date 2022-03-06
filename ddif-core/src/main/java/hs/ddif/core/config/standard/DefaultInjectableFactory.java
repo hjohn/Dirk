@@ -9,6 +9,7 @@ import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.injection.Constructable;
 import hs.ddif.core.scope.ScopeResolverManager;
+import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -23,8 +24,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * An {@link InjectableFactory} which creates {@link Injectable}s given
@@ -75,13 +74,13 @@ public class DefaultInjectableFactory implements InjectableFactory {
   }
 
   private static Type extractType(Type ownerType, Member member, AnnotatedElement element) {
-    Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(ownerType, member.getDeclaringClass());
+    Map<TypeVariable<?>, Type> typeArguments = Types.getTypeArguments(ownerType, member.getDeclaringClass());
 
     if(typeArguments == null) {
       throw new IllegalArgumentException("ownerType must be assignable to member's declaring class: " + ownerType + "; declaring class: " + member.getDeclaringClass());
     }
 
-    Type returnType = TypeUtils.unrollVariables(typeArguments, member instanceof Method ? ((Method)member).getGenericReturnType() : ((Field)member).getGenericType());
+    Type returnType = Types.unrollVariables(typeArguments, member instanceof Method ? ((Method)member).getGenericReturnType() : ((Field)member).getGenericType());
 
     if(returnType == null) {
       throw new DefinitionException(element, "has unresolvable return type");

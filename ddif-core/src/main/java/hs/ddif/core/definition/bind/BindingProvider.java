@@ -1,6 +1,7 @@
 package hs.ddif.core.definition.bind;
 
 import hs.ddif.core.store.Key;
+import hs.ddif.core.util.Types;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
@@ -17,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Provides {@link Binding}s for constructors, methods and fields.
@@ -87,14 +86,14 @@ public class BindingProvider {
           }
 
           if(typeArguments == null) {
-            typeArguments = TypeUtils.getTypeArguments(cls, Object.class);  // pretty sure that you can re-use these even for when are examining fields of a super class later
+            typeArguments = Types.getTypeArguments(cls, Object.class);  // pretty sure that you can re-use these even for when are examining fields of a super class later
 
             if(typeArguments == null) {
               throw new IllegalArgumentException("ownerType must be assignable to field's declaring class: " + cls + "; declaring class: " + currentInjectableClass);
             }
           }
 
-          Type type = TypeUtils.unrollVariables(typeArguments, field.getGenericType());
+          Type type = Types.unrollVariables(typeArguments, field.getGenericType());
 
           bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(field)), field, null));
         }
@@ -214,14 +213,14 @@ public class BindingProvider {
     Type[] params = executable.getGenericParameterTypes();
     Parameter[] parameters = executable.getParameters();
     List<Binding> bindings = new ArrayList<>();
-    Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(ownerType, executable.getDeclaringClass());
+    Map<TypeVariable<?>, Type> typeArguments = Types.getTypeArguments(ownerType, executable.getDeclaringClass());
 
     if(typeArguments == null) {
       throw new IllegalArgumentException("ownerType must be assignable to declaring class: " + ownerType + "; declaring class: " + executable.getDeclaringClass());
     }
 
     for(int i = 0; i < parameters.length; i++) {
-      Type type = TypeUtils.unrollVariables(typeArguments, params[i]);
+      Type type = Types.unrollVariables(typeArguments, params[i]);
 
       bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(parameters[i])), executable, parameters[i]));
     }
