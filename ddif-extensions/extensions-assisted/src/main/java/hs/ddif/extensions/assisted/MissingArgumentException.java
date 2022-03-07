@@ -1,4 +1,4 @@
-package hs.ddif.core.config.assisted;
+package hs.ddif.extensions.assisted;
 
 import java.util.Objects;
 

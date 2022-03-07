@@ -19,6 +19,7 @@
   <modules>
     <module>ddif-annotations</module>
     <module>ddif-core</module>
+    <module>ddif-extensions</module>
     <module>ddif-jakarta</module>
     <module>ddif-jsr330</module>
     <module>ddif-plugins</module>

@@ -1,4 +1,4 @@
-package hs.ddif.core.config.assisted;
+package hs.ddif.extensions.assisted;
 
 import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.ClassInjectableFactory;
