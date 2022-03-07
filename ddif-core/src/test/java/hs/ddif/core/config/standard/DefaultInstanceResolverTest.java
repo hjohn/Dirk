@@ -62,7 +62,7 @@ public class DefaultInstanceResolverTest {
     }
   };
 
-  private final TypeExtensionStore typeExtensionStore = TypeExtensionStores.create();
+  private final TypeExtensionStore typeExtensionStore = TypeExtensionStores.create(InjectableFactories.ANNOTATION_STRATEGY);
   private final InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
   private final InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);

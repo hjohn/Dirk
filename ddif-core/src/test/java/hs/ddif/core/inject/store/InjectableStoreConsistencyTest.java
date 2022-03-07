@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class InjectableStoreConsistencyTest {
   private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();
 
-  private TypeExtensionStore typeExtensionStore = TypeExtensionStores.create();
+  private TypeExtensionStore typeExtensionStore = TypeExtensionStores.create(InjectableFactories.ANNOTATION_STRATEGY);
   private InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
   private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
 

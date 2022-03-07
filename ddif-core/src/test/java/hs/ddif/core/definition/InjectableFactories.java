@@ -21,8 +21,8 @@ import javax.inject.Scope;
 import javax.inject.Singleton;
 
 public class InjectableFactories {
-  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, null);
-  private static final BindingProvider BINDING_PROVIDER = new BindingProvider(ANNOTATION_STRATEGY);
+  public static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, Opt.class);
+  public static final BindingProvider BINDING_PROVIDER = new BindingProvider(ANNOTATION_STRATEGY);
 
   private final ScopeResolverManager scopeResolverManager;
   private final DefaultInjectableFactory factory;

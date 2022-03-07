@@ -14,8 +14,8 @@ import java.util.List;
  *
  * Depending on which extensions are active, more candidates will be derived from
  * any given candidate when certain annotations or interfaces are implemented. For
- * example, registering a candidate which has {@link hs.ddif.annotations.Produces} annotated
- * members will also register the types produced. The same could apply to candidates
+ * example, registering a candidate which has produces annotated members will also
+ * register the types produced. The same could apply to candidates
  * implementing a provider interface.
  */
 public interface CandidateRegistry {

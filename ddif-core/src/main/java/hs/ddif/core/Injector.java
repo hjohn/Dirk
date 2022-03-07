@@ -51,7 +51,7 @@ import java.util.function.Predicate;
  * by providing a {@link ScopeResolver} during construction. Note that instances registered directly
  * are always treated as singletons as the injector has no way of creating these itself. If an
  * instance is complicated to construct, consider registering a provider or a class containing
- * {@link hs.ddif.annotations.Produces} annotated methods or fields.
+ * a producer annotated method or field.
  */
 public class Injector implements InstanceResolver, CandidateRegistry {
   private final InstanceResolver instanceResolver;

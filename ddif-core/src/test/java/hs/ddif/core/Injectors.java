@@ -75,7 +75,7 @@ public class Injectors {
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, SINGLETON);
 
     return new Injector(
-      TypeExtensionStores.create(),
+      TypeExtensionStores.create(ANNOTATION_STRATEGY),
       createDiscoveryFactory(injectableFactory, true),
       instanceInjectableFactory
     );
@@ -96,7 +96,7 @@ public class Injectors {
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, SINGLETON);
 
     return new Injector(
-      TypeExtensionStores.create(),
+      TypeExtensionStores.create(ANNOTATION_STRATEGY),
       createDiscoveryFactory(injectableFactory, false),
       instanceInjectableFactory
     );
