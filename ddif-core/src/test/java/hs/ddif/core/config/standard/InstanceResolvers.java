@@ -15,7 +15,7 @@ public class InstanceResolvers {
   private static final ClassInjectableFactory FACTORY = new InjectableFactories().forClass();
 
   public static DefaultInstanceResolver create() {
-    TypeExtensionStore typeExtensionStore = TypeExtensionStores.create();
+    TypeExtensionStore typeExtensionStore = TypeExtensionStores.create(InjectableFactories.ANNOTATION_STRATEGY);
     InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());

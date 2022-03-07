@@ -1,9 +1,7 @@
 package hs.ddif.core.instantiation;
 
-import hs.ddif.annotations.Opt;
 import hs.ddif.core.store.Key;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 
 /**
@@ -26,25 +24,4 @@ public interface TypeExtension<T> {
    */
   Instantiator<T> create(InstantiatorFactory instantiatorFactory, Key key, AnnotatedElement element);
 
-  /**
-   * Helper method to detect if an {@link AnnotatedElement} should be treated
-   * as optional.
-   *
-   * @param element an {@link AnnotatedElement}, cannot be {@code null}
-   * @return {@code true} if the element was optional, otherwise {@code false}
-   */
-  public static boolean isOptional(AnnotatedElement element) {
-    if(element != null) {
-      for(Annotation annotation : element.getAnnotations()) {
-        Class<? extends Annotation> annotationType = annotation.annotationType();
-        String simpleName = annotationType.getName();
-
-        if(simpleName.endsWith(".Nullable") || annotationType.equals(Opt.class)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
 }

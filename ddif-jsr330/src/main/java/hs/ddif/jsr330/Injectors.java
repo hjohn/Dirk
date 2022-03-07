@@ -6,6 +6,7 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.Injector;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
+import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.config.ListTypeExtension;
 import hs.ddif.core.config.ProducesInjectableExtension;
 import hs.ddif.core.config.ProviderInjectableExtension;
@@ -111,11 +112,11 @@ public class Injectors {
   private static TypeExtensionStore createTypeExtensionStore() {
     Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
 
-    typeExtensions.put(List.class, new ListTypeExtension<>());
-    typeExtensions.put(Set.class, new SetTypeExtension<>());
+    typeExtensions.put(List.class, new ListTypeExtension<>(ANNOTATION_STRATEGY));
+    typeExtensions.put(Set.class, new SetTypeExtension<>(ANNOTATION_STRATEGY));
     typeExtensions.put(Provider.class, new ProviderTypeExtension<>());
 
-    return new TypeExtensionStore(typeExtensions);
+    return new TypeExtensionStore(new DirectTypeExtension<>(ANNOTATION_STRATEGY), typeExtensions);
   }
 
   private static ScopeResolverManager createScopeResolverManager(SingletonScopeResolver singletonScopeResolver, ScopeResolver... scopeResolvers) {

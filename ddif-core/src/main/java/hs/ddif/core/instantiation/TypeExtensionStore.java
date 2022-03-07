@@ -9,7 +9,6 @@ import java.util.Set;
  * A store for {@link TypeExtension}s.
  */
 public class TypeExtensionStore {
-  private static final DirectTypeExtension<?> DEFAULT = new DirectTypeExtension<>();
 
   /**
    * Map containing {@link TypeExtension} by their supported type. Key {@code null}
@@ -17,17 +16,21 @@ public class TypeExtensionStore {
    */
   private final Map<Class<?>, TypeExtension<?>> typeExtensions;
 
+  private final TypeExtension<?> defaultExtension;
+
   /**
    * Constructs a new instance.
    *
+   * @param defaultExtension a default {@link TypeExtension} used when there is no type match, cannot be {@code null}
    * @param typeExtensions a map of {@link TypeExtension}s, cannot be {@code null} but can be empty
    */
-  public TypeExtensionStore(Map<Class<?>, TypeExtension<?>> typeExtensions) {
+  public TypeExtensionStore(TypeExtension<?> defaultExtension, Map<Class<?>, TypeExtension<?>> typeExtensions) {
     Map<Class<?>, TypeExtension<?>> map = new HashMap<>();
 
     map.putAll(typeExtensions);
 
     this.typeExtensions = Collections.unmodifiableMap(map);
+    this.defaultExtension = defaultExtension;
   }
 
   /**
@@ -51,7 +54,7 @@ public class TypeExtensionStore {
     TypeExtension<?> extension = typeExtensions.get(cls);
 
     if(extension == null) {
-      extension = DEFAULT;
+      extension = defaultExtension;
     }
 
     @SuppressWarnings("unchecked")

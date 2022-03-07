@@ -1,5 +1,6 @@
 package hs.ddif.core.config;
 
+import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.Instantiator;
 import hs.ddif.core.instantiation.InstantiatorFactory;
@@ -26,10 +27,21 @@ public class SetTypeExtension<T> implements TypeExtension<Set<T>> {
   private static final TypeVariable<?> TYPE_VARIABLE = Set.class.getTypeParameters()[0];
   private static final Set<TypeTrait> NONE = EnumSet.noneOf(TypeTrait.class);
 
+  private final AnnotationStrategy annotationStrategy;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param annotationStrategy an {@link AnnotationStrategy}, cannot be {@code null}
+   */
+  public SetTypeExtension(AnnotationStrategy annotationStrategy) {
+    this.annotationStrategy = annotationStrategy;
+  }
+
   @Override
   public Instantiator<Set<T>> create(InstantiatorFactory factory, Key key, AnnotatedElement element) {
     Key elementKey = new Key(Types.getTypeParameter(key.getType(), Set.class, TYPE_VARIABLE), key.getQualifiers());
-    boolean optional = TypeExtension.isOptional(element);
+    boolean optional = annotationStrategy.isOptional(element);
 
     return new Instantiator<>() {
       @Override
