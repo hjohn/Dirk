@@ -1,4 +1,4 @@
-package hs.ddif.core.config.assisted;
+package hs.ddif.extensions.assisted;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;

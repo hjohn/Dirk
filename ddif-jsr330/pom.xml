@@ -13,8 +13,19 @@
   <dependencies>
     <dependency>
       <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-annotations</artifactId>
+      <version>${revision}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
       <artifactId>ddif-core</artifactId>
       <version>${revision}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.hjohn.ddif.extensions</groupId>
+      <artifactId>extensions-assisted</artifactId>
+      <version>${revision}</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>javax.annotation</groupId>

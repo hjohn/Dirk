@@ -1,7 +1,5 @@
 package hs.ddif.jakarta;
 
-import hs.ddif.annotations.Argument;
-import hs.ddif.annotations.Assisted;
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.Injector;
@@ -11,9 +9,6 @@ import hs.ddif.core.config.ListTypeExtension;
 import hs.ddif.core.config.ProducesInjectableExtension;
 import hs.ddif.core.config.ProviderInjectableExtension;
 import hs.ddif.core.config.SetTypeExtension;
-import hs.ddif.core.config.assisted.AssistedAnnotationStrategy;
-import hs.ddif.core.config.assisted.AssistedInjectableExtension;
-import hs.ddif.core.config.assisted.ConfigurableAssistedAnnotationStrategy;
 import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.AnnotationBasedLifeCycleCallbacksFactory;
@@ -33,13 +28,15 @@ import hs.ddif.core.instantiation.TypeExtensionStore;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.ScopeResolverManager;
 import hs.ddif.core.util.Annotations;
+import hs.ddif.core.util.Classes;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import jakarta.annotation.PostConstruct;
@@ -54,11 +51,10 @@ import jakarta.inject.Singleton;
  * Factory for {@link Injector}s of various types.
  */
 public class Injectors {
-  private static final Inject INJECT = Annotations.of(Inject.class);
+  private static final Logger LOGGER = Logger.getLogger(Injectors.class.getName());
   private static final Singleton SINGLETON = Annotations.of(Singleton.class);
   private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, Opt.class);
   private static final Method PROVIDER_METHOD;
-  private static final AssistedAnnotationStrategy<?> ASSISTED_ANNOTATION_STRATEGY = new ConfigurableAssistedAnnotationStrategy<>(Assisted.class, Argument.class, Injectors::extractArgumentName, INJECT, Provider.class, Provider::get);
 
   static {
     try {
@@ -133,19 +129,18 @@ public class Injectors {
     MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, injectableFactory);
     FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
 
-    List<InjectableExtension> injectableExtensions = List.of(
-      new ProviderInjectableExtension(PROVIDER_METHOD, methodInjectableFactory),
-      new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory, Produces.class),
-      new AssistedInjectableExtension(classInjectableFactory, ASSISTED_ANNOTATION_STRATEGY)
-    );
+    List<InjectableExtension> injectableExtensions = new ArrayList<>();
+
+    injectableExtensions.add(new ProviderInjectableExtension(PROVIDER_METHOD, methodInjectableFactory));
+    injectableExtensions.add(new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory, Produces.class));
+
+    if(Classes.isAvailable("hs.ddif.extensions.assisted.AssistedInjectableExtension")) {
+      LOGGER.info("Using AssistedInjectableExtension found on classpath");
+
+      injectableExtensions.add(AssistedInjectableExtensionSupport.create(classInjectableFactory));
+    }
 
     return new DefaultDiscovererFactory(autoDiscovery, injectableExtensions, classInjectableFactory);
-  }
-
-  private static String extractArgumentName(AnnotatedElement element) {
-    Argument annotation = element.getAnnotation(Argument.class);
-
-    return annotation == null ? null : annotation.value();
   }
 }
 
