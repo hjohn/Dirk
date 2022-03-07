@@ -1,6 +1,5 @@
 package hs.ddif.core.config;
 
-import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
@@ -17,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Extension which looks for members annotated with {@link Produces}, and if found creates
+ * Extension which looks for members annotated with a produces annotation, and if found creates
  * {@link Injectable}s for them.
  */
 public class ProducesInjectableExtension implements InjectableExtension {
