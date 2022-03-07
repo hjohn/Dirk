@@ -15,7 +15,6 @@ import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Nested;
@@ -26,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class InjectableStoreConsistencyTest {
@@ -254,7 +254,7 @@ public class InjectableStoreConsistencyTest {
 
   public static class C {
     @Inject B b;
-    @Inject @Opt Supplier<D> d;  // not a circular dependency, and not required
+    @Inject @Opt Provider<D> d;  // not a circular dependency, and not required
   }
 
   public static class D {
@@ -290,8 +290,8 @@ public class InjectableStoreConsistencyTest {
   }
 
   public static class M {
-    @Inject Supplier<N> n;
-    @Inject @Opt Supplier<O> o;
+    @Inject Provider<N> n;
+    @Inject @Opt Provider<O> o;
   }
 
   public static class N {

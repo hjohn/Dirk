@@ -10,8 +10,6 @@ import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.NoSuchKeyException;
 
-import java.util.function.Supplier;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
@@ -20,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 public class ProviderInjectableExtensionInjectorTest {
   private Injector injector = Injectors.manual();
@@ -104,7 +103,7 @@ public class ProviderInjectableExtensionInjectorTest {
 
   @Test
   void shouldRejectInjectingNullFromProvider() {
-    Supplier<B> providerInstance = new Supplier<>() {
+    Provider<B> providerInstance = new Provider<>() {
       @Override
       public B get() {
         return null;  // breaks contract to do this
@@ -125,7 +124,7 @@ public class ProviderInjectableExtensionInjectorTest {
       .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
 
-    Supplier<B> provider = injector.getInstance(TypeUtils.parameterize(Supplier.class, B.class));
+    Provider<B> provider = injector.getInstance(TypeUtils.parameterize(Provider.class, B.class));
 
     /*
      * Providers are always wrapped, so requesting one directly should not
@@ -166,7 +165,7 @@ public class ProviderInjectableExtensionInjectorTest {
 
   @Test
   void shouldAllowInjectingNullFromProviderIfOptional() {
-    injector.registerInstance(new Supplier<B>() {
+    injector.registerInstance(new Provider<B>() {
       @Override
       public B get() {
         return null;  // breaks contract to do this
@@ -181,7 +180,7 @@ public class ProviderInjectableExtensionInjectorTest {
     assertThat(instance.b).isNull();
   }
 
-  public static class A implements Supplier<B> {
+  public static class A implements Provider<B> {
     @Override
     public B get() {
       return new B();
@@ -195,7 +194,7 @@ public class ProviderInjectableExtensionInjectorTest {
     @Inject B b;
   }
 
-  public static class D implements Supplier<B> {
+  public static class D implements Provider<B> {
     @Override
     public B get() {
       return new B();
@@ -203,7 +202,7 @@ public class ProviderInjectableExtensionInjectorTest {
   }
 
   public static class E {
-    @Inject Supplier<B> b;
+    @Inject Provider<B> b;
   }
 
   public static class F {

@@ -1,14 +1,14 @@
 package hs.ddif.core.test.injectables;
 
 import java.util.Set;
-import java.util.function.Supplier;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 public class BeanWithCollectionProvider {
 
   @Inject
-  private Supplier<Set<SimpleCollectionItemInterface>> beans;
+  private Provider<Set<SimpleCollectionItemInterface>> beans;
 
   public Set<SimpleCollectionItemInterface> getInjectedValues() {
     return beans.get();

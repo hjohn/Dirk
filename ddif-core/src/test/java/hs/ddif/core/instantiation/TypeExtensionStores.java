@@ -1,6 +1,6 @@
 package hs.ddif.core.instantiation;
 
-import hs.ddif.core.SupplierTypeExtension;
+import hs.ddif.core.ProviderTypeExtension;
 import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.config.ListTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
@@ -10,7 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
+
+import jakarta.inject.Provider;
 
 public class TypeExtensionStores {
 
@@ -19,7 +20,7 @@ public class TypeExtensionStores {
 
     typeExtensions.put(List.class, new ListTypeExtension<>(annotationStrategy));
     typeExtensions.put(Set.class, new SetTypeExtension<>(annotationStrategy));
-    typeExtensions.put(Supplier.class, new SupplierTypeExtension<>());
+    typeExtensions.put(Provider.class, new ProviderTypeExtension<>());
 
     return new TypeExtensionStore(new DirectTypeExtension<>(annotationStrategy), typeExtensions);
   }

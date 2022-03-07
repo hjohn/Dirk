@@ -18,7 +18,6 @@ import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -39,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
@@ -750,7 +750,7 @@ public class ProducesAnnotationTest {
 
   public static class P {
     @Produces
-    Supplier<Q> create() {
+    Provider<Q> create() {
       return () -> new Q();
     }
   }
@@ -765,7 +765,7 @@ public class ProducesAnnotationTest {
     }
   }
 
-  static class S implements Supplier<Q> {
+  static class S implements Provider<Q> {
     @Override
     public Q get() {
       return new Q();
