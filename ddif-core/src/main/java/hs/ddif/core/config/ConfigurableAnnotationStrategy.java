@@ -21,6 +21,7 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
   private final List<Class<? extends Annotation>> injectAnnotations;
   private final List<Class<? extends Annotation>> qualifierAnnotations;
   private final List<Class<? extends Annotation>> scopeAnnotations;
+  private final List<Class<? extends Annotation>> optionalAnnotations;
 
   /**
    * Constructs a new instance.
@@ -28,8 +29,9 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
    * @param injectAnnotations a list of inject annotation {@link Class}es, cannot be {@code null}, contain {@code null}s or be empty
    * @param qualifierAnnotations a list of qualifier annotation {@link Class}es, cannot be {@code null}, contain {@code null}s or be empty
    * @param scopeAnnotations a list of scope annotation {@link Class}es, cannot be {@code null}, contain {@code null}s or be empty
+   * @param optionalAnnotations a list of optional annotation {@link Class}es, cannot be {@code null}, contain {@code null}s but can be empty
    */
-  public ConfigurableAnnotationStrategy(List<Class<? extends Annotation>> injectAnnotations, List<Class<? extends Annotation>> qualifierAnnotations, List<Class<? extends Annotation>> scopeAnnotations) {
+  public ConfigurableAnnotationStrategy(List<Class<? extends Annotation>> injectAnnotations, List<Class<? extends Annotation>> qualifierAnnotations, List<Class<? extends Annotation>> scopeAnnotations, List<Class<? extends Annotation>> optionalAnnotations) {
     if(injectAnnotations == null || injectAnnotations.isEmpty()) {
       throw new IllegalArgumentException("injectAnnotations cannot be null or empty: " + injectAnnotations);
     }
@@ -39,10 +41,14 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
     if(scopeAnnotations == null || scopeAnnotations.isEmpty()) {
       throw new IllegalArgumentException("scopeAnnotations cannot be null or empty: " + injectAnnotations);
     }
+    if(optionalAnnotations == null) {
+      throw new IllegalArgumentException("optionalAnnotations cannot be null");
+    }
 
     this.injectAnnotations = new ArrayList<>(injectAnnotations);
     this.qualifierAnnotations = new ArrayList<>(qualifierAnnotations);
     this.scopeAnnotations = new ArrayList<>(scopeAnnotations);
+    this.optionalAnnotations = new ArrayList<>(optionalAnnotations);
   }
 
   /**
@@ -51,16 +57,34 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
    * @param inject an inject annotation {@link Class} to use, cannot be {@code null}
    * @param qualifier a qualifier annotation {@link Class} to use, cannot be {@code null}
    * @param scope a scope annotation {@link Class} to use, cannot be {@code null}
+   * @param optional an optional annotation {@link Class} to use, can be {@code null}
    */
-  public ConfigurableAnnotationStrategy(Class<? extends Annotation> inject, Class<? extends Annotation> qualifier, Class<? extends Annotation> scope) {
+  public ConfigurableAnnotationStrategy(Class<? extends Annotation> inject, Class<? extends Annotation> qualifier, Class<? extends Annotation> scope, Class<? extends Annotation> optional) {
     this.injectAnnotations = List.of(Objects.requireNonNull(inject, "inject cannot be null"));
     this.qualifierAnnotations = List.of(Objects.requireNonNull(qualifier, "qualifier cannot be null"));
     this.scopeAnnotations = List.of(Objects.requireNonNull(scope, "scope cannot be null"));
+    this.optionalAnnotations = optional == null ? List.of() : List.of(optional);
   }
 
   @Override
   public boolean isInjectAnnotated(AnnotatedElement element) {
     return isAnnotated(injectAnnotations, element);
+  }
+
+  @Override
+  public boolean isOptional(AnnotatedElement element) {
+    if(element != null) {
+      for(Annotation annotation : element.getAnnotations()) {
+        Class<? extends Annotation> annotationType = annotation.annotationType();
+        String simpleName = annotationType.getName();
+
+        if(simpleName.endsWith(".Nullable") || optionalAnnotations.contains(annotationType)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   @Override

@@ -1,5 +1,6 @@
 package hs.ddif.core.definition;
 
+import hs.ddif.annotations.Opt;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.AnnotationBasedLifeCycleCallbacksFactory;
@@ -20,7 +21,7 @@ import javax.inject.Scope;
 import javax.inject.Singleton;
 
 public class InjectableFactories {
-  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class);
+  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, null);
   private static final BindingProvider BINDING_PROVIDER = new BindingProvider(ANNOTATION_STRATEGY);
 
   private final ScopeResolverManager scopeResolverManager;

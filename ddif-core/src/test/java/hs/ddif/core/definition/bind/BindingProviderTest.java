@@ -30,7 +30,7 @@ public class BindingProviderTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation GREEN = Annotations.of(Green.class);
 
-  private BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class));
+  private BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, null));
 
   @Test
   public void ofMembersShouldBindToGenericFieldInSubclass() throws Exception {

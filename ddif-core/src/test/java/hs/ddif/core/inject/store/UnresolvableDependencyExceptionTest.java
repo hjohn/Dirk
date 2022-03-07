@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class UnresolvableDependencyExceptionTest {
   private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();
-  private final BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class));
+  private final BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, null));
 
   @Test
   void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException, BadQualifiedTypeException {
