@@ -3,14 +3,14 @@ package hs.ddif.core.definition;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import jakarta.inject.Inject;
 
 public class MethodInjectableFactoryTest {
   private final MethodInjectableFactory factory = new InjectableFactories().forMethod();
@@ -73,7 +73,7 @@ public class MethodInjectableFactoryTest {
   void createShouldRejectMethodAnnotatedWithInject() {
     assertThatThrownBy(() -> factory.create(A.class.getDeclaredMethod("c"), A.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [java.lang.String hs.ddif.core.definition.MethodInjectableFactoryTest$A.c()] should not have an inject annotation, but found: [@javax.inject.Inject()]")
+      .hasMessage("Method [java.lang.String hs.ddif.core.definition.MethodInjectableFactoryTest$A.c()] should not have an inject annotation, but found: [@jakarta.inject.Inject()]")
       .hasNoCause();
   }
 

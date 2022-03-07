@@ -18,11 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Qualifier;
-import javax.inject.Singleton;
-
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -34,6 +29,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Qualifier;
+import jakarta.inject.Singleton;
 
 public class InjectorProviderTest {
   private Injector injector = Injectors.manual();

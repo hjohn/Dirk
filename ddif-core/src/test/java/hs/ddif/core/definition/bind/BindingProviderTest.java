@@ -12,12 +12,6 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Qualifier;
-import javax.inject.Scope;
-import javax.inject.Singleton;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
@@ -25,6 +19,12 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
+import jakarta.inject.Singleton;
 
 public class BindingProviderTest {
   private static final Annotation RED = Annotations.of(Red.class);
@@ -151,7 +151,7 @@ public class BindingProviderTest {
   public void ofMembersShouldRejectScopeAnnotations() {
     assertThatThrownBy(() -> bindingProvider.ofMembers(ClassG.class))
       .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Method [void hs.ddif.core.definition.bind.BindingProviderTest$ClassG.setter(int)] of [class hs.ddif.core.definition.bind.BindingProviderTest$ClassG] should not be annotated with a scope annotation when it is annotated with an inject annotation: [@javax.inject.Singleton()]")
+      .hasMessage("Method [void hs.ddif.core.definition.bind.BindingProviderTest$ClassG.setter(int)] of [class hs.ddif.core.definition.bind.BindingProviderTest$ClassG] should not be annotated with a scope annotation when it is annotated with an inject annotation: [@jakarta.inject.Singleton()]")
       .hasNoCause();
   }
 

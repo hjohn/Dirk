@@ -13,13 +13,13 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import jakarta.inject.Inject;
 
 public class InjectorStoreConsistencyPolicyStressTest {
   private final Random rnd = new Random(4);

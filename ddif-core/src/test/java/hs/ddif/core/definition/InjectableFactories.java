@@ -13,12 +13,12 @@ import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Annotation;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.inject.Qualifier;
-import javax.inject.Scope;
-import javax.inject.Singleton;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
+import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
+import jakarta.inject.Singleton;
 
 public class InjectableFactories {
   public static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, Opt.class);

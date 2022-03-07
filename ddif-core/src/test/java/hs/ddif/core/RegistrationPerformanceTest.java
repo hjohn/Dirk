@@ -3,10 +3,10 @@ package hs.ddif.core;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import jakarta.inject.Inject;
 
 public class RegistrationPerformanceTest {
   private Injector injector = Injectors.manual();

@@ -18,8 +18,6 @@ import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Nested;
@@ -27,6 +25,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import jakarta.inject.Inject;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class DefaultDiscovererFactoryTest {

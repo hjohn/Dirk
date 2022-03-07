@@ -20,9 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class ProducesAnnotationTest {
@@ -80,7 +80,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectBadlyAnnotatedProducesField() {
     assertThatThrownBy(() -> injector.register(BadFactory1.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Field [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory1.size] should not have an inject annotation, but found: [@javax.inject.Inject()]")
+      .hasMessage("Field [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory1.size] should not have an inject annotation, but found: [@jakarta.inject.Inject()]")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));
@@ -90,7 +90,7 @@ public class ProducesAnnotationTest {
   void registerShouldRejectBadlyAnnotatedProducesMethod() {
     assertThatThrownBy(() -> injector.register(BadFactory2.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory2.create(java.lang.Double)] should not have an inject annotation, but found: [@javax.inject.Inject()]")
+      .hasMessage("Method [java.lang.Integer hs.ddif.core.ProducesAnnotationTest$BadFactory2.create(java.lang.Double)] should not have an inject annotation, but found: [@jakarta.inject.Inject()]")
       .hasNoCause();
 
     assertFalse(injector.contains(Object.class));

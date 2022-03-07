@@ -3,14 +3,14 @@ package hs.ddif.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 public class LifeCycleTest {
   private static final List<Class<?>> POST_CONSTRUCTS = new ArrayList<>();

@@ -35,12 +35,12 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.inject.Qualifier;
-import javax.inject.Scope;
-import javax.inject.Singleton;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
+import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
+import jakarta.inject.Singleton;
 
 /**
  * Factory for {@link Injector}s of various types.

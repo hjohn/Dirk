@@ -7,13 +7,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import jakarta.inject.Inject;
 
 public class InjectorGenericsTest {
   private Injector injector;

@@ -13,10 +13,6 @@ import hs.ddif.core.test.scope.TestScope;
 import java.lang.annotation.Annotation;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,6 +22,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 public class InjectorScopeTest {
 
@@ -176,7 +176,7 @@ public class InjectorScopeTest {
           assertThat(throwable.getSuppressed()).hasSize(1);
           assertThat(throwable.getSuppressed()[0])
             .isExactlyInstanceOf(DefinitionException.class)
-            .hasMessage("[class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@hs.ddif.core.test.scope.TestScope(), @javax.inject.Singleton()]")
+            .hasMessage("[class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@hs.ddif.core.test.scope.TestScope(), @jakarta.inject.Singleton()]")
             .hasNoCause();
         })
         .hasNoCause();
