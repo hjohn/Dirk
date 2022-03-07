@@ -18,18 +18,18 @@ import java.util.stream.Stream;
  * annotations used to control injection.
  */
 public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
-  private final List<Annotation> injectAnnotations;
-  private final List<Annotation> qualifierAnnotations;
-  private final List<Annotation> scopeAnnotations;
+  private final List<Class<? extends Annotation>> injectAnnotations;
+  private final List<Class<? extends Annotation>> qualifierAnnotations;
+  private final List<Class<? extends Annotation>> scopeAnnotations;
 
   /**
    * Constructs a new instance.
    *
-   * @param injectAnnotations a list of inject {@link Annotation}s, cannot be {@code null}, contain {@code null}s or be empty
-   * @param qualifierAnnotations a list of qualifier {@link Annotation}s, cannot be {@code null}, contain {@code null}s or be empty
-   * @param scopeAnnotations a list of scope {@link Annotation}s, cannot be {@code null}, contain {@code null}s or be empty
+   * @param injectAnnotations a list of inject annotation {@link Class}es, cannot be {@code null}, contain {@code null}s or be empty
+   * @param qualifierAnnotations a list of qualifier annotation {@link Class}es, cannot be {@code null}, contain {@code null}s or be empty
+   * @param scopeAnnotations a list of scope annotation {@link Class}es, cannot be {@code null}, contain {@code null}s or be empty
    */
-  public ConfigurableAnnotationStrategy(List<Annotation> injectAnnotations, List<Annotation> qualifierAnnotations, List<Annotation> scopeAnnotations) {
+  public ConfigurableAnnotationStrategy(List<Class<? extends Annotation>> injectAnnotations, List<Class<? extends Annotation>> qualifierAnnotations, List<Class<? extends Annotation>> scopeAnnotations) {
     if(injectAnnotations == null || injectAnnotations.isEmpty()) {
       throw new IllegalArgumentException("injectAnnotations cannot be null or empty: " + injectAnnotations);
     }
@@ -48,11 +48,11 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
   /**
    * Constructs a new instance.
    *
-   * @param inject an inject {@link Annotation} to use, cannot be {@code null}
-   * @param qualifier a qualifier {@link Annotation} to use, cannot be {@code null}
-   * @param scope a scope {@link Annotation} to use, cannot be {@code null}
+   * @param inject an inject annotation {@link Class} to use, cannot be {@code null}
+   * @param qualifier a qualifier annotation {@link Class} to use, cannot be {@code null}
+   * @param scope a scope annotation {@link Class} to use, cannot be {@code null}
    */
-  public ConfigurableAnnotationStrategy(Annotation inject, Annotation qualifier, Annotation scope) {
+  public ConfigurableAnnotationStrategy(Class<? extends Annotation> inject, Class<? extends Annotation> qualifier, Class<? extends Annotation> scope) {
     this.injectAnnotations = List.of(Objects.requireNonNull(inject, "inject cannot be null"));
     this.qualifierAnnotations = List.of(Objects.requireNonNull(qualifier, "qualifier cannot be null"));
     this.scopeAnnotations = List.of(Objects.requireNonNull(scope, "scope cannot be null"));
@@ -65,7 +65,7 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
 
   @Override
   public Set<Annotation> getInjectAnnotations(AnnotatedElement element) {
-    return Stream.of(element.getAnnotations()).filter(injectAnnotations::contains).collect(Collectors.toSet());
+    return Stream.of(element.getAnnotations()).filter(a -> injectAnnotations.contains(a.annotationType())).collect(Collectors.toSet());
   }
 
   @Override
@@ -83,9 +83,9 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
     return isAnnotated(qualifierAnnotations, annotation.annotationType());
   }
 
-  private static boolean isAnnotated(List<Annotation> annotations, AnnotatedElement element) {
+  private static boolean isAnnotated(List<Class<? extends Annotation>> annotations, AnnotatedElement element) {
     for(int i = 0, size = annotations.size(); i < size; i++) {
-      if(element.isAnnotationPresent(annotations.get(i).annotationType())) {
+      if(element.isAnnotationPresent(annotations.get(i))) {
         return true;
       }
     }
@@ -93,7 +93,7 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
     return false;
   }
 
-  private static Set<Annotation> getAnnotations(List<Annotation> annotations, AnnotatedElement element) {
+  private static Set<Annotation> getAnnotations(List<Class<? extends Annotation>> annotations, AnnotatedElement element) {
     Set<Annotation> matchingAnnotations = new HashSet<>();
 
     for(int i = 0, size = annotations.size(); i < size; i++) {
