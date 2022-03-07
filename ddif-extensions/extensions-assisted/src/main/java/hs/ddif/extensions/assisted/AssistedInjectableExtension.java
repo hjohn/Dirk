@@ -80,7 +80,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
       throw new DefinitionException(factoryClass, "must have a single abstract method to qualify for assisted injection");
     }
 
-    Type returnType = Types.unrollVariables(Types.getTypeArguments(type, factoryMethod.getDeclaringClass()), factoryMethod.getGenericReturnType());
+    Type returnType = Types.resolveVariables(Types.getTypeArguments(type, factoryMethod.getDeclaringClass()), factoryMethod.getGenericReturnType());
 
     if(returnType == null) {
       throw new DefinitionException(factoryMethod, "must not have unresolvable type variables to qualify for assisted injection: " + Arrays.toString(factoryClass.getTypeParameters()));

@@ -93,7 +93,7 @@ public class BindingProvider {
             }
           }
 
-          Type type = Types.unrollVariables(typeArguments, field.getGenericType());
+          Type type = Types.resolveVariables(typeArguments, field.getGenericType());
 
           bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(field)), field, null));
         }
@@ -220,7 +220,7 @@ public class BindingProvider {
     }
 
     for(int i = 0; i < parameters.length; i++) {
-      Type type = Types.unrollVariables(typeArguments, params[i]);
+      Type type = Types.resolveVariables(typeArguments, params[i]);
 
       bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(parameters[i])), executable, parameters[i]));
     }
