@@ -20,7 +20,7 @@ import javax.inject.Scope;
 import javax.inject.Singleton;
 
 public class InjectableFactories {
-  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Annotations.of(Inject.class), Annotations.of(Qualifier.class), Annotations.of(Scope.class));
+  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class);
   private static final BindingProvider BINDING_PROVIDER = new BindingProvider(ANNOTATION_STRATEGY);
 
   private final ScopeResolverManager scopeResolverManager;

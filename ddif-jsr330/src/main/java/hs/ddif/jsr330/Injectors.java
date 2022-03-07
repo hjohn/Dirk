@@ -53,10 +53,8 @@ import javax.inject.Singleton;
  */
 public class Injectors {
   private static final Inject INJECT = Annotations.of(Inject.class);
-  private static final Qualifier QUALIFIER = Annotations.of(Qualifier.class);
-  private static final Scope SCOPE = Annotations.of(Scope.class);
   private static final Singleton SINGLETON = Annotations.of(Singleton.class);
-  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(INJECT, QUALIFIER, SCOPE);
+  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class);
   private static final Method PROVIDER_METHOD;
   private static final AssistedAnnotationStrategy<?> ASSISTED_ANNOTATION_STRATEGY = new ConfigurableAssistedAnnotationStrategy<>(Assisted.class, Argument.class, Injectors::extractArgumentName, INJECT, Provider.class, Provider::get);
 
