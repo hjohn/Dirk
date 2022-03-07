@@ -24,9 +24,6 @@ import java.util.RandomAccess;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +35,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 public class QualifiedTypeStoreTest {
   private static final Annotation RED = Annotations.of(Red.class);
@@ -109,7 +109,7 @@ public class QualifiedTypeStoreTest {
 
     assertThatThrownBy(() -> store.put(instanceInjectableFactory.create(new String("a"), named("parameter-a"))))
       .isExactlyInstanceOf(DuplicateKeyException.class)
-      .hasMessage("[@javax.inject.Named(value=parameter-a) java.lang.String] is already present")
+      .hasMessage("[@jakarta.inject.Named(value=parameter-a) java.lang.String] is already present")
       .hasNoCause();
   }
 

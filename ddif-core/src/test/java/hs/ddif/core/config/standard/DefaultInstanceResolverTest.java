@@ -34,10 +34,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Scope;
-import javax.inject.Singleton;
-
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -48,6 +44,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import jakarta.inject.Named;
+import jakarta.inject.Scope;
+import jakarta.inject.Singleton;
 
 public class DefaultInstanceResolverTest {
   private final AbstractScopeResolver<String> scopeResolver = new AbstractScopeResolver<>() {

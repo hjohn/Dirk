@@ -10,9 +10,6 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.Collections;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +17,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 public class ClassInjectableFactoryTest {
   private final InjectableFactories injectableFactories = new InjectableFactories();
@@ -114,7 +114,7 @@ public class ClassInjectableFactoryTest {
   public void createShouldRejectInjectableClassWithMultipleScopes() {
     assertThatThrownBy(() -> factory.create(ClassWithMultipleScopes.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithMultipleScopes] cannot have multiple scope annotations, but found: [@hs.ddif.core.test.scope.TestScope(), @javax.inject.Singleton()]")
+      .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithMultipleScopes] cannot have multiple scope annotations, but found: [@hs.ddif.core.test.scope.TestScope(), @jakarta.inject.Singleton()]")
       .hasNoCause();
   }
 
@@ -167,7 +167,6 @@ public class ClassInjectableFactoryTest {
   }
 
   public static class ClassWithAnnotatedFinalField {
-    @SuppressWarnings("unused")
     @Inject private final String a = "";
   }
 

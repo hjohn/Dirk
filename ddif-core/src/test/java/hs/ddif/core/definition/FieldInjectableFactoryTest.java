@@ -2,14 +2,14 @@ package hs.ddif.core.definition;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import jakarta.inject.Inject;
 
 public class FieldInjectableFactoryTest {
   private final FieldInjectableFactory factory = new InjectableFactories().forField();
@@ -61,7 +61,7 @@ public class FieldInjectableFactoryTest {
   void createShouldRejectFieldAnnotatedWithInject() {
     assertThatThrownBy(() -> factory.create(A.class.getDeclaredField("c"), A.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Field [java.lang.String hs.ddif.core.definition.FieldInjectableFactoryTest$A.c] should not have an inject annotation, but found: [@javax.inject.Inject()]")
+      .hasMessage("Field [java.lang.String hs.ddif.core.definition.FieldInjectableFactoryTest$A.c] should not have an inject annotation, but found: [@jakarta.inject.Inject()]")
       .hasNoCause();
   }
 

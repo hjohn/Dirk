@@ -1,9 +1,8 @@
 package hs.ddif.core.test.injectables;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class SampleWithAnnotatedFinalFields {
-  @SuppressWarnings("unused")
   @Inject
   private final SampleWithoutConstructor a;
 

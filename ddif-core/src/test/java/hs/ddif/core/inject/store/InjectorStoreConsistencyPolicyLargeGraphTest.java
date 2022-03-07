@@ -27,12 +27,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-
 import org.junit.jupiter.api.Test;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 public class InjectorStoreConsistencyPolicyLargeGraphTest {
   private final Random rnd = new Random(4);

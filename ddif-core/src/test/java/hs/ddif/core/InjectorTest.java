@@ -63,10 +63,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,6 +76,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 public class InjectorTest {
   private Injector injector;
@@ -859,7 +859,6 @@ public class InjectorTest {
   }
 
   public static class BeanDependentOnBeanWithBadPostConstruct {
-    @SuppressWarnings("unused")
     @Inject private BeanWithBadPostConstruct dependency;
   }
 

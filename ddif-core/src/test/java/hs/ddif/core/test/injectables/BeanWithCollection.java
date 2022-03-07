@@ -2,7 +2,7 @@ package hs.ddif.core.test.injectables;
 
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class BeanWithCollection {
 

@@ -1,9 +1,9 @@
 package hs.ddif.core.test.injectables;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
 
 public class BeanWithPostConstruct extends ParentBeanWithPostConstruct {
   @Inject private String test;

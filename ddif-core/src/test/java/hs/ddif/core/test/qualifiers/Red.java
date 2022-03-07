@@ -1,9 +1,13 @@
 package hs.ddif.core.test.qualifiers;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-@java.lang.annotation.Documented
-@java.lang.annotation.Retention(RetentionPolicy.RUNTIME)
-@javax.inject.Qualifier
+import jakarta.inject.Qualifier;
+
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Qualifier
 public @interface Red {
 }

@@ -16,9 +16,6 @@ import hs.ddif.core.test.injectables.SimpleBean;
 
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +24,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 public class InjectorDiscoveryTest {
   private Injector injector = Injectors.autoDiscovering();
@@ -145,7 +145,7 @@ public class InjectorDiscoveryTest {
       .hasMessage("[hs.ddif.core.InjectorDiscoveryTest$G] instantiation failed because auto discovery was unable to resolve all dependencies; found: [Injectable[hs.ddif.core.InjectorDiscoveryTest$G]]")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessageMatching(Pattern.quote("Missing dependency [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A] required for Field [@javax.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a]"))
+      .hasMessageMatching(Pattern.quote("Missing dependency [@jakarta.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A] required for Field [@jakarta.inject.Named(") + "(value=)?" + Pattern.quote("\"some-qualifier\") hs.ddif.core.InjectorDiscoveryTest$A hs.ddif.core.InjectorDiscoveryTest$G.a]"))
       .hasNoCause();
   }
 

@@ -1,6 +1,6 @@
 package hs.ddif.core.test.injectables;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 public class ParentBeanWithPostConstruct {
   protected int postConstructOrderVerifier = 2;

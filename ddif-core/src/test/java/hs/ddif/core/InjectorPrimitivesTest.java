@@ -1,10 +1,10 @@
 package hs.ddif.core;
 
-import javax.inject.Inject;
-
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import jakarta.inject.Inject;
 
 public class InjectorPrimitivesTest {
   private Injector injector = Injectors.manual();

@@ -9,14 +9,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.inject.Singleton;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import jakarta.inject.Singleton;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class QualifiedTypeTest {
@@ -50,7 +49,7 @@ public class QualifiedTypeTest {
 
     assertThatThrownBy(() -> new QualifiedType(void.class, Set.of(Annotations.of(Singleton.class))))
       .isExactlyInstanceOf(BadQualifiedTypeException.class)
-      .hasMessage("[@javax.inject.Singleton() java.lang.Void] cannot be void or Void")
+      .hasMessage("[@jakarta.inject.Singleton() java.lang.Void] cannot be void or Void")
       .hasNoCause();
 
     assertThatThrownBy(() -> new QualifiedType(List.class))

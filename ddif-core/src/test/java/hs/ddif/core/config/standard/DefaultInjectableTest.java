@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.inject.Singleton;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
+import jakarta.inject.Singleton;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class DefaultInjectableTest {

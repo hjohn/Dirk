@@ -5,7 +5,7 @@ import hs.ddif.core.util.Annotations;
 
 import java.util.stream.Stream;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 public class ScopeResolverManagers {
 

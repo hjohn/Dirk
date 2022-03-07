@@ -15,14 +15,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Qualifier;
-import javax.inject.Scope;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
 
 public class UnresolvableDependencyExceptionTest {
   private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();

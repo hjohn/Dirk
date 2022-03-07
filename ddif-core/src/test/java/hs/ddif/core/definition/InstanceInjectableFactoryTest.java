@@ -4,12 +4,12 @@ import hs.ddif.core.util.Annotations;
 
 import java.util.List;
 
-import javax.inject.Singleton;
-
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import jakarta.inject.Singleton;
 
 public class InstanceInjectableFactoryTest {
   private final InjectableFactories injectableFactories = new InjectableFactories();

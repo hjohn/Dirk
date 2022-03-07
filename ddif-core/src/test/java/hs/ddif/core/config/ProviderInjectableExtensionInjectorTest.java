@@ -12,14 +12,14 @@ import hs.ddif.core.store.NoSuchKeyException;
 
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import jakarta.inject.Inject;
 
 public class ProviderInjectableExtensionInjectorTest {
   private Injector injector = Injectors.manual();

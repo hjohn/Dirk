@@ -1,6 +1,6 @@
 package hs.ddif.core.test.injectables;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Sample with one constructor annotated with @Inject.

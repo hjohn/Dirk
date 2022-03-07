@@ -14,7 +14,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 public class Injectables {
   private static final SingletonScopeResolver SINGLETON_SCOPE_RESOLVER = new SingletonScopeResolver(Annotations.of(Singleton.class));

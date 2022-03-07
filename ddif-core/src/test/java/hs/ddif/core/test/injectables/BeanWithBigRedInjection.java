@@ -1,9 +1,9 @@
 package hs.ddif.core.test.injectables;
 
-import javax.inject.Inject;
-
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Red;
+
+import jakarta.inject.Inject;
 
 public class BeanWithBigRedInjection {
 
