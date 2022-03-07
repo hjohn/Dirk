@@ -5,7 +5,6 @@ import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 public class InjectorGenericsTest {
   private Injector injector;
@@ -113,13 +113,13 @@ public class InjectorGenericsTest {
 
   public static class InjectableWithConverterProviders {
     @Inject
-    private Supplier<Converter<String, Integer>> stringToIntConverter;
+    private Provider<Converter<String, Integer>> stringToIntConverter;
 
     @Inject
-    private Supplier<Converter<Integer, String>> intToStringConverter;
+    private Provider<Converter<Integer, String>> intToStringConverter;
 
     @Inject
-    private Supplier<Converter<String, List<String>>> stringToStringListConverter;
+    private Provider<Converter<String, List<String>>> stringToStringListConverter;
 
     public Integer convertToInt(String s) {
       return stringToIntConverter.get().convert(s);

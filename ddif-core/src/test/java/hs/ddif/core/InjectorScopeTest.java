@@ -11,7 +11,6 @@ import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.test.scope.TestScope;
 
 import java.lang.annotation.Annotation;
-import java.util.function.Supplier;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
@@ -25,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
 public class InjectorScopeTest {
@@ -280,15 +280,15 @@ public class InjectorScopeTest {
   }
 
   public static class PrototypeBeanDependantOnXProvider {
-    @Inject Supplier<X> xProvider;
+    @Inject Provider<X> xProvider;
   }
 
   @Singleton
   public static class SingletonBeanDependentOnXProvider {
-    @Inject Supplier<X> xProvider;
+    @Inject Provider<X> xProvider;
   }
 
-  public static class XProvider implements Supplier<X> {  // A provider by default is assumed to provide a new bean every time (the most narrow scope, or prototype scope)
+  public static class XProvider implements Provider<X> {  // A provider by default is assumed to provide a new bean every time (the most narrow scope, or prototype scope)
     @Override
     public X get() {
       return null;

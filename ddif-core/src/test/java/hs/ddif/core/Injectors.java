@@ -27,12 +27,12 @@ import hs.ddif.core.util.Annotations;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
@@ -47,7 +47,7 @@ public class Injectors {
 
   static {
     try {
-      PROVIDER_METHOD = Supplier.class.getDeclaredMethod("get");
+      PROVIDER_METHOD = Provider.class.getDeclaredMethod("get");
     }
     catch(NoSuchMethodException | SecurityException e) {
       throw new IllegalStateException(e);

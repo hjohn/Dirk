@@ -61,7 +61,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -80,6 +79,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 
 public class InjectorTest {
   private Injector injector;
@@ -146,7 +146,7 @@ public class InjectorTest {
   @Test
   public void shouldGetBeanWithOptionalDependencyWhenProviderReturnsNull() {
     injector.register(BeanWithOptionalDependency.class);
-    injector.registerInstance(new Supplier<UnavailableBean>() {
+    injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
         return null;
@@ -245,7 +245,7 @@ public class InjectorTest {
 
   @Test  // @Nullable annotation on Provider is just ignored as it makes no sense for Providers
   public void shouldGetBeanWithOptionalProviderDependency() {
-    injector.registerInstance(new Supplier<UnavailableBean>() {
+    injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
         return null;  // this provider breaks its contract
@@ -275,7 +275,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenGettingUnavailableBean() {
-    injector.registerInstance(new Supplier<UnavailableBean>() {
+    injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
         return null;
@@ -333,7 +333,7 @@ public class InjectorTest {
 
   @Test
   public void shouldBeAbleToRemoveProviderWhichIsOnlyOptionallyDependedOn() {
-    Supplier<UnavailableBean> provider = new Supplier<>() {
+    Provider<UnavailableBean> provider = new Provider<>() {
       @Override
       public UnavailableBean get() {
         return new UnavailableBean();
@@ -705,7 +705,7 @@ public class InjectorTest {
 
   @Test
   public void shouldRegisterAndUseProvider() {
-    injector.registerInstance(new Supplier<String>() {
+    injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
@@ -717,7 +717,7 @@ public class InjectorTest {
 
   @Test
   public void shouldRemoveProvider() {
-    Supplier<String> provider = new Supplier<>() {
+    Provider<String> provider = new Provider<>() {
       @Override
       public String get() {
         return "a string";
@@ -730,7 +730,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRegisteringProviderWouldViolateSingularDependencies() {
-    assertThrows(ViolatesSingularDependencyException.class, () -> injector.registerInstance(new Supplier<SimpleChildBean>() {
+    assertThrows(ViolatesSingularDependencyException.class, () -> injector.registerInstance(new Provider<SimpleChildBean>() {
       @Override
       public SimpleChildBean get() {
         return new SimpleChildBean();
@@ -740,14 +740,14 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingSimilarButNotSameProvider() {
-    injector.registerInstance(new Supplier<String>() {
+    injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
       }
     });
 
-    assertThrows(NoSuchKeyException.class, () -> injector.removeInstance(new Supplier<String>() {
+    assertThrows(NoSuchKeyException.class, () -> injector.removeInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
@@ -757,7 +757,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingProviderByClass() {
-    injector.registerInstance(new Supplier<String>() {
+    injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
@@ -839,7 +839,7 @@ public class InjectorTest {
   @Test
   @Disabled("This test is no longer valid; Providers are injected directly now (no indirection that could check their result) and so null instances can be part of the results if a Provider breaks its contract.")
   public void getInstancesShouldSilentlyIgnoreProvidersThatReturnNull() {
-    injector.registerInstance(new Supplier<String>() {
+    injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
         return null;
@@ -850,7 +850,7 @@ public class InjectorTest {
   }
 
   public static class BeanWithBadPostConstruct {
-    private Supplier<BeanDependentOnBeanWithBadPostConstruct> provider;
+    private Provider<BeanDependentOnBeanWithBadPostConstruct> provider;
 
     @PostConstruct
     private void postConstruct() {
@@ -865,14 +865,14 @@ public class InjectorTest {
   interface SomeInterface {
   }
 
-  interface SomeInterfaceProvider extends Supplier<SomeInterface> {
+  interface SomeInterfaceProvider extends Provider<SomeInterface> {
   }
 
   static class Bean1 implements SomeInterface {
     @Inject public Bean1() {}
   }
 
-  static class Bean2 implements Supplier<SomeInterface> {
+  static class Bean2 implements Provider<SomeInterface> {
     @Inject public Bean2() {}
 
     @Override
@@ -898,7 +898,7 @@ public class InjectorTest {
   }
 
   public static class BeanThatNeedsProviderOfSomeInterface {
-    @Inject Supplier<SomeInterface> someInterface;
+    @Inject Provider<SomeInterface> someInterface;
 
     public BeanThatNeedsProviderOfSomeInterface() {}
 
@@ -908,7 +908,7 @@ public class InjectorTest {
   }
 
   public static class BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider {
-    @Inject Supplier<Bean3> bean3;
+    @Inject Provider<Bean3> bean3;
 
     public BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider() {}
 
@@ -982,7 +982,7 @@ public class InjectorTest {
   }
 
   public static class BadPostConstruct {
-    @Inject Supplier<BadPostConstruct> provider;
+    @Inject Provider<BadPostConstruct> provider;
 
     @PostConstruct
     void postConstruct() {

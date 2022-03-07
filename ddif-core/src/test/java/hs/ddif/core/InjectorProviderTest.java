@@ -16,7 +16,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
@@ -32,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Singleton;
 
@@ -57,7 +57,7 @@ public class InjectorProviderTest {
   public void providersShouldBreakCircularDependenciesOnly() {  // Required Suppliers cannot be used to delay registration of the provisioned class.
     assertThatThrownBy(() -> injector.register(BeanWithSupplier.class))
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
-      .hasMessage("Missing dependency [hs.ddif.core.InjectorProviderTest$SimpleBean] required for Field [private java.util.function.Supplier<hs.ddif.core.InjectorProviderTest$SimpleBean> hs.ddif.core.InjectorProviderTest$BeanWithSupplier.simpleBeanSupplier]")
+      .hasMessage("Missing dependency [hs.ddif.core.InjectorProviderTest$SimpleBean] required for Field [private jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$SimpleBean> hs.ddif.core.InjectorProviderTest$BeanWithSupplier.simpleBeanSupplier]")
       .hasNoCause();
 
     injector.register(SimpleBean.class);
@@ -70,7 +70,7 @@ public class InjectorProviderTest {
 
   @Test
   public void getInstanceShouldReturnInjectedSupplierClass() {
-    Supplier<Connection> anonymousSupplier = new Supplier<>() {
+    Provider<Connection> anonymousSupplier = new Provider<>() {
       @Override
       public Connection get() {
         return null;
@@ -86,7 +86,7 @@ public class InjectorProviderTest {
       assertEquals(DatabaseSupplier.class, injector.getInstance(DatabaseSupplier.class).getClass());
       assertEquals(Database.class, injector.getInstance(Database.class).getClass());
 
-      assertThat(injector.getInstances(Supplier.class)).isEmpty();
+      assertThat(injector.getInstances(Provider.class)).isEmpty();
 
       injector.remove(DatabaseSupplier.class);
 
@@ -172,7 +172,7 @@ public class InjectorProviderTest {
   }
 
   public static class BeanWithProvidedListOfString {
-    @Inject private Supplier<List<String>> texts;
+    @Inject private Provider<List<String>> texts;
 
     List<String> getTexts() {
       return texts.get();
@@ -198,10 +198,10 @@ public class InjectorProviderTest {
   public void nestedSuppliersShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.registerInstance(new NestedDatabaseSupplier()))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[Injectable[java.util.function.Supplier<java.util.function.Supplier<hs.ddif.core.InjectorProviderTest$Database>> <- public java.util.function.Supplier hs.ddif.core.InjectorProviderTest$NestedDatabaseSupplier.get()]] cannot be registered as its type conflicts with a TypeExtension for interface java.util.function.Supplier")
+      .hasMessage("[Injectable[jakarta.inject.Provider<jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database>> <- public jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$NestedDatabaseSupplier.get()]] cannot be registered as its type conflicts with a TypeExtension for interface jakarta.inject.Provider")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(FilteredKeyException.class)
-      .hasMessage("[java.util.function.Supplier<java.util.function.Supplier<hs.ddif.core.InjectorProviderTest$Database>>] cannot be added to or removed from the store as it matched the class filter")
+      .hasMessage("[jakarta.inject.Provider<jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database>>] cannot be added to or removed from the store as it matched the class filter")
       .hasNoCause();
   }
 
@@ -209,10 +209,10 @@ public class InjectorProviderTest {
   public void producerFieldProducingSupplierShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.register(SupplierFieldProducer.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[Injectable[java.util.function.Supplier<hs.ddif.core.InjectorProviderTest$Database> <- private static java.util.function.Supplier hs.ddif.core.InjectorProviderTest$SupplierFieldProducer.product]] cannot be registered as its type conflicts with a TypeExtension for interface java.util.function.Supplier")
+      .hasMessage("[Injectable[jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database> <- private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierFieldProducer.product]] cannot be registered as its type conflicts with a TypeExtension for interface jakarta.inject.Provider")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(FilteredKeyException.class)
-      .hasMessage("[java.util.function.Supplier<hs.ddif.core.InjectorProviderTest$Database>] cannot be added to or removed from the store as it matched the class filter")
+      .hasMessage("[jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database>] cannot be added to or removed from the store as it matched the class filter")
       .hasNoCause();
   }
 
@@ -220,10 +220,10 @@ public class InjectorProviderTest {
   public void producerMethodProducingSupplierShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.register(SupplierMethodProducer.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[Injectable[java.util.function.Supplier<hs.ddif.core.InjectorProviderTest$Database> <- private static java.util.function.Supplier hs.ddif.core.InjectorProviderTest$SupplierMethodProducer.product()]] cannot be registered as its type conflicts with a TypeExtension for interface java.util.function.Supplier")
+      .hasMessage("[Injectable[jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database> <- private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierMethodProducer.product()]] cannot be registered as its type conflicts with a TypeExtension for interface jakarta.inject.Provider")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(FilteredKeyException.class)
-      .hasMessage("[java.util.function.Supplier<hs.ddif.core.InjectorProviderTest$Database>] cannot be added to or removed from the store as it matched the class filter")
+      .hasMessage("[jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database>] cannot be added to or removed from the store as it matched the class filter")
       .hasNoCause();
   }
 
@@ -311,7 +311,7 @@ public class InjectorProviderTest {
   }
 
   public static class BeanWithProvidedDatabase {
-    @Inject Supplier<Database> database;
+    @Inject Provider<Database> database;
   }
 
   public static class Database {
@@ -319,30 +319,30 @@ public class InjectorProviderTest {
     }
   }
 
-  public static class NestedDatabaseSupplier implements Supplier<Supplier<Supplier<Database>>> {
+  public static class NestedDatabaseSupplier implements Provider<Provider<Provider<Database>>> {
 
     @Override
-    public Supplier<Supplier<Database>> get() {
-      return new Supplier<>() {
+    public Provider<Provider<Database>> get() {
+      return new Provider<>() {
         @Override
-        public Supplier<Database> get() {
+        public Provider<Database> get() {
           return new SimpleDatabaseSupplier();
         }
       };
     }
   }
 
-  public static class SimpleDatabaseSupplier implements Supplier<Database> {
+  public static class SimpleDatabaseSupplier implements Provider<Database> {
     @Override
     public Database get() {
       return new Database("jdbc:localhost");
     }
   }
 
-  public static class DatabaseSupplier implements Supplier<Database> {
+  public static class DatabaseSupplier implements Provider<Database> {
     @SuppressWarnings("unused")
     @Inject
-    public DatabaseSupplier(Supplier<Connection> cls, @Named("db.readonly") boolean readOnly) {
+    public DatabaseSupplier(Provider<Connection> cls, @Named("db.readonly") boolean readOnly) {
     }
 
     @Override
@@ -352,16 +352,16 @@ public class InjectorProviderTest {
   }
 
   public static class SupplierFieldProducer {
-    @Produces private static Supplier<Database> product;
+    @Produces private static Provider<Database> product;
   }
 
   public static class SupplierMethodProducer {
-    @Produces private static Supplier<Database> product() {
+    @Produces private static Provider<Database> product() {
       return null;
     }
   }
 
-  public static class AppendableSupplier implements Supplier<Appendable> {
+  public static class AppendableSupplier implements Provider<Appendable> {
 
     @Override
     public Appendable get() {
@@ -509,7 +509,7 @@ public class InjectorProviderTest {
     assertThat(r1.z).isNotEqualTo(r2.z);
   }
 
-  public static class A implements Supplier<Z> {
+  public static class A implements Provider<Z> {
     @Override
     @Red
     public Z get() {
@@ -517,7 +517,7 @@ public class InjectorProviderTest {
     }
   }
 
-  public static class B implements Supplier<Z> {
+  public static class B implements Provider<Z> {
     @Override
     @Green
     public Z get() {
@@ -526,7 +526,7 @@ public class InjectorProviderTest {
   }
 
   @Singleton
-  public static class C implements Supplier<Z> {
+  public static class C implements Provider<Z> {
     @Override
     @Big
     @Singleton
@@ -535,14 +535,14 @@ public class InjectorProviderTest {
     }
   }
 
-  public static class D implements Supplier<Y> {
+  public static class D implements Provider<Y> {
     @Override
     public Y get() {
       return new Y();
     }
   }
 
-  public static class E implements Supplier<Z> {
+  public static class E implements Provider<Z> {
     @Override
     @Green
     public Z get() {
@@ -572,20 +572,20 @@ public class InjectorProviderTest {
 
   public static class W {
     @Inject List<Z> zs;
-    @Inject Supplier<List<Z>> zList;
+    @Inject Provider<List<Z>> zList;
     @Inject @Green List<?> greens;
     @Inject @Green List<Z> zGreens;
-    @Inject @Green Supplier<List<?>> greenList;
-    @Inject @Green Supplier<List<Z>> zGreenList;
+    @Inject @Green Provider<List<?>> greenList;
+    @Inject @Green Provider<List<Z>> zGreenList;
     @Inject @Red List<?> reds;
     @Inject @Red List<Z> zReds;
-    @Inject @Red Supplier<List<?>> redList;
-    @Inject @Red Supplier<List<Z>> zRedList;
+    @Inject @Red Provider<List<?>> redList;
+    @Inject @Red Provider<List<Z>> zRedList;
   }
 
   public static class X {
-    @Inject @Red Supplier<Z> red;
-    @Inject @Green Supplier<Z> green;
+    @Inject @Red Provider<Z> red;
+    @Inject @Green Provider<Z> green;
   }
 
   public static class Y {
@@ -617,14 +617,14 @@ public class InjectorProviderTest {
   }
 
   static class PrimitivesA {
-    @Inject Supplier<Integer> i;
-    @Inject Supplier<Double> d;
+    @Inject Provider<Integer> i;
+    @Inject Provider<Double> d;
 
-    private Supplier<Byte> b;
-    private Supplier<Boolean> flag;
+    private Provider<Byte> b;
+    private Provider<Boolean> flag;
 
     @Inject
-    PrimitivesA(Supplier<Byte> b, Supplier<Boolean> flag) {
+    PrimitivesA(Provider<Byte> b, Provider<Boolean> flag) {
       this.b = b;
       this.flag = flag;
     }
@@ -636,7 +636,7 @@ public class InjectorProviderTest {
 
   public static class BeanWithOptionalSupplier {
     @Inject @Opt
-    private Supplier<SimpleBean> simpleBeanSupplier;
+    private Provider<SimpleBean> simpleBeanSupplier;
 
     public SimpleBean getSimpleBean() {
       return simpleBeanSupplier.get();
@@ -649,7 +649,7 @@ public class InjectorProviderTest {
 
   public static class BeanWithSupplier {
     @Inject
-    private Supplier<SimpleBean> simpleBeanSupplier;
+    private Provider<SimpleBean> simpleBeanSupplier;
 
     public SimpleBean getSimpleBean() {
       return simpleBeanSupplier.get();
