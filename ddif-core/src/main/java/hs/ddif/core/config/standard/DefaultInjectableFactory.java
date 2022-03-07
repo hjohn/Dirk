@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * An {@link InjectableFactory} which creates {@link Injectable}s given
  * a {@link Type}, an {@link AnnotatedElement}, a list of {@link Binding}s and
- * an {@link Constructable}.
+ * a {@link Constructable}.
  */
 public class DefaultInjectableFactory implements InjectableFactory {
   private final ScopeResolverManager scopeResolverManager;

@@ -5,8 +5,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.util.Set;
 
 /**
- * Strategy for checking and obtaining annotations relevant to the functioning of
- * dependency injection.
+ * Strategy for checking and obtaining annotations relevant to dependency injection.
  */
 public interface AnnotationStrategy {
 
@@ -15,7 +14,7 @@ public interface AnnotationStrategy {
    * are inject annotations.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
-   * @return a sorted set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
+   * @return a modifiable set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
    */
   Set<Annotation> getInjectAnnotations(AnnotatedElement element);
 
@@ -32,7 +31,7 @@ public interface AnnotationStrategy {
    * are meta annotated by a qualifier annotation.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
-   * @return a sorted set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
+   * @return a modifiable set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
    */
   Set<Annotation> getQualifiers(AnnotatedElement element);
 
@@ -41,7 +40,7 @@ public interface AnnotationStrategy {
    * are meta annotated by a scope annotation.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
-   * @return a sorted set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
+   * @return a modifiable set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
    */
   Set<Annotation> getScopes(AnnotatedElement element);
 
