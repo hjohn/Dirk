@@ -116,6 +116,40 @@ public class Annotations {
   }
 
   /**
+   * Recursively finds annotations <b>directly</b> annotated by a given meta annotation class, starting
+   * from the given {@link AnnotatedElement}. The annotations returned are not necessarily direct
+   * annotations on the given element, but can be meta annotations which are annotated with the
+   * given meta annotations.
+   *
+   * @param element an {@link AnnotatedElement}, cannot be {@code null}
+   * @param metaAnnotation an {@link Annotation}, cannot be {@code null}
+   * @return a set of {@link Annotation}s directly annotated with the given meta annotation, never {@code null} and never contains {@code null}s
+   */
+  public static Set<Annotation> findDirectlyMetaAnnotatedAnnotations(AnnotatedElement element, Class<? extends Annotation> metaAnnotation) {
+    Set<Annotation> matchingAnnotations = new HashSet<>();
+    Deque<Annotation> annotations = new ArrayDeque<>();
+
+    annotations.addAll(Arrays.asList(element.getAnnotations()));
+
+    Set<Annotation> visited = new HashSet<>(annotations);
+
+    while(!annotations.isEmpty()) {
+      Annotation annotation = annotations.remove();
+
+      for(Annotation childAnnotation : annotation.annotationType().getAnnotations()) {
+        if(visited.add(childAnnotation)) {
+          annotations.add(childAnnotation);
+        }
+        if(childAnnotation.annotationType().equals(metaAnnotation)) {
+          matchingAnnotations.add(annotation);
+        }
+      }
+    }
+
+    return matchingAnnotations;
+  }
+
+  /**
    * Returns {@link Annotation}s on the given {@link AnnotatedElement} which are annotated with the given meta annotation
    * directly or indirectly.
    *
