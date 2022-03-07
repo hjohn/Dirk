@@ -21,7 +21,7 @@ public class SingletonScopeResolver extends AbstractScopeResolver<String> {
   }
 
   @Override
-  public Class<? extends Annotation> getScopeAnnotationClass() {
+  public Class<? extends Annotation> getAnnotationClass() {
     return singletonAnnotation;
   }
 
@@ -31,7 +31,7 @@ public class SingletonScopeResolver extends AbstractScopeResolver<String> {
   }
 
   @Override
-  public boolean isSingletonScope() {
+  public boolean isSingleton() {
     return true;
   }
 }

@@ -52,7 +52,7 @@ import jakarta.inject.Singleton;
 public class DefaultInstanceResolverTest {
   private final AbstractScopeResolver<String> scopeResolver = new AbstractScopeResolver<>() {
     @Override
-    public Class<? extends Annotation> getScopeAnnotationClass() {
+    public Class<? extends Annotation> getAnnotationClass() {
       return TestScoped.class;
     }
 

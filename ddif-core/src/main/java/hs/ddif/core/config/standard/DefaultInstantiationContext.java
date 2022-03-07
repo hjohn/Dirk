@@ -102,7 +102,7 @@ public class DefaultInstantiationContext implements InstantiationContext {
     ScopeResolver scopeResolver = injectable.getScopeResolver();
 
     try {
-      if(!allowOutOfScope || scopeResolver.isScopeActive()) {
+      if(!allowOutOfScope || scopeResolver.isActive()) {
         LazyInjectionContext lazyInjectionContext = new LazyInjectionContext(stack.isEmpty() ? null : stack.getLast(), injectable);
 
         stack.addLast(lazyInjectionContext);
@@ -130,7 +130,7 @@ public class DefaultInstantiationContext implements InstantiationContext {
        * Scope was checked to be active (to avoid exception cost), but it still occurred...
        */
 
-      LOGGER.warning("Scope " + scopeResolver.getScopeAnnotationClass() + " should have been active: " + e.getMessage());
+      LOGGER.warning("Scope " + scopeResolver.getAnnotationClass() + " should have been active: " + e.getMessage());
 
       return null;  // same as if scope hadn't been active in the first place
     }
@@ -196,7 +196,7 @@ public class DefaultInstantiationContext implements InstantiationContext {
     private List<Injection> injections;
 
     LazyInjectionContext(LazyInjectionContext parent, Injectable<?> injectable) {
-      boolean dependent = injectable.getScopeResolver().getScopeAnnotationClass() == null;
+      boolean dependent = injectable.getScopeResolver().getAnnotationClass() == null;
 
       this.parent = dependent ? parent : null;
       this.injectable = injectable;

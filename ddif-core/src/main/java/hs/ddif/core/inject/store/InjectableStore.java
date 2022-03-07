@@ -248,8 +248,8 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     ScopeResolver dependentScopeResolver = dependentInjectable.getScopeResolver();
     ScopeResolver injectableScopeResolver = injectable.getScopeResolver();
 
-    Class<?> dependendentScopeAnnotation = dependentScopeResolver.isSingletonScope() ? SINGLETON : dependentScopeResolver.getScopeAnnotationClass();
-    Class<?> injectableScopeAnnotation = injectableScopeResolver.isSingletonScope() ? SINGLETON : injectableScopeResolver.getScopeAnnotationClass();
+    Class<?> dependendentScopeAnnotation = dependentScopeResolver.isSingleton() ? SINGLETON : dependentScopeResolver.getAnnotationClass();
+    Class<?> injectableScopeAnnotation = injectableScopeResolver.isSingleton() ? SINGLETON : injectableScopeResolver.getAnnotationClass();
 
     if(isNarrowerScope(injectableScopeAnnotation, dependendentScopeAnnotation)) {
       throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getType());
