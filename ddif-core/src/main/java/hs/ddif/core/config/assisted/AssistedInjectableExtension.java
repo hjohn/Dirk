@@ -1,7 +1,5 @@
-package hs.ddif.core.config;
+package hs.ddif.core.config.assisted;
 
-import hs.ddif.annotations.Argument;
-import hs.ddif.annotations.Assisted;
 import hs.ddif.core.config.standard.InjectableExtension;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.DefinitionException;
@@ -27,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import net.bytebuddy.ByteBuddy;
@@ -42,32 +39,25 @@ import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.matcher.ElementMatchers;
 
 /**
- * Extension which provides implementations {@link Assisted} annotated abstract classes or interfaces.
- * The types must have a single abstract method with a concrete, non primitive return type.
+ * Extension which provides implementations of abstract classes or interfaces annotated with
+ * the configured assist annotation. The types must have a single abstract method with a
+ * concrete, non primitive return type.
  */
 public class AssistedInjectableExtension implements InjectableExtension {
   private static final Map<Type, Injectable<?>> PRODUCER_INJECTABLES = new WeakHashMap<>();
 
   private final ClassInjectableFactory injectableFactory;
-  private final Annotation inject;
-  private final Class<?> providerClass;
-  private final Function<Object, Object> providerGetter;
+  private final AssistedAnnotationStrategy<?> strategy;
 
   /**
    * Constructs a new instance.
    *
-   * @param <P> the type of the provider class used
    * @param injectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
-   * @param inject an inject {@link Annotation} to use for generated classes, cannot be {@code null}
-   * @param providerClass a provider {@link Class} to subclass for generated classes, cannot be {@code null}
-   * @param providerGetter a getter {@link Function} of the given provider class, cannot be {@code null}
+   * @param strategy an {@link AssistedAnnotationStrategy}, cannot be {@code null}
    */
-  @SuppressWarnings("unchecked")
-  public <P> AssistedInjectableExtension(ClassInjectableFactory injectableFactory, Annotation inject, Class<P> providerClass, Function<P, Object> providerGetter) {
+  public AssistedInjectableExtension(ClassInjectableFactory injectableFactory, AssistedAnnotationStrategy<?> strategy) {
     this.injectableFactory = injectableFactory;
-    this.inject = inject;
-    this.providerClass = providerClass;
-    this.providerGetter = (Function<Object, Object>)providerGetter;
+    this.strategy = strategy;
   }
 
   @Override
@@ -80,7 +70,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
 
     Class<?> factoryClass = Types.raw(type);
 
-    if(!factoryClass.isAnnotationPresent(Assisted.class)) {
+    if(!factoryClass.isAnnotationPresent(strategy.assistedAnnotationClass())) {
       return List.of();
     }
 
@@ -119,13 +109,13 @@ public class AssistedInjectableExtension implements InjectableExtension {
   private Class<?> generateFactoryClass(Type type, Method factoryMethod) {
     Class<?> productType = factoryMethod.getReturnType();
     Injectable<?> productInjectable = injectableFactory.create(productType);
-    Interceptor interceptor = new Interceptor(productInjectable, factoryMethod, providerGetter);
+    Interceptor<?> interceptor = new Interceptor<>(productInjectable, factoryMethod, strategy);
 
     /*
      * Construct ByteBuddy builder:
      */
 
-    List<Annotation> declaredAnnotations = Arrays.stream(Types.raw(type).getDeclaredAnnotations()).filter(a -> !a.annotationType().equals(Assisted.class)).collect(Collectors.toList());
+    List<Annotation> declaredAnnotations = Arrays.stream(Types.raw(type).getDeclaredAnnotations()).filter(a -> !a.annotationType().equals(strategy.assistedAnnotationClass())).collect(Collectors.toList());
 
     Builder<?> builder = new ByteBuddy()
       .subclass(type, ConstructorStrategy.Default.IMITATE_SUPER_CLASS.withInheritedAnnotations())
@@ -145,32 +135,32 @@ public class AssistedInjectableExtension implements InjectableExtension {
       Binding binding = productBindings.get(i);
       Parameter parameter = binding.getParameter();
       AccessibleObject accessibleObject = binding.getAccessibleObject();
-      Argument annotation = binding.getAnnotatedElement().getAnnotation(Argument.class);
 
-      if(annotation == null) {
+      if(strategy.isArgument(binding.getAnnotatedElement())) {
+        try {
+          String name = parameter == null ? strategy.determineArgumentName(accessibleObject) : strategy.determineArgumentName(parameter);
+
+          parameterBindings.put(name, binding);
+          providerFieldNames.add(null);
+        }
+        catch(MissingArgumentException e) {
+          throw new DefinitionException(accessibleObject, "unable to determine argument name" + (parameter == null ? "" : " for parameter [" + parameter + "]"), e);
+        }
+      }
+      else {
         List<Annotation> annotations = Arrays.asList(binding.getAnnotatedElement().getAnnotations());
         String fieldName = "__binding" + i + "__" + toString(binding) + "__";
 
         if(parameter != null) {
           annotations = new ArrayList<>(annotations);
 
-          annotations.add(inject);
+          annotations.add(strategy.injectAnnotation());
         }
 
         providerFieldNames.add(fieldName);
         builder = builder
-          .defineField(fieldName, Types.parameterize(providerClass, binding.getType()), Visibility.PRIVATE)
+          .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getType()), Visibility.PRIVATE)
           .annotateField(annotations);
-      }
-      else {
-        String name = parameter == null ? determineArgumentName(annotation, (Field)accessibleObject) : determineArgumentName(parameter);
-
-        if(name == null) {
-          throw new DefinitionException(accessibleObject, "unable to determine argument name for parameter [" + parameter + "]; specify one with @Argument or compile classes with parameter name information");
-        }
-
-        parameterBindings.put(name, binding);
-        providerFieldNames.add(null);
       }
     }
 
@@ -244,19 +234,21 @@ public class AssistedInjectableExtension implements InjectableExtension {
 
   /**
    * Interceptor for generated subclass of assisted injection factories.
+   *
+   * @param <P> the provider class
    */
-  public static class Interceptor {
+  public static class Interceptor<P> {
     private final Injectable<?> productInjectable;
     private final List<InjectionTemplate> templates = new ArrayList<>();
     private final Method factoryMethod;
-    private final Function<Object, Object> providerGetter;
+    private final AssistedAnnotationStrategy<P> strategy;
 
     private List<String> factoryParameterNames;
 
-    Interceptor(Injectable<?> productInjectable, Method factoryMethod, Function<Object, Object> providerGetter) {
+    Interceptor(Injectable<?> productInjectable, Method factoryMethod, AssistedAnnotationStrategy<P> strategy) {
       this.productInjectable = productInjectable;
       this.factoryMethod = factoryMethod;
-      this.providerGetter = providerGetter;
+      this.strategy = strategy;
     }
 
     void initialize(Map<String, Binding> productArgumentTypes, List<Binding> bindings, List<Field> fields) {
@@ -299,7 +291,8 @@ public class AssistedInjectableExtension implements InjectableExtension {
       List<Injection> injections = new ArrayList<>();
 
       for(InjectionTemplate template : templates) {
-        Object value = template.field == null ? parameters.get(template.parameterName) : providerGetter.apply(template.field.get(factoryInstance));
+        @SuppressWarnings("unchecked")
+        Object value = template.field == null ? parameters.get(template.parameterName) : strategy.provision((P)template.field.get(factoryInstance));
 
         injections.add(new Injection(template.accessibleObject, value));
       }
@@ -317,6 +310,40 @@ public class AssistedInjectableExtension implements InjectableExtension {
         this.accessibleObject = accessibleObject;
         this.parameterName = parameterName;
       }
+    }
+
+    private List<String> validateProducerAndReturnArgumentNames(Method factoryMethod, Map<String, Binding> argumentBindings) {
+      List<String> names = new ArrayList<>();
+
+      if(factoryMethod.getParameterCount() != argumentBindings.size()) {
+        throw new DefinitionException(factoryMethod, "should have " + argumentBindings.size() + " argument(s) of types: " + argumentBindings.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getType())));
+      }
+
+      Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
+      Parameter[] parameters = factoryMethod.getParameters();
+
+      for(int i = 0; i < parameters.length; i++) {
+        try {
+          String name = strategy.determineArgumentName(parameters[i]);
+
+          if(!argumentBindings.containsKey(name)) {
+            throw new DefinitionException(factoryMethod, "is missing required argument with name: " + name);
+          }
+
+          Type factoryArgumentType = Primitives.toBoxed(genericParameterTypes[i]);
+
+          if(!Types.raw(argumentBindings.get(name).getType()).equals(Types.raw(factoryArgumentType))) {
+            throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
+          }
+
+          names.add(name);
+        }
+        catch(MissingArgumentException e) {
+          throw new DefinitionException(factoryMethod, "is missing argument name for [" + parameters[i] + "]", e);
+        }
+      }
+
+      return names;
     }
   }
 
@@ -336,52 +363,5 @@ public class AssistedInjectableExtension implements InjectableExtension {
     }
 
     return factoryMethod;
-  }
-
-  private static List<String> validateProducerAndReturnArgumentNames(Method factoryMethod, Map<String, Binding> argumentBindings) {
-    List<String> names = new ArrayList<>();
-
-    if(factoryMethod.getParameterCount() != argumentBindings.size()) {
-      throw new DefinitionException(factoryMethod, "should have " + argumentBindings.size() + " argument(s) of types: " + argumentBindings.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getType())));
-    }
-
-    Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
-    Parameter[] parameters = factoryMethod.getParameters();
-
-    for(int i = 0; i < parameters.length; i++) {
-      String name = determineArgumentName(parameters[i]);
-
-      if(name == null) {
-        throw new DefinitionException(factoryMethod, "is missing argument name for [" + parameters[i] + "]; specify one with @Argument or compile classes with parameter name information");
-      }
-
-      if(!argumentBindings.containsKey(name)) {
-        throw new DefinitionException(factoryMethod, "is missing required argument with name: " + name);
-      }
-
-      Type factoryArgumentType = Primitives.toBoxed(genericParameterTypes[i]);
-
-      if(!Types.raw(argumentBindings.get(name).getType()).equals(Types.raw(factoryArgumentType))) {
-        throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
-      }
-
-      names.add(name);
-    }
-
-    return names;
-  }
-
-  private static String determineArgumentName(Argument annotation, Field field) {
-    return !annotation.value().isEmpty() ? annotation.value() : field.getName();
-  }
-
-  private static String determineArgumentName(Parameter parameter) {
-    Argument annotation = parameter.getAnnotation(Argument.class);
-
-    if((annotation == null || annotation.value().isEmpty()) && !parameter.isNamePresent()) {
-      return null;
-    }
-
-    return annotation != null && !annotation.value().isEmpty() ? annotation.value() : parameter.getName();
   }
 }

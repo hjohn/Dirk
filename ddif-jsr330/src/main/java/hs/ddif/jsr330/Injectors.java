@@ -1,12 +1,16 @@
 package hs.ddif.jsr330;
 
+import hs.ddif.annotations.Argument;
+import hs.ddif.annotations.Assisted;
 import hs.ddif.core.Injector;
-import hs.ddif.core.config.AssistedInjectableExtension;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.ListTypeExtension;
 import hs.ddif.core.config.ProducesInjectableExtension;
 import hs.ddif.core.config.ProviderInjectableExtension;
 import hs.ddif.core.config.SetTypeExtension;
+import hs.ddif.core.config.assisted.AssistedAnnotationStrategy;
+import hs.ddif.core.config.assisted.AssistedInjectableExtension;
+import hs.ddif.core.config.assisted.ConfigurableAssistedAnnotationStrategy;
 import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.AnnotationBasedLifeCycleCallbacksFactory;
@@ -27,6 +31,7 @@ import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.ScopeResolverManager;
 import hs.ddif.core.util.Annotations;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +57,7 @@ public class Injectors {
   private static final Singleton SINGLETON = Annotations.of(Singleton.class);
   private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(INJECT, QUALIFIER, SCOPE);
   private static final Method PROVIDER_METHOD;
+  private static final AssistedAnnotationStrategy<?> ASSISTED_ANNOTATION_STRATEGY = new ConfigurableAssistedAnnotationStrategy<>(Assisted.class, Argument.class, Injectors::extractArgumentName, INJECT, Provider.class, Provider::get);
 
   static {
     try {
@@ -129,10 +135,16 @@ public class Injectors {
     List<InjectableExtension> injectableExtensions = List.of(
       new ProviderInjectableExtension(PROVIDER_METHOD, methodInjectableFactory),
       new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory),
-      new AssistedInjectableExtension(classInjectableFactory, INJECT, Provider.class, Provider::get)
+      new AssistedInjectableExtension(classInjectableFactory, ASSISTED_ANNOTATION_STRATEGY)
     );
 
     return new DefaultDiscovererFactory(autoDiscovery, injectableExtensions, classInjectableFactory);
+  }
+
+  private static String extractArgumentName(AnnotatedElement element) {
+    Argument annotation = element.getAnnotation(Argument.class);
+
+    return annotation == null ? null : annotation.value();
   }
 }
 
