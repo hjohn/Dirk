@@ -27,6 +27,17 @@ public interface AnnotationStrategy {
   boolean isInjectAnnotated(AnnotatedElement element);
 
   /**
+   * Checks if the given {@link AnnotatedElement} is optional. If optional and there is no
+   * matching dependency, the injector will not thrown an exception but instead will skip
+   * injecting fields and will provide {@code null} for parameters. This allows having default
+   * values for field injection.
+   *
+   * @param element an {@link AnnotatedElement}, cannot be {@code null}
+   * @return {@code true} if the given {@link AnnotatedElement} is optional, otherwise {@code false}
+   */
+  boolean isOptional(AnnotatedElement element);
+
+  /**
    * Returns all {@link Annotation}s on the given {@link AnnotatedElement} which
    * are meta annotated by a qualifier annotation.
    *
