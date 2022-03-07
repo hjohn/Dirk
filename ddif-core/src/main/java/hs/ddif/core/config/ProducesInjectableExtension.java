@@ -9,6 +9,7 @@ import hs.ddif.core.util.Fields;
 import hs.ddif.core.util.Methods;
 import hs.ddif.core.util.Types;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -22,16 +23,19 @@ import java.util.List;
 public class ProducesInjectableExtension implements InjectableExtension {
   private final MethodInjectableFactory methodInjectableFactory;
   private final FieldInjectableFactory fieldInjectableFactory;
+  private final Class<? extends Annotation> produces;
 
   /**
    * Constructs a new instance.
    *
    * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
    * @param fieldInjectableFactory a {@link FieldInjectableFactory}, cannot be {@code null}
+   * @param produces an annotation {@link Class} marking producer fields and methods, cannot be {@code null}
    */
-  public ProducesInjectableExtension(MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
+  public ProducesInjectableExtension(MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory, Class<? extends Annotation> produces) {
     this.methodInjectableFactory = methodInjectableFactory;
     this.fieldInjectableFactory = fieldInjectableFactory;
+    this.produces = produces;
   }
 
   @Override
@@ -40,11 +44,11 @@ public class ProducesInjectableExtension implements InjectableExtension {
     Class<?> injectableClass = Types.raw(type);
 
     if(injectableClass != null) {
-      for(Method method : Methods.findAnnotated(injectableClass, Produces.class)) {
+      for(Method method : Methods.findAnnotated(injectableClass, produces)) {
         injectables.add(methodInjectableFactory.create(method, type));
       }
 
-      for(Field field : Fields.findAnnotated(injectableClass, Produces.class)) {
+      for(Field field : Fields.findAnnotated(injectableClass, produces)) {
         injectables.add(fieldInjectableFactory.create(field, type));
       }
     }

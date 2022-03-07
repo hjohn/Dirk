@@ -17,7 +17,7 @@ public class ProducesInjectableExtensionTest {
   private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
   private final FieldInjectableFactory fieldInjectableFactory = injectableFactories.forField();
 
-  private ProducesInjectableExtension extension = new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory);
+  private ProducesInjectableExtension extension = new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory, Produces.class);
 
   @Test
   void shouldFindProducesAnnotatedMethods() throws NoSuchMethodException, SecurityException, NoSuchFieldException {
