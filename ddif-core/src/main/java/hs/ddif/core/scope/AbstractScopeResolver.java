@@ -14,7 +14,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   private final Map<S, Map<Constructable<?>, ContextualInstance<?>>> instancesByScope = new HashMap<>();
 
   @Override
-  public final boolean isScopeActive() {
+  public final boolean isActive() {
     return getCurrentScope() != null;
   }
 
@@ -23,7 +23,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
-      throw new OutOfScopeException(constructable, getScopeAnnotationClass());
+      throw new OutOfScopeException(constructable, getAnnotationClass());
     }
 
     Map<Constructable<?>, ContextualInstance<?>> instances = instancesByScope.computeIfAbsent(currentScope, k -> new HashMap<>());

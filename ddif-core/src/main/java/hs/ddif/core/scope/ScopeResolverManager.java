@@ -23,7 +23,7 @@ public class ScopeResolverManager {
    */
   public ScopeResolverManager(ScopeResolver... scopeResolvers) {
     for(ScopeResolver scopeResolver : scopeResolvers) {
-      scopeResolversByAnnotation.put(scopeResolver.getScopeAnnotationClass(), scopeResolver);
+      scopeResolversByAnnotation.put(scopeResolver.getAnnotationClass(), scopeResolver);
     }
 
     scopeResolversByAnnotation.put(null, new NullScopeResolver());
@@ -48,12 +48,12 @@ public class ScopeResolverManager {
 
   private static class NullScopeResolver implements ScopeResolver {
     @Override
-    public Class<? extends Annotation> getScopeAnnotationClass() {
+    public Class<? extends Annotation> getAnnotationClass() {
       return null;
     }
 
     @Override
-    public boolean isScopeActive() {
+    public boolean isActive() {
       return true;
     }
 

@@ -314,7 +314,7 @@ public class InjectorScopeTest {
     public String currentScope = "default";
 
     @Override
-    public Class<? extends Annotation> getScopeAnnotationClass() {
+    public Class<? extends Annotation> getAnnotationClass() {
       return TestScope.class;
     }
 

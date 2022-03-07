@@ -15,14 +15,14 @@ public interface ScopeResolver {
    *
    * @return the annotation this resolver handles, can be {@code null}
    */
-  Class<? extends Annotation> getScopeAnnotationClass();
+  Class<? extends Annotation> getAnnotationClass();
 
   /**
    * Returns {@code true} when a scope is currently active, otherwise {@code false}.
    *
    * @return {@code true} when a scope is currently active, otherwise {@code false}
    */
-  boolean isScopeActive();
+  boolean isActive();
 
   /**
    * Returns an instance of the given type or constructing it if needed.
@@ -49,7 +49,7 @@ public interface ScopeResolver {
    *
    * @return {@code true} if this scope resolver represents a singleton scope, otherwise {@code false}
    */
-  default boolean isSingletonScope() {
+  default boolean isSingleton() {
     return false;
   }
 }
