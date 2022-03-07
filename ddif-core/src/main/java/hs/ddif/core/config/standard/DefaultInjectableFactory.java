@@ -80,7 +80,7 @@ public class DefaultInjectableFactory implements InjectableFactory {
       throw new IllegalArgumentException("ownerType must be assignable to member's declaring class: " + ownerType + "; declaring class: " + member.getDeclaringClass());
     }
 
-    Type returnType = Types.unrollVariables(typeArguments, member instanceof Method ? ((Method)member).getGenericReturnType() : ((Field)member).getGenericType());
+    Type returnType = Types.resolveVariables(typeArguments, member instanceof Method ? ((Method)member).getGenericReturnType() : ((Field)member).getGenericType());
 
     if(returnType == null) {
       throw new DefinitionException(element, "has unresolvable return type");

@@ -131,7 +131,7 @@ public class Types {
    * @param type a type to unroll variable assignments for, cannot be {@code null}
    * @return a {@link Type} or {@code null} when not all variables can be resolved
    */
-  public static Type unrollVariables(Map<TypeVariable<?>, Type> typeArguments, Type type) {  // FIXME rename resolve
+  public static Type resolveVariables(Map<TypeVariable<?>, Type> typeArguments, Type type) {
     return TypeUtils.unrollVariables(typeArguments, type);
   }
 
