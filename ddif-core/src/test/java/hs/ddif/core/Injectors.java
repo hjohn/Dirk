@@ -111,7 +111,7 @@ public class Injectors {
 
     List<InjectableExtension> injectableExtensions = new ArrayList<>();
 
-    injectableExtensions.add(new ProviderInjectableExtension(PROVIDER_METHOD, methodInjectableFactory));
+    injectableExtensions.add(new ProviderInjectableExtension(methodInjectableFactory, PROVIDER_METHOD));
     injectableExtensions.add(new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory, Produces.class));
 
     return new DefaultDiscovererFactory(autoDiscovery, injectableExtensions, classInjectableFactory);

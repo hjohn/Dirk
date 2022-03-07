@@ -208,7 +208,7 @@ public class InjectorBuilder {
     public Builder5 injectableExtensions(Function<Context4, List<InjectableExtension>> callback) {
       List<InjectableExtension> injectableExtensions = new ArrayList<>();
 
-      injectableExtensions.add(new ProviderInjectableExtension(PROVIDER_METHOD, context.methodInjectableFactory));
+      injectableExtensions.add(new ProviderInjectableExtension(context.methodInjectableFactory, PROVIDER_METHOD));
       injectableExtensions.add(new ProducesInjectableExtension(context.methodInjectableFactory, context.fieldInjectableFactory, Produces.class));
       injectableExtensions.addAll(callback.apply(context));
 
