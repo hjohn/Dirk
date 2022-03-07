@@ -14,18 +14,18 @@ import java.util.List;
  * an additional injectable for the type the provider provides.
  */
 public class ProviderInjectableExtension implements InjectableExtension {
-  private final Method providerMethod;
   private final MethodInjectableFactory methodInjectableFactory;
+  private final Method providerMethod;
 
   /**
    * Constructs a new instance.
    *
-   * @param providerMethod a getter {@link Method} of a provider type, cannot be {@code null}
    * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
+   * @param providerMethod a getter {@link Method} of a provider type, cannot be {@code null}
    */
-  public ProviderInjectableExtension(Method providerMethod, MethodInjectableFactory methodInjectableFactory) {
-    this.providerMethod = providerMethod;
+  public ProviderInjectableExtension(MethodInjectableFactory methodInjectableFactory, Method providerMethod) {
     this.methodInjectableFactory = methodInjectableFactory;
+    this.providerMethod = providerMethod;
   }
 
   @Override
