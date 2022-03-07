@@ -126,6 +126,13 @@ public class AnnotationsTest {
           Annotations.of(Deep.class),
           Annotations.of(Wet.class)
         );
+
+      assertThat(Annotations.findDirectlyMetaAnnotatedAnnotations(A.class.getDeclaredField("field1"), Cold.class))
+        .containsExactlyInAnyOrder(
+          Annotations.of(Deeper.class),
+          Annotations.of(Deep.class),
+          Annotations.of(Wet.class)
+        );
     }
 
     @Test
@@ -138,11 +145,17 @@ public class AnnotationsTest {
     void shouldNotFindItself() throws Exception {
       assertThat(Annotations.findDirectlyMetaAnnotatedAnnotations(A.class.getDeclaredField("field1"), Annotations.of(Deepest.class)))
         .isEmpty();
+
+      assertThat(Annotations.findDirectlyMetaAnnotatedAnnotations(A.class.getDeclaredField("field1"), Deepest.class))
+        .isEmpty();
     }
 
     @Test
     void shouldFindItselfIfMetaAnnotatedWithItself() throws Exception {
       assertThat(Annotations.findDirectlyMetaAnnotatedAnnotations(A.class.getDeclaredField("field1"), Annotations.of(Hot.class)))
+        .containsExactlyInAnyOrder(Annotations.of(Hot.class));
+
+      assertThat(Annotations.findDirectlyMetaAnnotatedAnnotations(A.class.getDeclaredField("field1"), Hot.class))
         .containsExactlyInAnyOrder(Annotations.of(Hot.class));
     }
 
