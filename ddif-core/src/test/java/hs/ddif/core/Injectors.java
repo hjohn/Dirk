@@ -2,6 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
+import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.ProducesInjectableExtension;
 import hs.ddif.core.config.ProviderInjectableExtension;
@@ -118,7 +119,7 @@ public class Injectors {
 
     List<InjectableExtension> injectableExtensions = List.of(
       new ProviderInjectableExtension(PROVIDER_METHOD, methodInjectableFactory),
-      new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory),
+      new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory, Produces.class),
       new AssistedInjectableExtension(classInjectableFactory, ASSISTED_ANNOTATION_STRATEGY)
     );
 
