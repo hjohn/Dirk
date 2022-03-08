@@ -7,6 +7,7 @@ import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.config.ListTypeExtension;
 import hs.ddif.core.config.ProducesInjectableExtension;
 import hs.ddif.core.config.ProviderInjectableExtension;
+import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
 import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
@@ -233,7 +234,7 @@ public class InjectorBuilder {
 
       typeExtensions.put(List.class, new ListTypeExtension<>(context.annotationStrategy));
       typeExtensions.put(Set.class, new SetTypeExtension<>(context.annotationStrategy));
-      typeExtensions.put(Provider.class, new ProviderTypeExtension<>());
+      typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
 
       TypeExtensionStore store = new TypeExtensionStore(new DirectTypeExtension<>(context.annotationStrategy), typeExtensions);
 
