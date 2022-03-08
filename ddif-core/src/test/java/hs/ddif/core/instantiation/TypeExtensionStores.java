@@ -1,8 +1,8 @@
 package hs.ddif.core.instantiation;
 
-import hs.ddif.core.ProviderTypeExtension;
 import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.config.ListTypeExtension;
+import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
 import hs.ddif.core.definition.bind.AnnotationStrategy;
 
@@ -20,7 +20,7 @@ public class TypeExtensionStores {
 
     typeExtensions.put(List.class, new ListTypeExtension<>(annotationStrategy));
     typeExtensions.put(Set.class, new SetTypeExtension<>(annotationStrategy));
-    typeExtensions.put(Provider.class, new ProviderTypeExtension<>());
+    typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
 
     return new TypeExtensionStore(new DirectTypeExtension<>(annotationStrategy), typeExtensions);
   }
