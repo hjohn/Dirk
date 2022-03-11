@@ -47,6 +47,14 @@
     <connection>scm:git:https://github.com/hjohn/hs.ddif.git</connection>
   </scm>
 
+  <developers>
+    <developer>
+      <id>hjohn</id>
+      <name>John Hendrikx</name>
+      <email>john.hendrikx@gmail.com</email>
+    </developer>
+  </developers>
+
   <distributionManagement>
     <snapshotRepository>
       <id>sonatype-nexus-snapshots</id>
