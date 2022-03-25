@@ -6,6 +6,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -22,10 +23,12 @@ public class ComponentScanner {
 
   private final Reflections reflections;
   private final QueryFunction<Store, String> scanDefinition;
+  private final Predicate<Class<?>> filter;
 
-  ComponentScanner(Reflections reflections, QueryFunction<Store, String> scanDefinition) {
+  ComponentScanner(Reflections reflections, QueryFunction<Store, String> scanDefinition, Predicate<Class<?>> filter) {
     this.reflections = reflections;
     this.scanDefinition = scanDefinition;
+    this.filter = filter;
   }
 
   /**
@@ -49,6 +52,7 @@ public class ComponentScanner {
           .filter(ReflectionUtilsPredicates.withClassModifier(Modifier.ABSTRACT).negate())
       )
       .stream()
+      .filter(filter)
       .sorted(Comparator.comparing(Type::getTypeName))
       .collect(Collectors.toList());
   }
