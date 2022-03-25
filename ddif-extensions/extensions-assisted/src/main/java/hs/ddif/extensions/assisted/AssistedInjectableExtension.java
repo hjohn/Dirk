@@ -22,8 +22,10 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
@@ -140,7 +142,10 @@ public class AssistedInjectableExtension implements InjectableExtension {
         try {
           String name = parameter == null ? strategy.determineArgumentName(accessibleObject) : strategy.determineArgumentName(parameter);
 
-          parameterBindings.put(name, binding);
+          if(parameterBindings.put(name, binding) != null) {
+            throw new DefinitionException(accessibleObject, "has a duplicate argument name: " + name);
+          }
+
           providerFieldNames.add(null);
         }
         catch(MissingArgumentException e) {
@@ -321,6 +326,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
 
       Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
       Parameter[] parameters = factoryMethod.getParameters();
+      Set<String> encounteredNames = new HashSet<>();
 
       for(int i = 0; i < parameters.length; i++) {
         try {
@@ -334,6 +340,10 @@ public class AssistedInjectableExtension implements InjectableExtension {
 
           if(!Types.raw(argumentBindings.get(name).getType()).equals(Types.raw(factoryArgumentType))) {
             throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
+          }
+
+          if(!encounteredNames.add(name)) {
+            throw new DefinitionException(factoryMethod, "has a duplicate argument name: " + name);
           }
 
           names.add(name);

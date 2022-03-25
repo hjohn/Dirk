@@ -397,6 +397,42 @@ public class AssistedInjectionTest {
   }
 
   @Test
+  public void shouldRejectDuplicateArgumentNamesInProducer() {
+    assertThatThrownBy(() -> injector.register(ProducerWithDuplicateArgumentNames.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [public abstract hs.ddif.extensions.assisted.AssistedInjectionTest$ProductWithTwoArguments hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithDuplicateArgumentNames.create(java.lang.String,java.lang.String)] has a duplicate argument name: a")
+      .hasNoCause();
+  }
+
+  public static class ProductWithTwoArguments {
+    @Inject @Argument String a;
+    @Inject @Argument String b;
+  }
+
+  @Assisted
+  interface ProducerWithDuplicateArgumentNames {
+    ProductWithTwoArguments create(@Argument("a") String a, @Argument("a") String b);
+  }
+
+  @Test
+  public void shouldRejectDuplicateArgumentNamesInProduct() {
+    assertThatThrownBy(() -> injector.register(ProducerForProductWithDuplicateNames.class))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Field [java.lang.String hs.ddif.extensions.assisted.AssistedInjectionTest$ProductWithDuplicateNames.b] has a duplicate argument name: a")
+      .hasNoCause();
+  }
+
+  public static class ProductWithDuplicateNames {
+    @Inject @Argument String a;
+    @Inject @Argument("a") String b;
+  }
+
+  @Assisted
+  interface ProducerForProductWithDuplicateNames {
+    ProductWithDuplicateNames create(String a, String b);
+  }
+
+  @Test
   public void shouldConstructComplicatedProduct() {
     injector.register(ComplicatedProductFactory.class);
     injector.registerInstance(3, Annotations.of(Green.class));
