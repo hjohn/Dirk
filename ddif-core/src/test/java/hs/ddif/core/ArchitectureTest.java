@@ -8,11 +8,13 @@ import com.tngtech.archunit.library.DependencyRules;
 
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
-@AnalyzeClasses(packages = "hs.ddif.core", importOptions = ImportOption.DoNotIncludeTests.class)
+@AnalyzeClasses(packages = ArchitectureTest.BASE_PACKAGE_NAME, importOptions = ImportOption.DoNotIncludeTests.class)
 public class ArchitectureTest {
-  @ArchTest
-  public static final ArchRule packagesShouldBeFreeOfCycles = slices().matching("hs.ddif.(**)").should().beFreeOfCycles();
+  static final String BASE_PACKAGE_NAME = "hs.ddif.core";
 
   @ArchTest
-  public static final ArchRule noClassesShouldDependOnUpperPackages = DependencyRules.NO_CLASSES_SHOULD_DEPEND_UPPER_PACKAGES;
+  private final ArchRule packagesShouldBeFreeOfCycles = slices().matching(BASE_PACKAGE_NAME + ".(**)").should().beFreeOfCycles();
+
+  @ArchTest
+  private final ArchRule noClassesShouldDependOnUpperPackages = DependencyRules.NO_CLASSES_SHOULD_DEPEND_UPPER_PACKAGES;
 }
