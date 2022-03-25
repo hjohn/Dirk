@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType.Builder;
+import net.bytebuddy.dynamic.DynamicType.Unloaded;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.MethodDelegation;
@@ -190,18 +191,7 @@ public class AssistedInjectableExtension implements InjectableExtension {
        * Generate the factory:
        */
 
-      Class<?> factoryClass = Types.raw(factoryType);
-      Class<?> cls = builder
-        .make()
-        .load(getClass().getClassLoader(), ClassLoadingStrategy.UsingLookup.withFallback(() -> {
-          try {
-            return MethodHandles.privateLookupIn(factoryClass, MethodHandles.lookup());
-          }
-          catch(IllegalAccessException e) {
-            return MethodHandles.lookup();
-          }
-        }))
-        .getLoaded();
+      Class<?> cls = load(builder.make());
 
       /*
        * Set the field list on the factory:
@@ -213,6 +203,22 @@ public class AssistedInjectableExtension implements InjectableExtension {
       interceptor.initialize(parameterBindings, productBindings, providerFields, names);
 
       return cls;
+    }
+
+    private Class<?> load(Unloaded<?> unloaded) {
+      try {
+        return unloaded.load(getClass().getClassLoader(), ClassLoadingStrategy.UsingLookup.withFallback(() -> {
+          try {
+            return MethodHandles.privateLookupIn(productClass, MethodHandles.lookup());
+          }
+          catch(IllegalArgumentException | IllegalAccessException e) {
+            return MethodHandles.lookup();
+          }
+        })).getLoaded();
+      }
+      catch(Exception e) {
+        return unloaded.load(getClass().getClassLoader()).getLoaded();
+      }
     }
 
     private List<String> validateProducerAndReturnArgumentNames(Map<String, Binding> argumentBindings) {
