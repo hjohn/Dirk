@@ -274,6 +274,21 @@ public class AssistedInjectionTest {
   }
 
   @Test
+  public void registerShouldMatchArgumentsByTypeIfProducerNotAnnotated() {
+    injector.register(ProducerForProductWithMismatchingArgumentNames.class);
+  }
+
+  @Assisted
+  public static class ProductWithMismatchingArgumentNames {
+    @Inject @Argument String s;
+    @Inject @Argument double x;
+  }
+
+  interface ProducerForProductWithMismatchingArgumentNames {
+    ProductWithMismatchingArgumentNames create(String t, double y);
+  }
+
+  @Test
   public void registerShouldAcceptProducerWhichNeedsNoFurtherConstruction() {
     injector.register(AutonomousProducer.class);
 

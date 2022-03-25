@@ -225,29 +225,72 @@ public class AssistedInjectableExtension implements InjectableExtension {
       Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
       Parameter[] parameters = factoryMethod.getParameters();
       Set<String> encounteredNames = new HashSet<>();
+      boolean hasAnnotatedParameters = false;
 
       for(int i = 0; i < parameters.length; i++) {
-        try {
-          String name = strategy.determineArgumentName(parameters[i]);
-
-          if(!argumentBindings.containsKey(name)) {
-            throw new DefinitionException(factoryMethod, "is missing required argument with name: " + name);
-          }
-
-          Type factoryArgumentType = Primitives.toBoxed(genericParameterTypes[i]);
-
-          if(!Types.raw(argumentBindings.get(name).getType()).equals(Types.raw(factoryArgumentType))) {
-            throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
-          }
-
-          if(!encounteredNames.add(name)) {
-            throw new DefinitionException(factoryMethod, "has a duplicate argument name: " + name);
-          }
-
-          names.add(name);
+        if(strategy.isArgument(parameters[i])) {
+          hasAnnotatedParameters = true;
+          break;
         }
-        catch(MissingArgumentException e) {
-          throw new DefinitionException(factoryMethod, "is missing argument name for [" + parameters[i] + "]", e);
+      }
+
+      try {
+        for(int i = 0; i < parameters.length; i++) {
+          try {
+            String name = strategy.determineArgumentName(parameters[i]);
+
+            if(!argumentBindings.containsKey(name)) {
+              throw new DefinitionException(factoryMethod, "is missing required argument with name: " + name);
+            }
+
+            Type factoryArgumentType = Types.resolveVariables(factoryTypeArguments, Primitives.toBoxed(genericParameterTypes[i]));
+
+            if(!argumentBindings.get(name).getType().equals(factoryArgumentType)) {
+              throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
+            }
+
+            if(!encounteredNames.add(name)) {
+              throw new DefinitionException(factoryMethod, "has a duplicate argument name: " + name);
+            }
+
+            names.add(name);
+          }
+          catch(MissingArgumentException e) {
+            throw new DefinitionException(factoryMethod, "is missing argument name for [" + parameters[i] + "]", e);
+          }
+        }
+      }
+      catch(Exception e) {
+        try {
+          if(!hasAnnotatedParameters) {
+            return validateProducerByTypeAndReturnArgumentNames(argumentBindings);
+          }
+        }
+        catch(DefinitionException e2) {
+          e.addSuppressed(e2);
+        }
+
+        throw e;
+      }
+
+      return names;
+    }
+
+    private List<String> validateProducerByTypeAndReturnArgumentNames(Map<String, Binding> argumentBindings) {
+      List<String> names = new ArrayList<>();
+
+      Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
+      Parameter[] parameters = factoryMethod.getParameters();
+
+      for(int i = 0; i < parameters.length; i++) {
+        Type factoryArgumentType = Primitives.toBoxed(Types.resolveVariables(factoryTypeArguments, genericParameterTypes[i]));
+        List<String> matches = argumentBindings.entrySet().stream().filter(e -> e.getValue().getType().equals(factoryArgumentType)).map(Map.Entry::getKey).collect(Collectors.toList());
+
+        if(matches.size() == 1) {
+          names.add(matches.get(0));
+        }
+        else {
+          throw new DefinitionException(factoryMethod, "parameter " + i + " could not be matched by its type: " + factoryArgumentType);
         }
       }
 
