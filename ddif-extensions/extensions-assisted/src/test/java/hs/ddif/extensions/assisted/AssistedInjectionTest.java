@@ -12,10 +12,13 @@ import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
+import hs.ddif.core.util.Types;
 
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Disabled;
@@ -447,6 +450,22 @@ public class AssistedInjectionTest {
 
   interface ProducerForProductWithDuplicateNames {
     ProductWithDuplicateNames create(String a, String b);
+  }
+
+  @Test
+  public void shouldBePossibleToUseBiFunction() {
+    injector.register(TestService.class);
+
+    ParameterizedType factoryType = Types.parameterize(BiFunction.class, Integer.class, Double.class, TestAssistedAbstractSample.class);
+
+    injector.register(factoryType);
+
+    BiFunction<Integer, Double, TestAssistedAbstractSample> instance = injector.getInstance(factoryType);
+
+    TestAssistedAbstractSample sample = instance.apply(5, 4.5);
+
+    assertThat(sample.interval).isEqualTo(5);
+    assertThat(sample.factor).isEqualTo(4.5);
   }
 
   @Test
