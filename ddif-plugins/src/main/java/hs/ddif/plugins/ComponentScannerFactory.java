@@ -3,6 +3,7 @@ package hs.ddif.plugins;
 import java.lang.reflect.AnnotatedElement;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,24 @@ public class ComponentScannerFactory {
   private final AnnotatedElement[] fieldAnnotations;
   private final AnnotatedElement[] methodAnnotations;
   private final AnnotatedElement[] constructorAnnotations;
+  private final Predicate<Class<?>> filter;
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param typeAnnotations an array of annotations to scan for on types, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param fieldAnnotations an array of annotations to scan for on fields, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param methodAnnotations an array of annotations to scan for on methods, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param constructorAnnotations an array of annotations to scan for on constructors, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param filter an inclusion filter for the classes detected, can be {@code null} in which case all detected classes are included
+   */
+  public ComponentScannerFactory(AnnotatedElement[] typeAnnotations, AnnotatedElement[] fieldAnnotations, AnnotatedElement[] methodAnnotations, AnnotatedElement[] constructorAnnotations, Predicate<Class<?>> filter) {
+    this.typeAnnotations = typeAnnotations.clone();
+    this.fieldAnnotations = fieldAnnotations.clone();
+    this.methodAnnotations = methodAnnotations.clone();
+    this.constructorAnnotations = constructorAnnotations.clone();
+    this.filter = filter == null ? x -> true : filter;
+  }
 
   /**
    * Constructs a new instance.
@@ -40,10 +59,7 @@ public class ComponentScannerFactory {
    * @param constructorAnnotations an array of annotations to scan for on constructors, cannot be {@code null} or contain {@code null}s but can be empty
    */
   public ComponentScannerFactory(AnnotatedElement[] typeAnnotations, AnnotatedElement[] fieldAnnotations, AnnotatedElement[] methodAnnotations, AnnotatedElement[] constructorAnnotations) {
-    this.typeAnnotations = typeAnnotations.clone();
-    this.fieldAnnotations = fieldAnnotations.clone();
-    this.methodAnnotations = methodAnnotations.clone();
-    this.constructorAnnotations = constructorAnnotations.clone();
+    this(typeAnnotations, fieldAnnotations, methodAnnotations, constructorAnnotations, null);
   }
 
   /**
@@ -64,7 +80,7 @@ public class ComponentScannerFactory {
       .filterInputsBy(s -> filterPattern.matcher(s).matches())
       .setScanners(SCANNERS);
 
-    return new ComponentScanner(new Reflections(configuration), getScanDefinition());
+    return new ComponentScanner(new Reflections(configuration), getScanDefinition(), filter);
   }
 
   /**
@@ -78,16 +94,16 @@ public class ComponentScannerFactory {
       .addUrls(urls)
       .setScanners(SCANNERS);
 
-    return new ComponentScanner(new Reflections(configuration), getScanDefinition());
+    return new ComponentScanner(new Reflections(configuration), getScanDefinition(), filter);
   }
 
   private QueryFunction<Store, String> getScanDefinition() {
     return Scanners.TypesAnnotated.with(typeAnnotations)
       .add(
         Scanners.FieldsAnnotated.with(fieldAnnotations)
-        .add(Scanners.MethodsAnnotated.with(methodAnnotations))
-        .add(Scanners.ConstructorsAnnotated.with(constructorAnnotations))
-        .map(ComponentScannerFactory::reduceToClassName)
+          .add(Scanners.MethodsAnnotated.with(methodAnnotations))
+          .add(Scanners.ConstructorsAnnotated.with(constructorAnnotations))
+          .map(ComponentScannerFactory::reduceToClassName)
       );
   }
 
