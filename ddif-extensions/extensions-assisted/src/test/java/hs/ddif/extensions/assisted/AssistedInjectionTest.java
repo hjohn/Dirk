@@ -122,11 +122,10 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithMultipleAbstractMethods() {
     assertThatThrownBy(() -> injector.register(ProducerWithMultipleAbtractMethods.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithMultipleAbtractMethods] must have a single abstract method to qualify for assisted injection")
+      .hasMessage("Exception occurred during discovery via path: [hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithMultipleAbtractMethods]")
       .hasNoCause();
   }
 
-  @Assisted
   public abstract static class ProducerWithMultipleAbtractMethods {
     public abstract TestService create(String input);
     public abstract TestService create2(String input);
@@ -136,39 +135,42 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithIllegalReturnType() {
     assertThatThrownBy(() -> injector.register(ProducerWithIncorrectReturnType.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public abstract java.lang.Object hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithIncorrectReturnType.create(java.lang.String)] must not have unresolvable type variables to qualify for assisted injection: [T]")
+      .hasMessage("Method [public abstract hs.ddif.extensions.assisted.AssistedInjectionTest$Stuff hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithIncorrectReturnType.create(java.lang.String)] must not have unresolvable type variables to qualify for assisted injection")
       .hasNoCause();
-  }
 
-  @Assisted
-  public interface ProducerWithIncorrectReturnType<T> {
-    T create(String input);
-  }
-
-  @Test
-  public void registerShouldRejectProducerWithPrimitiveReturnType() {
-    assertThatThrownBy(() -> injector.register(ProducerWithPrimitiveReturnType.class))
+    assertThatThrownBy(() -> injector.register(ProducerWithIncorrectReturnType2.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public abstract int hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithPrimitiveReturnType.create(java.lang.String)] must not return a primitive type to qualify for assisted injection")
+      .hasMessage("Method [public abstract hs.ddif.extensions.assisted.AssistedInjectionTest$Stuff hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithIncorrectReturnType2.create(java.lang.String)] must not have unresolvable type variables to qualify for assisted injection")
       .hasNoCause();
   }
 
   @Assisted
-  public interface ProducerWithPrimitiveReturnType {
-    int create(String input);
+  public static class Stuff<T> {
+    T field;
+  }
+
+  interface ProducerWithIncorrectReturnType<T> {
+    Stuff<T> create(String input);
+  }
+
+  interface ProducerWithIncorrectReturnType2 {
+    <T> Stuff<T> create(String input);
   }
 
   @Test
   public void registerShouldRejectProducerWithAbstractReturnType() {
     assertThatThrownBy(() -> injector.register(ProducerWithAbstractReturnType.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public abstract java.lang.Number hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithAbstractReturnType.create(java.lang.String)] must return a concrete type to qualify for assisted injection")
+      .hasMessage("Method [public abstract hs.ddif.extensions.assisted.AssistedInjectionTest$AbstractProduct hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithAbstractReturnType.create(java.lang.String)] must return a concrete type to qualify for assisted injection")
       .hasNoCause();
   }
 
   @Assisted
+  public static abstract class AbstractProduct {
+  }
+
   public interface ProducerWithAbstractReturnType {
-    Number create(String input);
+    AbstractProduct create(String input);
   }
 
   @Test
@@ -179,12 +181,12 @@ public class AssistedInjectionTest {
       .hasNoCause();
   }
 
+  @Assisted
   public static class TestAssistedInjectionClassWithProducerWithIncorrectParameterCount {
     @Inject
     public TestAssistedInjectionClassWithProducerWithIncorrectParameterCount() {}
   }
 
-  @Assisted
   public interface ProducerWithIncorrectParameterCount {
     TestAssistedInjectionClassWithProducerWithIncorrectParameterCount create(Double notNeeded);
   }
@@ -197,6 +199,7 @@ public class AssistedInjectionTest {
       .hasNoCause();
   }
 
+  @Assisted
   public static class TestAssistedInjectionClassWithProducerWithIncorrectParameterType {
     @Inject @Argument private String text;
 
@@ -204,7 +207,6 @@ public class AssistedInjectionTest {
     public TestAssistedInjectionClassWithProducerWithIncorrectParameterType() {}
   }
 
-  @Assisted
   public interface ProducerWithIncorrectParameterType {
     TestAssistedInjectionClassWithProducerWithIncorrectParameterType create(@Argument("text") Double text);
   }
@@ -217,6 +219,7 @@ public class AssistedInjectionTest {
       .hasNoCause();
   }
 
+  @Assisted
   public static class TestAssistedInjectionClassWithProducerWithIncorrectParameter {
     @Inject @Argument private String text;
 
@@ -224,7 +227,6 @@ public class AssistedInjectionTest {
     public TestAssistedInjectionClassWithProducerWithIncorrectParameter() {}
   }
 
-  @Assisted
   public interface ProducerWithIncorrectParameter {
     TestAssistedInjectionClassWithProducerWithIncorrectParameter create(@Argument("incorrect") String incorrect);
   }
@@ -304,6 +306,7 @@ public class AssistedInjectionTest {
     assertNotNull(injector.getInstance(AbstractProducerWithNoParameters.class).create());
   }
 
+  @Assisted
   public static class TestTargetWithAbstactProducerAndNoParameters {
     String text;
 
@@ -313,7 +316,6 @@ public class AssistedInjectionTest {
     }
   }
 
-  @Assisted
   public static abstract class AbstractProducerWithNoParameters {
     public abstract TestTargetWithAbstactProducerAndNoParameters create();
   }
@@ -350,6 +352,7 @@ public class AssistedInjectionTest {
       .hasNoCause();
   }
 
+  @Assisted
   public static class Product {
     final String input;
 
@@ -359,7 +362,6 @@ public class AssistedInjectionTest {
     }
   }
 
-  @Assisted
   public static abstract class ProducerWithFinalBinding {
     @Inject final int i = 2;  // bad because final
 
@@ -379,6 +381,7 @@ public class AssistedInjectionTest {
       .hasNoCause();
   }
 
+  @Assisted
   public static class BadProduct {
     final String input;
     @Inject final int x = 5;
@@ -389,7 +392,6 @@ public class AssistedInjectionTest {
     }
   }
 
-  @Assisted
   public static abstract class ProducerWithBadBindings {
     @Inject String s;
 
@@ -404,12 +406,12 @@ public class AssistedInjectionTest {
       .hasNoCause();
   }
 
+  @Assisted
   public static class ProductWithTwoArguments {
     @Inject @Argument String a;
     @Inject @Argument String b;
   }
 
-  @Assisted
   interface ProducerWithDuplicateArgumentNames {
     ProductWithTwoArguments create(@Argument("a") String a, @Argument("a") String b);
   }
@@ -422,12 +424,12 @@ public class AssistedInjectionTest {
       .hasNoCause();
   }
 
+  @Assisted
   public static class ProductWithDuplicateNames {
     @Inject @Argument String a;
     @Inject @Argument("a") String b;
   }
 
-  @Assisted
   interface ProducerForProductWithDuplicateNames {
     ProductWithDuplicateNames create(String a, String b);
   }
@@ -452,6 +454,7 @@ public class AssistedInjectionTest {
     assertThat(product.calculate()).isEqualTo((3 + 4) * (2 * 7) + 13);
   }
 
+  @Assisted
   public static class TestTargetWithInterfaceProducerAndNoParameters {
     String text;
 
@@ -461,11 +464,11 @@ public class AssistedInjectionTest {
     }
   }
 
-  @Assisted
   public interface InterfaceProducerWithNoParameters {
     TestTargetWithInterfaceProducerAndNoParameters create();
   }
 
+  @Assisted
   public static class TestAssistedSample {
     @Inject public TestService testService;
     @Inject @Argument public Integer interval;
@@ -474,21 +477,22 @@ public class AssistedInjectionTest {
     public TestAssistedSample() {}
   }
 
+  @Assisted
   public static class TestAssistedAbstractSample {
-    @Inject public TestService testService;
+    public TestService testService;
     @Inject @Argument public int interval;
     @Inject @Argument public Double factor;
 
     @Inject
-    public TestAssistedAbstractSample() {}
+    public TestAssistedAbstractSample(TestService testService) {
+      this.testService = testService;
+    }
   }
 
-  @Assisted
   public interface TestAssistedSampleFactory {
     TestAssistedSample create(@Argument("interval") Integer interval);
   }
 
-  @Assisted
   public static abstract class TestAssistedAbstractSampleFactory {
     @Inject private ValueSupplier valueSupplier;
 
@@ -499,7 +503,6 @@ public class AssistedInjectionTest {
     public abstract TestAssistedAbstractSample create(@Argument("interval") int interval, @Argument("factor") Double factor);
   }
 
-  @Assisted
   public static abstract class TestAssistedAbstractSampleFactoryWithConstructor {
     private ValueSupplier valueSupplier;
 
@@ -515,6 +518,7 @@ public class AssistedInjectionTest {
     public abstract TestAssistedAbstractSample create(@Argument("interval") Integer interval, @Argument("factor") double factor);
   }
 
+  @Assisted
   public static class TestService {
   }
 
@@ -525,6 +529,7 @@ public class AssistedInjectionTest {
     }
   }
 
+  @Assisted
   public static class ComplicatedProduct {
     @Inject private @Green Provider<List<Integer>> numbers;
     @Inject private @Red Set<Integer> multipliers;
@@ -540,7 +545,6 @@ public class AssistedInjectionTest {
     }
   }
 
-  @Assisted
   interface ComplicatedProductFactory {
     ComplicatedProduct create(int offset);
   }
