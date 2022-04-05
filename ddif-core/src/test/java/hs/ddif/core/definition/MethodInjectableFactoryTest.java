@@ -1,7 +1,7 @@
 package hs.ddif.core.definition;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
@@ -51,10 +51,10 @@ public class MethodInjectableFactoryTest {
   void createShouldRejectMethodWithUnresolvableTypeVariables() {
     assertThatThrownBy(() -> factory.create(B.class.getDeclaredMethod("d"), B.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public java.util.List hs.ddif.core.definition.MethodInjectableFactoryTest$B.d()] has unsuitable type")
+      .hasMessage("Method [public java.util.Queue hs.ddif.core.definition.MethodInjectableFactoryTest$B.d()] has unsuitable type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BadQualifiedTypeException.class)
-      .hasMessage("[java.util.List<T>] cannot have unresolvable type variables or wild cards")
+      .hasMessage("[java.util.Queue<T>] cannot have unresolvable type variables or wild cards")
       .hasNoCause();
   }
 
@@ -124,8 +124,8 @@ public class MethodInjectableFactoryTest {
       return (T)"Bye";
     }
 
-    public List<T> d() {
-      return new ArrayList<>();
+    public Queue<T> d() {
+      return new ArrayDeque<>();
     }
   }
 

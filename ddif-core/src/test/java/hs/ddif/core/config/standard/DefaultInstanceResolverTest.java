@@ -17,7 +17,6 @@ import hs.ddif.core.instantiation.DefaultInstantiatorFactory;
 import hs.ddif.core.instantiation.InstantiationContext;
 import hs.ddif.core.instantiation.InstantiatorFactory;
 import hs.ddif.core.instantiation.TypeExtensionStore;
-import hs.ddif.core.instantiation.TypeExtensionStores;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.instantiation.domain.MultipleInstances;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
@@ -62,13 +61,13 @@ public class DefaultInstanceResolverTest {
     }
   };
 
-  private final TypeExtensionStore typeExtensionStore = TypeExtensionStores.create(InjectableFactories.ANNOTATION_STRATEGY);
+  private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);
+  private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager);
+  private final TypeExtensionStore typeExtensionStore = injectableFactories.getTypeExtensionStore();
   private final InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
   private final InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-  private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);
-  private final InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
+  private final InjectableStore store = new InjectableStore(instantiatorBindingMap);
   private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
-  private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager);
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
   private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
   private final InstanceInjectableFactory instanceInjectableFactory = injectableFactories.forInstance();

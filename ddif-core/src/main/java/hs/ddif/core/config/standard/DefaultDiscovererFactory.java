@@ -76,7 +76,7 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
   }
 
   private class SimpleDiscoverer implements Discoverer {
-    private final QualifiedTypeStore<Injectable<?>> tempStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), t -> true);
+    private final QualifiedTypeStore<Injectable<?>> tempStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), i -> i.getTypes());
 
     /**
      * When auto discovery is on, keeps track of unresolved bindings. A linked hash set

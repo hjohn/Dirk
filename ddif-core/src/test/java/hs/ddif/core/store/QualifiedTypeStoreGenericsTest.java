@@ -9,7 +9,7 @@ import hs.ddif.core.util.TypeReference;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Queue;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +27,7 @@ public class QualifiedTypeStoreGenericsTest {
 
   @BeforeEach
   public void beforeEach() {
-    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), cls -> true);
+    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), Injectable::getTypes);
   }
 
   /**
@@ -90,7 +90,7 @@ public class QualifiedTypeStoreGenericsTest {
 
   @Test
   public void shouldBeAbleToAddAndRemoveResolvedGenericInterface() throws NoSuchMethodException, SecurityException {
-    Injectable<List<String>> injectable = methodInjectableFactory.create(
+    Injectable<Queue<String>> injectable = methodInjectableFactory.create(
       SuppliesGenericResolvedInterface.class.getDeclaredMethod("supply"),
       SuppliesGenericResolvedInterface.class
     );
@@ -100,7 +100,7 @@ public class QualifiedTypeStoreGenericsTest {
   }
 
   public static class SuppliesGenericResolvedInterface {
-    public List<String> supply() {
+    public Queue<String> supply() {
       return null;
     }
   }

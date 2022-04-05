@@ -12,12 +12,12 @@ import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.util.Annotations;
+import hs.ddif.core.util.Types;
 
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,7 +47,7 @@ public class DefaultInjectableTest {
 
   @Test
   void constructorShouldAcceptValidParameters() throws InstanceCreationFailure, BadQualifiedTypeException {
-    Injectable<String> injectable = new DefaultInjectable<>(String.class, new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, constructable);
+    Injectable<String> injectable = new DefaultInjectable<>(String.class, Set.of(String.class), new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, constructable);
 
     assertThat(injectable.create(List.of())).isEqualTo("5");
     assertThat(injectable.getType()).isEqualTo(String.class);
@@ -56,10 +56,10 @@ public class DefaultInjectableTest {
     assertThat(injectable.getBindings()).isEmpty();
     assertThat(injectable.toString()).isEqualTo("Injectable[java.lang.String]");
 
-    injectable = new DefaultInjectable<>(String.class, new QualifiedType(TypeUtils.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class))), List.of(binding1, binding2, binding3), SCOPE_RESOLVER, null, constructable);
+    injectable = new DefaultInjectable<>(String.class, Set.of(Types.parameterize(Supplier.class, String.class)), new QualifiedType(Types.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class))), List.of(binding1, binding2, binding3), SCOPE_RESOLVER, null, constructable);
 
     assertThat(injectable.create(List.of())).isEqualTo("5");
-    assertThat(injectable.getType()).isEqualTo(TypeUtils.parameterize(Supplier.class, String.class));
+    assertThat(injectable.getType()).isEqualTo(Types.parameterize(Supplier.class, String.class));
     assertThat(injectable.getScopeResolver()).isEqualTo(SCOPE_RESOLVER);
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class), Annotations.of(Green.class));
     assertThat(injectable.getBindings()).containsExactly(binding1, binding2, binding3);
@@ -68,27 +68,37 @@ public class DefaultInjectableTest {
 
   @Test
   void constructorShouldRejectBadParameters() {
-    assertThatThrownBy(() -> new DefaultInjectable<>(null, new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, constructable))
+    assertThatThrownBy(() -> new DefaultInjectable<>(null, Set.of(String.class), new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, constructable))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("ownerType cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, null, List.of(), SCOPE_RESOLVER, null, constructable))
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, null, null, List.of(), SCOPE_RESOLVER, null, constructable))
+      .isExactlyInstanceOf(IllegalArgumentException.class)
+      .hasMessage("types cannot be null")
+      .hasNoCause();
+
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, Set.of(Integer.class), null, List.of(), SCOPE_RESOLVER, null, constructable))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("qualifiedType cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), null, SCOPE_RESOLVER, null, constructable))
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, Set.of(String.class), null, List.of(), SCOPE_RESOLVER, null, constructable))
+      .isExactlyInstanceOf(IllegalArgumentException.class)
+      .hasMessage("qualifiedType cannot be null")
+      .hasNoCause();
+
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, Set.of(String.class), new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), null, SCOPE_RESOLVER, null, constructable))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("bindings cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), null, null, constructable))
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, Set.of(String.class), new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), null, null, constructable))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("scopeResolver cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), SCOPE_RESOLVER, null, null))
+    assertThatThrownBy(() -> new DefaultInjectable<>(String.class, Set.of(String.class), new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), SCOPE_RESOLVER, null, null))
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("constructable cannot be null")
       .hasNoCause();
@@ -99,8 +109,8 @@ public class DefaultInjectableTest {
     EqualsVerifier
       .forClass(DefaultInjectable.class)
       .withNonnullFields("qualifiedType", "ownerType")
-      .withCachedHashCode("hashCode", "calculateHash", new DefaultInjectable<>(String.class, new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), SCOPE_RESOLVER, null, constructable))
-      .withIgnoredFields("bindings", "scopeResolver", "constructable")
+      .withCachedHashCode("hashCode", "calculateHash", new DefaultInjectable<>(String.class, Set.of(String.class), new QualifiedType(String.class, Set.of(Annotations.of(Red.class))), List.of(), SCOPE_RESOLVER, null, constructable))
+      .withIgnoredFields("bindings", "types", "scopeResolver", "constructable")
       .verify();
   }
 }

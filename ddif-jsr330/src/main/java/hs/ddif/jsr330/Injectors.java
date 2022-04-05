@@ -74,16 +74,7 @@ public class Injectors {
    * @return an {@link Injector}, never {@code null}
    */
   public static Injector autoDiscovering(ScopeResolver... scopeResolvers) {
-    SingletonScopeResolver singletonScopeResolver = new SingletonScopeResolver(SINGLETON);
-    ScopeResolverManager scopeResolverManager = createScopeResolverManager(singletonScopeResolver, scopeResolvers);
-    InjectableFactory injectableFactory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY);
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, SINGLETON);
-
-    return new Injector(
-      createTypeExtensionStore(),
-      createDiscoveryFactory(injectableFactory, true),
-      instanceInjectableFactory
-    );
+    return createInjector(true, scopeResolvers);
   }
 
   /**
@@ -94,26 +85,31 @@ public class Injectors {
    * @return an {@link Injector}, never {@code null}
    */
   public static Injector manual(ScopeResolver... scopeResolvers) {
+    return createInjector(false, scopeResolvers);
+  }
+
+  private static Injector createInjector(boolean autoDiscovering, ScopeResolver... scopeResolvers) {
     SingletonScopeResolver singletonScopeResolver = new SingletonScopeResolver(SINGLETON);
     ScopeResolverManager scopeResolverManager = createScopeResolverManager(singletonScopeResolver, scopeResolvers);
-    InjectableFactory injectableFactory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY);
+    Map<Class<?>, TypeExtension<?>> typeExtensions = createTypeExtensions();
+    InjectableFactory injectableFactory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, typeExtensions.keySet());
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, SINGLETON);
 
     return new Injector(
-      createTypeExtensionStore(),
-      createDiscoveryFactory(injectableFactory, false),
+      new TypeExtensionStore(new DirectTypeExtension<>(ANNOTATION_STRATEGY), typeExtensions),
+      createDiscoveryFactory(injectableFactory, autoDiscovering),
       instanceInjectableFactory
     );
   }
 
-  private static TypeExtensionStore createTypeExtensionStore() {
+  private static Map<Class<?>, TypeExtension<?>> createTypeExtensions() {
     Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
 
     typeExtensions.put(List.class, new ListTypeExtension<>(ANNOTATION_STRATEGY));
     typeExtensions.put(Set.class, new SetTypeExtension<>(ANNOTATION_STRATEGY));
     typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
 
-    return new TypeExtensionStore(new DirectTypeExtension<>(ANNOTATION_STRATEGY), typeExtensions);
+    return typeExtensions;
   }
 
   private static ScopeResolverManager createScopeResolverManager(SingletonScopeResolver singletonScopeResolver, ScopeResolver... scopeResolvers) {

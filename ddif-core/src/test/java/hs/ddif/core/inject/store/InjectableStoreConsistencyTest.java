@@ -50,7 +50,7 @@ public class InjectableStoreConsistencyTest {
   private Injectable<N> n = classInjectableFactory.create(N.class);
   private Injectable<O> o = classInjectableFactory.create(O.class);
 
-  private InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
+  private InjectableStore store = new InjectableStore(instantiatorBindingMap);
 
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {

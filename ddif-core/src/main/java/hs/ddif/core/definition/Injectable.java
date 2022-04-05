@@ -32,6 +32,13 @@ public interface Injectable<T> extends Constructable<T> {
   Type getType();
 
   /**
+   * Returns the {@link Type}s of this injectable.
+   * 
+   * @return the {@link Type}s of this injectable, never {@code null}, empty or contains {@code null}
+   */
+  Set<Type> getTypes();
+
+  /**
    * Returns an unmodifiable set of qualifier {@link Annotation}s.
    *
    * @return an unmodifiable set of qualifier {@link Annotation}s, never {@code null} and never contains {@code null}s but can be empty

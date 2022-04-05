@@ -3,7 +3,6 @@ package hs.ddif.core.instantiation;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A store for {@link TypeExtension}s.
@@ -31,15 +30,6 @@ public class TypeExtensionStore {
 
     this.typeExtensions = Collections.unmodifiableMap(map);
     this.defaultExtension = defaultExtension;
-  }
-
-  /**
-   * Returns the set of classes for which a type extension exists in this store.
-   *
-   * @return a set of {@link Class}, never {@code null} and never contains {@code null}, but can be empty
-   */
-  public Set<Class<?>> getExtendedTypes() {
-    return typeExtensions.keySet();
   }
 
   /**

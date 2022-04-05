@@ -32,6 +32,7 @@ import hs.ddif.core.util.Annotations;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,12 +92,14 @@ public class InjectorBuilder {
   public static class Context2 extends Context1 {
     public final ScopeResolverManager scopeResolverManager;
     public final InjectableFactory injectableFactory;
+    public final Map<Class<?>, TypeExtension<?>> typeExtensions;
 
-    Context2(Context1 context, ScopeResolverManager scopeResolverManager) {
+    Context2(Context1 context, ScopeResolverManager scopeResolverManager, Map<Class<?>, TypeExtension<?>> typeExtensions) {
       super(context.annotationStrategy);
 
       this.scopeResolverManager = scopeResolverManager;
-      this.injectableFactory = new DefaultInjectableFactory(scopeResolverManager, annotationStrategy);
+      this.typeExtensions = Collections.unmodifiableMap(new HashMap<>(typeExtensions));
+      this.injectableFactory = new DefaultInjectableFactory(scopeResolverManager, annotationStrategy, this.typeExtensions.keySet());
     }
   }
 
@@ -108,7 +111,7 @@ public class InjectorBuilder {
     public final FieldInjectableFactory fieldInjectableFactory;
 
     Context3(Context2 context, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, BindingProvider bindingProvider, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
-      super(context, context.scopeResolverManager);
+      super(context, context.scopeResolverManager, context.typeExtensions);
 
       this.lifeCycleCallbacksFactory = lifeCycleCallbacksFactory;
       this.bindingProvider = bindingProvider;
@@ -158,7 +161,13 @@ public class InjectorBuilder {
     private final Context2 context;
 
     Builder2(Context1 context, SingletonScopeResolver singletonScopeResolver, List<ScopeResolver> scopeResolvers) {
-      this.context = new Context2(context, createScopeResolverManager(singletonScopeResolver, scopeResolvers));
+      Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
+
+      typeExtensions.put(List.class, new ListTypeExtension<>(context.annotationStrategy));
+      typeExtensions.put(Set.class, new SetTypeExtension<>(context.annotationStrategy));
+      typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
+
+      this.context = new Context2(context, createScopeResolverManager(singletonScopeResolver, scopeResolvers), typeExtensions);
     }
 
     public Builder3 lifeCycleCallbacksFactory(Function<Context2, LifeCycleCallbacksFactory> callback) {
@@ -230,13 +239,8 @@ public class InjectorBuilder {
 
     public Injector build() {
       InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(context.injectableFactory, SINGLETON);
-      Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
 
-      typeExtensions.put(List.class, new ListTypeExtension<>(context.annotationStrategy));
-      typeExtensions.put(Set.class, new SetTypeExtension<>(context.annotationStrategy));
-      typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
-
-      TypeExtensionStore store = new TypeExtensionStore(new DirectTypeExtension<>(context.annotationStrategy), typeExtensions);
+      TypeExtensionStore store = new TypeExtensionStore(new DirectTypeExtension<>(context.annotationStrategy), context.typeExtensions);
 
       return new Injector(store, context.discovererFactory, instanceInjectableFactory);
     }

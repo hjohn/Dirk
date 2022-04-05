@@ -1,11 +1,9 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.instantiation.TypeTrait;
 import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.FilteredKeyException;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
@@ -56,11 +54,10 @@ public class InjectableStore implements Resolver<Injectable<?>> {
    * Constructs a new instance.
    *
    * @param bindingManager an {@link BindingManager}, cannot be {@code null}
-   * @param extendedTypes a set of {@link Class} for which type extensions are in use, cannot be {@code null} or contain {@code null} but can be empty
    */
-  public InjectableStore(BindingManager bindingManager, Set<Class<?>> extendedTypes) {
+  public InjectableStore(BindingManager bindingManager) {
     this.bindingManager = Objects.requireNonNull(bindingManager, "bindingManager cannot be null");
-    this.qualifiedTypeStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), cls -> !extendedTypes.contains(cls));
+    this.qualifiedTypeStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), i -> i.getTypes());
   }
 
   @Override
@@ -96,12 +93,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
    * @param injectables a collection of {@link Injectable}s, cannot be {@code null} or contain {@code null}s but can be empty
    */
   public synchronized void putAll(Collection<Injectable<?>> injectables) {
-    try {
-      qualifiedTypeStore.putAll(injectables);
-    }
-    catch(FilteredKeyException e) {
-      throw new DefinitionException("[" + e.getInjectable() + "] cannot be registered as its type conflicts with a TypeExtension for " + Types.raw(e.getKey().getType()), e);
-    }
+    qualifiedTypeStore.putAll(injectables);
 
     try {
       addBindings(injectables);  // modifies structure but must be done before checking for required bindings

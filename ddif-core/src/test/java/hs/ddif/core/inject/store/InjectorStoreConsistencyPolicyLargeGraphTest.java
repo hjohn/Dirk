@@ -42,7 +42,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
     TypeExtensionStore typeExtensionStore = TypeExtensionStores.create(InjectableFactories.ANNOTATION_STRATEGY);
     InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-    InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
+    InjectableStore store = new InjectableStore(instantiatorBindingMap);
     List<Injectable<?>> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
@@ -66,6 +66,11 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
         @Override
         public Type getType() {
           return qualifiedType.getType();
+        }
+
+        @Override
+        public Set<Type> getTypes() {
+          return Set.of(qualifiedType.getType());
         }
 
         @Override
