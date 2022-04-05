@@ -6,6 +6,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +43,50 @@ public class Types {
 
       if(scanClass.getSuperclass() != null) {
         toScan.add(scanClass.getSuperclass());
+      }
+    }
+
+    return superTypes;
+  }
+
+  /**
+   * Given a {@link Type}, returns a set of all types extended or implemented.
+   *
+   * @param type a {@link Type}, cannot be {@code null}
+   * @return a set of all types extended or implemented, never {@code null}, never contains {@code null}s and never empty
+   */
+  public static Set<Type> getGenericSuperTypes(Type type) {
+    Deque<Type> toScan = new ArrayDeque<>();
+    Set<Type> superTypes = new HashSet<>();
+
+    toScan.add(type);
+
+    Map<TypeVariable<?>, Type> typeArguments = type instanceof ParameterizedType ? TypeUtils.getTypeArguments((ParameterizedType)type) : new HashMap<>();
+
+    while(!toScan.isEmpty()) {
+      Type scanType = toScan.remove();
+      Class<?> scanClass = raw(scanType);
+
+      Type resolvedType = TypeUtils.unrollVariables(typeArguments, scanType);
+
+      superTypes.add(resolvedType);
+
+      for(Type iface : scanClass.getGenericInterfaces()) {
+        if(iface instanceof ParameterizedType) {
+          typeArguments.putAll(TypeUtils.getTypeArguments((ParameterizedType)iface));
+        }
+
+        toScan.add(iface);
+      }
+
+      Type superType = scanClass.getGenericSuperclass();
+
+      if(superType != null) {
+        if(superType instanceof ParameterizedType) {
+          typeArguments.putAll(TypeUtils.getTypeArguments((ParameterizedType)superType));
+        }
+
+        toScan.add(superType);
       }
     }
 

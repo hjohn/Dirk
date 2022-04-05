@@ -24,7 +24,6 @@ import java.util.RandomAccess;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 
 public class QualifiedTypeStoreTest {
   private static final Annotation RED = Annotations.of(Red.class);
@@ -53,7 +53,7 @@ public class QualifiedTypeStoreTest {
 
   @BeforeEach
   public void beforeEach() {
-    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), cls -> Supplier.class != cls);
+    this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), Injectable::getTypes);
   }
 
   @Test
@@ -271,10 +271,10 @@ public class QualifiedTypeStoreTest {
 
     assertTrue(store.contains(new Key(StringProvider.class)));
 
-    // Ensure lookup by a filtered type is not possible:
-    assertFalse(store.contains(new Key(TypeUtils.parameterize(Supplier.class, String.class))));
-    assertFalse(store.contains(new Key(new TypeReference<Supplier<String>>() {}.getType())));
-    assertFalse(store.contains(new Key(new TypeReference<Supplier<Long>>() {}.getType())));
+    // Ensure lookup by a filtered type is not possible (store doesn't do this, injectable factory filters the types already):
+    assertFalse(store.contains(new Key(Types.parameterize(Provider.class, String.class))));
+    assertFalse(store.contains(new Key(new TypeReference<Provider<String>>() {}.getType())));
+    assertFalse(store.contains(new Key(new TypeReference<Provider<Long>>() {}.getType())));
   }
 
   @Test

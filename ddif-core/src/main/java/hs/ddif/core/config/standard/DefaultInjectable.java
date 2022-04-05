@@ -13,6 +13,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -22,6 +23,7 @@ import java.util.Set;
  */
 final class DefaultInjectable<T> implements Injectable<T> {
   private final Type ownerType;
+  private final Set<Type> types;
   private final QualifiedType qualifiedType;
   private final List<Binding> bindings;
   private final ScopeResolver scopeResolver;
@@ -33,15 +35,19 @@ final class DefaultInjectable<T> implements Injectable<T> {
    * Constructs a new instance.
    *
    * @param ownerType a {@link Type}, cannot be {@code null}
+   * @param types a set of {@link Type} of this injectable, cannot be {@code null} or contain {@code null}s
    * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
    * @param bindings a list of {@link Binding}s, cannot be {@code null} or contain {@code null}s, but can be empty
    * @param scopeResolver a {@link ScopeResolver}, cannot be {@code null}
    * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
    * @param constructable a {@link Constructable}, cannot be {@code null}
    */
-  DefaultInjectable(Type ownerType, QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, Constructable<T> constructable) {
+  DefaultInjectable(Type ownerType, Set<Type> types, QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, Constructable<T> constructable) {
     if(ownerType == null) {
       throw new IllegalArgumentException("ownerType cannot be null");
+    }
+    if(types == null) {
+      throw new IllegalArgumentException("types cannot be null");
     }
     if(qualifiedType == null) {
       throw new IllegalArgumentException("qualifiedType cannot be null");
@@ -55,8 +61,12 @@ final class DefaultInjectable<T> implements Injectable<T> {
     if(constructable == null) {
       throw new IllegalArgumentException("constructable cannot be null");
     }
+    if(!types.contains(qualifiedType.getType())) {
+      throw new IllegalArgumentException("types must contain base type: " + qualifiedType.getType());
+    }
 
     this.ownerType = ownerType;
+    this.types = Collections.unmodifiableSet(new HashSet<>(types));
     this.qualifiedType = qualifiedType;
     this.bindings = Collections.unmodifiableList(new ArrayList<>(bindings));
     this.scopeResolver = scopeResolver;
@@ -72,6 +82,11 @@ final class DefaultInjectable<T> implements Injectable<T> {
   @Override
   public Type getType() {
     return qualifiedType.getType();
+  }
+
+  @Override
+  public Set<Type> getTypes() {
+    return types;
   }
 
   @Override

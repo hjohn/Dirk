@@ -67,7 +67,7 @@ public class Injector implements InstanceResolver, CandidateRegistry {
   public Injector(TypeExtensionStore typeExtensionStore, DiscovererFactory discovererFactory, InstanceInjectableFactory instanceInjectableFactory) {
     InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(Objects.requireNonNull(instantiatorFactory, "instantiatorFactory cannot be null"));
-    InjectableStore store = new InjectableStore(instantiatorBindingMap, typeExtensionStore.getExtendedTypes());
+    InjectableStore store = new InjectableStore(instantiatorBindingMap);
     InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
 
     this.registry = new InjectableStoreCandidateRegistry(store, discovererFactory, instanceInjectableFactory);

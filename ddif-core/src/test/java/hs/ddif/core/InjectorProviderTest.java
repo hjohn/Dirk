@@ -8,7 +8,6 @@ import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.DuplicateKeyException;
-import hs.ddif.core.store.FilteredKeyException;
 import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Retention;
@@ -198,10 +197,7 @@ public class InjectorProviderTest {
   public void nestedSuppliersShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.registerInstance(new NestedDatabaseSupplier()))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[Injectable[jakarta.inject.Provider<jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database>> <- public jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$NestedDatabaseSupplier.get()]] cannot be registered as its type conflicts with a TypeExtension for interface jakarta.inject.Provider")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(FilteredKeyException.class)
-      .hasMessage("[jakarta.inject.Provider<jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database>>] cannot be added to or removed from the store as it matched the class filter")
+      .hasMessage("Method [public jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$NestedDatabaseSupplier.get()] cannot be registered as it conflicts with a TypeExtension for type: interface jakarta.inject.Provider")
       .hasNoCause();
   }
 
@@ -209,10 +205,7 @@ public class InjectorProviderTest {
   public void producerFieldProducingSupplierShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.register(SupplierFieldProducer.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[Injectable[jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database> <- private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierFieldProducer.product]] cannot be registered as its type conflicts with a TypeExtension for interface jakarta.inject.Provider")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(FilteredKeyException.class)
-      .hasMessage("[jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database>] cannot be added to or removed from the store as it matched the class filter")
+      .hasMessage("Field [private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierFieldProducer.product] cannot be registered as it conflicts with a TypeExtension for type: interface jakarta.inject.Provider")
       .hasNoCause();
   }
 
@@ -220,10 +213,7 @@ public class InjectorProviderTest {
   public void producerMethodProducingSupplierShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.register(SupplierMethodProducer.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[Injectable[jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database> <- private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierMethodProducer.product()]] cannot be registered as its type conflicts with a TypeExtension for interface jakarta.inject.Provider")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(FilteredKeyException.class)
-      .hasMessage("[jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$Database>] cannot be added to or removed from the store as it matched the class filter")
+      .hasMessage("Method [private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierMethodProducer.product()] cannot be registered as it conflicts with a TypeExtension for type: interface jakarta.inject.Provider")
       .hasNoCause();
   }
 

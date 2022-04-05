@@ -30,6 +30,11 @@ public class Injectables {
       }
 
       @Override
+      public Set<Type> getTypes() {
+        return Set.of(String.class, Object.class);
+      }
+
+      @Override
       public Set<Annotation> getQualifiers() {
         return qualifiedType.getQualifiers();
       }

@@ -33,21 +33,37 @@ import java.util.stream.Collectors;
 public class DefaultInjectableFactory implements InjectableFactory {
   private final ScopeResolverManager scopeResolverManager;
   private final AnnotationStrategy annotationStrategy;
+  private final Set<Class<?>> extendedTypes;
 
   /**
    * Constructs a new instance.
    *
    * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
    * @param annotationStrategy a {@link AnnotationStrategy}, cannot be {@code null}
+   * @param extendedTypes a set of {@link Class} for which type extensions are in use, cannot be {@code null} or contain {@code null} but can be empty
    */
-  public DefaultInjectableFactory(ScopeResolverManager scopeResolverManager, AnnotationStrategy annotationStrategy) {
+  public DefaultInjectableFactory(ScopeResolverManager scopeResolverManager, AnnotationStrategy annotationStrategy, Set<Class<?>> extendedTypes) {
     this.scopeResolverManager = Objects.requireNonNull(scopeResolverManager, "scopeResolverManager cannot be null");
     this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy cannot be null");
+    this.extendedTypes = Objects.requireNonNull(extendedTypes, "extendedTypes cannot be null");
   }
 
   @Override
   public <T> Injectable<T> create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, Constructable<T> constructable) {
     try {
+      if(ownerType == null) {
+        throw new IllegalArgumentException("ownerType cannot be null");
+      }
+      if(element == null) {
+        throw new IllegalArgumentException("element cannot be null");
+      }
+      if(bindings == null) {
+        throw new IllegalArgumentException("bindings cannot be null");
+      }
+      if(constructable == null) {
+        throw new IllegalArgumentException("constructable cannot be null");
+      }
+
       Set<Annotation> scopes = annotationStrategy.getScopes(element);
 
       if(scopes.size() > 1) {
@@ -59,8 +75,13 @@ public class DefaultInjectableFactory implements InjectableFactory {
 
       Type type = member == null ? ownerType : extractType(ownerType, member, element);
 
+      if(extendedTypes.contains(Types.raw(type))) {
+        throw new DefinitionException(element, "cannot be registered as it conflicts with a TypeExtension for type: " + Types.raw(type));
+      }
+
       return new DefaultInjectable<>(
         ownerType,
+        Types.getGenericSuperTypes(type).stream().filter(t -> !extendedTypes.contains(Types.raw(t))).collect(Collectors.toSet()),
         new QualifiedType(type, annotationStrategy.getQualifiers(element)),
         bindings,
         scopeResolverManager.getScopeResolver(scopes.isEmpty() ? null : scopes.iterator().next()),

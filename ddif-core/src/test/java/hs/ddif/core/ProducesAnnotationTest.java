@@ -8,7 +8,6 @@ import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.inject.store.CyclicDependencyException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.store.DuplicateKeyException;
-import hs.ddif.core.store.FilteredKeyException;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
@@ -734,8 +733,6 @@ public class ProducesAnnotationTest {
   public void shouldRejectRegisteringClassWithProducerProducingExactTypeProvidedByATypeExtension() {
     assertThatThrownBy(() -> injector.register(P.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(FilteredKeyException.class)
       .hasNoCause();
   }
 

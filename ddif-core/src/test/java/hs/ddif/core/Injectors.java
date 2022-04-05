@@ -3,6 +3,7 @@ package hs.ddif.core;
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
+import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.config.ProducesInjectableExtension;
 import hs.ddif.core.config.ProviderInjectableExtension;
 import hs.ddif.core.config.discovery.DiscovererFactory;
@@ -19,7 +20,9 @@ import hs.ddif.core.definition.LifeCycleCallbacksFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.definition.bind.AnnotationStrategy;
 import hs.ddif.core.definition.bind.BindingProvider;
-import hs.ddif.core.instantiation.TypeExtensionStores;
+import hs.ddif.core.instantiation.TypeExtension;
+import hs.ddif.core.instantiation.TypeExtensionStore;
+import hs.ddif.core.instantiation.TypeExtensions;
 import hs.ddif.core.scope.ScopeResolver;
 import hs.ddif.core.scope.ScopeResolverManager;
 import hs.ddif.core.util.Annotations;
@@ -27,6 +30,7 @@ import hs.ddif.core.util.Annotations;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import jakarta.annotation.PostConstruct;
@@ -62,17 +66,7 @@ public class Injectors {
    * @return an {@link Injector}, never {@code null}
    */
   public static Injector autoDiscovering(ScopeResolver... scopeResolvers) {
-    SingletonScopeResolver singletonScopeResolver = new SingletonScopeResolver(SINGLETON);
-    ScopeResolverManager scopeResolverManager = createScopeResolverManager(singletonScopeResolver, scopeResolvers);
-    InjectableFactory injectableFactory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY);
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, SINGLETON);
-
-    return new Injector(
-      TypeExtensionStores.create(ANNOTATION_STRATEGY),
-      createDiscoveryFactory(injectableFactory, true),
-      instanceInjectableFactory
-    );
-
+    return createInjector(true, scopeResolvers);
   }
 
   /**
@@ -83,14 +77,19 @@ public class Injectors {
    * @return an {@link Injector}, never {@code null}
    */
   public static Injector manual(ScopeResolver... scopeResolvers) {
+    return createInjector(false, scopeResolvers);
+  }
+
+  private static Injector createInjector(boolean autoDiscovering, ScopeResolver... scopeResolvers) {
     SingletonScopeResolver singletonScopeResolver = new SingletonScopeResolver(SINGLETON);
     ScopeResolverManager scopeResolverManager = createScopeResolverManager(singletonScopeResolver, scopeResolvers);
-    InjectableFactory injectableFactory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY);
+    Map<Class<?>, TypeExtension<?>> typeExtensions = TypeExtensions.create(ANNOTATION_STRATEGY);
+    InjectableFactory injectableFactory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, typeExtensions.keySet());
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, SINGLETON);
 
     return new Injector(
-      TypeExtensionStores.create(ANNOTATION_STRATEGY),
-      createDiscoveryFactory(injectableFactory, false),
+      new TypeExtensionStore(new DirectTypeExtension<>(ANNOTATION_STRATEGY), typeExtensions),
+      createDiscoveryFactory(injectableFactory, autoDiscovering),
       instanceInjectableFactory
     );
   }

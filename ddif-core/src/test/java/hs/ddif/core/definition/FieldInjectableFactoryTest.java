@@ -1,6 +1,6 @@
 package hs.ddif.core.definition;
 
-import java.util.List;
+import java.util.Queue;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
@@ -50,10 +50,10 @@ public class FieldInjectableFactoryTest {
   void createShouldRejectFieldWithUnresolvableTypeVariables() {
     assertThatThrownBy(() -> factory.create(B.class.getDeclaredField("d"), B.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Field [public java.util.List hs.ddif.core.definition.FieldInjectableFactoryTest$B.d] has unsuitable type")
+      .hasMessage("Field [public java.util.Queue hs.ddif.core.definition.FieldInjectableFactoryTest$B.d] has unsuitable type")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(BadQualifiedTypeException.class)
-      .hasMessage("[java.util.List<T>] cannot have unresolvable type variables or wild cards")
+      .hasMessage("[java.util.Queue<T>] cannot have unresolvable type variables or wild cards")
       .hasNoCause();
   }
 
@@ -102,7 +102,7 @@ public class FieldInjectableFactoryTest {
   static class B<T> {
     @SuppressWarnings("unchecked")
     public T b = (T)"Bye";
-    public List<T> d;
+    public Queue<T> d;
   }
 
   static class C extends B<String> {
