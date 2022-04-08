@@ -45,7 +45,7 @@ public class DefaultDiscovererFactoryTest {
 
   @Nested
   class When_autoDiscovery_isDisabled {
-    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(false, List.of(new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory, Produces.class)), classInjectableFactory);
+    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(false, List.of(new ProducesDiscoveryExtension(Produces.class)), classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
 
     @Nested
     class And_gather_With_Injectable_IsCalled {
@@ -88,7 +88,7 @@ public class DefaultDiscovererFactoryTest {
 
   @Nested
   class When_autoDiscovery_isEnabled {
-    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(true, List.of(new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory, Produces.class)), classInjectableFactory);
+    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(true, List.of(new ProducesDiscoveryExtension(Produces.class)), classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
 
     @Nested
     class And_gather_With_Injectable_IsCalled {

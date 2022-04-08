@@ -2,15 +2,20 @@ package hs.ddif.core.config.standard;
 
 import hs.ddif.core.config.discovery.Discoverer;
 import hs.ddif.core.config.discovery.DiscovererFactory;
+import hs.ddif.core.config.standard.DiscoveryExtension.Registry;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.definition.bind.Binding;
 import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
 import hs.ddif.core.util.Types;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +33,7 @@ import java.util.stream.Collectors;
  * through bindings when gathering injectables for a {@link Type}.
  */
 public class DefaultDiscovererFactory implements DiscovererFactory {
+  private static final Map<Type, List<Injectable<?>>> DERIVED_INJECTABLES = new WeakHashMap<>();
   private static final Discoverer EMPTY = new Discoverer() {
     @Override
     public Set<Injectable<?>> discover() {
@@ -40,20 +47,26 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
   };
 
   private final boolean autoDiscovery;
-  private final List<InjectableExtension> injectableExtensions;
+  private final List<DiscoveryExtension> extensions;
   private final ClassInjectableFactory classInjectableFactory;
+  private final MethodInjectableFactory methodInjectableFactory;
+  private final FieldInjectableFactory fieldInjectableFactory;
 
   /**
    * Constructs a new instance.
    *
-   * @param injectableExtensions a list of {@link InjectableExtension}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param extensions a list of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null}s but can be empty
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
    * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
+   * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
+   * @param fieldInjectableFactory a {@link FieldInjectableFactory}, cannot be {@code null}
    */
-  public DefaultDiscovererFactory(boolean autoDiscovery, List<InjectableExtension> injectableExtensions, ClassInjectableFactory classInjectableFactory) {
+  public DefaultDiscovererFactory(boolean autoDiscovery, List<DiscoveryExtension> extensions, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
     this.autoDiscovery = autoDiscovery;
-    this.injectableExtensions = injectableExtensions;
+    this.extensions = extensions;
     this.classInjectableFactory = classInjectableFactory;
+    this.methodInjectableFactory = methodInjectableFactory;
+    this.fieldInjectableFactory = fieldInjectableFactory;
   }
 
   @Override
@@ -192,9 +205,17 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
 
       for(Type type : visitTypes) {
         if(visitedTypes.add(type)) {
-          for(InjectableExtension injectableExtension : injectableExtensions) {
-            extensionDiscoveries.addAll(injectableExtension.getDerived(type));  // extension don't necessarily resolve the type examined; they might though through for example a static producer which produces itself
-          }
+          extensionDiscoveries.addAll(DERIVED_INJECTABLES
+            .computeIfAbsent(type, k -> {
+              DerivedRegistry registry = new DerivedRegistry();
+
+              for(DiscoveryExtension injectableExtension : extensions) {
+                // extension don't necessarily resolve the type examined; they might though through for example a static producer which produces itself
+                injectableExtension.deriveTypes(registry, type);
+              }
+
+              return registry.derivedInjectables;
+            }));
         }
       }
 
@@ -288,6 +309,25 @@ public class DefaultDiscovererFactory implements DiscovererFactory {
       }
 
       return "[" + key + "]";
+    }
+  }
+
+  private class DerivedRegistry implements Registry {
+    final List<Injectable<?>> derivedInjectables = new ArrayList<>();
+
+    @Override
+    public void add(Field field, Type ownerType) {
+      derivedInjectables.add(fieldInjectableFactory.create(field, ownerType));
+    }
+
+    @Override
+    public void add(Method method, Type ownerType) {
+      derivedInjectables.add(methodInjectableFactory.create(method, ownerType));
+    }
+
+    @Override
+    public void add(Type type) {
+      derivedInjectables.add(classInjectableFactory.create(type));
     }
   }
 
