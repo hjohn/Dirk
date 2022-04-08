@@ -1,6 +1,5 @@
 package hs.ddif.core.config.standard;
 
-import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
@@ -12,14 +11,14 @@ import hs.ddif.core.instantiation.TypeExtensionStores;
 import java.util.List;
 
 public class InstanceResolvers {
-  private static final ClassInjectableFactory FACTORY = new InjectableFactories().forClass();
+  private static final InjectableFactories FACTORY = new InjectableFactories();
 
   public static DefaultInstanceResolver create() {
     TypeExtensionStore typeExtensionStore = TypeExtensionStores.create(InjectableFactories.ANNOTATION_STRATEGY);
     InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap);
-    DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), FACTORY);
+    DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), FACTORY.forClass(), FACTORY.forMethod(), FACTORY.forField());
     DefaultInstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
 
     return new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);

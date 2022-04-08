@@ -4,14 +4,14 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.DirectTypeExtension;
-import hs.ddif.core.config.ProducesInjectableExtension;
-import hs.ddif.core.config.ProviderInjectableExtension;
+import hs.ddif.core.config.ProducesDiscoveryExtension;
+import hs.ddif.core.config.ProviderDiscoveryExtension;
 import hs.ddif.core.config.discovery.DiscovererFactory;
 import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.standard.DefaultDiscovererFactory;
 import hs.ddif.core.config.standard.DefaultInjectableFactory;
-import hs.ddif.core.config.standard.InjectableExtension;
+import hs.ddif.core.config.standard.DiscoveryExtension;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.InjectableFactory;
@@ -108,12 +108,12 @@ public class Injectors {
     MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, injectableFactory);
     FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
 
-    List<InjectableExtension> injectableExtensions = new ArrayList<>();
+    List<DiscoveryExtension> injectableExtensions = new ArrayList<>();
 
-    injectableExtensions.add(new ProviderInjectableExtension(methodInjectableFactory, PROVIDER_METHOD));
-    injectableExtensions.add(new ProducesInjectableExtension(methodInjectableFactory, fieldInjectableFactory, Produces.class));
+    injectableExtensions.add(new ProviderDiscoveryExtension(PROVIDER_METHOD));
+    injectableExtensions.add(new ProducesDiscoveryExtension(Produces.class));
 
-    return new DefaultDiscovererFactory(autoDiscovery, injectableExtensions, classInjectableFactory);
+    return new DefaultDiscovererFactory(autoDiscovery, injectableExtensions, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
   }
 }
 

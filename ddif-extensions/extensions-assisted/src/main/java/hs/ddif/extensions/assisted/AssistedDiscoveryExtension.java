@@ -1,11 +1,14 @@
 package hs.ddif.extensions.assisted;
 
-import hs.ddif.core.config.standard.InjectableExtension;
-import hs.ddif.core.definition.ClassInjectableFactory;
+import hs.ddif.core.config.standard.DiscoveryExtension;
 import hs.ddif.core.definition.DefinitionException;
-import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.LifeCycleCallbacksFactory;
 import hs.ddif.core.definition.bind.Binding;
+import hs.ddif.core.definition.bind.BindingException;
+import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.core.instantiation.factory.ClassObjectFactory;
+import hs.ddif.core.instantiation.injection.Constructable;
 import hs.ddif.core.instantiation.injection.Injection;
 import hs.ddif.core.util.Primitives;
 import hs.ddif.core.util.Types;
@@ -13,6 +16,7 @@ import hs.ddif.core.util.Types;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -27,7 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import net.bytebuddy.ByteBuddy;
@@ -47,31 +50,26 @@ import net.bytebuddy.matcher.ElementMatchers;
  * the configured assist annotation. The types must have a single abstract method with a
  * concrete, non primitive return type.
  */
-public class AssistedInjectableExtension implements InjectableExtension {
-  private static final Map<Type, Injectable<?>> PRODUCER_INJECTABLES = new WeakHashMap<>();
-
-  private final ClassInjectableFactory injectableFactory;
+public class AssistedDiscoveryExtension implements DiscoveryExtension {
+  private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
+  private final BindingProvider bindingProvider;
   private final AssistedAnnotationStrategy<?> strategy;
 
   /**
    * Constructs a new instance.
    *
-   * @param injectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
+   * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
+   * @param lifeCycleCallbacksFactory a {@link LifeCycleCallbacksFactory}, cannot be {@code null}
    * @param strategy an {@link AssistedAnnotationStrategy}, cannot be {@code null}
    */
-  public AssistedInjectableExtension(ClassInjectableFactory injectableFactory, AssistedAnnotationStrategy<?> strategy) {
-    this.injectableFactory = injectableFactory;
+  public AssistedDiscoveryExtension(BindingProvider bindingProvider, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, AssistedAnnotationStrategy<?> strategy) {
+    this.lifeCycleCallbacksFactory = lifeCycleCallbacksFactory;
+    this.bindingProvider = bindingProvider;
     this.strategy = strategy;
   }
 
   @Override
-  public List<Injectable<?>> getDerived(Type factoryType) {
-    Injectable<?> injectable = PRODUCER_INJECTABLES.get(factoryType);
-
-    if(injectable != null) {
-      return List.of(injectable);
-    }
-
+  public void deriveTypes(Registry registry, Type factoryType) {
     Class<?> factoryClass = Types.raw(factoryType);
 
     if(strategy.providerClass().equals(factoryClass)) {
@@ -81,23 +79,24 @@ public class AssistedInjectableExtension implements InjectableExtension {
        * the provider class is used in the generated types which would result in recursion.
        */
 
-      return List.of();
+      return;
     }
 
     Method factoryMethod = findFactoryMethod(factoryClass);
 
     if(factoryMethod == null) {
-      return List.of();
+      return;
     }
 
     Map<TypeVariable<?>, Type> factoryTypeArguments = Types.getTypeArguments(factoryType, factoryClass);
     Type productType = Types.resolveVariables(factoryTypeArguments, factoryMethod.getGenericReturnType());
 
     if(!Types.raw(productType).isAnnotationPresent(strategy.assistedAnnotationClass())) {
-      return List.of();
+      return;
     }
 
-    return List.of(new ProducerInjectableFactory(productType, factoryType, factoryMethod, factoryTypeArguments).create());
+    new ProducerInjectableFactory(productType, factoryType, factoryMethod, factoryTypeArguments)
+      .register(registry);
   }
 
   private class ProducerInjectableFactory {
@@ -121,88 +120,90 @@ public class AssistedInjectableExtension implements InjectableExtension {
       }
     }
 
-    public Injectable<?> create() {
-      Injectable<?> factoryInjectable = injectableFactory.create(generateFactoryClass());
-
-      PRODUCER_INJECTABLES.put(factoryType, factoryInjectable);
-
-      return factoryInjectable;
+    public void register(Registry registry) {
+      registry.add(generateFactoryClass());
     }
 
     private Class<?> generateFactoryClass() {
-      Injectable<?> productInjectable = injectableFactory.create(productClass);
-      Interceptor<?> interceptor = new Interceptor<>(productInjectable, strategy);
+      try {
+        Constructor<?> constructor = bindingProvider.getConstructor(productClass);
+        List<Binding> productBindings = bindingProvider.ofConstructorAndMembers(constructor, productClass);
+        Constructable<?> constructable = new ClassObjectFactory<>(constructor, lifeCycleCallbacksFactory.create(productClass));
+        Interceptor<?> interceptor = new Interceptor<>(constructable, productClass, strategy);
 
-      /*
-       * Construct ByteBuddy builder:
-       */
+        /*
+         * Construct ByteBuddy builder:
+         */
 
-      Builder<?> builder = new ByteBuddy()
-        .subclass(factoryType, ConstructorStrategy.Default.IMITATE_SUPER_CLASS.withInheritedAnnotations())
-        .annotateType(Types.raw(factoryType).getDeclaredAnnotations())
-        .method(ElementMatchers.returns(productClass).and(ElementMatchers.isAbstract()))
-        .intercept(MethodDelegation.to(interceptor));
+        Builder<?> builder = new ByteBuddy()
+          .subclass(factoryType, ConstructorStrategy.Default.IMITATE_SUPER_CLASS.withInheritedAnnotations())
+          .annotateType(Types.raw(factoryType).getDeclaredAnnotations())
+          .method(ElementMatchers.returns(productClass).and(ElementMatchers.isAbstract()))
+          .intercept(MethodDelegation.to(interceptor));
 
-      /*
-       * Add a field per binding to the builder:
-       */
+        /*
+         * Add a field per binding to the builder:
+         */
 
-      List<String> providerFieldNames = new ArrayList<>();
-      Map<String, Binding> parameterBindings = new HashMap<>();
-      List<Binding> productBindings = productInjectable.getBindings();
+        List<String> providerFieldNames = new ArrayList<>();
+        Map<String, Binding> parameterBindings = new HashMap<>();
 
-      for(int i = 0; i < productBindings.size(); i++) {
-        Binding binding = productBindings.get(i);
-        Parameter parameter = binding.getParameter();
-        AccessibleObject accessibleObject = binding.getAccessibleObject();
+        for(int i = 0; i < productBindings.size(); i++) {
+          Binding binding = productBindings.get(i);
+          Parameter parameter = binding.getParameter();
+          AccessibleObject accessibleObject = binding.getAccessibleObject();
 
-        if(strategy.isArgument(binding.getAnnotatedElement())) {
-          try {
-            String name = parameter == null ? strategy.determineArgumentName(accessibleObject) : strategy.determineArgumentName(parameter);
+          if(strategy.isArgument(binding.getAnnotatedElement())) {
+            try {
+              String name = parameter == null ? strategy.determineArgumentName(accessibleObject) : strategy.determineArgumentName(parameter);
 
-            if(parameterBindings.put(name, binding) != null) {
-              throw new DefinitionException(accessibleObject, "has a duplicate argument name: " + name);
+              if(parameterBindings.put(name, binding) != null) {
+                throw new DefinitionException(accessibleObject, "has a duplicate argument name: " + name);
+              }
+
+              providerFieldNames.add(null);
+            }
+            catch(MissingArgumentException e) {
+              throw new DefinitionException(accessibleObject, "unable to determine argument name" + (parameter == null ? "" : " for parameter [" + parameter + "]"), e);
+            }
+          }
+          else {
+            List<Annotation> annotations = Arrays.asList(binding.getAnnotatedElement().getAnnotations());
+            String fieldName = "__binding" + i + "__" + toBindingString(binding) + "__";
+
+            if(parameter != null) {
+              annotations = new ArrayList<>(annotations);
+
+              annotations.add(strategy.injectAnnotation());
             }
 
-            providerFieldNames.add(null);
-          }
-          catch(MissingArgumentException e) {
-            throw new DefinitionException(accessibleObject, "unable to determine argument name" + (parameter == null ? "" : " for parameter [" + parameter + "]"), e);
+            providerFieldNames.add(fieldName);
+            builder = builder
+              .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getType()), Visibility.PRIVATE)
+              .annotateField(annotations);
           }
         }
-        else {
-          List<Annotation> annotations = Arrays.asList(binding.getAnnotatedElement().getAnnotations());
-          String fieldName = "__binding" + i + "__" + toBindingString(binding) + "__";
 
-          if(parameter != null) {
-            annotations = new ArrayList<>(annotations);
+        /*
+         * Generate the factory:
+         */
 
-            annotations.add(strategy.injectAnnotation());
-          }
+        Class<?> cls = load(builder.make());
 
-          providerFieldNames.add(fieldName);
-          builder = builder
-            .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getType()), Visibility.PRIVATE)
-            .annotateField(annotations);
-        }
+        /*
+         * Set the field list on the factory:
+         */
+
+        List<Field> providerFields = createProviderFields(cls, providerFieldNames);
+        List<String> names = validateProducerAndReturnArgumentNames(parameterBindings);
+
+        interceptor.initialize(parameterBindings, productBindings, providerFields, names);
+
+        return cls;
       }
-
-      /*
-       * Generate the factory:
-       */
-
-      Class<?> cls = load(builder.make());
-
-      /*
-       * Set the field list on the factory:
-       */
-
-      List<Field> providerFields = createProviderFields(cls, providerFieldNames);
-      List<String> names = validateProducerAndReturnArgumentNames(parameterBindings);
-
-      interceptor.initialize(parameterBindings, productBindings, providerFields, names);
-
-      return cls;
+      catch(BindingException e) {
+        throw new DefinitionException(productClass, "could not be bound", e);
+      }
     }
 
     private Class<?> load(Unloaded<?> unloaded) {
@@ -310,14 +311,16 @@ public class AssistedInjectableExtension implements InjectableExtension {
    * @param <P> the provider class
    */
   public static class Interceptor<P> {
-    private final Injectable<?> productInjectable;
+    private final Constructable<?> productConstructable;
+    private final Type productType;
     private final AssistedAnnotationStrategy<P> strategy;
     private final List<InjectionTemplate> templates = new ArrayList<>();
 
     private List<String> factoryParameterNames;
 
-    Interceptor(Injectable<?> productInjectable, AssistedAnnotationStrategy<P> strategy) {
-      this.productInjectable = productInjectable;
+    Interceptor(Constructable<?> productConstructable, Type productType, AssistedAnnotationStrategy<P> strategy) {
+      this.productConstructable = productConstructable;
+      this.productType = productType;
       this.strategy = strategy;
     }
 
@@ -350,10 +353,10 @@ public class AssistedInjectableExtension implements InjectableExtension {
           parameters.put(factoryParameterNames.get(i), args[i]);
         }
 
-        return productInjectable.create(createInjections(factoryInstance, parameters));
+        return productConstructable.create(createInjections(factoryInstance, parameters));
       }
       catch(Exception e) {
-        throw new InstanceCreationFailure(productInjectable.getType(), "Exception while creating instance", e);
+        throw new InstanceCreationFailure(productType, "Exception while creating instance", e);
       }
     }
 

@@ -5,8 +5,8 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.config.ListTypeExtension;
-import hs.ddif.core.config.ProducesInjectableExtension;
-import hs.ddif.core.config.ProviderInjectableExtension;
+import hs.ddif.core.config.ProducesDiscoveryExtension;
+import hs.ddif.core.config.ProviderDiscoveryExtension;
 import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
 import hs.ddif.core.config.discovery.DiscovererFactory;
@@ -14,7 +14,7 @@ import hs.ddif.core.config.scope.SingletonScopeResolver;
 import hs.ddif.core.config.standard.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.standard.DefaultDiscovererFactory;
 import hs.ddif.core.config.standard.DefaultInjectableFactory;
-import hs.ddif.core.config.standard.InjectableExtension;
+import hs.ddif.core.config.standard.DiscoveryExtension;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.InjectableFactory;
@@ -215,14 +215,14 @@ public class InjectorBuilder {
       this.context = new Context4(context, autoDiscovery);
     }
 
-    public Builder5 injectableExtensions(Function<Context4, List<InjectableExtension>> callback) {
-      List<InjectableExtension> injectableExtensions = new ArrayList<>();
+    public Builder5 injectableExtensions(Function<Context4, List<DiscoveryExtension>> callback) {
+      List<DiscoveryExtension> injectableExtensions = new ArrayList<>();
 
-      injectableExtensions.add(new ProviderInjectableExtension(context.methodInjectableFactory, PROVIDER_METHOD));
-      injectableExtensions.add(new ProducesInjectableExtension(context.methodInjectableFactory, context.fieldInjectableFactory, Produces.class));
+      injectableExtensions.add(new ProviderDiscoveryExtension(PROVIDER_METHOD));
+      injectableExtensions.add(new ProducesDiscoveryExtension(Produces.class));
       injectableExtensions.addAll(callback.apply(context));
 
-      return new Builder5(context, new DefaultDiscovererFactory(context.autoDiscovery, injectableExtensions, context.classInjectableFactory));
+      return new Builder5(context, new DefaultDiscovererFactory(context.autoDiscovery, injectableExtensions, context.classInjectableFactory, context.methodInjectableFactory, context.fieldInjectableFactory));
     }
 
     public Builder5 defaultInjectableExtensions() {
