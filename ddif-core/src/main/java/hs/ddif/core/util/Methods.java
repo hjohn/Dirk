@@ -1,5 +1,7 @@
 package hs.ddif.core.util;
 
+import hs.ddif.api.util.Types;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;

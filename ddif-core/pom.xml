@@ -12,6 +12,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-api</artifactId>
+      <version>1.0.1-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
       <groupId>io.leangen.geantyref</groupId>
       <artifactId>geantyref</artifactId>
     </dependency>

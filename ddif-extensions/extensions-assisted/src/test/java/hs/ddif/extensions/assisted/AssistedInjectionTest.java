@@ -2,17 +2,17 @@ package hs.ddif.extensions.assisted;
 
 import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
-import hs.ddif.core.Injector;
+import hs.ddif.api.Injector;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.instantiation.domain.NoSuchInstance;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.util.Annotations;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectorBuilder;
-import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.definition.DefinitionException;
-import hs.ddif.core.definition.bind.BindingException;
+import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
-import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
-import hs.ddif.core.util.Annotations;
-import hs.ddif.core.util.Types;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.ParameterizedType;
@@ -39,7 +39,7 @@ public class AssistedInjectionTest {
 
   private Injector injector = InjectorBuilder.builder()
     .manual()
-    .injectableExtensions(context -> List.of(new AssistedDiscoveryExtension(context.bindingProvider, context.lifeCycleCallbacksFactory, ASSISTED_ANNOTATION_STRATEGY)))
+    .discoveryExtensions(context -> List.of(new AssistedDiscoveryExtension(context.bindingProvider, context.lifeCycleCallbacksFactory, ASSISTED_ANNOTATION_STRATEGY)))
     .build();
 
   private static String extractArgumentName(AnnotatedElement element) {

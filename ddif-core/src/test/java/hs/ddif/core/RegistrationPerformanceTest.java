@@ -1,5 +1,7 @@
 package hs.ddif.core;
 
+import hs.ddif.api.Injector;
+
 import java.lang.reflect.Type;
 import java.util.List;
 

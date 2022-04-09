@@ -2,13 +2,14 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
-import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.api.Injector;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.instantiation.domain.NoSuchInstance;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.util.Annotations;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
-import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.DuplicateKeyException;
-import hs.ddif.core.util.Annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

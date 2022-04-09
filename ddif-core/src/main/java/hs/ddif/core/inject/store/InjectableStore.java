@@ -1,13 +1,13 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.api.instantiation.TypeTrait;
+import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.scope.ScopeResolver;
+import hs.ddif.api.util.Types;
+import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.TypeTrait;
-import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.Key;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
-import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;

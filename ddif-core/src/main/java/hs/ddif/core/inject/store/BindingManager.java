@@ -1,8 +1,8 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.TypeTrait;
-import hs.ddif.core.store.Key;
+import hs.ddif.api.instantiation.TypeTrait;
+import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.core.definition.Binding;
 
 import java.util.Set;
 

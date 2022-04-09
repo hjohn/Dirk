@@ -1,15 +1,17 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.api.MultipleInstancesException;
-import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.definition.DefinitionException;
-import hs.ddif.core.definition.bind.BindingException;
+import hs.ddif.api.Injector;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.MultipleInstancesException;
+import hs.ddif.api.instantiation.domain.NoSuchInstance;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.util.Annotations;
+import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
-import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.DuplicateKeyException;
 import hs.ddif.core.store.NoSuchKeyException;
 import hs.ddif.core.test.injectables.AbstractBean;
@@ -50,7 +52,6 @@ import hs.ddif.core.test.injectables.SubclassOfBeanWithInjection;
 import hs.ddif.core.test.injectables.SubclassOfBeanWithInjectionWithSameNamedInjection;
 import hs.ddif.core.test.injectables.UnavailableBean;
 import hs.ddif.core.test.injectables.UnregisteredParentBean;
-import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
 
 import java.lang.reflect.InvocationTargetException;

@@ -1,5 +1,7 @@
 package hs.ddif.core.store;
 
+import hs.ddif.api.instantiation.domain.Key;
+
 /**
  * Thrown when attempting to add a {@link Key} which already exists in the store.
  */

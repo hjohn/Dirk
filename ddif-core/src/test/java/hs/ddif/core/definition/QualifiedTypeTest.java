@@ -1,9 +1,9 @@
 package hs.ddif.core.definition;
 
+import hs.ddif.api.util.Annotations;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
-import hs.ddif.core.util.Annotations;
-import hs.ddif.core.util.Types;
 
 import java.util.List;
 import java.util.Set;

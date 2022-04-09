@@ -1,6 +1,6 @@
 package hs.ddif.jakarta;
 
-import hs.ddif.core.Injector;
+import hs.ddif.api.Injector;
 
 import org.junit.jupiter.api.Test;
 

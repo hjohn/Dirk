@@ -1,7 +1,7 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.Instantiator;
+import hs.ddif.api.instantiation.Instantiator;
+import hs.ddif.core.definition.Binding;
 
 /**
  * Provides bound {@link Instantiator}s.

@@ -1,7 +1,6 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.injection.Injection;
+import hs.ddif.core.definition.injection.Injection;
 
 import java.util.ArrayList;
 import java.util.List;

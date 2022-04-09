@@ -1,7 +1,7 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.injection.Constructable;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.core.definition.injection.Constructable;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
@@ -15,7 +15,7 @@ public interface InjectableFactory {
 
   /**
    * Creates {@link Injectable}s given an owner {@link Type}, an optional {@link Member}
-   * an {@link AnnotatedElement}, a list of {@link Binding}s and an {@link Constructable}.
+   * an {@link AnnotatedElement}, a list of {@link Binding}s and a {@link Constructable}.
    *
    * <p>The type of the {@link Injectable} is determined from the given member if
    * not {@code null} and otherwise is the same as the given owner type.

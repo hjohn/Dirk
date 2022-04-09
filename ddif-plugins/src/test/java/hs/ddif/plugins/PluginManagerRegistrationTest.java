@@ -1,8 +1,8 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.Injector;
+import hs.ddif.api.Injector;
+import hs.ddif.api.util.Annotations;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
-import hs.ddif.core.util.Annotations;
 import hs.ddif.jsr330.Injectors;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableDependency;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableInjectAnnotatedDependency;

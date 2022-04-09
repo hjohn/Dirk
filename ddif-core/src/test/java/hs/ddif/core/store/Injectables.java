@@ -1,13 +1,12 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.config.scope.SingletonScopeResolver;
+import hs.ddif.api.scope.ScopeResolver;
+import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.definition.BadQualifiedTypeException;
+import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.injection.Injection;
-import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.util.Annotations;
+import hs.ddif.core.definition.injection.Injection;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -17,7 +16,7 @@ import java.util.Set;
 import jakarta.inject.Singleton;
 
 public class Injectables {
-  private static final SingletonScopeResolver SINGLETON_SCOPE_RESOLVER = new SingletonScopeResolver(Annotations.of(Singleton.class));
+  private static final SingletonScopeResolver SINGLETON_SCOPE_RESOLVER = new SingletonScopeResolver(Singleton.class);
 
   public static Injectable<Object> create() throws BadQualifiedTypeException {
     QualifiedType qualifiedType = new QualifiedType(String.class);

@@ -1,9 +1,10 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.definition.bind.BindingException;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.util.Annotations;
+import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.scope.TestScope;
-import hs.ddif.core.util.Annotations;
 import hs.ddif.core.util.Nullable;
 
 import java.lang.reflect.Type;

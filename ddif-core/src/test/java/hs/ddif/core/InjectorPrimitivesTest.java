@@ -1,5 +1,7 @@
 package hs.ddif.core;
 
+import hs.ddif.api.Injector;
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

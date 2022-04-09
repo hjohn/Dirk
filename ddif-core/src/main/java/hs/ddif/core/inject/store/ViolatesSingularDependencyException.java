@@ -1,6 +1,6 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.store.Key;
+import hs.ddif.api.instantiation.domain.Key;
 
 import java.lang.reflect.Type;
 

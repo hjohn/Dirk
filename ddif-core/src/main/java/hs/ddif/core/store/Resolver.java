@@ -1,5 +1,7 @@
 package hs.ddif.core.store;
 
+import hs.ddif.api.instantiation.domain.Key;
+
 import java.util.Set;
 
 /**

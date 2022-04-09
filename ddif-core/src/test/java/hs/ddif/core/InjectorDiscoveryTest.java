@@ -1,9 +1,10 @@
 package hs.ddif.core;
 
-import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.config.discovery.DiscoveryFailure;
-import hs.ddif.core.definition.DefinitionException;
-import hs.ddif.core.definition.bind.BindingException;
+import hs.ddif.api.Injector;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.core.definition.BindingException;
+import hs.ddif.core.discovery.DiscoveryFailure;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;

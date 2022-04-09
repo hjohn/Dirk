@@ -1,10 +1,12 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.core.api.MultipleInstancesException;
-import hs.ddif.core.api.NoSuchInstanceException;
+import hs.ddif.api.Injector;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.instantiation.domain.MultipleInstancesException;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.util.TypeReference;
 import hs.ddif.core.definition.BadQualifiedTypeException;
-import hs.ddif.core.definition.DefinitionException;
 import hs.ddif.core.inject.store.CyclicDependencyException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.store.DuplicateKeyException;
@@ -12,7 +14,6 @@ import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.qualifiers.Small;
-import hs.ddif.core.util.TypeReference;
 import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.ArrayList;

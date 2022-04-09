@@ -1,10 +1,10 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.Instantiator;
-import hs.ddif.core.instantiation.InstantiatorFactory;
-import hs.ddif.core.instantiation.TypeTrait;
-import hs.ddif.core.store.Key;
+import hs.ddif.api.instantiation.Instantiator;
+import hs.ddif.api.instantiation.InstantiatorFactory;
+import hs.ddif.api.instantiation.TypeTrait;
+import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.core.definition.Binding;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,17 +1,17 @@
 package hs.ddif.extensions.assisted;
 
-import hs.ddif.core.config.standard.DiscoveryExtension;
-import hs.ddif.core.definition.DefinitionException;
-import hs.ddif.core.definition.LifeCycleCallbacksFactory;
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.definition.bind.BindingException;
-import hs.ddif.core.definition.bind.BindingProvider;
-import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.factory.ClassObjectFactory;
-import hs.ddif.core.instantiation.injection.Constructable;
-import hs.ddif.core.instantiation.injection.Injection;
-import hs.ddif.core.util.Primitives;
-import hs.ddif.core.util.Types;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DiscoveryExtension;
+import hs.ddif.api.definition.LifeCycleCallbacksFactory;
+import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.util.Primitives;
+import hs.ddif.api.util.Types;
+import hs.ddif.core.definition.Binding;
+import hs.ddif.core.definition.BindingException;
+import hs.ddif.core.definition.BindingProvider;
+import hs.ddif.core.definition.factory.ClassObjectFactory;
+import hs.ddif.core.definition.injection.Constructable;
+import hs.ddif.core.definition.injection.Injection;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;

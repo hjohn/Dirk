@@ -1,6 +1,6 @@
 package hs.ddif.jsr330;
 
-import hs.ddif.core.Injector;
+import hs.ddif.api.Injector;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

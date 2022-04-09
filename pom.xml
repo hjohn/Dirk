@@ -18,6 +18,7 @@
 
   <modules>
     <module>ddif-annotations</module>
+    <module>ddif-api</module>
     <module>ddif-core</module>
     <module>ddif-extensions</module>
     <module>ddif-jakarta</module>

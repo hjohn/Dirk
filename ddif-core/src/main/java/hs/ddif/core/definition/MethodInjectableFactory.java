@@ -1,7 +1,6 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.definition.bind.BindingProvider;
-import hs.ddif.core.instantiation.factory.MethodObjectFactory;
+import hs.ddif.core.definition.factory.MethodObjectFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
