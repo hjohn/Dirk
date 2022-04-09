@@ -1,6 +1,7 @@
 package hs.ddif.core.store;
 
-import hs.ddif.core.util.Types;
+import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;

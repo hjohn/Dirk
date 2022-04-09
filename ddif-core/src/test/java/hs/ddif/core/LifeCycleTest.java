@@ -1,5 +1,7 @@
 package hs.ddif.core;
 
+import hs.ddif.api.Injector;
+
 import java.util.ArrayList;
 import java.util.List;
 

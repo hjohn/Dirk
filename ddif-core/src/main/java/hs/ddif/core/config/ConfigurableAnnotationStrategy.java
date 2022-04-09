@@ -1,7 +1,7 @@
 package hs.ddif.core.config;
 
-import hs.ddif.core.definition.bind.AnnotationStrategy;
-import hs.ddif.core.util.Annotations;
+import hs.ddif.api.annotation.AnnotationStrategy;
+import hs.ddif.api.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;

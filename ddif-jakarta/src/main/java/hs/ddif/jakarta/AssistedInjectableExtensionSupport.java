@@ -2,10 +2,10 @@ package hs.ddif.jakarta;
 
 import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
-import hs.ddif.core.config.standard.DiscoveryExtension;
-import hs.ddif.core.definition.LifeCycleCallbacksFactory;
-import hs.ddif.core.definition.bind.BindingProvider;
-import hs.ddif.core.util.Annotations;
+import hs.ddif.api.definition.DiscoveryExtension;
+import hs.ddif.api.definition.LifeCycleCallbacksFactory;
+import hs.ddif.api.util.Annotations;
+import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.extensions.assisted.AssistedAnnotationStrategy;
 import hs.ddif.extensions.assisted.AssistedDiscoveryExtension;
 import hs.ddif.extensions.assisted.ConfigurableAssistedAnnotationStrategy;

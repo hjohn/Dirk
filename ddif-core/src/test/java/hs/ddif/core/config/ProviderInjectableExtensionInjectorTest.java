@@ -1,13 +1,13 @@
 package hs.ddif.core.config;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.core.Injector;
+import hs.ddif.api.Injector;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.NoSuchInstance;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.core.Injectors;
-import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.api.NoSuchInstanceException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
-import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.domain.NoSuchInstance;
 import hs.ddif.core.store.NoSuchKeyException;
 
 import org.apache.commons.lang3.reflect.TypeUtils;

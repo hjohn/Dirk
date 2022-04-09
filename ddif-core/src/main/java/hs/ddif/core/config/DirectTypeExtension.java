@@ -1,15 +1,15 @@
 package hs.ddif.core.config;
 
-import hs.ddif.core.definition.bind.AnnotationStrategy;
-import hs.ddif.core.instantiation.InstantiationContext;
-import hs.ddif.core.instantiation.Instantiator;
-import hs.ddif.core.instantiation.InstantiatorFactory;
-import hs.ddif.core.instantiation.TypeExtension;
-import hs.ddif.core.instantiation.TypeTrait;
-import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.instantiation.domain.MultipleInstances;
-import hs.ddif.core.instantiation.domain.NoSuchInstance;
-import hs.ddif.core.store.Key;
+import hs.ddif.api.annotation.AnnotationStrategy;
+import hs.ddif.api.instantiation.InstantiationContext;
+import hs.ddif.api.instantiation.Instantiator;
+import hs.ddif.api.instantiation.InstantiatorFactory;
+import hs.ddif.api.instantiation.TypeExtension;
+import hs.ddif.api.instantiation.TypeTrait;
+import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.instantiation.domain.MultipleInstances;
+import hs.ddif.api.instantiation.domain.NoSuchInstance;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.Collections;

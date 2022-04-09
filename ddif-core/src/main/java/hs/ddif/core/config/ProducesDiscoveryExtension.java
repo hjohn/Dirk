@@ -1,10 +1,10 @@
 package hs.ddif.core.config;
 
-import hs.ddif.core.config.standard.DiscoveryExtension;
+import hs.ddif.api.definition.DiscoveryExtension;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.util.Fields;
 import hs.ddif.core.util.Methods;
-import hs.ddif.core.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

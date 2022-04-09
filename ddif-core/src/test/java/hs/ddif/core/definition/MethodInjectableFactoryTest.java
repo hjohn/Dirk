@@ -1,5 +1,8 @@
 package hs.ddif.core.definition;
 
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.core.InjectableFactories;
+
 import java.util.ArrayDeque;
 import java.util.Queue;
 

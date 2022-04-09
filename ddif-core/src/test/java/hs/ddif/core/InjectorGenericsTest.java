@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import hs.ddif.api.Injector;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 
 import java.util.ArrayList;

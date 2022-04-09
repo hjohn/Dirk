@@ -1,6 +1,7 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.util.Annotations;
+import hs.ddif.api.util.Annotations;
+import hs.ddif.core.InjectableFactories;
 
 import java.util.List;
 

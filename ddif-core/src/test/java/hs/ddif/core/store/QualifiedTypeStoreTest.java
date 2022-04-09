@@ -1,9 +1,13 @@
 package hs.ddif.core.store;
 
+import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.util.Annotations;
+import hs.ddif.api.util.TypeReference;
+import hs.ddif.api.util.Types;
+import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
@@ -11,9 +15,6 @@ import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.qualifiers.Small;
-import hs.ddif.core.util.Annotations;
-import hs.ddif.core.util.TypeReference;
-import hs.ddif.core.util.Types;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;

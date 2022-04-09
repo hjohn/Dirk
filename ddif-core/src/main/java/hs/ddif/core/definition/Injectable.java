@@ -1,8 +1,7 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.injection.Constructable;
-import hs.ddif.core.scope.ScopeResolver;
+import hs.ddif.api.scope.ScopeResolver;
+import hs.ddif.core.definition.injection.Constructable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -33,7 +32,7 @@ public interface Injectable<T> extends Constructable<T> {
 
   /**
    * Returns the {@link Type}s of this injectable.
-   * 
+   *
    * @return the {@link Type}s of this injectable, never {@code null}, empty or contains {@code null}
    */
   Set<Type> getTypes();

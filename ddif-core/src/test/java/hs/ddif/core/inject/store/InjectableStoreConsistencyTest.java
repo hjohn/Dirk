@@ -1,14 +1,13 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.api.instantiation.InstantiatorFactory;
+import hs.ddif.api.scope.UnknownScopeException;
+import hs.ddif.core.InjectableFactories;
+import hs.ddif.core.InstantiatorFactories;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.InjectableFactories;
-import hs.ddif.core.instantiation.DefaultInstantiatorFactory;
-import hs.ddif.core.instantiation.InstantiatorFactory;
-import hs.ddif.core.instantiation.TypeExtensionStore;
-import hs.ddif.core.instantiation.TypeExtensionStores;
-import hs.ddif.core.scope.UnknownScopeException;
+import hs.ddif.core.instantiation.TypeExtensions;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
 import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
@@ -31,10 +30,6 @@ import jakarta.inject.Provider;
 public class InjectableStoreConsistencyTest {
   private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();
 
-  private TypeExtensionStore typeExtensionStore = TypeExtensionStores.create(InjectableFactories.ANNOTATION_STRATEGY);
-  private InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
-  private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-
   private Injectable<A> a = classInjectableFactory.create(A.class);
   private Injectable<B> b = classInjectableFactory.create(B.class);
   private Injectable<C> c = classInjectableFactory.create(C.class);
@@ -50,6 +45,8 @@ public class InjectableStoreConsistencyTest {
   private Injectable<N> n = classInjectableFactory.create(N.class);
   private Injectable<O> o = classInjectableFactory.create(O.class);
 
+  private InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(InjectableFactories.ANNOTATION_STRATEGY, TypeExtensions.create(InjectableFactories.ANNOTATION_STRATEGY));
+  private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private InjectableStore store = new InjectableStore(instantiatorBindingMap);
 
   @Test

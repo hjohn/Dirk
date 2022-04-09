@@ -1,15 +1,15 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.util.Annotations;
+import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.definition.BadQualifiedTypeException;
+import hs.ddif.core.definition.Binding;
+import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.ClassInjectableFactory;
-import hs.ddif.core.definition.InjectableFactories;
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.definition.bind.BindingProvider;
 import hs.ddif.core.store.Injectables;
-import hs.ddif.core.store.Key;
 import hs.ddif.core.test.qualifiers.Red;
-import hs.ddif.core.util.Annotations;
 
 import java.util.Collections;
 import java.util.List;

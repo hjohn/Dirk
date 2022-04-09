@@ -1,10 +1,9 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.definition.bind.BindingException;
-import hs.ddif.core.definition.bind.BindingProvider;
-import hs.ddif.core.instantiation.factory.ClassObjectFactory;
-import hs.ddif.core.util.Types;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.LifeCycleCallbacksFactory;
+import hs.ddif.api.util.Types;
+import hs.ddif.core.definition.factory.ClassObjectFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;

@@ -1,7 +1,8 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.core.instantiation.injection.Injection;
-import hs.ddif.core.instantiation.injection.Constructable;
+import hs.ddif.api.util.Annotations;
+import hs.ddif.core.definition.injection.Constructable;
+import hs.ddif.core.definition.injection.Injection;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -20,11 +21,11 @@ public class InstanceInjectableFactory {
    * Constructs a new instance.
    *
    * @param factory a {@link InjectableFactory}, cannot be {@code null}
-   * @param singleton a singleton {@link AnnotatedElement} to use, cannot be {@code null}
+   * @param singleton a singleton annotation {@link Class} to use, cannot be {@code null}
    */
-  public InstanceInjectableFactory(InjectableFactory factory, Annotation singleton) {
+  public InstanceInjectableFactory(InjectableFactory factory, Class<? extends Annotation> singleton) {
     this.factory = Objects.requireNonNull(factory, "factory cannot be null");
-    this.singleton = Objects.requireNonNull(singleton, "singleton cannot be null");
+    this.singleton = Annotations.of(Objects.requireNonNull(singleton, "singleton cannot be null"));
   }
 
   /**

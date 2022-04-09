@@ -1,7 +1,7 @@
 package hs.ddif.core.config;
 
-import hs.ddif.core.config.standard.DiscoveryExtension;
-import hs.ddif.core.util.Types;
+import hs.ddif.api.definition.DiscoveryExtension;
+import hs.ddif.api.util.Types;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;

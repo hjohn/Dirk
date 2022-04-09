@@ -1,6 +1,6 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.api.CandidateRegistry;
+import hs.ddif.api.CandidateRegistry;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;

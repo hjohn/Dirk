@@ -2,35 +2,24 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
+import hs.ddif.api.Injector;
+import hs.ddif.api.annotation.AnnotationStrategy;
+import hs.ddif.api.definition.DiscoveryExtension;
+import hs.ddif.api.definition.LifeCycleCallbacksFactory;
+import hs.ddif.api.scope.ScopeResolver;
+import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
-import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.config.ProviderDiscoveryExtension;
-import hs.ddif.core.config.discovery.DiscovererFactory;
-import hs.ddif.core.config.scope.SingletonScopeResolver;
-import hs.ddif.core.config.standard.AnnotationBasedLifeCycleCallbacksFactory;
-import hs.ddif.core.config.standard.DefaultDiscovererFactory;
-import hs.ddif.core.config.standard.DefaultInjectableFactory;
-import hs.ddif.core.config.standard.DiscoveryExtension;
-import hs.ddif.core.definition.ClassInjectableFactory;
-import hs.ddif.core.definition.FieldInjectableFactory;
-import hs.ddif.core.definition.InjectableFactory;
-import hs.ddif.core.definition.InstanceInjectableFactory;
-import hs.ddif.core.definition.LifeCycleCallbacksFactory;
-import hs.ddif.core.definition.MethodInjectableFactory;
-import hs.ddif.core.definition.bind.AnnotationStrategy;
-import hs.ddif.core.definition.bind.BindingProvider;
-import hs.ddif.core.instantiation.TypeExtension;
-import hs.ddif.core.instantiation.TypeExtensionStore;
+import hs.ddif.core.config.SingletonScopeResolver;
+import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.instantiation.TypeExtensions;
-import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.scope.ScopeResolverManager;
-import hs.ddif.core.util.Annotations;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.annotation.PostConstruct;
@@ -45,7 +34,6 @@ import jakarta.inject.Singleton;
  * Factory for {@link Injector}s of various types.
  */
 public class Injectors {
-  private static final Singleton SINGLETON = Annotations.of(Singleton.class);
   private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, Opt.class);
   private static final Method PROVIDER_METHOD;
 
@@ -81,39 +69,30 @@ public class Injectors {
   }
 
   private static Injector createInjector(boolean autoDiscovering, ScopeResolver... scopeResolvers) {
-    SingletonScopeResolver singletonScopeResolver = new SingletonScopeResolver(SINGLETON);
-    ScopeResolverManager scopeResolverManager = createScopeResolverManager(singletonScopeResolver, scopeResolvers);
-    Map<Class<?>, TypeExtension<?>> typeExtensions = TypeExtensions.create(ANNOTATION_STRATEGY);
-    InjectableFactory injectableFactory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, typeExtensions.keySet());
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, SINGLETON);
+    BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
+    LifeCycleCallbacksFactory lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(ANNOTATION_STRATEGY, PostConstruct.class, PreDestroy.class);
 
-    return new Injector(
-      new TypeExtensionStore(new DirectTypeExtension<>(ANNOTATION_STRATEGY), typeExtensions),
-      createDiscoveryFactory(injectableFactory, autoDiscovering),
-      instanceInjectableFactory
+    List<ScopeResolver> finalScopeResolvers = Arrays.stream(scopeResolvers).anyMatch(ScopeResolver::isSingleton) ? Arrays.asList(scopeResolvers)
+      : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(Singleton.class))).collect(Collectors.toList());
+
+    return new StandardInjector(
+      TypeExtensions.create(ANNOTATION_STRATEGY),
+      createDiscoveryExtensions(),
+      finalScopeResolvers,
+      ANNOTATION_STRATEGY,
+      bindingProvider,
+      lifeCycleCallbacksFactory,
+      autoDiscovering
     );
   }
 
-  private static ScopeResolverManager createScopeResolverManager(SingletonScopeResolver singletonScopeResolver, ScopeResolver... scopeResolvers) {
-    ScopeResolver[] standardScopeResolvers = new ScopeResolver[] {singletonScopeResolver};
-    ScopeResolver[] extendedScopeResolvers = Stream.of(scopeResolvers, standardScopeResolvers).flatMap(Stream::of).toArray(ScopeResolver[]::new);
-
-    return new ScopeResolverManager(extendedScopeResolvers);
-  }
-
-  private static DiscovererFactory createDiscoveryFactory(InjectableFactory injectableFactory, boolean autoDiscovery) {
-    BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
-    LifeCycleCallbacksFactory lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(ANNOTATION_STRATEGY, PostConstruct.class, PreDestroy.class);
-    ClassInjectableFactory classInjectableFactory = new ClassInjectableFactory(bindingProvider, injectableFactory, lifeCycleCallbacksFactory);
-    MethodInjectableFactory methodInjectableFactory = new MethodInjectableFactory(bindingProvider, injectableFactory);
-    FieldInjectableFactory fieldInjectableFactory = new FieldInjectableFactory(bindingProvider, injectableFactory);
-
+  private static List<DiscoveryExtension> createDiscoveryExtensions() {
     List<DiscoveryExtension> injectableExtensions = new ArrayList<>();
 
     injectableExtensions.add(new ProviderDiscoveryExtension(PROVIDER_METHOD));
     injectableExtensions.add(new ProducesDiscoveryExtension(Produces.class));
 
-    return new DefaultDiscovererFactory(autoDiscovery, injectableExtensions, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    return injectableExtensions;
   }
 }
 

@@ -1,13 +1,14 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.core.api.InstanceCreationException;
-import hs.ddif.core.api.NoSuchInstanceException;
-import hs.ddif.core.definition.DefinitionException;
+import hs.ddif.api.Injector;
+import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.scope.AbstractScopeResolver;
+import hs.ddif.api.scope.OutOfScopeException;
 import hs.ddif.core.inject.store.ScopeConflictException;
-import hs.ddif.core.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.core.scope.AbstractScopeResolver;
-import hs.ddif.core.scope.OutOfScopeException;
 import hs.ddif.core.test.scope.TestScope;
 
 import java.lang.annotation.Annotation;

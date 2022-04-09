@@ -1,7 +1,7 @@
 package hs.ddif.plugins;
 
-import hs.ddif.core.Injector;
-import hs.ddif.core.api.InstanceCreationException;
+import hs.ddif.api.Injector;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.jsr330.Injectors;
 import hs.ddif.test.plugin.Database;
 

@@ -1,20 +1,17 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.core.config.scope.SingletonScopeResolver;
+import hs.ddif.api.instantiation.InstantiatorFactory;
+import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.scope.ScopeResolver;
+import hs.ddif.api.util.Annotations;
+import hs.ddif.core.InstantiatorFactories;
+import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.definition.BadQualifiedTypeException;
+import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.definition.InjectableFactories;
 import hs.ddif.core.definition.QualifiedType;
-import hs.ddif.core.definition.bind.Binding;
-import hs.ddif.core.instantiation.DefaultInstantiatorFactory;
-import hs.ddif.core.instantiation.InstantiatorFactory;
-import hs.ddif.core.instantiation.TypeExtensionStore;
-import hs.ddif.core.instantiation.TypeExtensionStores;
-import hs.ddif.core.instantiation.injection.Injection;
-import hs.ddif.core.scope.ScopeResolver;
-import hs.ddif.core.store.Key;
-import hs.ddif.core.util.Annotations;
+import hs.ddif.core.definition.injection.Injection;
 import hs.ddif.core.util.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -39,14 +36,13 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
   @Test
   void largeGraphTest() throws BadQualifiedTypeException {
-    TypeExtensionStore typeExtensionStore = TypeExtensionStores.create(InjectableFactories.ANNOTATION_STRATEGY);
-    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
+    InstantiatorFactory instantiatorFactory = InstantiatorFactories.create();
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap);
     List<Injectable<?>> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
-    ScopeResolver scopeResolver = new SingletonScopeResolver(Annotations.of(Singleton.class));
+    ScopeResolver scopeResolver = new SingletonScopeResolver(Singleton.class);
 
     for(int i = 0; i < 10000; i++) {
       store.checkInvariants();
