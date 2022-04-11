@@ -25,7 +25,6 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 /**
  * A standard implementation of {@link Injector} provided with the framework.
@@ -100,16 +99,6 @@ public class StandardInjector implements Injector {
   @Override
   public <T> T getInstance(Class<T> cls, Object... qualifiers) {
     return instanceResolver.getInstance(cls, qualifiers);
-  }
-
-  @Override
-  public <T> List<T> getInstances(Type type, Predicate<Type> typePredicate, Object... qualifiers) {
-    return instanceResolver.getInstances(type, typePredicate, qualifiers);
-  }
-
-  @Override
-  public <T> List<T> getInstances(Class<T> cls, Predicate<Type> typePredicate, Object... qualifiers) {
-    return instanceResolver.getInstances(cls, typePredicate, qualifiers);
   }
 
   @Override

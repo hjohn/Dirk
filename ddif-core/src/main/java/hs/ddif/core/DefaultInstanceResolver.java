@@ -20,7 +20,6 @@ import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -70,23 +69,13 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> List<T> getInstances(Type type, Predicate<Type> predicate, Object... qualifiers) {
+  public synchronized <T> List<T> getInstances(Type type, Object... qualifiers) {
     try {
-      return getInstances(KeyFactory.of(type, qualifiers), predicate);
+      return getInstances(KeyFactory.of(type, qualifiers));
     }
     catch(InstanceCreationFailure f) {
       throw f.toRuntimeException();
     }
-  }
-
-  @Override
-  public synchronized <T> List<T> getInstances(Class<T> cls, Predicate<Type> predicate, Object... qualifiers) {
-    return getInstance((Type)cls, predicate, qualifiers);
-  }
-
-  @Override
-  public synchronized <T> List<T> getInstances(Type type, Object... qualifiers) {
-    return getInstances(type, null, qualifiers);
   }
 
   @Override
@@ -137,7 +126,7 @@ class DefaultInstanceResolver implements InstanceResolver {
     }
   }
 
-  private <T> List<T> getInstances(Key key, Predicate<Type> typePredicate) throws InstanceCreationFailure {
-    return instantiationContext.createAll(key, typePredicate);
+  private <T> List<T> getInstances(Key key) throws InstanceCreationFailure {
+    return instantiationContext.createAll(key);
   }
 }
