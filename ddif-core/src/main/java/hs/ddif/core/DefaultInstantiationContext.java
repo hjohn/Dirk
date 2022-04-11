@@ -15,13 +15,11 @@ import hs.ddif.core.definition.injection.Injection;
 import hs.ddif.core.inject.store.BoundInstantiatorProvider;
 import hs.ddif.core.store.Resolver;
 
-import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 /**
@@ -71,19 +69,17 @@ class DefaultInstantiationContext implements InstantiationContext {
   }
 
   @Override
-  public synchronized <T> List<T> createAll(Key key, Predicate<Type> typePredicate) throws InstanceCreationFailure {
+  public synchronized <T> List<T> createAll(Key key) throws InstanceCreationFailure {
     List<T> instances = new ArrayList<>();
 
     @SuppressWarnings("unchecked")
     Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
 
     for(Injectable<T> injectable : injectables) {
-      if(typePredicate == null || typePredicate.test(injectable.getType())) {
-        T instance = createInstanceInScope(injectable);
+      T instance = createInstanceInScope(injectable);
 
-        if(instance != null) {
-          instances.add(instance);
-        }
+      if(instance != null) {
+        instances.add(instance);
       }
     }
 

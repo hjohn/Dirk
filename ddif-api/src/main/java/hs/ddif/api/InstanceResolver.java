@@ -109,34 +109,4 @@ public interface InstanceResolver {
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
   <T> List<T> getInstances(Class<T> cls, Object... qualifiers);
-
-  /**
-   * Returns all instances of the given {@link Type} matching the given criteria (if any) in
-   * which all dependencies are injected.  When there are no matches, an empty set is
-   * returned. The instances returned can either be existing instances or newly created
-   * depending on their scope or a mix thereof.
-   *
-   * @param <T> the type of the instances
-   * @param type the {@link Type} of the instances required, cannot be {@code null}
-   * @param predicate a {@link Predicate} of {@link Type} to filter matching instances, can be {@code null} in which case no filtering is applied
-   * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
-   * @return all instances of the given {@link Type} matching the given criteria (if any), never {@code null}, can be empty
-   * @throws InstanceCreationException when an error occurred during creation of a matching instance
-   */
-  <T> List<T> getInstances(Type type, Predicate<Type> predicate, Object... qualifiers);
-
-  /**
-   * Returns all instances of the given class matching the given criteria (if any) in
-   * which all dependencies are injected.  When there are no matches, an empty set is
-   * returned. The instances returned can either be existing instances or newly created
-   * depending on their scope or a mix thereof.
-   *
-   * @param <T> the type of the instances
-   * @param cls the class of the instances required, cannot be {@code null}
-   * @param predicate a {@link Predicate} of {@link Type} to filter matching instances, can be {@code null} in which case no filtering is applied
-   * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
-   * @return all instances of the given class matching the given criteria (if any), never {@code null}, can be empty
-   * @throws InstanceCreationException when an error occurred during creation of a matching instance
-   */
-  <T> List<T> getInstances(Class<T> cls, Predicate<Type> predicate, Object... qualifiers);
 }
