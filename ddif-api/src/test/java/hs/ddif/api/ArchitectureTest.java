@@ -19,7 +19,7 @@ public class ArchitectureTest {
   static final String BASE_PACKAGE_NAME = "hs.ddif.api";
 
   @ArchTest
-  private final ArchRule packagesShouldBeFreeOfCycles = slices().matching(BASE_PACKAGE_NAME + ".(**)").should().beFreeOfCycles();
+  private final ArchRule packagesShouldBeFreeOfCycles = slices().matching("(**)").should().beFreeOfCycles();
 
   @ArchTest
   public static final ArchRule noClassesShouldPubliclyImplementInterfaceInSamePackage = noClasses().should(publiclyImplementInterfacesInSamePackage());
