@@ -3,6 +3,7 @@ package hs.ddif.core.definition;
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Annotations;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
@@ -12,7 +13,6 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 
@@ -134,16 +134,16 @@ public class BindingProviderTest {
       .containsExactly(
         new Key(ClassB.class),
         new Key(String.class),
-        new Key(TypeUtils.parameterize(Provider.class, Integer.class)),
-        new Key(TypeUtils.parameterize(List.class, Double.class)),
-        new Key(TypeUtils.parameterize(Set.class, String.class)),
-        new Key(TypeUtils.parameterize(List.class, Double.class), List.of(RED)),
-        new Key(TypeUtils.parameterize(Set.class, String.class), List.of(RED)),
-        new Key(TypeUtils.parameterize(List.class, Double.class), List.of(GREEN)),
-        new Key(TypeUtils.parameterize(Set.class, String.class), List.of(GREEN)),
+        new Key(Types.parameterize(Provider.class, Integer.class)),
+        new Key(Types.parameterize(List.class, Double.class)),
+        new Key(Types.parameterize(Set.class, String.class)),
+        new Key(Types.parameterize(List.class, Double.class), List.of(RED)),
+        new Key(Types.parameterize(Set.class, String.class), List.of(RED)),
+        new Key(Types.parameterize(List.class, Double.class), List.of(GREEN)),
+        new Key(Types.parameterize(Set.class, String.class), List.of(GREEN)),
         new Key(Long.class),
-        new Key(TypeUtils.parameterize(Provider.class, Short.class)),
-        new Key(TypeUtils.parameterize(Provider.class, Short.class))
+        new Key(Types.parameterize(Provider.class, Short.class)),
+        new Key(Types.parameterize(Provider.class, Short.class))
       );
   }
 

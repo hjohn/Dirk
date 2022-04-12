@@ -2,6 +2,7 @@ package hs.ddif.core.store;
 
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.TypeReference;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.Injectable;
@@ -12,7 +13,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Queue;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -68,7 +68,7 @@ public class QualifiedTypeStoreGenericsTest {
 
   @Test
   public void shouldAcceptGenericTypesWithoutTypeVariables() {
-    store.put(classInjectableFactory.create(TypeUtils.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted
+    store.put(classInjectableFactory.create(Types.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted
   }
 
   /**

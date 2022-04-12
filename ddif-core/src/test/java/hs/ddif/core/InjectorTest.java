@@ -9,6 +9,7 @@ import hs.ddif.api.instantiation.domain.MultipleInstancesException;
 import hs.ddif.api.instantiation.domain.NoSuchInstance;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.util.Annotations;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
@@ -63,7 +64,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -1018,11 +1018,11 @@ public class InjectorTest {
     injector.registerInstance("B");
     injector.registerInstance("C");
 
-    List<String> list = injector.getInstance(TypeUtils.parameterize(List.class, String.class));
+    List<String> list = injector.getInstance(Types.parameterize(List.class, String.class));
 
     assertThat(list).containsExactlyInAnyOrder("A", "B", "C");
 
-    Set<String> set = injector.getInstance(TypeUtils.parameterize(Set.class, String.class));
+    Set<String> set = injector.getInstance(Types.parameterize(Set.class, String.class));
 
     assertThat(set).containsExactlyInAnyOrder("A", "B", "C");
   }
@@ -1031,11 +1031,11 @@ public class InjectorTest {
   public void shouldSkipNullsInCollections() {
     injector.register(NullProducers.class);
 
-    List<String> list = injector.getInstance(TypeUtils.parameterize(List.class, String.class));
+    List<String> list = injector.getInstance(Types.parameterize(List.class, String.class));
 
     assertThat(list).containsExactlyInAnyOrder("B", "C");
 
-    Set<String> set = injector.getInstance(TypeUtils.parameterize(Set.class, String.class));
+    Set<String> set = injector.getInstance(Types.parameterize(Set.class, String.class));
 
     assertThat(set).containsExactlyInAnyOrder("B", "C");
   }

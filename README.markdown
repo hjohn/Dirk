@@ -402,7 +402,7 @@ will be thrown:
 
 # BSD License
 
-Copyright (c) 2013-2021, John Hendrikx
+Copyright (c) 2013-2022, John Hendrikx
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -412,24 +412,44 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Dependencies and Acknowledgements
+# Dependencies and Acknowledgments
 
 ### Reflections
 
 License: WTFPL (http://www.wtfpl.net/)  
 https://github.com/ronmamo/reflections
 
+Linking: Maven Dependency
+
+Usage:
+- Scanning classpath for annotations
+
 ### Geantyref
 
 License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)   
 https://github.com/leangen/geantyref
 
+Linking: Maven Dependency
+
+Usage:
+- Implementation of Annotation interface
+
 ### Apache Commons Lang
 
-License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)  
-https://commons.apache.org/proper/commons-lang/
+License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+https://commons.apache.org/proper/commons-lang/   
+
+Linking: Embedded (minimal required code directly included)
+
+Usage:
+- `TypeUtils` for dealing with generic types and type variables
 
 ### Byte Buddy
 
 License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)  
 https://bytebuddy.net/
+
+Linking: Maven Dependency (optional)
+
+Usage:
+- Generating factories for Assisted Injection
