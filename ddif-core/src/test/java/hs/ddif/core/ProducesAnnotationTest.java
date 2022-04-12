@@ -6,6 +6,7 @@ import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.domain.MultipleInstancesException;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.util.TypeReference;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.inject.store.CyclicDependencyException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
@@ -19,7 +20,6 @@ import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -138,9 +138,9 @@ public class ProducesAnnotationTest {
   @Test
   void shouldSupportGenericProducerMethod() {
     injector.register(StringMethodFactory.class);
-    injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class));
+    injector.register(Types.parameterize(GenericFactory1.class, Long.class));
 
-    assertThrows(DuplicateKeyException.class, () -> injector.register(TypeUtils.parameterize(GenericFactory1.class, Long.class)));
+    assertThrows(DuplicateKeyException.class, () -> injector.register(Types.parameterize(GenericFactory1.class, Long.class)));
 
     List<String> x1 = injector.getInstance(new TypeReference<ArrayList<String>>() {}.getType());
     List<Long> y1 = injector.getInstance(new TypeReference<ArrayList<Long>>() {}.getType());
@@ -154,7 +154,7 @@ public class ProducesAnnotationTest {
     assertTrue(injector.contains(Object.class));
 
     injector.remove(StringMethodFactory.class);
-    injector.remove(TypeUtils.parameterize(GenericFactory1.class, Long.class));
+    injector.remove(Types.parameterize(GenericFactory1.class, Long.class));
 
     assertFalse(injector.contains(Object.class));
   }

@@ -2,6 +2,7 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Annotations;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.definition.BadQualifiedTypeException;
@@ -15,7 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +35,7 @@ public class UnresolvableDependencyExceptionTest {
 
     e = new UnresolvableDependencyException(
       new Key(Integer.class),
-      bindings.stream().filter(b -> TypeUtils.isAssignable(b.getType(), Integer.class)).findFirst().get(),
+      bindings.stream().filter(b -> Types.isAssignable(b.getType(), Integer.class)).findFirst().get(),
       Collections.emptySet()
     );
 
@@ -43,7 +43,7 @@ public class UnresolvableDependencyExceptionTest {
 
     e = new UnresolvableDependencyException(
       new Key(Double.class, Set.of(Annotations.of(Red.class))),
-      bindings.stream().filter(b -> TypeUtils.isAssignable(b.getType(), Double.class)).findFirst().get(),
+      bindings.stream().filter(b -> Types.isAssignable(b.getType(), Double.class)).findFirst().get(),
       Set.of(Injectables.create(), Injectables.create())
     );
 

@@ -19,6 +19,7 @@
   <modules>
     <module>ddif-annotations</module>
     <module>ddif-api</module>
+    <module>ddif-commons-lang3-minimal</module>
     <module>ddif-core</module>
     <module>ddif-extensions</module>
     <module>ddif-jakarta</module>
@@ -110,11 +111,6 @@
         <groupId>nl.jqno.equalsverifier</groupId>
         <artifactId>equalsverifier</artifactId>
         <version>3.9</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>3.8.1</version>
       </dependency>
       <dependency>
         <groupId>org.assertj</groupId>

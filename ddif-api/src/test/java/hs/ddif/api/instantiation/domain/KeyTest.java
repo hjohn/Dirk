@@ -1,6 +1,7 @@
 package hs.ddif.api.instantiation.domain;
 
 import hs.ddif.api.util.Annotations;
+import hs.ddif.api.util.Types;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -8,7 +9,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,9 +27,9 @@ public class KeyTest {
     assertThat(key.getQualifiers()).isEmpty();
     assertThat(key.toString()).isEqualTo("java.lang.String");
 
-    key = new Key(TypeUtils.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class)));
+    key = new Key(Types.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class)));
 
-    assertThat(key.getType()).isEqualTo(TypeUtils.parameterize(Supplier.class, String.class));
+    assertThat(key.getType()).isEqualTo(Types.parameterize(Supplier.class, String.class));
     assertThat(key.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class), Annotations.of(Green.class));
     assertThat(key.toString()).isEqualTo("@hs.ddif.api.instantiation.domain.KeyTest$Green() @hs.ddif.api.instantiation.domain.KeyTest$Red() java.util.function.Supplier<java.lang.String>");
   }

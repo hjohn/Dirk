@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,9 +27,9 @@ public class QualifiedTypeTest {
     assertThat(key.getQualifiers()).isEmpty();
     assertThat(key.toString()).isEqualTo("java.lang.String");
 
-    key = new QualifiedType(TypeUtils.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class)));
+    key = new QualifiedType(Types.parameterize(Supplier.class, String.class), Set.of(Annotations.of(Red.class), Annotations.of(Green.class)));
 
-    assertThat(key.getType()).isEqualTo(TypeUtils.parameterize(Supplier.class, String.class));
+    assertThat(key.getType()).isEqualTo(Types.parameterize(Supplier.class, String.class));
     assertThat(key.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class), Annotations.of(Green.class));
     assertThat(key.toString()).isEqualTo("@hs.ddif.core.test.qualifiers.Green() @hs.ddif.core.test.qualifiers.Red() java.util.function.Supplier<java.lang.String>");
   }

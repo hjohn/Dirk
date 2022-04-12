@@ -1,5 +1,8 @@
 package hs.ddif.api.util;
 
+import hs.ddif.org.apache.commons.lang3.ClassUtils;
+import hs.ddif.org.apache.commons.lang3.reflect.TypeUtils;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -10,9 +13,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Support functions for types, classes and interfaces.

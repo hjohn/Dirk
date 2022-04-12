@@ -6,11 +6,11 @@ import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.api.instantiation.domain.NoSuchInstance;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.Injectors;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.core.store.NoSuchKeyException;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
@@ -124,7 +124,7 @@ public class ProviderInjectableExtensionInjectorTest {
       .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
 
-    Provider<B> provider = injector.getInstance(TypeUtils.parameterize(Provider.class, B.class));
+    Provider<B> provider = injector.getInstance(Types.parameterize(Provider.class, B.class));
 
     /*
      * Providers are always wrapped, so requesting one directly should not
