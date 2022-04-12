@@ -13,7 +13,7 @@ public class ArchitectureTest {
   static final String BASE_PACKAGE_NAME = "hs.ddif.core";
 
   @ArchTest
-  private final ArchRule packagesShouldBeFreeOfCycles = slices().matching(BASE_PACKAGE_NAME + ".(**)").should().beFreeOfCycles();
+  private final ArchRule packagesShouldBeFreeOfCycles = slices().matching("(**)").should().beFreeOfCycles();
 
   @ArchTest
   private final ArchRule noClassesShouldDependOnUpperPackages = DependencyRules.NO_CLASSES_SHOULD_DEPEND_UPPER_PACKAGES;
