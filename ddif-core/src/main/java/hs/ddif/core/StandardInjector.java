@@ -64,15 +64,17 @@ public class StandardInjector implements Injector {
       typeExtensions.keySet()
     );
 
+    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(new TypeExtensionStore(new DirectTypeExtension<>(annotationStrategy), typeExtensions));
+
     DiscovererFactory discovererFactory = new DefaultDiscovererFactory(
       autoDiscovery,
       discoveryExtensions,
+      instantiatorFactory,
       new ClassInjectableFactory(bindingProvider, injectableFactory, lifeCycleCallbacksFactory),
       new MethodInjectableFactory(bindingProvider, injectableFactory),
       new FieldInjectableFactory(bindingProvider, injectableFactory)
     );
 
-    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(new TypeExtensionStore(new DirectTypeExtension<>(annotationStrategy), typeExtensions));
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap);
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, singletonAnnotationClass);

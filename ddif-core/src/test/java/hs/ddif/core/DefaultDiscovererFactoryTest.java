@@ -2,6 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.instantiation.InstantiatorFactory;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.config.ProducesDiscoveryExtension;
@@ -10,6 +11,7 @@ import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.MethodInjectableFactory;
+import hs.ddif.core.instantiation.TypeExtensions;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
@@ -26,9 +28,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class DefaultDiscovererFactoryTest {
+  private final InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(InjectableFactories.ANNOTATION_STRATEGY, TypeExtensions.create(InjectableFactories.ANNOTATION_STRATEGY));
   private final QualifiedTypeStore<Injectable<?>> store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), Injectable::getTypes);
   private final InjectableFactories injectableFactories = new InjectableFactories();
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
@@ -44,7 +48,7 @@ public class DefaultDiscovererFactoryTest {
 
   @Nested
   class When_autoDiscovery_isDisabled {
-    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(false, List.of(new ProducesDiscoveryExtension(Produces.class)), classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(false, List.of(new ProducesDiscoveryExtension(Produces.class)), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
 
     @Nested
     class And_gather_With_Injectable_IsCalled {
@@ -87,7 +91,7 @@ public class DefaultDiscovererFactoryTest {
 
   @Nested
   class When_autoDiscovery_isEnabled {
-    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(true, List.of(new ProducesDiscoveryExtension(Produces.class)), classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(true, List.of(new ProducesDiscoveryExtension(Produces.class)), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
 
     @Nested
     class And_gather_With_Injectable_IsCalled {
@@ -141,6 +145,14 @@ public class DefaultDiscovererFactoryTest {
         assertThat(gatherer.create(store, new Key(K.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(K.class),
           fieldInjectableFactory.create(H.class.getDeclaredField("h"), H.class)
+        );
+      }
+
+      @Test
+      void shouldDiscoverThroughBindingClassesWrappedInProvider() throws Exception {
+        assertThat(gatherer.create(store, new Key(L.class)).discover()).containsExactlyInAnyOrder(
+          classInjectableFactory.create(L.class),
+          classInjectableFactory.create(G.class)
         );
       }
 
@@ -353,6 +365,10 @@ public class DefaultDiscovererFactoryTest {
 
   public static class K {
     @Inject H h;
+  }
+
+  public static class L {
+    @Inject Provider<G> g;
   }
 
   public static class W {
