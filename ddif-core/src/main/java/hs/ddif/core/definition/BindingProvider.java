@@ -77,13 +77,9 @@ public class BindingProvider {
 
     while(currentInjectableClass != null) {
       for(Field field : currentInjectableClass.getDeclaredFields()) {
-        if(annotationStrategy.isInjectAnnotated(field)) {
+        if(!annotationStrategy.getInjectAnnotations(field).isEmpty()) {
           if(Modifier.isFinal(field.getModifiers())) {
             throw new BindingException(cls, field, "cannot be final");
-          }
-
-          if(!annotationStrategy.getScopes(field).isEmpty()) {
-            throw new BindingException(cls, field, "should not be annotated with a scope annotation when it is annotated with an inject annotation: " + annotationStrategy.getScopes(field));
           }
 
           if(typeArguments == null) {
@@ -101,13 +97,9 @@ public class BindingProvider {
       }
 
       for(Method method : currentInjectableClass.getDeclaredMethods()) {
-        if(annotationStrategy.isInjectAnnotated(method)) {
+        if(!annotationStrategy.getInjectAnnotations(method).isEmpty()) {
           if(method.getParameterCount() == 0) {
             throw new BindingException(cls, method, "must have parameters");
-          }
-
-          if(!annotationStrategy.getScopes(method).isEmpty()) {
-            throw new BindingException(cls, method, "should not be annotated with a scope annotation when it is annotated with an inject annotation: " + annotationStrategy.getScopes(method));
           }
 
           bindings.addAll(ofExecutable(method, cls));
@@ -191,7 +183,7 @@ public class BindingProvider {
     Constructor<T>[] declaredConstructors = (Constructor<T>[])cls.getDeclaredConstructors();
 
     for(Constructor<T> constructor : declaredConstructors) {
-      if(annotationStrategy.isInjectAnnotated(constructor)) {
+      if(!annotationStrategy.getInjectAnnotations(constructor).isEmpty()) {
         if(suitableConstructor != null) {
           throw new BindingException(cls, "cannot have multiple Inject annotated constructors");
         }

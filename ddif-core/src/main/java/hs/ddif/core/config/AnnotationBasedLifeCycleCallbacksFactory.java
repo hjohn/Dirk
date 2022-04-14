@@ -64,7 +64,7 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
       if(method.getParameterCount() > 0) {
         throw new DefinitionException(method, "cannot have parameters when annotated as a lifecycle method (post construct or pre destroy)");
       }
-      if(annotationStrategy.isInjectAnnotated(method)) {
+      if(!annotationStrategy.getInjectAnnotations(method).isEmpty()) {
         throw new DefinitionException(method, "cannot be inject annotated when annotated as a lifecycle method (post construct or pre destroy): " + annotationStrategy.getInjectAnnotations(method));
       }
     });

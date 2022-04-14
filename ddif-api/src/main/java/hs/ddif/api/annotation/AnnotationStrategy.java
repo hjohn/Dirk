@@ -1,11 +1,16 @@
 package hs.ddif.api.annotation;
 
+import hs.ddif.api.definition.DefinitionException;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.util.Set;
 
 /**
  * Strategy for checking and obtaining annotations relevant to dependency injection.
+ *
+ * <p>Strategies can either resolve conflicting annotations or report them as a definition
+ * problem. It is recommended the problems are reported.
  */
 public interface AnnotationStrategy {
 
@@ -15,16 +20,9 @@ public interface AnnotationStrategy {
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
    * @return a modifiable set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
+   * @throws DefinitionException when the strategy detects an annotation problem
    */
   Set<Annotation> getInjectAnnotations(AnnotatedElement element);
-
-  /**
-   * Checks if the given {@link AnnotatedElement} is annotated by an inject annotation.
-   *
-   * @param element an {@link AnnotatedElement}, cannot be {@code null}
-   * @return {@code true} if the given {@link AnnotatedElement} is annotated by an inject annotation, otherwise {@code false}
-   */
-  boolean isInjectAnnotated(AnnotatedElement element);
 
   /**
    * Checks if the given {@link AnnotatedElement} is optional. If optional and there is no
@@ -47,13 +45,13 @@ public interface AnnotationStrategy {
   Set<Annotation> getQualifiers(AnnotatedElement element);
 
   /**
-   * Returns all {@link Annotation}s on the given {@link AnnotatedElement} which
-   * are meta annotated by a scope annotation.
+   * Returns the scope annotation on the given {@link AnnotatedElement}.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
-   * @return a modifiable set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
+   * @return an {@link Annotation}, or {@code null} for the default scope
+   * @throws DefinitionException when the strategy detects an annotation problem
    */
-  Set<Annotation> getScopes(AnnotatedElement element);
+  Annotation getScope(AnnotatedElement element) throws DefinitionException;
 
   /**
    * Checks if the given {@link Annotation} is a qualifier annotation. This means it
