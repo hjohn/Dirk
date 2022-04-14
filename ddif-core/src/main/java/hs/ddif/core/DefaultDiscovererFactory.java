@@ -3,6 +3,7 @@ package hs.ddif.core;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DiscoveryExtension;
 import hs.ddif.api.definition.DiscoveryExtension.Registry;
+import hs.ddif.api.instantiation.InstantiatorFactory;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
@@ -22,9 +23,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
@@ -49,6 +51,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
   private final boolean autoDiscovery;
   private final List<DiscoveryExtension> extensions;
+  private final InstantiatorFactory instantiatorFactory;
   private final ClassInjectableFactory classInjectableFactory;
   private final MethodInjectableFactory methodInjectableFactory;
   private final FieldInjectableFactory fieldInjectableFactory;
@@ -58,13 +61,15 @@ class DefaultDiscovererFactory implements DiscovererFactory {
    *
    * @param extensions a list of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null}s but can be empty
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
+   * @param instantiatorFactory an {@link InstantiatorFactory}, cannot be {@code null}
    * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
    * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
    * @param fieldInjectableFactory a {@link FieldInjectableFactory}, cannot be {@code null}
    */
-  public DefaultDiscovererFactory(boolean autoDiscovery, List<DiscoveryExtension> extensions, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
+  public DefaultDiscovererFactory(boolean autoDiscovery, List<DiscoveryExtension> extensions, InstantiatorFactory instantiatorFactory, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
     this.autoDiscovery = autoDiscovery;
     this.extensions = extensions;
+    this.instantiatorFactory = instantiatorFactory;
     this.classInjectableFactory = classInjectableFactory;
     this.methodInjectableFactory = methodInjectableFactory;
     this.fieldInjectableFactory = fieldInjectableFactory;
@@ -93,10 +98,14 @@ class DefaultDiscovererFactory implements DiscovererFactory {
     private final QualifiedTypeStore<Injectable<?>> tempStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), i -> i.getTypes());
 
     /**
-     * When auto discovery is on, keeps track of unresolved bindings. A linked hash set
-     * is used to get deterministic behavior for the exception messages.
+     * When auto discovery is on, keeps track of unresolved bindings. The map contains
+     * the key which is already processed through an Instantiator (and so refers to the
+     * actual Injectable that may need to be created, and not to a wrapper like Provider) and
+     * the binding from which it was derived.
+     *
+     * <p>A linked hash map is used to get deterministic behavior for the exception messages.
      */
-    private final Set<Binding> unresolvedBindings = new LinkedHashSet<>();
+    private final Map<Key, Binding> unresolvedBindings = new LinkedHashMap<>();
 
     /**
      * Keys that must always be discovered without the use of auto discovery through
@@ -185,14 +194,14 @@ class DefaultDiscovererFactory implements DiscovererFactory {
         visitTypes.add(injectable.getType());
 
         for(Binding binding : injectable.getBindings()) {
-          Key key = binding.getKey();
+          Key key = instantiatorFactory.getInstantiator(binding.getKey(), binding.getAnnotatedElement()).getKey();
 
           if(includingResolver.resolve(key).isEmpty()) {
             via.put(key, injectableKey);
             visitTypes.add(key.getType());
 
             if(autoDiscovery) {
-              unresolvedBindings.add(binding);
+              unresolvedBindings.put(key, binding);
             }
           }
         }
@@ -262,18 +271,18 @@ class DefaultDiscovererFactory implements DiscovererFactory {
     }
 
     private boolean discoverBindings() {
-      for(Iterator<Binding> iterator = unresolvedBindings.iterator(); iterator.hasNext();) {
-        Binding binding = iterator.next();
-        Key key = binding.getKey();
+      for(Iterator<Entry<Key, Binding>> iterator = unresolvedBindings.entrySet().iterator(); iterator.hasNext();) {
+        Entry<Key, Binding> entry = iterator.next();
+        Key key = entry.getKey();  // this Key is the actual type required, not necessarily the same as Binding#getKey
 
         iterator.remove();
 
         if(includingResolver.resolve(key).isEmpty()) {
           try {
-            return addInjectables(List.of(attemptCreateInjectable(binding)));
+            return addInjectables(List.of(attemptCreateInjectable(key)));
           }
           catch(Exception e) {
-            encounteredProblems.add("Auto discovery of binding unsuccessful: " + binding + ": " + e.getMessage());
+            encounteredProblems.add("Auto discovery of binding unsuccessful: " + entry.getValue() + ": " + e.getMessage());
           }
         }
       }
@@ -287,18 +296,6 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
       if(!injectable.getQualifiers().containsAll(key.getQualifiers())) {
         throw new DefinitionException(Types.raw(type), "found during auto discovery is missing qualifiers required by: [" + key + "]");
-      }
-
-      return injectable;
-    }
-
-    private Injectable<?> attemptCreateInjectable(Binding binding) {
-      Key key = binding.getKey();
-      Type type = key.getType();
-      Injectable<?> injectable = classInjectableFactory.create(type);
-
-      if(!injectable.getQualifiers().containsAll(key.getQualifiers())) {
-        throw new DefinitionException(Types.raw(binding.getType()), "found during auto discovery is missing qualifiers required by: " + binding);
       }
 
       return injectable;

@@ -73,7 +73,7 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreIsEmpty {
-    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
     private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
 
     @Test
@@ -93,7 +93,7 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreNotEmpty {
-    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
     private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
 
     {
@@ -225,7 +225,7 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreEmptyAndAutoDiscoveryIsActive {
-    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(true, List.of(), classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(true, List.of(), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
     private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
 
     @Test

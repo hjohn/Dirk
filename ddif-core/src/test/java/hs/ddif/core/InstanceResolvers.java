@@ -13,7 +13,7 @@ public class InstanceResolvers {
     InstantiatorFactory instantiatorFactory = InstantiatorFactories.create();
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap);
-    DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), FACTORY.forClass(), FACTORY.forMethod(), FACTORY.forField());
+    DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), instantiatorFactory, FACTORY.forClass(), FACTORY.forMethod(), FACTORY.forField());
     DefaultInstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
 
     return new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
