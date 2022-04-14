@@ -1,11 +1,13 @@
 package hs.ddif.core.config;
 
 import hs.ddif.api.annotation.AnnotationStrategy;
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -67,11 +69,6 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
   }
 
   @Override
-  public boolean isInjectAnnotated(AnnotatedElement element) {
-    return isAnnotated(injectAnnotations, element);
-  }
-
-  @Override
   public boolean isOptional(AnnotatedElement element) {
     if(element != null) {
       for(Annotation annotation : element.getAnnotations()) {
@@ -89,7 +86,7 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
 
   @Override
   public Set<Annotation> getInjectAnnotations(AnnotatedElement element) {
-    return Stream.of(element.getAnnotations()).filter(a -> injectAnnotations.contains(a.annotationType())).collect(Collectors.toSet());
+    return getAnnotations(element).injects;
   }
 
   @Override
@@ -98,13 +95,27 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
   }
 
   @Override
-  public Set<Annotation> getScopes(AnnotatedElement element) {
-    return getAnnotations(scopeAnnotations, element);
+  public Annotation getScope(AnnotatedElement element) {
+    Set<Annotation> scopes = getAnnotations(scopeAnnotations, element);
+
+    if(scopes.size() > 1) {
+      throw new DefinitionException(element, "cannot have multiple scope annotations, but found: " + scopes.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()));
+    }
+
+    if(scopes.isEmpty()) {
+      return null;
+    }
+
+    return scopes.iterator().next();
   }
 
   @Override
   public boolean isQualifier(Annotation annotation) {
     return isAnnotated(qualifierAnnotations, annotation.annotationType());
+  }
+
+  private DiscoveredAnnotations getAnnotations(AnnotatedElement element) {
+    return new DiscoveredAnnotations(element);
   }
 
   private static boolean isAnnotated(List<Class<? extends Annotation>> annotations, AnnotatedElement element) {
@@ -125,5 +136,24 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
     }
 
     return matchingAnnotations;
+  }
+
+  private class DiscoveredAnnotations {
+    final Set<Annotation> injects;
+    final Set<Annotation> scopes;
+
+    DiscoveredAnnotations(AnnotatedElement element) {
+      this.scopes = getAnnotations(scopeAnnotations, element);
+
+      if(scopes.size() > 1) {
+        throw new DefinitionException(element, "cannot have multiple scope annotations, but found: " + scopes.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()));
+      }
+
+      this.injects = Stream.of(element.getAnnotations()).filter(a -> injectAnnotations.contains(a.annotationType())).collect(Collectors.toSet());
+
+      if(!scopes.isEmpty() && !injects.isEmpty()) {
+        throw new DefinitionException(element, "cannot have both inject and scope annotations, but found: " + injects.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()) + " and: " + scopes.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()));
+      }
+    }
   }
 }

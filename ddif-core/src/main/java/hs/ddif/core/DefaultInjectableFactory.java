@@ -63,13 +63,10 @@ class DefaultInjectableFactory implements InjectableFactory {
         throw new IllegalArgumentException("constructable cannot be null");
       }
 
-      Set<Annotation> scopes = annotationStrategy.getScopes(element);
+      Set<Annotation> injectAnnotations = annotationStrategy.getInjectAnnotations(element);
 
-      if(scopes.size() > 1) {
-        throw new DefinitionException(element, "cannot have multiple scope annotations, but found: " + scopes.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()));
-      }
-      if(annotationStrategy.isInjectAnnotated(element)) {
-        throw new DefinitionException(element, "should not have an inject annotation, but found: " + annotationStrategy.getInjectAnnotations(element).stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()));
+      if(!injectAnnotations.isEmpty()) {
+        throw new DefinitionException(element, "should not have an inject annotation, but found: " + injectAnnotations.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()));
       }
 
       Type type = member == null ? ownerType : extractType(ownerType, member, element);
@@ -83,7 +80,7 @@ class DefaultInjectableFactory implements InjectableFactory {
         Types.getGenericSuperTypes(type).stream().filter(t -> !extendedTypes.contains(Types.raw(t))).collect(Collectors.toSet()),
         new QualifiedType(type, annotationStrategy.getQualifiers(element)),
         bindings,
-        scopeResolverManager.getScopeResolver(scopes.isEmpty() ? null : scopes.iterator().next()),
+        scopeResolverManager.getScopeResolver(annotationStrategy.getScope(element)),
         element,
         constructable
       );

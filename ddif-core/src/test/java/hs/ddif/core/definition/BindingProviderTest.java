@@ -1,6 +1,7 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
@@ -150,8 +151,8 @@ public class BindingProviderTest {
   @Test
   public void ofMembersShouldRejectScopeAnnotations() {
     assertThatThrownBy(() -> bindingProvider.ofMembers(ClassG.class))
-      .isExactlyInstanceOf(BindingException.class)
-      .hasMessage("Method [void hs.ddif.core.definition.BindingProviderTest$ClassG.setter(int)] of [class hs.ddif.core.definition.BindingProviderTest$ClassG] should not be annotated with a scope annotation when it is annotated with an inject annotation: [@jakarta.inject.Singleton()]")
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Method [void hs.ddif.core.definition.BindingProviderTest$ClassG.setter(int)] cannot have both inject and scope annotations, but found: [@jakarta.inject.Inject()] and: [@jakarta.inject.Singleton()]")
       .hasNoCause();
   }
 
