@@ -1,5 +1,6 @@
 package hs.ddif.core.store;
 
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.TypeReference;
 import hs.ddif.api.util.Types;
@@ -31,12 +32,12 @@ public class QualifiedTypeStoreGenericsTest {
     this.store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), Injectable::getTypes);
   }
 
-  /**
+  /*
    * Tests that a store containing String and Integer will resolve to the correct number of matches
    * when the store is queried for various ways of referring to these classes using generics.
    */
   @Test
-  public void shouldResolveToStringWhenUsingGenerics() {
+  public void shouldResolveToStringWhenUsingGenerics() throws Exception {
     store.put(classInjectableFactory.create(String.class));   // String extends Object implements CharSequence, Serializable, Comparable<String>
     store.put(instanceInjectableFactory.create(Integer.MAX_VALUE));  // Integer extends Number implements Serializable, Comparable<Integer>
 
@@ -67,16 +68,16 @@ public class QualifiedTypeStoreGenericsTest {
   }
 
   @Test
-  public void shouldAcceptGenericTypesWithoutTypeVariables() {
+  public void shouldAcceptGenericTypesWithoutTypeVariables() throws DefinitionException {
     store.put(classInjectableFactory.create(Types.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted
   }
 
-  /**
+  /*
    * Tests the store with some classes that have multiple generic parameters for potential resolution
    * problems.  This test only handles a few potential cases, and may need extending.
    */
   @Test
-  public void shouldResolveInjectablesWithMultipleGenericParameters() {
+  public void shouldResolveInjectablesWithMultipleGenericParameters() throws DefinitionException {
     store.put(classInjectableFactory.create(OrangeToOrangeJuiceConverter.class));
     store.put(classInjectableFactory.create(AppleToSlicedAppleConverter.class));
 
@@ -90,7 +91,7 @@ public class QualifiedTypeStoreGenericsTest {
   }
 
   @Test
-  public void shouldBeAbleToAddAndRemoveResolvedGenericInterface() throws NoSuchMethodException, SecurityException {
+  public void shouldBeAbleToAddAndRemoveResolvedGenericInterface() throws Exception {
     Injectable<Queue<String>> injectable = methodInjectableFactory.create(
       SuppliesGenericResolvedInterface.class.getDeclaredMethod("supply"),
       SuppliesGenericResolvedInterface.class

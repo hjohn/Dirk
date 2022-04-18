@@ -1,5 +1,6 @@
 package hs.ddif.core.store;
 
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.TypeReference;
@@ -58,7 +59,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldStore() {
+  public void shouldStore() throws DefinitionException {
     store.put(classInjectableFactory.create(BeanWithBigRedInjection.class));
 
     assertThat(store.resolve(new Key(Object.class, Set.of(BIG, RED)))).isEmpty();
@@ -69,7 +70,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldNotAllowRemovingInjectablesThatWereNeverAdded() {
+  public void shouldNotAllowRemovingInjectablesThatWereNeverAdded() throws DefinitionException {
     store.put(classInjectableFactory.create(Y.class));
 
     assertThat(store.resolve(new Key(Y.class))).isNotNull();
@@ -79,7 +80,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldStoreWithQualifier() {
+  public void shouldStoreWithQualifier() throws DefinitionException {
     store.put(instanceInjectableFactory.create("a", named("parameter-a")));
     store.put(instanceInjectableFactory.create("a", named("parameter-b")));
     store.put(instanceInjectableFactory.create("c", named("parameter-c")));
@@ -95,7 +96,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldStoreMultipleOfSameType() {
+  public void shouldStoreMultipleOfSameType() throws DefinitionException {
     store.put(instanceInjectableFactory.create("a"));
     store.put(instanceInjectableFactory.create("b"));
     store.put(instanceInjectableFactory.create("c"));
@@ -105,7 +106,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() {
+  public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() throws DefinitionException {
     store.put(instanceInjectableFactory.create(new String("a"), named("parameter-a")));
 
     assertThatThrownBy(() -> store.put(instanceInjectableFactory.create(new String("a"), named("parameter-a"))))
@@ -115,7 +116,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldRemoveWithQualifier() {
+  public void shouldRemoveWithQualifier() throws DefinitionException {
     store.put(instanceInjectableFactory.create("a", named("parameter-a")));
     store.put(instanceInjectableFactory.create("a", named("parameter-b")));
     store.put(instanceInjectableFactory.create("c", named("parameter-c")));
@@ -125,7 +126,7 @@ public class QualifiedTypeStoreTest {
     store.remove(instanceInjectableFactory.create("c", named("parameter-c")));
   }
 
-  private void setupStore() {
+  private void setupStore() throws DefinitionException {
     store.put(instanceInjectableFactory.create("a", named("parameter-a")));
     store.put(instanceInjectableFactory.create("a", named("parameter-b"), Annotations.of(Red.class)));
     store.put(instanceInjectableFactory.create("c", named("parameter-c")));
@@ -146,7 +147,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldResolve() {
+  public void shouldResolve() throws DefinitionException {
     setupStore();
 
     // All Strings
@@ -199,7 +200,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void resolveShouldFindInjectablesWhenCriteriaIsAnAnnotationClass() {  // Tests that Annotation classes are converted to a descriptor internally
+  public void resolveShouldFindInjectablesWhenCriteriaIsAnAnnotationClass() throws DefinitionException {  // Tests that Annotation classes are converted to a descriptor internally
     setupStore();
 
     assertEquals(3, store.resolve(new Key(Object.class, Set.of(RED))).size());
@@ -218,7 +219,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void putShouldRejectDuplicateBeans() {
+  public void putShouldRejectDuplicateBeans() throws DefinitionException {
     try {
       store.put(classInjectableFactory.create(A.class));
       store.put(classInjectableFactory.create(A.class));
@@ -232,7 +233,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void putAllShouldRejectDuplicateBeans() {
+  public void putAllShouldRejectDuplicateBeans() throws DefinitionException {
     try {
       store.putAll(List.of(classInjectableFactory.create(A.class), classInjectableFactory.create(A.class)));
       fail();
@@ -244,7 +245,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void putAllShouldRejectDuplicateBeansWhenOnePresentAlready() {
+  public void putAllShouldRejectDuplicateBeansWhenOnePresentAlready() throws DefinitionException {
     try {
       store.put(classInjectableFactory.create(A.class));
       store.putAll(List.of(classInjectableFactory.create(B.class), classInjectableFactory.create(A.class)));
@@ -259,7 +260,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void containsShouldWork() {
+  public void containsShouldWork() throws DefinitionException {
     store.put(classInjectableFactory.create(A.class));
 
     assertTrue(store.contains(new Key(A.class, Set.of(BIG))));

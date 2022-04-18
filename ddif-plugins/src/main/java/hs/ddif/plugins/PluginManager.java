@@ -1,6 +1,8 @@
 package hs.ddif.plugins;
 
 import hs.ddif.api.CandidateRegistry;
+import hs.ddif.api.definition.AutoDiscoveryException;
+import hs.ddif.api.definition.DefinitionException;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -41,8 +43,10 @@ public class PluginManager {
    *
    * @param packageNamePrefixes a list of packages to scan
    * @return a {@link Plugin}, never {@code null}
+   * @throws AutoDiscoveryException when auto discovery fails to find all required types
+   * @throws DefinitionException when a definition problem was encountered
    */
-  public Plugin loadPluginAndScan(String... packageNamePrefixes) {
+  public Plugin loadPluginAndScan(String... packageNamePrefixes) throws AutoDiscoveryException, DefinitionException {
     ClassLoader classLoader = this.getClass().getClassLoader();
 
     LOGGER.fine("Scanning packages: " + Arrays.toString(packageNamePrefixes));
@@ -56,9 +60,11 @@ public class PluginManager {
    *
    * @param urls a list of {@link URL}s to load and scan
    * @return a {@link Plugin}, never {@code null}
+   * @throws AutoDiscoveryException when auto discovery fails to find all required types
+   * @throws DefinitionException when a definition problem was encountered
    */
   @SuppressWarnings("resource")
-  public Plugin loadPluginAndScan(URL... urls) {
+  public Plugin loadPluginAndScan(URL... urls) throws AutoDiscoveryException, DefinitionException {
     URLClassLoader classLoader = new UnloadTrackingClassLoader(urls);
 
     LOGGER.fine("Scanning Plugin at: " + Arrays.toString(urls));
@@ -71,8 +77,10 @@ public class PluginManager {
    * underlying {@link CandidateRegistry}.
    *
    * @param plugin a {@link Plugin} to unload, cannot be {@code null}
+   * @throws AutoDiscoveryException when auto discovery fails to find all required types
+   * @throws DefinitionException when a definition problem was encountered
    */
-  public void unload(Plugin plugin) {
+  public void unload(Plugin plugin) throws AutoDiscoveryException, DefinitionException {
     baseRegistry.remove(plugin.getTypes());  // may fail
     plugin.destroy();  // can't fail
   }
@@ -82,9 +90,10 @@ public class PluginManager {
    *
    * @param urls one or more jar files
    * @return a {@link Plugin}, never {@code null}
+   * @throws AutoDiscoveryException when auto discovery fails to find all required types
    */
   @SuppressWarnings("resource")
-  public Plugin loadPlugin(URL... urls) {
+  public Plugin loadPlugin(URL... urls) throws AutoDiscoveryException, DefinitionException {
     URLClassLoader classLoader = new UnloadTrackingClassLoader(urls);
 
     try {
@@ -117,7 +126,7 @@ public class PluginManager {
     }
   }
 
-  private Plugin createPlugin(String name, List<Type> types, ClassLoader classLoader) {
+  private Plugin createPlugin(String name, List<Type> types, ClassLoader classLoader) throws AutoDiscoveryException, DefinitionException {
     Plugin plugin = new Plugin(name, types, classLoader);
 
     baseRegistry.register(plugin.getTypes());
@@ -158,7 +167,7 @@ public class PluginManager {
       this.classLoader = classLoader;
     }
 
-    Plugin loadPlugin(String pluginName) {
+    Plugin loadPlugin(String pluginName) throws AutoDiscoveryException, DefinitionException {
       List<Type> types = componentScanner.findComponentTypes(classLoader);
 
       LOGGER.fine("Registering types: " + types);

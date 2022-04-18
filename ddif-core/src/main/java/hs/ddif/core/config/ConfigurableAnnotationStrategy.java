@@ -85,7 +85,7 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
   }
 
   @Override
-  public Set<Annotation> getInjectAnnotations(AnnotatedElement element) {
+  public Set<Annotation> getInjectAnnotations(AnnotatedElement element) throws DefinitionException {
     return getAnnotations(element).injects;
   }
 
@@ -114,7 +114,7 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
     return isAnnotated(qualifierAnnotations, annotation.annotationType());
   }
 
-  private DiscoveredAnnotations getAnnotations(AnnotatedElement element) {
+  private DiscoveredAnnotations getAnnotations(AnnotatedElement element) throws DefinitionException {
     return new DiscoveredAnnotations(element);
   }
 
@@ -142,7 +142,7 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
     final Set<Annotation> injects;
     final Set<Annotation> scopes;
 
-    DiscoveredAnnotations(AnnotatedElement element) {
+    DiscoveredAnnotations(AnnotatedElement element) throws DefinitionException {
       this.scopes = getAnnotations(scopeAnnotations, element);
 
       if(scopes.size() > 1) {

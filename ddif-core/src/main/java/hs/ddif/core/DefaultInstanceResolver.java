@@ -1,19 +1,17 @@
 package hs.ddif.core;
 
 import hs.ddif.api.InstanceResolver;
+import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.instantiation.InstantiationContext;
 import hs.ddif.api.instantiation.Instantiator;
 import hs.ddif.api.instantiation.InstantiatorFactory;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.api.instantiation.domain.InstanceResolutionFailure;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.api.instantiation.domain.Key;
-import hs.ddif.api.instantiation.domain.MultipleInstances;
-import hs.ddif.api.instantiation.domain.NoSuchInstance;
+import hs.ddif.api.instantiation.domain.MultipleInstancesException;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.discovery.DiscovererFactory;
-import hs.ddif.core.discovery.DiscoveryFailure;
 import hs.ddif.core.inject.store.InjectableStore;
 
 import java.lang.reflect.Type;
@@ -47,39 +45,29 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> T getInstance(Type type, Object... qualifiers) {
-    try {
-      Key key = KeyFactory.of(type, qualifiers);
-      T instance = getInstance(key);
+  public synchronized <T> T getInstance(Type type, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException {
+    Key key = KeyFactory.of(type, qualifiers);
+    T instance = getInstance(key);
 
-      if(instance == null) {
-        throw new NoSuchInstanceException("No such instance: " + key, null);
-      }
+    if(instance == null) {
+      throw new NoSuchInstanceException(key);
+    }
 
-      return instance;
-    }
-    catch(InstanceResolutionFailure f) {
-      throw f.toRuntimeException();
-    }
+    return instance;
   }
 
   @Override
-  public synchronized <T> T getInstance(Class<T> cls, Object... qualifiers) {
+  public synchronized <T> T getInstance(Class<T> cls, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException {
     return getInstance((Type)cls, qualifiers);
   }
 
   @Override
-  public synchronized <T> List<T> getInstances(Type type, Object... qualifiers) {
-    try {
-      return getInstances(KeyFactory.of(type, qualifiers));
-    }
-    catch(InstanceCreationFailure f) {
-      throw f.toRuntimeException();
-    }
+  public synchronized <T> List<T> getInstances(Type type, Object... qualifiers) throws InstanceCreationException {
+    return getInstances(KeyFactory.of(type, qualifiers));
   }
 
   @Override
-  public synchronized <T> List<T> getInstances(Class<T> cls, Object... qualifiers) {
+  public synchronized <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws InstanceCreationException {
     return getInstances((Type)cls, qualifiers);
   }
 
@@ -92,7 +80,7 @@ class DefaultInstanceResolver implements InstanceResolver {
     return store;
   }
 
-  private <T> T getInstance(Key key) throws NoSuchInstance, MultipleInstances, InstanceCreationFailure {
+  private <T> T getInstance(Key key) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException {
     Instantiator<T> instantiator = instantiatorFactory.getInstantiator(key, null);
     Discoverer discoverer = discovererFactory.create(store, instantiator.getKey());
     Set<Injectable<?>> gatheredInjectables = Set.of();
@@ -105,13 +93,11 @@ class DefaultInstanceResolver implements InstanceResolver {
       }
     }
     catch(Exception e) {
-      DiscoveryFailure f = new DiscoveryFailure(key, "instantiation failed because auto discovery was unable to resolve all dependencies; found: " + gatheredInjectables.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()), e);
-
-      if(!discoverer.getProblems().isEmpty()) {
-        f.addSuppressed(new DiscoveryException(discoverer.getProblems()));
+      if(gatheredInjectables.isEmpty()) {
+        throw new AutoDiscoveryException("Unable to instantiate [" + key + "]" + (discoverer.getProblems().isEmpty() ? "" : discoverer.getProblems().stream().collect(Collectors.joining("\n    -> ", "\n    -> ", ""))), e);
       }
 
-      throw f;
+      throw new AutoDiscoveryException("[" + key + "] and the discovered types " + gatheredInjectables.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()) + " could not be registered" + discoverer.getProblems().stream().collect(Collectors.joining("\n    -> ", "\n    -> ", "")), e);
     }
 
     try {
@@ -126,7 +112,7 @@ class DefaultInstanceResolver implements InstanceResolver {
     }
   }
 
-  private <T> List<T> getInstances(Key key) throws InstanceCreationFailure {
+  private <T> List<T> getInstances(Key key) throws InstanceCreationException {
     return instantiationContext.createAll(key);
   }
 }

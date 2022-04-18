@@ -22,7 +22,7 @@ public interface AnnotationStrategy {
    * @return a modifiable set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
    * @throws DefinitionException when the strategy detects an annotation problem
    */
-  Set<Annotation> getInjectAnnotations(AnnotatedElement element);
+  Set<Annotation> getInjectAnnotations(AnnotatedElement element) throws DefinitionException;
 
   /**
    * Checks if the given {@link AnnotatedElement} is optional. If optional and there is no

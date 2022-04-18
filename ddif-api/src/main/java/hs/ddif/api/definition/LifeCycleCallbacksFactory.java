@@ -12,6 +12,7 @@ public interface LifeCycleCallbacksFactory {
    *
    * @param cls a {@link Class}, cannot be {@code null}
    * @return a {@link LifeCycleCallbacks}, never {@code null}
+   * @throws DefinitionException when a definition problem was encountered
    */
-  LifeCycleCallbacks create(Class<?> cls);
+  LifeCycleCallbacks create(Class<?> cls) throws DefinitionException;
 }

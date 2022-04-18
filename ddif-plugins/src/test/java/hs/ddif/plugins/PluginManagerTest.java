@@ -1,7 +1,7 @@
 package hs.ddif.plugins;
 
 import hs.ddif.api.Injector;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.jsr330.Injectors;
@@ -42,7 +42,7 @@ public class PluginManagerTest {
   private PluginManager pluginManager;
 
   @BeforeEach
-  public void beforeEach() {
+  public void beforeEach() throws Exception {
     injector = Injectors.autoDiscovering();
     pluginManager = new PluginManager(new DefaultComponentScannerFactory(), injector.getCandidateRegistry());
 
@@ -59,7 +59,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldLoadThenUnloadPlugin() {
+  public void shouldLoadThenUnloadPlugin() throws Exception {
     BeanWithTextProviders bean1 = injector.getInstance(BeanWithTextProviders.class);  // it's perfectly fine to get a bean with no text providers
 
     assertNotNull(bean1);
@@ -98,8 +98,8 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldLoadPluginAgainAfterUnload() {
-    assertThrows(InstanceCreationException.class, () -> injector.getInstance(Database.class));
+  public void shouldLoadPluginAgainAfterUnload() throws Exception {
+    assertThrows(AutoDiscoveryException.class, () -> injector.getInstance(Database.class));
 
     injector.register(TextStyler.class);  // not part of plugin, so needs to be registered separate -- don't want it part of plugin either as then plugin would be unable to unload itself
 
@@ -109,7 +109,7 @@ public class PluginManagerTest {
 
     pluginManager.unload(plugin);
 
-    assertThrows(InstanceCreationException.class, () -> injector.getInstance(Database.class));
+    assertThrows(AutoDiscoveryException.class, () -> injector.getInstance(Database.class));
 
     plugin = pluginManager.loadPlugin(PLUGIN_URL);
 
@@ -117,7 +117,7 @@ public class PluginManagerTest {
 
     pluginManager.unload(plugin);
 
-    assertThrows(InstanceCreationException.class, () -> injector.getInstance(Database.class));
+    assertThrows(AutoDiscoveryException.class, () -> injector.getInstance(Database.class));
 
     assertNotNull(db1);
     assertNotNull(db2);
@@ -128,7 +128,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldNotLoadPluginWhenLoadingWouldViolateSingularDependencies() {
+  public void shouldNotLoadPluginWhenLoadingWouldViolateSingularDependencies() throws Exception {
     injector.register(DatabaseBean.class);  // Provides Database
     injector.register(BeanWithDatabase.class);  // Requires an unambiguous Database dependency
 
@@ -136,7 +136,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void shouldLoadPluginAfterFixingSingularDependencyViolations() {
+  public void shouldLoadPluginAfterFixingSingularDependencyViolations() throws Exception {
     injector.register(DatabaseBean.class);
     injector.register(BeanWithDatabase.class);  // Requires an unambiguous Database dependency
 

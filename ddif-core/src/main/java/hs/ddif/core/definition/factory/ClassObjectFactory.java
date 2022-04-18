@@ -1,7 +1,7 @@
 package hs.ddif.core.definition.factory;
 
 import hs.ddif.api.instantiation.LifeCycleCallbacks;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
 
@@ -41,9 +41,9 @@ public class ClassObjectFactory<T> implements Constructable<T> {
   }
 
   @Override
-  public T create(List<Injection> injections) throws InstanceCreationFailure {
+  public T create(List<Injection> injections) throws InstanceCreationException {
     if(UNDER_CONSTRUCTION.contains(this)) {
-      throw new InstanceCreationFailure(constructor.getDeclaringClass(), "already under construction (dependency creation loop in setter, initializer or post-construct method?)");
+      throw new InstanceCreationException(constructor.getDeclaringClass(), "already under construction (dependency creation loop in setter, initializer or post-construct method?)");
     }
 
     try {
@@ -53,7 +53,12 @@ public class ClassObjectFactory<T> implements Constructable<T> {
 
       injectInstance(instance, injections);
 
-      lifeCycleCallbacks.postConstruct(instance);
+      try {
+        lifeCycleCallbacks.postConstruct(instance);
+      }
+      catch(Exception e) {
+        throw new InstanceCreationException(constructor.getDeclaringClass(), "threw exception during post construction", e);
+      }
 
       return instance;
     }
@@ -67,7 +72,7 @@ public class ClassObjectFactory<T> implements Constructable<T> {
     lifeCycleCallbacks.preDestroy(instance);
   }
 
-  private T constructInstance(List<Injection> injections) throws InstanceCreationFailure {
+  private T constructInstance(List<Injection> injections) throws InstanceCreationException {
     try {
       Object[] values = new Object[constructor.getParameterCount()];  // Parameters for constructor
       int parameterIndex = 0;
@@ -81,11 +86,11 @@ public class ClassObjectFactory<T> implements Constructable<T> {
       return constructor.newInstance(values);
     }
     catch(Exception e) {
-      throw new InstanceCreationFailure(constructor, "call failed", e);
+      throw new InstanceCreationException(constructor, "call failed", e);
     }
   }
 
-  private static void injectInstance(Object instance, List<Injection> injections) throws InstanceCreationFailure {
+  private static void injectInstance(Object instance, List<Injection> injections) throws InstanceCreationException {
     Object[] values = null;
     int parameterIndex = 0;
 
@@ -103,7 +108,7 @@ public class ClassObjectFactory<T> implements Constructable<T> {
           }
         }
         catch(Exception e) {
-          throw new InstanceCreationFailure(field, "inject failed", e);
+          throw new InstanceCreationException(field, "inject failed", e);
         }
       }
       else if(accessibleObject instanceof Method) {
@@ -120,7 +125,7 @@ public class ClassObjectFactory<T> implements Constructable<T> {
             method.invoke(instance, values);
           }
           catch(Exception e) {
-            throw new InstanceCreationFailure(method, "inject failed", e);
+            throw new InstanceCreationException(method, "inject failed", e);
           }
 
           values = null;

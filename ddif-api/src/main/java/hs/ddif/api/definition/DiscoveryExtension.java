@@ -19,23 +19,26 @@ public interface DiscoveryExtension {
      *
      * @param field a {@link Field}, cannot be {@code null}
      * @param ownerType an owner {@link Type}, cannot be {@code null}
+     * @throws DefinitionException when a definition problem was encountered during registration
      */
-    void add(Field field, Type ownerType);
+    void add(Field field, Type ownerType) throws DefinitionException;
 
     /**
      * Adds a derived type given a {@link Method} and the method's owner {@link Type}.
      *
      * @param method a {@link Method}, cannot be {@code null}
      * @param ownerType an owner {@link Type}, cannot be {@code null}
+     * @throws DefinitionException when a definition problem was encountered during registration
      */
-    void add(Method method, Type ownerType);
+    void add(Method method, Type ownerType) throws DefinitionException;
 
     /**
      * Adds a derived type given a {@link Type}.
      *
      * @param type a {@link Type} to add, cannot be {@code null}
+     * @throws DefinitionException when a definition problem was encountered during registration
      */
-    void add(Type type);
+    void add(Type type) throws DefinitionException;
   }
 
   /**
@@ -47,6 +50,7 @@ public interface DiscoveryExtension {
    *
    * @param type a {@link Type} use as base for derivation, never {@code null}
    * @param registry a {@link Registry} where derived types can be registered, never {@code null}
+   * @throws DefinitionException when a definition problem was encountered during derivation
    */
-  void deriveTypes(Registry registry, Type type);
+  void deriveTypes(Registry registry, Type type) throws DefinitionException;
 }

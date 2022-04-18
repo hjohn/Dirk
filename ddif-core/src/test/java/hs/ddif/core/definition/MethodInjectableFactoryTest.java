@@ -81,7 +81,7 @@ public class MethodInjectableFactoryTest {
   }
 
   @Test
-  void createShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException {
+  void createShouldAcceptValidParameters() throws Exception {
     Injectable<String> injectable = factory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());

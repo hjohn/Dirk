@@ -3,7 +3,7 @@ package hs.ddif.extensions.assisted;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DiscoveryExtension;
 import hs.ddif.api.definition.LifeCycleCallbacksFactory;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.api.util.Primitives;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
@@ -69,7 +69,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
   }
 
   @Override
-  public void deriveTypes(Registry registry, Type factoryType) {
+  public void deriveTypes(Registry registry, Type factoryType) throws DefinitionException {
     Class<?> factoryClass = Types.raw(factoryType);
 
     if(strategy.providerClass().equals(factoryClass)) {
@@ -105,7 +105,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
     private final Map<TypeVariable<?>, Type> factoryTypeArguments;
     private final Class<?> productClass;
 
-    ProducerInjectableFactory(Type productType, Type factoryType, Method factoryMethod, Map<TypeVariable<?>, Type> typeArguments) {
+    ProducerInjectableFactory(Type productType, Type factoryType, Method factoryMethod, Map<TypeVariable<?>, Type> typeArguments) throws DefinitionException {
       this.factoryType = factoryType;
       this.factoryMethod = factoryMethod;
       this.productClass = Types.raw(productType);
@@ -120,11 +120,11 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
       }
     }
 
-    public void register(Registry registry) {
+    public void register(Registry registry) throws DefinitionException {
       registry.add(generateFactoryClass());
     }
 
-    private Class<?> generateFactoryClass() {
+    private Class<?> generateFactoryClass() throws DefinitionException {
       try {
         Constructor<?> constructor = bindingProvider.getConstructor(productClass);
         List<Binding> productBindings = bindingProvider.ofConstructorAndMembers(constructor, productClass);
@@ -222,7 +222,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
       }
     }
 
-    private List<String> validateProducerAndReturnArgumentNames(Map<String, Binding> argumentBindings) {
+    private List<String> validateProducerAndReturnArgumentNames(Map<String, Binding> argumentBindings) throws DefinitionException {
       List<String> names = new ArrayList<>();
 
       if(factoryMethod.getParameterCount() != argumentBindings.size()) {
@@ -283,7 +283,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
       return names;
     }
 
-    private List<String> validateProducerByTypeAndReturnArgumentNames(Map<String, Binding> argumentBindings) {
+    private List<String> validateProducerByTypeAndReturnArgumentNames(Map<String, Binding> argumentBindings) throws DefinitionException {
       List<String> names = new ArrayList<>();
 
       Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
@@ -342,10 +342,10 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
      * @param factoryInstance the factory instance, cannot be {@code null}
      * @param args an array of all arguments passed to the factory method, never {@code null}
      * @return the product of the factory, never {@code null}
-     * @throws InstanceCreationFailure when the product could not be created
+     * @throws InstanceCreationException when the product could not be created
      */
     @RuntimeType
-    public Object intercept(@This Object factoryInstance, @AllArguments Object[] args) throws InstanceCreationFailure {
+    public Object intercept(@This Object factoryInstance, @AllArguments Object[] args) throws InstanceCreationException {
       try {
         Map<String, Object> parameters = new HashMap<>();
 
@@ -356,7 +356,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
         return productConstructable.create(createInjections(factoryInstance, parameters));
       }
       catch(Exception e) {
-        throw new InstanceCreationFailure(productType, "Exception while creating instance", e);
+        throw new InstanceCreationException(productType, "Exception while creating instance", e);
       }
     }
 

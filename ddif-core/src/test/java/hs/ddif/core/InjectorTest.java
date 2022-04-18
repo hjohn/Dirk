@@ -2,11 +2,10 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
+import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.api.instantiation.domain.MultipleInstancesException;
-import hs.ddif.api.instantiation.domain.NoSuchInstance;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
@@ -86,7 +85,7 @@ public class InjectorTest {
   private Injector injector;
 
   @BeforeEach
-  public void beforeEach() {
+  public void beforeEach() throws Exception {
     injector = Injectors.manual();
 
     injector.register(SimpleBean.class);
@@ -106,7 +105,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldGetSimpleBean() {
+  public void shouldGetSimpleBean() throws Exception {
     assertNotNull(injector.getInstance(SimpleBean.class));
   }
 
@@ -121,7 +120,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithInjection() {
+  public void shouldGetBeanWithInjection() throws Exception {
     BeanWithInjection bean = injector.getInstance(BeanWithInjection.class);
 
     assertNotNull(bean.getInjectedValue());
@@ -129,7 +128,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithInterfaceBasedInjection() {
+  public void shouldGetBeanWithInterfaceBasedInjection() throws Exception {
     BeanWithInterfaceBasedInjection bean = injector.getInstance(BeanWithInterfaceBasedInjection.class);
 
     assertNotNull(bean.getInjectedValue());
@@ -137,7 +136,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithProviderInjection() {
+  public void shouldGetBeanWithProviderInjection() throws Exception {
     BeanWithProvider bean = injector.getInstance(BeanWithProvider.class);
 
     assertNotNull(bean.getSimpleBean());
@@ -145,7 +144,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithOptionalDependencyWhenProviderReturnsNull() {
+  public void shouldGetBeanWithOptionalDependencyWhenProviderReturnsNull() throws Exception {
     injector.register(BeanWithOptionalDependency.class);
     injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
@@ -158,7 +157,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithOptionalDependencyWhenNoProviderAvailable() {
+  public void shouldGetBeanWithOptionalDependencyWhenNoProviderAvailable() throws Exception {
     injector.register(BeanWithOptionalDependency.class);
 
     assertNotNull(injector.getInstance(BeanWithOptionalDependency.class));
@@ -173,7 +172,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldLeaveDefaultFieldValuesIntactForOptionalDependencies() {
+  public void shouldLeaveDefaultFieldValuesIntactForOptionalDependencies() throws Exception {
     injector.register(OptionalDependent.class);
 
     OptionalDependent instance = injector.getInstance(OptionalDependent.class);
@@ -238,14 +237,14 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithOptionalConstructorDependencyWhenNoProviderAvailable() {
+  public void shouldGetBeanWithOptionalConstructorDependencyWhenNoProviderAvailable() throws Exception {
     injector.register(BeanWithOptionalConstructorDependency.class);
 
     assertNotNull(injector.getInstance(BeanWithOptionalConstructorDependency.class));
   }
 
   @Test  // @Nullable annotation on Provider is just ignored as it makes no sense for Providers
-  public void shouldGetBeanWithOptionalProviderDependency() {
+  public void shouldGetBeanWithOptionalProviderDependency() throws Exception {
     injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
@@ -275,7 +274,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenGettingUnavailableBean() {
+  public void shouldThrowExceptionWhenGettingUnavailableBean() throws Exception {
     injector.registerInstance(new Provider<UnavailableBean>() {
       @Override
       public UnavailableBean get() {
@@ -291,13 +290,11 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldRemoveBean() {
+  public void shouldRemoveBean() throws AutoDiscoveryException, DefinitionException {
     injector.remove(BeanWithInjection.class);
 
     assertThatThrownBy(() -> injector.getInstance(BeanWithInjection.class))
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstance.class)
       .hasNoCause();
   }
 
@@ -305,14 +302,7 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenRemovingInterface() {
     assertThatThrownBy(() -> injector.remove(SimpleInterface.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.test.injectables.SimpleInterface]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[interface hs.ddif.core.test.injectables.SimpleInterface] cannot be abstract")
-          .hasNoCause();
-      })
+      .hasMessage("[interface hs.ddif.core.test.injectables.SimpleInterface] cannot be abstract")
       .hasNoCause();
   }
 
@@ -333,7 +323,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldBeAbleToRemoveProviderWhichIsOnlyOptionallyDependedOn() {
+  public void shouldBeAbleToRemoveProviderWhichIsOnlyOptionallyDependedOn() throws Exception {
     Provider<UnavailableBean> provider = new Provider<>() {
       @Override
       public UnavailableBean get() {
@@ -358,7 +348,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldRegisterStringInstances() {
+  public void shouldRegisterStringInstances() throws Exception {
     injector.registerInstance("a");
     injector.registerInstance("b");
     injector.registerInstance("c");
@@ -369,13 +359,13 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldRegisterSameStringInstancesWithDifferentQualifiers() {
+  public void shouldRegisterSameStringInstancesWithDifferentQualifiers() throws Exception {
     injector.registerInstance("a", Annotations.of(Named.class, Map.of("value", "name-1")));
     injector.registerInstance("a", Annotations.of(Named.class, Map.of("value", "name-2")));
   }
 
   @Test
-  public void shouldThrowExceptionWhenRegisteringDuplicate() {
+  public void shouldThrowExceptionWhenRegisteringDuplicate() throws Exception {
     injector.register(String.class);
 
     assertThatThrownBy(() -> injector.register(String.class))
@@ -387,14 +377,7 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenRegisteringInterface() {
     assertThatThrownBy(() -> injector.register(List.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [java.util.List]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[interface java.util.List] cannot be abstract")
-          .hasNoCause();
-      })
+      .hasMessage("[interface java.util.List] cannot be abstract")
       .hasNoCause();
   }
 
@@ -436,7 +419,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldRespectSingletonAnnotation() {
+  public void shouldRespectSingletonAnnotation() throws Exception {
     SimpleBean bean1 = injector.getInstance(SimpleBean.class);
 
     assertTrue(bean1 == injector.getInstance(SimpleBean.class));
@@ -448,7 +431,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldSupportQualifiers() {
+  public void shouldSupportQualifiers() throws Exception {
     injector.register(BigRedBean.class);
 
     injector.register(BeanWithBigInjection.class);
@@ -461,7 +444,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenRegisteringDependentBeanWithNoMatchForAllQualifiers() {
+  public void shouldThrowExceptionWhenRegisteringDependentBeanWithNoMatchForAllQualifiers() throws Exception {
     injector.register(BigBean.class);
 
     assertThatThrownBy(() -> injector.register(BeanWithBigRedInjection.class))  // Won't match BigBean, so won't match anything
@@ -470,7 +453,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenRegisteringBeanWithMoreQualifiersWhenItWouldViolateSingularDependencies() {
+  public void shouldThrowExceptionWhenRegisteringBeanWithMoreQualifiersWhenItWouldViolateSingularDependencies() throws Exception {
     injector.register(BigBean.class);
     injector.register(BeanWithBigInjection.class);
 
@@ -480,7 +463,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenRemovingRequiredBeanWithMoreQualifiers() {
+  public void shouldThrowExceptionWhenRemovingRequiredBeanWithMoreQualifiers() throws Exception {
     injector.register(BigRedBean.class);
     injector.register(BeanWithBigInjection.class);
 
@@ -490,7 +473,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldGetBeanWithInjectionWithMultipleTypeMatchesWhenDisambiguatedWithQualifier() {
+  public void shouldGetBeanWithInjectionWithMultipleTypeMatchesWhenDisambiguatedWithQualifier() throws Exception {
     injector.register(SimpleCollectionItemImpl3.class);  // One of several, this one qualified
     injector.register(BeanWithDirectRedCollectionItemDependency.class);  // Depends on the specific one above using qualifier
 
@@ -502,7 +485,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldCallPostConstruct() {
+  public void shouldCallPostConstruct() throws Exception {
     injector.registerInstance("Hello World");
     injector.register(BeanWithPostConstruct.class);
 
@@ -519,7 +502,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldInjectCollection() {
+  public void shouldInjectCollection() throws Exception {
     BeanWithCollection bean = injector.getInstance(BeanWithCollection.class);
 
     assertNotNull(bean.getInjectedValues());
@@ -534,7 +517,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectEmptyCollection() {
+  public void shouldInjectEmptyCollection() throws Exception {
     BeanWithCollection bean = injector.getInstance(BeanWithCollection.class);
 
     assertNotNull(bean.getInjectedValues());
@@ -550,7 +533,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectCollectionProvider() {
+  public void shouldInjectCollectionProvider() throws Exception {
     injector.register(BeanWithCollectionProvider.class);
 
     BeanWithCollectionProvider bean = injector.getInstance(BeanWithCollectionProvider.class);
@@ -583,17 +566,10 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenFinalFieldAnnotatedWithInject() throws SecurityException {
     assertThatThrownBy(() -> injector.register(FieldInjectionSampleWithAnnotatedFinalField.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] could not be bound")
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
-          .hasNoCause();
-      })
+      .hasMessage("[class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] could not be bound")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessage("Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
       .hasNoCause();
   }
 
@@ -602,7 +578,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldInjectSetters() {
+  public void shouldInjectSetters() throws Exception {
     injector.register(List.of(A.class, B.class, C.class, D.class));
 
     A instance = injector.getInstance(A.class);
@@ -648,17 +624,10 @@ public class InjectorTest {
   public void shouldRejectSetterWithoutParameters() {
     assertThatThrownBy(() -> injector.register(BadA.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.InjectorTest$BadA]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.InjectorTest$BadA] could not be bound")
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("Method [void hs.ddif.core.InjectorTest$BadA.setNothing()] of [class hs.ddif.core.InjectorTest$BadA] must have parameters")
-          .hasNoCause();
-      })
+      .hasMessage("[class hs.ddif.core.InjectorTest$BadA] could not be bound")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessage("Method [void hs.ddif.core.InjectorTest$BadA.setNothing()] of [class hs.ddif.core.InjectorTest$BadA] must have parameters")
       .hasNoCause();
   }
 
@@ -673,7 +642,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldInjectConstructor() {
+  public void shouldInjectConstructor() throws Exception {
     injector.register(ConstructorInjectionSample.class);
 
     ConstructorInjectionSample instance = injector.getInstance(ConstructorInjectionSample.class);
@@ -686,17 +655,10 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenMultipleConstructorsAnnotatedWithInject() {
     assertThatThrownBy(() -> injector.register(ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors]")
-      .satisfies(throwable -> {
-        assertThat(throwable.getSuppressed()).hasSize(1);
-        assertThat(throwable.getSuppressed()[0])
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] could not be bound")
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
-          .hasNoCause();
-      })
+      .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] could not be bound")
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(BindingException.class)
+      .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .hasNoCause();
   }
 
@@ -705,7 +667,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldRegisterAndUseProvider() {
+  public void shouldRegisterAndUseProvider() throws Exception {
     injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
@@ -717,7 +679,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldRemoveProvider() {
+  public void shouldRemoveProvider() throws Exception {
     Provider<String> provider = new Provider<>() {
       @Override
       public String get() {
@@ -740,7 +702,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenRemovingSimilarButNotSameProvider() {
+  public void shouldThrowExceptionWhenRemovingSimilarButNotSameProvider() throws Exception {
     injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
@@ -757,7 +719,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenRemovingProviderByClass() {
+  public void shouldThrowExceptionWhenRemovingProviderByClass() throws Exception {
     injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
@@ -769,22 +731,22 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldRegisterInstance() {
+  public void shouldRegisterInstance() throws Exception {
     injector.registerInstance(new String("hello there!"));
   }
 
   @Test
-  public void shouldRegisterInstanceEvenWithBadAnnotations() {
+  public void shouldRegisterInstanceEvenWithBadAnnotations() throws Exception {
     injector.registerInstance(new SampleWithMultipleAnnotatedConstructors());  // note, not a class, but an instantiated object!
   }
 
   @Test
-  public void shouldRegisterInstanceEvenWithAnnotatedFinalFields() {
+  public void shouldRegisterInstanceEvenWithAnnotatedFinalFields() throws Exception {
     injector.registerInstance(new SampleWithAnnotatedFinalFields());  // note, not a class, but an instantiated object!
   }
 
   @Test
-  public void shouldInjectSuperClass() {
+  public void shouldInjectSuperClass() throws Exception {
     injector.register(SubclassOfBeanWithInjection.class);
 
     SubclassOfBeanWithInjection bean = injector.getInstance(SubclassOfBeanWithInjection.class);
@@ -793,7 +755,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectSuperAndSubClassEvenIfFieldsAreSameName() {
+  public void shouldInjectSuperAndSubClassEvenIfFieldsAreSameName() throws Exception {
     injector.register(SubclassOfBeanWithInjectionWithSameNamedInjection.class);
 
     SubclassOfBeanWithInjectionWithSameNamedInjection bean = injector.getInstance(SubclassOfBeanWithInjectionWithSameNamedInjection.class);
@@ -804,7 +766,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldFindInstanceByAbstractSuperClass() {
+  public void shouldFindInstanceByAbstractSuperClass() throws Exception {
     injector.register(SubclassOfAbstractBean.class);
 
     List<AbstractBean> beans = injector.getInstances(AbstractBean.class);
@@ -813,23 +775,20 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectSameSingletonEachTime() {
+  public void shouldInjectSameSingletonEachTime() throws Exception {
     SimpleBean simpleBean = injector.getInstance(BeanWithInjection.class).getInjectedValue();
 
     assertEquals(simpleBean, injector.getInstance(BeanWithInjection.class).getInjectedValue());
   }
 
   @Test
-  public void shouldThrowConstructionExceptionWhenPostConstructHasACircularDependency() {
+  public void shouldThrowConstructionExceptionWhenPostConstructHasACircularDependency() throws Exception {
     injector.register(BeanWithBadPostConstruct.class);
     injector.register(BeanDependentOnBeanWithBadPostConstruct.class);
 
     assertThatThrownBy(() -> injector.getInstance(BeanWithBadPostConstruct.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Method [private void hs.ddif.core.InjectorTest$BeanWithBadPostConstruct.postConstruct()] call failed for PostConstruct")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(InstanceCreationFailure.class)
-      .hasMessage("Method [private void hs.ddif.core.InjectorTest$BeanWithBadPostConstruct.postConstruct()] call failed for PostConstruct")
+      .hasMessage("[class hs.ddif.core.InjectorTest$BeanWithBadPostConstruct] threw exception during post construction")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InvocationTargetException.class)
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -839,7 +798,7 @@ public class InjectorTest {
 
   @Test
   @Disabled("This test is no longer valid; Providers are injected directly now (no indirection that could check their result) and so null instances can be part of the results if a Provider breaks its contract.")
-  public void getInstancesShouldSilentlyIgnoreProvidersThatReturnNull() {
+  public void getInstancesShouldSilentlyIgnoreProvidersThatReturnNull() throws Exception {
     injector.registerInstance(new Provider<String>() {
       @Override
       public String get() {
@@ -919,7 +878,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface() {
+  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface() throws Exception {
     // First register interface implementor, then interface provider
     injector.register(Bean1.class);
     injector.register(BeanThatNeedsInterface.class);
@@ -930,7 +889,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface_2() {
+  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface_2() throws Exception {
     // First register interface provider, then implementor
     injector.register(Bean2.class);
     injector.register(BeanThatNeedsInterface.class);
@@ -941,7 +900,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface_3() {
+  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface_3() throws Exception {
     // First register interface implementor, then indirect interface provider
     injector.register(Bean1.class);
     injector.register(BeanThatNeedsInterface.class);
@@ -952,7 +911,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface_4() {
+  public void shouldNotAllowMultipleBeansProvidingSameInterfaceToBeRegisteredWhenThereIsABeanWithASingularDependencyOnSaidInterface_4() throws Exception {
     // First register indirect interface provider, then implementor
     injector.register(Bean3.class);
     injector.register(BeanThatNeedsInterface.class);
@@ -963,7 +922,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectCorrectProvider() {
+  public void shouldInjectCorrectProvider() throws Exception {
     injector.register(Bean3.class);
     injector.register(BeanThatNeedsProviderOfSomeInterface.class);
 
@@ -973,7 +932,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldInjectCorrectProvider2() {
+  public void shouldInjectCorrectProvider2() throws Exception {
     injector.register(Bean3.class);
     injector.register(BeanThatNeedsProviderOfSomethingThatIsAlsoAProvider.class);
 
@@ -992,28 +951,22 @@ public class InjectorTest {
   }
 
   @Test
-  public void postConstructShouldRejectReferringToObjectUnderConstruction() {
+  public void postConstructShouldRejectReferringToObjectUnderConstruction() throws Exception {
     injector.register(BadPostConstruct.class);
 
     assertThatThrownBy(() -> injector.getInstance(BadPostConstruct.class))
       .isExactlyInstanceOf(InstanceCreationException.class)
-      .hasMessage("Method [void hs.ddif.core.InjectorTest$BadPostConstruct.postConstruct()] call failed for PostConstruct")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(InstanceCreationFailure.class)
-      .hasMessage("Method [void hs.ddif.core.InjectorTest$BadPostConstruct.postConstruct()] call failed for PostConstruct")
+      .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] threw exception during post construction")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InvocationTargetException.class)
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(InstanceCreationException.class)
       .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in setter, initializer or post-construct method?)")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(InstanceCreationFailure.class)
-      .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in setter, initializer or post-construct method?)")
       .hasNoCause();
   }
 
   @Test
-  public void shouldAutoCreateCollections() {
+  public void shouldAutoCreateCollections() throws Exception {
     injector.registerInstance("A");
     injector.registerInstance("B");
     injector.registerInstance("C");
@@ -1028,7 +981,7 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldSkipNullsInCollections() {
+  public void shouldSkipNullsInCollections() throws Exception {
     injector.register(NullProducers.class);
 
     List<String> list = injector.getInstance(Types.parameterize(List.class, String.class));

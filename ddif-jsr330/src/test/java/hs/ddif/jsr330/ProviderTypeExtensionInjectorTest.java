@@ -13,56 +13,56 @@ public class ProviderTypeExtensionInjectorTest {
 
   // Singleton -> Singleton = OK
   @Test
-  public void shouldRegisterSingletonBeanDependentOnXWhenXIsProvidedAsSingleton() {
+  public void shouldRegisterSingletonBeanDependentOnXWhenXIsProvidedAsSingleton() throws Exception {
     injector.registerInstance(new X());
     injector.register(SingletonBeanDependentOnX.class);
   }
 
   // Prototype -> Prototype = OK
   @Test
-  public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsPrototype() {
+  public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsPrototype() throws Exception {
     injector.registerInstance(new XProvider());
     injector.register(PrototypeBeanDependantOnX.class);
   }
 
   // Prototype -> Singleton = OK
   @Test
-  public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsSingleton() {
+  public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsSingleton() throws Exception {
     injector.registerInstance(new X());
     injector.register(PrototypeBeanDependantOnX.class);
   }
 
   // Singleton -> Prototype = OK
   @Test
-  public void shouldThrowExceptionWhenRegisteringSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() {
+  public void shouldThrowExceptionWhenRegisteringSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() throws Exception {
     injector.registerInstance(new XProvider());
     injector.register(SingletonBeanDependentOnX.class);
   }
 
   // Singleton -> Provider<Singleton> = OK
   @Test
-  public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsSingleton() {
+  public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsSingleton() throws Exception {
     injector.registerInstance(new X());
     injector.register(SingletonBeanDependentOnXProvider.class);
   }
 
   // Prototype -> Provider<Prototype> = OK
   @Test
-  public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsPrototype() {
+  public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsPrototype() throws Exception {
     injector.registerInstance(new XProvider());
     injector.register(PrototypeBeanDependantOnXProvider.class);
   }
 
   // Prototype -> Provider<Singleton> = OK
   @Test
-  public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsSingleton() {
+  public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsSingleton() throws Exception {
     injector.registerInstance(new X());
     injector.register(PrototypeBeanDependantOnXProvider.class);
   }
 
   // Singleton -> Provider<Prototype> = OK
   @Test
-  public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsPrototype() {
+  public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsPrototype() throws Exception {
     injector.registerInstance(new XProvider());
     injector.register(SingletonBeanDependentOnXProvider.class);
   }

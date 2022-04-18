@@ -12,7 +12,7 @@ public class InjectorPrimitivesTest {
   private Injector injector = Injectors.manual();
 
   @Test
-  void injectionsShouldWorkWithPrimitives() {
+  void injectionsShouldWorkWithPrimitives() throws Exception {
     injector.registerInstance(7);
     injector.registerInstance(2.5);
     injector.registerInstance(true);

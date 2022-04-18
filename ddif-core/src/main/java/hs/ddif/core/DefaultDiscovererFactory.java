@@ -77,7 +77,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
   @Override
   public Discoverer create(Resolver<Injectable<?>> resolver, List<Type> types) {  // used during normal registration
-    return new SimpleDiscoverer(resolver, types.stream().map(Key::new).collect(Collectors.toList()));
+    return new SimpleDiscoverer(resolver, types);
   }
 
   @Override
@@ -91,7 +91,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
       return EMPTY;
     }
 
-    return new SimpleDiscoverer(resolver, List.of(key));
+    return new SimpleDiscoverer(resolver, key);
   }
 
   private class SimpleDiscoverer implements Discoverer {
@@ -120,13 +120,20 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
     private final IncludingResolver includingResolver;
 
-    SimpleDiscoverer(Resolver<Injectable<?>> resolver, List<Key> keys) {
+    SimpleDiscoverer(Resolver<Injectable<?>> resolver, List<Type> types) {
       this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
 
-      for(Key key : keys) {
+      for(Key key : types.stream().map(Key::new).collect(Collectors.toList())) {
         visitTypes.add(key.getType());
         requiredKeys.add(key);
       }
+    }
+
+    SimpleDiscoverer(Resolver<Injectable<?>> resolver, Key key) {
+      this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
+
+      visitTypes.add(key.getType());
+      requiredKeys.add(key);
     }
 
     SimpleDiscoverer(Resolver<Injectable<?>> resolver, Injectable<?> injectable) {
@@ -142,7 +149,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
     }
 
     @Override
-    public Set<Injectable<?>> discover() {
+    public Set<Injectable<?>> discover() throws DefinitionException {
 
       /*
        * Discover new injectables via various mechanisms, in a very specific order.
@@ -210,22 +217,23 @@ class DefaultDiscovererFactory implements DiscovererFactory {
       return true;
     }
 
-    private boolean discoverViaExtensions() {
+    private boolean discoverViaExtensions() throws DefinitionException {
       List<Injectable<?>> extensionDiscoveries = new ArrayList<>();
 
       for(Type type : visitTypes) {
         if(visitedTypes.add(type)) {
-          extensionDiscoveries.addAll(DERIVED_INJECTABLES
-            .computeIfAbsent(type, k -> {
-              DerivedRegistry registry = new DerivedRegistry();
+          if(!DERIVED_INJECTABLES.containsKey(type)) {
+            DerivedRegistry registry = new DerivedRegistry();
 
-              for(DiscoveryExtension injectableExtension : extensions) {
-                // extension don't necessarily resolve the type examined; they might though through for example a static producer which produces itself
-                injectableExtension.deriveTypes(registry, type);
-              }
+            for(DiscoveryExtension injectableExtension : extensions) {
+              // extension don't necessarily resolve the type examined; they might though through for example a static producer which produces itself
+              injectableExtension.deriveTypes(registry, type);
+            }
 
-              return registry.derivedInjectables;
-            }));
+            DERIVED_INJECTABLES.put(type, registry.derivedInjectables);
+          }
+
+          extensionDiscoveries.addAll(DERIVED_INJECTABLES.get(type));
         }
       }
 
@@ -234,7 +242,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
       return addInjectables(extensionDiscoveries);
     }
 
-    private boolean discoverInputTypes() {
+    private boolean discoverInputTypes() throws DefinitionException {
       List<Injectable<?>> injectables = new ArrayList<>();
       DefinitionException throwable = null;
 
@@ -242,21 +250,16 @@ class DefaultDiscovererFactory implements DiscovererFactory {
         boolean alreadyDerived = tempStore.contains(key);  // was this key already derived through another mechanism?
 
         try {
-          injectables.add(attemptCreateInjectable(key));
-
-          if(alreadyDerived) {  // if creation succeeded but it was also derived another way then creation is ambiguous, signal this
-            alreadyDerived = false;  // clear flag so exception is not ignored
-
-            throw new DefinitionException(Types.raw(key.getType()), "creation is ambiguous, there are multiple ways to create it");
-          }
+          injectables.add(attemptCreateInjectable(key));  // if alreadyDerived is true and the attempt succeeds, there will be multiple ways of creating this candidate (potentially with different qualifiers)
         }
-        catch(Exception e) {
+        catch(DefinitionException e) {
           if(!alreadyDerived) {  // if creation failed but it was derived through other means, ignore the exception, this is acceptable as it is not ambiguous
             if(throwable == null) {
-              throwable = new DefinitionException("Exception occurred during discovery via path: " + toChain(key), null);
+              throwable = e;
             }
-
-            throwable.addSuppressed(e);
+            else {
+              throwable.addSuppressed(e);  // gather all exceptions that may occur on the input types, to get a complete picture
+            }
           }
         }
       }
@@ -282,7 +285,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
             return addInjectables(List.of(attemptCreateInjectable(key)));
           }
           catch(Exception e) {
-            encounteredProblems.add("Auto discovery of binding unsuccessful: " + entry.getValue() + ": " + e.getMessage());
+            encounteredProblems.add(toChain(key) + ", via " + entry.getValue() + ", is not registered and cannot be discovered (reason: " + e.getMessage() + (e.getCause() != null ? " because " + e.getCause().getMessage() : "") + ")");
           }
         }
       }
@@ -290,12 +293,12 @@ class DefaultDiscovererFactory implements DiscovererFactory {
       return false;
     }
 
-    private Injectable<?> attemptCreateInjectable(Key key) {
+    private Injectable<?> attemptCreateInjectable(Key key) throws DefinitionException {
       Type type = key.getType();
       Injectable<?> injectable = classInjectableFactory.create(type);
 
       if(!injectable.getQualifiers().containsAll(key.getQualifiers())) {
-        throw new DefinitionException(Types.raw(type), "found during auto discovery is missing qualifiers required by: [" + key + "]");
+        throw new DefinitionException(Types.raw(type), "is missing the required qualifiers: " + key.getQualifiers());
       }
 
       return injectable;
@@ -303,7 +306,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
     private String toChain(Key key) {
       if(via.containsKey(key)) {
-        return toChain(via.get(key)) + " -> [" + key + "]";
+        return "[" + key + "] required by " + toChain(via.get(key));
       }
 
       return "[" + key + "]";
@@ -314,17 +317,17 @@ class DefaultDiscovererFactory implements DiscovererFactory {
     final List<Injectable<?>> derivedInjectables = new ArrayList<>();
 
     @Override
-    public void add(Field field, Type ownerType) {
+    public void add(Field field, Type ownerType) throws DefinitionException {
       derivedInjectables.add(fieldInjectableFactory.create(field, ownerType));
     }
 
     @Override
-    public void add(Method method, Type ownerType) {
+    public void add(Method method, Type ownerType) throws DefinitionException {
       derivedInjectables.add(methodInjectableFactory.create(method, ownerType));
     }
 
     @Override
-    public void add(Type type) {
+    public void add(Type type) throws DefinitionException {
       derivedInjectables.add(classInjectableFactory.create(type));
     }
   }
