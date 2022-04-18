@@ -1,6 +1,6 @@
 package hs.ddif.core.definition.factory;
 
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
 
@@ -27,7 +27,7 @@ public class FieldObjectFactory<T> implements Constructable<T> {
   }
 
   @Override
-  public T create(List<Injection> injections) throws InstanceCreationFailure {
+  public T create(List<Injection> injections) throws InstanceCreationException {
     try {
       @SuppressWarnings("unchecked")
       T instance = (T)field.get(injections.isEmpty() ? null : injections.get(0).getValue());
@@ -35,7 +35,7 @@ public class FieldObjectFactory<T> implements Constructable<T> {
       return instance;
     }
     catch(Exception e) {
-      throw new InstanceCreationFailure(field, "read failed", e);
+      throw new InstanceCreationException(field, "read failed", e);
     }
   }
 

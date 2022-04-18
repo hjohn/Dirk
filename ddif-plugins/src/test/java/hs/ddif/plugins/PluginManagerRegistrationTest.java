@@ -26,7 +26,7 @@ public class PluginManagerRegistrationTest {
   private static final Annotation VERSION = Annotations.of(Named.class, Map.of("value", "version"));
 
   @Test
-  public void shouldLoadWithAutoDiscovery() {
+  public void shouldLoadWithAutoDiscovery() throws Exception {
     Injector injector = Injectors.autoDiscovering();
 
     injector.registerInstance("{jsonconfig}", CONFIGURATION);
@@ -43,7 +43,7 @@ public class PluginManagerRegistrationTest {
   }
 
   @Test
-  public void shouldLoadWithoutAutoDiscovery() {
+  public void shouldLoadWithoutAutoDiscovery() throws Exception {
     Injector injector = Injectors.manual();
 
     injector.registerInstance("{jsonconfig}", CONFIGURATION);

@@ -1,7 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
@@ -32,7 +31,7 @@ public class DefaultInjectableFactoryTest {
   private final DefaultInjectableFactory factory = new DefaultInjectableFactory(manager, InjectableFactories.ANNOTATION_STRATEGY, Set.of(Provider.class, List.class, Set.class));
   private final Constructable<BookShop> constructable = new Constructable<>() {
     @Override
-    public BookShop create(List<Injection> injections) throws InstanceCreationFailure {
+    public BookShop create(List<Injection> injections) {
       return null;
     }
 
@@ -60,7 +59,7 @@ public class DefaultInjectableFactoryTest {
   }
 
   @Test
-  void createShouldCreateClassBasedInjectable() {
+  void createShouldCreateClassBasedInjectable() throws DefinitionException {
     Injectable<BookShop> injectable = factory.create(BookShop.class, null, BookShop.class, List.of(), constructable);
 
     assertThat(injectable).isNotNull();
@@ -78,7 +77,7 @@ public class DefaultInjectableFactoryTest {
   }
 
   @Test
-  void createShouldCreateMethodBasedInjectable() throws NoSuchMethodException, SecurityException {
+  void createShouldCreateMethodBasedInjectable() throws Exception {
     Method method = BookShopFactory.class.getDeclaredMethod("createBookShop");
 
     Injectable<BookShop> injectable = factory.create(BookShopFactory.class, method, method, List.of(), constructable);
@@ -98,7 +97,7 @@ public class DefaultInjectableFactoryTest {
   }
 
   @Test
-  void createShouldCreateFieldBasedInjectable() throws NoSuchFieldException, SecurityException {
+  void createShouldCreateFieldBasedInjectable() throws Exception {
     Field field = BookShopFactory.class.getDeclaredField("bookShop");
 
     Injectable<BookShop> injectable = factory.create(BookShopFactory.class, field, field, List.of(), constructable);

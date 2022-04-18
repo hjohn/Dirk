@@ -1,18 +1,19 @@
 package hs.ddif.api.instantiation.domain;
 
+import java.util.Collection;
+
 /**
- * Thrown when multiple matching instances were available while only one
- * was expected.
+ * Thrown when multiple matching instances were available.
  */
 public class MultipleInstancesException extends InstanceResolutionException {
 
   /**
    * Constructs a new instance.
    *
-   * @param message a message, can be {@code null}
-   * @param cause a {@link Throwable} cause, can be {@code null}
+   * @param key a {@link Key}, cannot be {@code null}
+   * @param injectables a set of injectables, cannot be {@code null}
    */
-  public MultipleInstancesException(String message, Throwable cause) {
-    super(message, cause);
+  public MultipleInstancesException(Key key, Collection<?> injectables) {
+    super("Multiple matching instances: [" + key + "]: " + injectables);
   }
 }

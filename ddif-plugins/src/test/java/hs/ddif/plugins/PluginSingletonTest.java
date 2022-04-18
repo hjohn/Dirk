@@ -1,7 +1,7 @@
 package hs.ddif.plugins;
 
 import hs.ddif.api.Injector;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.jsr330.Injectors;
 import hs.ddif.test.plugin.Database;
 
@@ -28,7 +28,7 @@ public class PluginSingletonTest {
   }
 
   @Test
-  public void shouldLoadAndUnloadPluginWithPluginSingleton() {
+  public void shouldLoadAndUnloadPluginWithPluginSingleton() throws Exception {
     Injector injector = Injectors.autoDiscovering();
 
     PluginManager pluginManager = new PluginManager(new DefaultComponentScannerFactory(), injector.getCandidateRegistry());
@@ -40,7 +40,7 @@ public class PluginSingletonTest {
 
       pluginManager.unload(plugin);
 
-      assertThrows(InstanceCreationException.class, () -> injector.getInstance(Database.class));
+      assertThrows(AutoDiscoveryException.class, () -> injector.getInstance(Database.class));
 
       waitForPluginUnload(plugin);
 

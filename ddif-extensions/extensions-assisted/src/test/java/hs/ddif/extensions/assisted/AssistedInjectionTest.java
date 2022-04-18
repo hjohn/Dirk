@@ -4,7 +4,6 @@ import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.domain.NoSuchInstance;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
@@ -49,7 +48,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void shouldAcceptAndRemoveProducerInterface() {
+  public void shouldAcceptAndRemoveProducerInterface() throws Exception {
     for(int i = 0; i < 2; i++) {
       injector.register(TestService.class);
       injector.register(TestAssistedSampleFactory.class);
@@ -57,9 +56,6 @@ public class AssistedInjectionTest {
       // The Product of the Factory should not be registered with the Injector:
       assertThatThrownBy(() -> injector.getInstance(TestAssistedSample.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .hasMessage("No such instance: [hs.ddif.extensions.assisted.AssistedInjectionTest$TestAssistedSample]")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(NoSuchInstance.class)
         .hasMessage("No such instance: [hs.ddif.extensions.assisted.AssistedInjectionTest$TestAssistedSample]")
         .hasNoCause();
 
@@ -76,7 +72,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void shouldAcceptAndCreateProducerAbstractClass() {
+  public void shouldAcceptAndCreateProducerAbstractClass() throws Exception {
     injector.register(ValueSupplier.class);
     injector.register(TestService.class);
     injector.register(TestAssistedAbstractSampleFactory.class);
@@ -84,9 +80,6 @@ public class AssistedInjectionTest {
     // The Product of the Factory should not be registered with the Injector:
     assertThatThrownBy(() -> injector.getInstance(TestAssistedAbstractSample.class))
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasMessage("No such instance: [hs.ddif.extensions.assisted.AssistedInjectionTest$TestAssistedAbstractSample]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstance.class)
       .hasMessage("No such instance: [hs.ddif.extensions.assisted.AssistedInjectionTest$TestAssistedAbstractSample]")
       .hasNoCause();
 
@@ -99,7 +92,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void shouldAcceptAndCreateProducerAbstractClassWithConstructor() {
+  public void shouldAcceptAndCreateProducerAbstractClassWithConstructor() throws Exception {
     injector.register(ValueSupplier.class);
     injector.register(TestService.class);
     injector.register(TestAssistedAbstractSampleFactoryWithConstructor.class);
@@ -107,9 +100,6 @@ public class AssistedInjectionTest {
     // The Product of the Factory should not be registered with the Injector:
     assertThatThrownBy(() -> injector.getInstance(TestAssistedAbstractSample.class))
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasMessage("No such instance: [hs.ddif.extensions.assisted.AssistedInjectionTest$TestAssistedAbstractSample]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstance.class)
       .hasMessage("No such instance: [hs.ddif.extensions.assisted.AssistedInjectionTest$TestAssistedAbstractSample]")
       .hasNoCause();
 
@@ -125,7 +115,7 @@ public class AssistedInjectionTest {
   public void registerShouldRejectProducerWithMultipleAbstractMethods() {
     assertThatThrownBy(() -> injector.register(ProducerWithMultipleAbtractMethods.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Exception occurred during discovery via path: [hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithMultipleAbtractMethods]")
+      .hasMessage("[class hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithMultipleAbtractMethods] cannot be abstract")
       .hasNoCause();
   }
 
@@ -277,7 +267,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldMatchArgumentsByTypeIfProducerNotAnnotated() {
+  public void registerShouldMatchArgumentsByTypeIfProducerNotAnnotated() throws Exception {
     injector.register(ProducerForProductWithMismatchingArgumentNames.class);
   }
 
@@ -292,7 +282,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptProducerWhichNeedsNoFurtherConstruction() {
+  public void registerShouldAcceptProducerWhichNeedsNoFurtherConstruction() throws Exception {
     injector.register(AutonomousProducer.class);
 
     AutonomousProducer producer = injector.getInstance(AutonomousProducer.class);
@@ -318,7 +308,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptAbstractProducerWithNoParameters() {
+  public void registerShouldAcceptAbstractProducerWithNoParameters() throws Exception {
     injector.register(AbstractProducerWithNoParameters.class);
 
     assertNotNull(injector.getInstance(AbstractProducerWithNoParameters.class).create());
@@ -339,7 +329,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void registerShouldAcceptInterfaceProducerWithNoParameters() {
+  public void registerShouldAcceptInterfaceProducerWithNoParameters() throws Exception {
     injector.register(InterfaceProducerWithNoParameters.class);
 
     assertNotNull(injector.getInstance(InterfaceProducerWithNoParameters.class).create());
@@ -356,7 +346,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void shouldRejectProducerWithFinalBinding() {
+  public void shouldRejectProducerWithFinalBinding() throws Exception {
     injector.registerInstance(5);
 
     assertThatThrownBy(() -> injector.register(ProducerWithFinalBinding.class))
@@ -387,7 +377,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void shouldRejectProducerProducingProductWithFinalBinding() {
+  public void shouldRejectProducerProducingProductWithFinalBinding() throws Exception {
     injector.registerInstance("bla");
 
     assertThatThrownBy(() -> injector.register(ProducerWithBadBindings.class))
@@ -453,7 +443,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void shouldBePossibleToUseBiFunction() {
+  public void shouldBePossibleToUseBiFunction() throws Exception {
     injector.register(TestService.class);
 
     ParameterizedType factoryType = Types.parameterize(BiFunction.class, Integer.class, Double.class, TestAssistedAbstractSample.class);
@@ -469,7 +459,7 @@ public class AssistedInjectionTest {
   }
 
   @Test
-  public void shouldConstructComplicatedProduct() {
+  public void shouldConstructComplicatedProduct() throws Exception {
     injector.register(ComplicatedProductFactory.class);
     injector.registerInstance(3, Annotations.of(Green.class));
     injector.registerInstance(2, Annotations.of(Red.class));

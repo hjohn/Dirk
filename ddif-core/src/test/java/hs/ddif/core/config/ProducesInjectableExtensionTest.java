@@ -16,7 +16,7 @@ public class ProducesInjectableExtensionTest {
   private ProducesDiscoveryExtension extension = new ProducesDiscoveryExtension(Produces.class);
 
   @Test
-  void shouldFindProducesAnnotatedMethods() throws NoSuchMethodException, SecurityException, NoSuchFieldException {
+  void shouldFindProducesAnnotatedMethods() throws Exception {
     extension.deriveTypes(registry, A.class);
 
     verify(registry).add(A.class.getDeclaredMethod("createB"), A.class);

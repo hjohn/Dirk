@@ -1,5 +1,6 @@
 package hs.ddif.core.config;
 
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DiscoveryExtension;
 import hs.ddif.api.util.Types;
 
@@ -23,7 +24,7 @@ public class ProviderDiscoveryExtension implements DiscoveryExtension {
   }
 
   @Override
-  public void deriveTypes(Registry registry, Type type) {
+  public void deriveTypes(Registry registry, Type type) throws DefinitionException {
     Class<?> cls = Types.raw(type);
 
     if(cls != null && providerMethod.getDeclaringClass().isAssignableFrom(cls) && !cls.isInterface()) {

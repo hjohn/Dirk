@@ -1,5 +1,8 @@
 package hs.ddif.api;
 
+import hs.ddif.api.definition.AutoDiscoveryException;
+import hs.ddif.api.definition.DefinitionException;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -40,8 +43,10 @@ public interface CandidateRegistry {
    * types, then this method will throw an exception.
    *
    * @param type the type to register, cannot be {@code null}
+   * @throws AutoDiscoveryException when auto discovery fails to find all required types
+   * @throws DefinitionException when a definition problem was encountered
    */
-  void register(Type type);
+  void register(Type type) throws AutoDiscoveryException, DefinitionException;
 
   /**
    * Registers the given {@link Type}s, and all their derived candidates if any, if all
@@ -53,8 +58,10 @@ public interface CandidateRegistry {
    * types, then this method will throw an exception.
    *
    * @param types a list of types to register, cannot be {@code null} or contain {@code null}s
+   * @throws AutoDiscoveryException when auto discovery fails to find all required types
+   * @throws DefinitionException when a definition problem was encountered
    */
-  void register(List<Type> types);
+  void register(List<Type> types) throws AutoDiscoveryException, DefinitionException;
 
   /**
    * Registers an instance, and all its derived candidates if any, as a
@@ -66,8 +73,9 @@ public interface CandidateRegistry {
    *
    * @param instance the instance to register with the Injector
    * @param qualifiers optional list of qualifiers for this instance
+   * @throws DefinitionException when a definition problem was encountered
    */
-  void registerInstance(Object instance, Annotation... qualifiers);
+  void registerInstance(Object instance, Annotation... qualifiers) throws DefinitionException;
 
   /**
    * Removes the given {@link Type}, and all its derived candidates if any, if
@@ -78,8 +86,10 @@ public interface CandidateRegistry {
    * and an exception is thrown.
    *
    * @param type the type to remove, cannot be {@code null}
+   * @throws AutoDiscoveryException when auto discovery fails to find all required types
+   * @throws DefinitionException when a definition problem was encountered
    */
-  void remove(Type type);
+  void remove(Type type) throws AutoDiscoveryException, DefinitionException;
 
   /**
    * Removes the given {@link Type}s, all their derived candidates if any, if
@@ -90,8 +100,10 @@ public interface CandidateRegistry {
    * and an exception is thrown.
    *
    * @param types a list of types to remove, cannot be {@code null} or contain {@code null}s
+   * @throws AutoDiscoveryException when auto discovery fails to find all required types
+   * @throws DefinitionException when a definition problem was encountered
    */
-  void remove(List<Type> types);
+  void remove(List<Type> types) throws AutoDiscoveryException, DefinitionException;
 
   /**
    * Removes an instance, and all its derived candidates if any, if doing so
@@ -101,6 +113,7 @@ public interface CandidateRegistry {
    * and an exception is thrown.
    *
    * @param instance the instance to remove, cannot be {@code null}
+   * @throws DefinitionException when a definition problem was encountered
    */
-  void removeInstance(Object instance);
+  void removeInstance(Object instance) throws DefinitionException;
 }

@@ -6,11 +6,13 @@ import hs.ddif.api.instantiation.InstantiatorFactory;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.config.ProducesDiscoveryExtension;
+import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.MethodInjectableFactory;
+import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.instantiation.TypeExtensions;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
@@ -66,7 +68,7 @@ public class DefaultDiscovererFactoryTest {
     @Nested
     class And_gather_With_Key_IsCalled {
       @Test
-      void shouldAlwaysReturnEmptySet() {
+      void shouldAlwaysReturnEmptySet() throws Exception {
         assertThat(gatherer.create(store, new Key(A.class)).discover()).isEmpty();
         assertThat(gatherer.create(store, new Key(A.class, Set.of(Annotations.of(Red.class)))).discover()).isEmpty();
         assertThat(gatherer.create(store, new Key(I.class)).discover()).isEmpty();
@@ -157,7 +159,7 @@ public class DefaultDiscovererFactoryTest {
       }
 
       @Test
-      void shouldReturnEmptySetWhenTypeAlreadyResolvable() {
+      void shouldReturnEmptySetWhenTypeAlreadyResolvable() throws DefinitionException {
         store.put(classInjectableFactory.create(A.class));
 
         assertThat(gatherer.create(store, new Key(A.class)).discover()).isEmpty();
@@ -167,14 +169,8 @@ public class DefaultDiscovererFactoryTest {
       void shouldRejectWhenDiscoveredTypeMissesRequiredQualifiers() {
         assertThatThrownBy(() -> gatherer.create(store, new Key(A.class, Set.of(Annotations.of(Red.class)))).discover())
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Exception occurred during discovery via path: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.DefaultDiscovererFactoryTest$A]")
-          .satisfies(throwable -> {
-            assertThat(throwable.getSuppressed()).hasSize(1);
-            assertThat(throwable.getSuppressed()[0])
-              .isExactlyInstanceOf(DefinitionException.class)
-              .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$A] found during auto discovery is missing qualifiers required by: [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.DefaultDiscovererFactoryTest$A]")
-              .hasNoCause();
-          })
+          .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$A] is missing the required qualifiers: [@hs.ddif.core.test.qualifiers.Red()]")
+          .hasNoSuppressedExceptions()
           .hasNoCause();
       }
 
@@ -182,19 +178,20 @@ public class DefaultDiscovererFactoryTest {
       void shouldRejectTypeThatIsAbstract() {
         assertThatThrownBy(() -> gatherer.create(store, new Key(I.class)).discover())
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.DefaultDiscovererFactoryTest$I]")
-          .satisfies(throwable -> {
-            assertThat(throwable.getSuppressed()).hasSize(1);
-            assertThat(throwable.getSuppressed()[0])
-              .isExactlyInstanceOf(DefinitionException.class)
-              .hasMessage("[interface hs.ddif.core.DefaultDiscovererFactoryTest$I] cannot be abstract")
-              .hasNoCause();
-          })
+          .hasMessage("[interface hs.ddif.core.DefaultDiscovererFactoryTest$I] cannot be abstract")
+          .hasNoSuppressedExceptions()
           .hasNoCause();
       }
 
       @Test
-      void shouldNotIncludeTypeThatHasQualifiers() {
+      void shouldDiscoverAbstractTypeThatProducesItself() throws Exception {
+        assertThat(gatherer.create(store, new Key(M.class)).discover()).containsExactlyInAnyOrder(
+          fieldInjectableFactory.create(M.class.getDeclaredField("m"), M.class)
+        );
+      }
+
+      @Test
+      void shouldNotIncludeTypeThatHasQualifiers() throws DefinitionException {
         assertThat(gatherer.create(store, new Key(Bad_C.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_C.class)
           // J was not included as it was required to have qualifiers
@@ -202,7 +199,7 @@ public class DefaultDiscovererFactoryTest {
       }
 
       @Test
-      void shouldNotIncludeUndiscoverableDependency() {
+      void shouldNotIncludeUndiscoverableDependency() throws DefinitionException {
         assertThat(gatherer.create(store, new Key(Bad_A.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_A.class)
           // C was not included as it has no suitable constructor
@@ -210,7 +207,7 @@ public class DefaultDiscovererFactoryTest {
       }
 
       @Test
-      void shouldNotIncludeUndiscoverableDependencyInDependency() {
+      void shouldNotIncludeUndiscoverableDependencyInDependency() throws DefinitionException {
         assertThat(gatherer.create(store, new Key(Bad_D.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_D.class),
           classInjectableFactory.create(Bad_A.class)
@@ -219,7 +216,7 @@ public class DefaultDiscovererFactoryTest {
       }
 
       @Test
-      void shouldNotIncludeUndiscoverableDependencies() {
+      void shouldNotIncludeUndiscoverableDependencies() throws DefinitionException {
         assertThat(gatherer.create(store, new Key(Bad_B.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_B.class)
           // C and E are not included as neither has a suitable constructor
@@ -227,12 +224,11 @@ public class DefaultDiscovererFactoryTest {
       }
 
       @Test
-      void shouldRejectTypeWhichCanBeDerivedOrConstructedInMultipleWays() {
-        assertThatThrownBy(() -> gatherer.create(store, new Key(Bad_H.class)).discover())
-          .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.DefaultDiscovererFactoryTest$Bad_H]")
-          .hasSuppressedException(new DefinitionException("[class hs.ddif.core.DefaultDiscovererFactoryTest$Bad_H] creation is ambiguous, there are multiple ways to create it", null))
-          .hasNoCause();
+      void shouldReturnAllWaysTypeCanBeCreated() throws Exception {
+        assertThat(gatherer.create(store, new Key(Bad_H.class)).discover()).containsExactlyInAnyOrder(
+          classInjectableFactory.create(Bad_H.class),
+          fieldInjectableFactory.create(Bad_H.class.getDeclaredField("h"), Bad_H.class)
+        );
       }
     }
 
@@ -245,6 +241,35 @@ public class DefaultDiscovererFactoryTest {
           fieldInjectableFactory.create(W.class.getDeclaredField("w"), W.class),
           fieldInjectableFactory.create(W.class.getDeclaredField("x"), W.class),
           fieldInjectableFactory.create(W.class.getDeclaredField("z"), W.class)
+        );
+      }
+
+      @Test
+      void shouldThrowDefinitionExceptionWhenContainingBadProducer() {
+        Discoverer discoverer = gatherer.create(store, List.of(Bad_E.class));
+
+        assertThatThrownBy(discoverer::discover)
+          .isExactlyInstanceOf(DefinitionException.class)
+          .hasMessage("Method [void hs.ddif.core.DefaultDiscovererFactoryTest$Bad_E.bla()] has unsuitable type")
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BadQualifiedTypeException.class)
+          .hasMessage("[java.lang.Void] cannot be void or Void")
+          .hasNoCause();
+
+        assertThat(discoverer.getProblems()).isEmpty();
+      }
+
+      @Test
+      void shouldFindAsManyTypesAsPossibleAndReturnProblems() throws DefinitionException {
+        Discoverer discoverer = gatherer.create(store, List.of(Bad_A.class));
+
+        assertThat(discoverer.discover()).containsExactlyInAnyOrder(
+          classInjectableFactory.create(Bad_A.class)
+        );
+
+        assertThat(discoverer.getProblems()).containsExactlyInAnyOrder(
+          "[hs.ddif.core.DefaultDiscovererFactoryTest$C] required by [hs.ddif.core.DefaultDiscovererFactoryTest$Bad_A], via Field [hs.ddif.core.DefaultDiscovererFactoryTest$C hs.ddif.core.DefaultDiscovererFactoryTest$Bad_A.c], "
+          + "is not registered and cannot be discovered (reason: [class hs.ddif.core.DefaultDiscovererFactoryTest$C] could not be bound because [class hs.ddif.core.DefaultDiscovererFactoryTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)"
         );
       }
 
@@ -267,42 +292,43 @@ public class DefaultDiscovererFactoryTest {
          * from Y.
          */
 
-        assertThatThrownBy(() -> gatherer.create(store, List.of(X.class, Y.class, Z.class)).discover())
+        Discoverer discoverer = gatherer.create(store, List.of(X.class, Y.class, Z.class));
+
+        assertThatThrownBy(() -> discoverer.discover())
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.DefaultDiscovererFactoryTest$X]")
+          .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] could not be bound")
           .satisfies(throwable -> {
-            assertThat(throwable.getSuppressed()).hasSize(2);
             assertThat(throwable.getSuppressed()[0])
               .isExactlyInstanceOf(DefinitionException.class)
-              .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] could not be bound")
-              .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-              .isExactlyInstanceOf(BindingException.class)
-              .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
-              .hasNoCause();
-            assertThat(throwable.getSuppressed()[1])
-              .isExactlyInstanceOf(DefinitionException.class)
               .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$Z] could not be bound")
+              .hasNoSuppressedExceptions()
               .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
               .isExactlyInstanceOf(BindingException.class)
               .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$Z] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+              .hasNoSuppressedExceptions()
               .hasNoCause();
           })
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
+          .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .hasNoSuppressedExceptions()
           .hasNoCause();
 
-        assertThatThrownBy(() -> gatherer.create(store, List.of(X.class, Y.class)).discover())
+        assertThat(discoverer.getProblems()).isEmpty();
+
+        Discoverer discoverer2 = gatherer.create(store, List.of(X.class, Y.class));
+
+        assertThatThrownBy(() -> discoverer2.discover())
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.DefaultDiscovererFactoryTest$X]")
-          .satisfies(throwable -> {
-            assertThat(throwable.getSuppressed()).hasSize(1);
-            assertThat(throwable.getSuppressed()[0])
-              .isExactlyInstanceOf(DefinitionException.class)
-              .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] could not be bound")
-              .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-              .isExactlyInstanceOf(BindingException.class)
-              .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
-              .hasNoCause();
-          })
+          .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] could not be bound")
+          .hasNoSuppressedExceptions()
+          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+          .isExactlyInstanceOf(BindingException.class)
+          .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
+          .hasNoSuppressedExceptions()
           .hasNoCause();
+
+        assertThat(discoverer2.getProblems()).isEmpty();
       }
     }
   }
@@ -424,6 +450,21 @@ public class DefaultDiscovererFactoryTest {
   }
 
   /**
+   * Bad because it has a producer that is not legal
+   */
+  public static class Bad_E {
+    @Produces void bla() {
+    }
+  }
+
+  /**
+   * Bad because it has a producer that is not legal
+   */
+  public static class Bad_F {
+    @Inject Bad_E badE;
+  }
+
+  /**
    * Bad because there are two ways available to construct it, through the static
    * producer and through its constructor.
    */
@@ -436,5 +477,9 @@ public class DefaultDiscovererFactoryTest {
   }
 
   public static class J {
+  }
+
+  interface M {  // abstract type, but produces itself...
+    @Produces static M m = new M() {};
   }
 }

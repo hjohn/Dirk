@@ -38,8 +38,9 @@ public class ClassInjectableFactory {
    * @param <T> the type of the given type
    * @param type a {@link Type}, cannot be {@code null}
    * @return a {@link Injectable}, never {@code null}
+   * @throws DefinitionException when a definition problem was encountered
    */
-  public <T> Injectable<T> create(Type type) {
+  public <T> Injectable<T> create(Type type) throws DefinitionException {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }

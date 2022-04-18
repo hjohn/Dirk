@@ -3,6 +3,7 @@ package hs.ddif.core;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.api.instantiation.domain.MultipleInstancesException;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.util.TypeReference;
@@ -136,7 +137,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  void shouldSupportGenericProducerMethod() {
+  void shouldSupportGenericProducerMethod() throws Exception {
     injector.register(StringMethodFactory.class);
     injector.register(Types.parameterize(GenericFactory1.class, Long.class));
 
@@ -160,7 +161,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  void shouldSupportGenericProducerField() {
+  void shouldSupportGenericProducerField() throws Exception {
     StringFactory stringFactory = new StringFactory("hi");
     IntegerFactory integerFactory = new IntegerFactory(123);
 
@@ -185,7 +186,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldRegisterSelfDependentFactory() {
+  public void shouldRegisterSelfDependentFactory() throws Exception {
     injector.register(SelfDependentFactory.class);
 
     assertNotNull(injector.getInstance(Phone.class));
@@ -202,7 +203,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldRegisterAutoDiscoveryDependentFactory() {
+  public void shouldRegisterAutoDiscoveryDependentFactory() throws Exception {
     autoDiscoveryInjector.register(AutoDiscoveryDependentFactory.class);
 
     assertNotNull(autoDiscoveryInjector.getInstance(Phone.class));
@@ -217,7 +218,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldRegisterFactoryWithProducesWhichRequiresProvidedClassInSameFactory() {
+  public void shouldRegisterFactoryWithProducesWhichRequiresProvidedClassInSameFactory() throws Exception {
     injector.register(CrossDependentFactory.class);
 
     assertNotNull(injector.getInstance(Phone.class));
@@ -228,13 +229,13 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldAutoDiscoverProducesAnnotations() {
+  public void shouldAutoDiscoverProducesAnnotations() throws Exception {
     assertNotNull(autoDiscoveryInjector.getInstance(AnotherFactory.class));
     assertNotNull(autoDiscoveryInjector.getInstance(Truck.class));
   }
 
   @Test
-  public void shouldAutoDiscoverNestedProducesAnnotations() {
+  public void shouldAutoDiscoverNestedProducesAnnotations() throws Exception {
     Thing instance = autoDiscoveryInjector.getInstance(Thing.class);
 
     assertNotNull(instance.anotherFactory);
@@ -243,7 +244,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldAutoDiscoverComplicatedNestedProducesAnnotations() {
+  public void shouldAutoDiscoverComplicatedNestedProducesAnnotations() throws Exception {
     ComplicatedThing instance = autoDiscoveryInjector.getInstance(ComplicatedThing.class);
 
     assertNotNull(instance.part2.part3);
@@ -261,7 +262,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldRegisterClassWhichProducesInstances() {
+  public void shouldRegisterClassWhichProducesInstances() throws Exception {
     injector.register(Thing4.class);
 
     Phone phone = injector.getInstance(Phone.class);
@@ -275,17 +276,17 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void requiredDependencySuppliedIndirectlyByStaticFieldShouldNotCauseCycle() {
+  public void requiredDependencySuppliedIndirectlyByStaticFieldShouldNotCauseCycle() throws Exception {
     autoDiscoveryInjector.getInstance(StaticFieldBasedPhoneProducer.class);
   }
 
   @Test
-  public void requiredDependencySuppliedIndirectlyByStaticMethodShouldNotCauseCycle() {
+  public void requiredDependencySuppliedIndirectlyByStaticMethodShouldNotCauseCycle() throws Exception {
     autoDiscoveryInjector.getInstance(StaticMethodBasedPhoneProducer.class);
   }
 
   @Test
-  public void shouldDiscoverClassWhichProducesInstances() {
+  public void shouldDiscoverClassWhichProducesInstances() throws Exception {
     assertNotNull(autoDiscoveryInjector.getInstance(Thing4.class));
 
     Phone phone = autoDiscoveryInjector.getInstance(Phone.class);
@@ -300,7 +301,7 @@ public class ProducesAnnotationTest {
     private String prefix = "pre";
 
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws Exception {
       injector.registerInstance(intValue);
       injector.registerInstance(prefix);
       injector.register(SingletonFactory.class);
@@ -308,7 +309,7 @@ public class ProducesAnnotationTest {
     }
 
     @AfterEach
-    void afterEach() {
+    void afterEach() throws Exception {
       injector.remove(UnscopedFactory.class);
       injector.remove(SingletonFactory.class);
       injector.removeInstance(prefix);
@@ -321,14 +322,14 @@ public class ProducesAnnotationTest {
     void registeringAFactoryTwiceShouldThrowException() {
       assertThrows(DuplicateKeyException.class, new Executable() {
         @Override
-        public void execute() {
+        public void execute() throws Exception {
           injector.register(UnscopedFactory.class);
         }
       });
     }
 
     @Test
-    void factoryScopeShouldBeRespected() {
+    void factoryScopeShouldBeRespected() throws Exception {
       SingletonFactory factory1 = injector.getInstance(SingletonFactory.class);
       SingletonFactory factory2 = injector.getInstance(SingletonFactory.class);
 
@@ -341,21 +342,21 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void factoryShouldHaveDependenciesInjected() {
+    void factoryShouldHaveDependenciesInjected() throws Exception {
       UnscopedFactory unscopedFactory = injector.getInstance(UnscopedFactory.class);
 
       assertEquals("pre", unscopedFactory.prefix);
     }
 
     @Test
-    void productsShouldBeAvailableDirectly() {
+    void productsShouldBeAvailableDirectly() throws Exception {
       Car car = injector.getInstance(Car.class);
 
       assertEquals("pre-toyota-15", car.name);
 
       assertThrows(MultipleInstancesException.class, new Executable() {
         @Override
-        public void execute() {
+        public void execute() throws Exception {
           injector.getInstance(Phone.class);
         }
       });
@@ -364,7 +365,7 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void phoneScopeShouldBeRespected() {
+    void phoneScopeShouldBeRespected() throws Exception {
       Phone redPhone1 = injector.getInstance(Phone.class, Red.class);
       Phone redPhone2 = injector.getInstance(Phone.class, Red.class);
 
@@ -377,12 +378,12 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void allPhonesShouldBeReturnedWhenGettingInstancesOfPhone() {
+    void allPhonesShouldBeReturnedWhenGettingInstancesOfPhone() throws InstanceCreationException {
       assertEquals(4, injector.getInstances(Phone.class).size());
     }
 
     @Test
-    void injectorShouldReturnGenericTypes() {
+    void injectorShouldReturnGenericTypes() throws Exception {
       injector.getInstance(new TypeReference<Garage<Bus>>() {}.getType());
 
       Garage<Bus> busGarage1 = injector.getInstance(new TypeReference<Garage<Bus>>() {}.getType());
@@ -399,12 +400,12 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void providerCreatedViaFactoryShouldSupplyObjects() {
+    void providerCreatedViaFactoryShouldSupplyObjects() throws Exception {
       assertEquals(Bus.class, injector.getInstance(Bus.class).getClass());
     }
 
     @Test
-    void recursiveFactoryShouldWork() {
+    void recursiveFactoryShouldWork() throws Exception {
       assertEquals(Truck.class, injector.getInstance(Truck.class).getClass());
     }
   }
@@ -738,7 +739,7 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldAllowRegisteringClassWithProducerProducingSubtypeProvidedByATypeExtension() {
+  public void shouldAllowRegisteringClassWithProducerProducingSubtypeProvidedByATypeExtension() throws Exception {
     injector.register(R.class);
 
     assertNotNull(injector.getInstance(R.class));

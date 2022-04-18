@@ -4,7 +4,6 @@ import hs.ddif.api.annotation.AnnotationStrategy;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.LifeCycleCallbacksFactory;
 import hs.ddif.api.instantiation.LifeCycleCallbacks;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.core.util.Methods;
 
 import java.lang.annotation.Annotation;
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 /**
  * Implementation of a {@link LifeCycleCallbacksFactory} which determines which life cycle
@@ -53,23 +51,31 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
   }
 
   @Override
-  public LifeCycleCallbacks create(Class<?> cls) {
+  public LifeCycleCallbacks create(Class<?> cls) throws DefinitionException {
     List<Method> postConstructMethods = Methods.findAnnotated(cls, postConstruct);
     List<Method> preDestroyMethods = Methods.findAnnotated(cls, preDestroy);
 
     Collections.sort(postConstructMethods, CLASS_HIERARCHY_COMPARATOR);
     Collections.sort(preDestroyMethods, CLASS_HIERARCHY_COMPARATOR.reversed());
 
-    Stream.concat(postConstructMethods.stream(), preDestroyMethods.stream()).forEach(method -> {
-      if(method.getParameterCount() > 0) {
-        throw new DefinitionException(method, "cannot have parameters when annotated as a lifecycle method (post construct or pre destroy)");
-      }
-      if(!annotationStrategy.getInjectAnnotations(method).isEmpty()) {
-        throw new DefinitionException(method, "cannot be inject annotated when annotated as a lifecycle method (post construct or pre destroy): " + annotationStrategy.getInjectAnnotations(method));
-      }
-    });
+    for(Method method : postConstructMethods) {
+      checkMethod(method);
+    }
+
+    for(Method method : preDestroyMethods) {
+      checkMethod(method);
+    }
 
     return new DefaultLifeCycleCallbacks(postConstructMethods, preDestroyMethods);
+  }
+
+  private void checkMethod(Method method) throws DefinitionException {
+    if(method.getParameterCount() > 0) {
+      throw new DefinitionException(method, "cannot have parameters when annotated as a lifecycle method (post construct or pre destroy)");
+    }
+    if(!annotationStrategy.getInjectAnnotations(method).isEmpty()) {
+      throw new DefinitionException(method, "cannot be inject annotated when annotated as a lifecycle method (post construct or pre destroy): " + annotationStrategy.getInjectAnnotations(method));
+    }
   }
 
   private class DefaultLifeCycleCallbacks implements LifeCycleCallbacks {
@@ -82,15 +88,10 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
     }
 
     @Override
-    public void postConstruct(Object instance) throws InstanceCreationFailure {
+    public void postConstruct(Object instance) throws Exception {
       for(Method method : postConstructMethods) {
-        try {
-          method.setAccessible(true);
-          method.invoke(instance);
-        }
-        catch(Exception e) {
-          throw new InstanceCreationFailure(method, "call failed for PostConstruct", e);
-        }
+        method.setAccessible(true);
+        method.invoke(instance);
       }
     }
 

@@ -16,7 +16,7 @@ public class RegistrationPerformanceTest {
 
   @Test
   @Disabled
-  public void test() throws InterruptedException {
+  public void test() throws Exception {
     int iterations = 1000;
     int meausurements = 10;
     long[] times = new long[meausurements];
@@ -36,7 +36,7 @@ public class RegistrationPerformanceTest {
     }
   }
 
-  private long run(int iterations) {
+  private long run(int iterations) throws Exception {
     long nanos = System.nanoTime();
 
     for(int i = 0; i < iterations; i++) {

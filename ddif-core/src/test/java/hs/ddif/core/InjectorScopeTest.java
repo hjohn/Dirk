@@ -4,7 +4,6 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.scope.AbstractScopeResolver;
 import hs.ddif.api.scope.OutOfScopeException;
@@ -34,7 +33,7 @@ public class InjectorScopeTest {
   class Classes {
 
     @Test
-    public void shouldThrowOutOfScopeExceptionWhenNoScopeActive() {
+    public void shouldThrowOutOfScopeExceptionWhenNoScopeActive() throws Exception {
       TestScopeResolver scopeResolver = new TestScopeResolver();
 
       scopeResolver.currentScope = null;
@@ -47,16 +46,13 @@ public class InjectorScopeTest {
         .isExactlyInstanceOf(InstanceCreationException.class)
         .hasMessage("[class hs.ddif.core.InjectorScopeTest$TestScopedBean] could not be created")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(InstanceCreationFailure.class)
-        .hasMessage("[class hs.ddif.core.InjectorScopeTest$TestScopedBean] could not be created")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(OutOfScopeException.class)
         .hasMessage("Scope not active: interface hs.ddif.core.test.scope.TestScope for: Injectable[hs.ddif.core.InjectorScopeTest$TestScopedBean]")
         .hasNoCause();
     }
 
     @Test
-    public void shouldRemoveInstancesFromScopeResolver() {
+    public void shouldRemoveInstancesFromScopeResolver() throws Exception {
       Injector injector = Injectors.manual();
 
       injector.register(S.class);
@@ -80,7 +76,7 @@ public class InjectorScopeTest {
     }
 
     @Test
-    public void shouldKeepScopesSeparated() {
+    public void shouldKeepScopesSeparated() throws Exception {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = Injectors.manual(scopeResolver);
 
@@ -111,7 +107,7 @@ public class InjectorScopeTest {
     }
 
     @Test
-    public void shouldKeepScopesSeparatedInReferences() {
+    public void shouldKeepScopesSeparatedInReferences() throws Exception {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = Injectors.manual(scopeResolver);
 
@@ -142,7 +138,7 @@ public class InjectorScopeTest {
     }
 
     @Test
-    public void shouldThrowExceptionWhenNarrowScopedBeansAreInjectedIntoBroaderScopedBeans() {
+    public void shouldThrowExceptionWhenNarrowScopedBeansAreInjectedIntoBroaderScopedBeans() throws Exception {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = Injectors.manual(scopeResolver);
 
@@ -153,7 +149,7 @@ public class InjectorScopeTest {
     }
 
     @Test
-    public void shouldAllowInjectingUnscopedInstancesAlways() {
+    public void shouldAllowInjectingUnscopedInstancesAlways() throws Exception {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = Injectors.manual(scopeResolver);
 
@@ -164,7 +160,7 @@ public class InjectorScopeTest {
     }
 
     @Test
-    public void shouldThrowExceptionWhenMultipleScopesDefinedOnBean() {
+    public void shouldThrowExceptionWhenMultipleScopesDefinedOnBean() throws Exception {
       TestScopeResolver scopeResolver = new TestScopeResolver();
       Injector injector = Injectors.manual(scopeResolver);
 
@@ -172,14 +168,7 @@ public class InjectorScopeTest {
 
       assertThatThrownBy(() -> injector.register(IllegalMultiScopedBean.class))
         .isExactlyInstanceOf(DefinitionException.class)
-        .hasMessage("Exception occurred during discovery via path: [hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean]")
-        .satisfies(throwable -> {
-          assertThat(throwable.getSuppressed()).hasSize(1);
-          assertThat(throwable.getSuppressed()[0])
-            .isExactlyInstanceOf(DefinitionException.class)
-            .hasMessage("[class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@hs.ddif.core.test.scope.TestScope(), @jakarta.inject.Singleton()]")
-            .hasNoCause();
-        })
+        .hasMessage("[class hs.ddif.core.InjectorScopeTest$IllegalMultiScopedBean] cannot have multiple scope annotations, but found: [@hs.ddif.core.test.scope.TestScope(), @jakarta.inject.Singleton()]")
         .hasNoCause();
     }
   }
@@ -193,7 +182,7 @@ public class InjectorScopeTest {
 
     // Singleton -> Singleton = OK
     @Test
-    public void shouldRegisterSingletonBeanDependentOnXWhenXIsProvidedAsSingleton() {
+    public void shouldRegisterSingletonBeanDependentOnXWhenXIsProvidedAsSingleton() throws Exception {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new X());
@@ -202,7 +191,7 @@ public class InjectorScopeTest {
 
     // Prototype -> Prototype = OK
     @Test
-    public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsPrototype() {
+    public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsPrototype() throws Exception {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
@@ -211,7 +200,7 @@ public class InjectorScopeTest {
 
     // Prototype -> Singleton = OK
     @Test
-    public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsSingleton() {
+    public void shouldRegisterPrototypeBeanDependentOnXWhenXIsProvidedAsSingleton() throws Exception {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new X());
@@ -220,7 +209,7 @@ public class InjectorScopeTest {
 
     // Singleton -> Prototype = OK
     @Test
-    public void shouldRegisterSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() {
+    public void shouldRegisterSingletonBeanDependentOnXWhenXIsProvidedAsPrototype() throws Exception {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
@@ -229,7 +218,7 @@ public class InjectorScopeTest {
 
     // Singleton -> Provider<Singleton> = OK
     @Test
-    public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsSingleton() {
+    public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsSingleton() throws Exception {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new X());
@@ -238,7 +227,7 @@ public class InjectorScopeTest {
 
     // Prototype -> Provider<Prototype> = OK
     @Test
-    public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsPrototype() {
+    public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsPrototype() throws Exception {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
@@ -247,7 +236,7 @@ public class InjectorScopeTest {
 
     // Prototype -> Provider<Singleton> = OK
     @Test
-    public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsSingleton() {
+    public void shouldRegisterPrototypeBeanDependentOnXProviderWhenXIsProvidedAsSingleton() throws Exception {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new X());
@@ -256,7 +245,7 @@ public class InjectorScopeTest {
 
     // Singleton -> Provider<Prototype> = OK
     @Test
-    public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsPrototype() {
+    public void shouldRegisterSingletonBeanDependentOnXProviderWhenXIsProvidedAsPrototype() throws Exception {
       Injector injector = Injectors.manual();
 
       injector.registerInstance(new XProvider());
@@ -297,7 +286,7 @@ public class InjectorScopeTest {
   }
 
   @Test
-  public void shouldKeepSameTypesWithDifferentQualifiersSeparated() {
+  public void shouldKeepSameTypesWithDifferentQualifiersSeparated() throws Exception {
     TestScopeResolver scopeResolver = new TestScopeResolver();
     Injector injector = Injectors.manual(scopeResolver);
 

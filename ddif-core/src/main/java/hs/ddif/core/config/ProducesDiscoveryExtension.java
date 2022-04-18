@@ -1,5 +1,6 @@
 package hs.ddif.core.config;
 
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DiscoveryExtension;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Injectable;
@@ -28,7 +29,7 @@ public class ProducesDiscoveryExtension implements DiscoveryExtension {
   }
 
   @Override
-  public void deriveTypes(Registry registry, Type type) {
+  public void deriveTypes(Registry registry, Type type) throws DefinitionException {
     Class<?> injectableClass = Types.raw(type);
 
     if(injectableClass != null) {

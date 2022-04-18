@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.InstantiatorFactory;
 import hs.ddif.api.scope.UnknownScopeException;
 import hs.ddif.core.InjectableFactories;
@@ -15,6 +16,7 @@ import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,24 +32,42 @@ import jakarta.inject.Provider;
 public class InjectableStoreConsistencyTest {
   private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();
 
-  private Injectable<A> a = classInjectableFactory.create(A.class);
-  private Injectable<B> b = classInjectableFactory.create(B.class);
-  private Injectable<C> c = classInjectableFactory.create(C.class);
-  private Injectable<D> d = classInjectableFactory.create(D.class);
-  private Injectable<E> e = classInjectableFactory.create(E.class);
-  private Injectable<F> f = classInjectableFactory.create(F.class);
-  private Injectable<G> g = classInjectableFactory.create(G.class);
-  private Injectable<H> h = classInjectableFactory.create(H.class);
-  private Injectable<I> i = classInjectableFactory.create(I.class);
-  private Injectable<J> j = classInjectableFactory.create(J.class);
-  private Injectable<L> l = classInjectableFactory.create(L.class);
-  private Injectable<M> m = classInjectableFactory.create(M.class);
-  private Injectable<N> n = classInjectableFactory.create(N.class);
-  private Injectable<O> o = classInjectableFactory.create(O.class);
+  private Injectable<A> a;
+  private Injectable<B> b;
+  private Injectable<C> c;
+  private Injectable<D> d;
+  private Injectable<E> e;
+  private Injectable<F> f;
+  private Injectable<G> g;
+  private Injectable<H> h;
+  private Injectable<I> i;
+  private Injectable<J> j;
+  private Injectable<L> l;
+  private Injectable<M> m;
+  private Injectable<N> n;
+  private Injectable<O> o;
 
   private InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(InjectableFactories.ANNOTATION_STRATEGY, TypeExtensions.create(InjectableFactories.ANNOTATION_STRATEGY));
   private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private InjectableStore store = new InjectableStore(instantiatorBindingMap);
+
+  @BeforeEach
+  void beforeEach() throws DefinitionException {
+    a = classInjectableFactory.create(A.class);
+    b = classInjectableFactory.create(B.class);
+    c = classInjectableFactory.create(C.class);
+    d = classInjectableFactory.create(D.class);
+    e = classInjectableFactory.create(E.class);
+    f = classInjectableFactory.create(F.class);
+    g = classInjectableFactory.create(G.class);
+    h = classInjectableFactory.create(H.class);
+    i = classInjectableFactory.create(I.class);
+    j = classInjectableFactory.create(J.class);
+    l = classInjectableFactory.create(L.class);
+    m = classInjectableFactory.create(M.class);
+    n = classInjectableFactory.create(N.class);
+    o = classInjectableFactory.create(O.class);
+  }
 
   @Test
   void shouldThrowExceptionWhenClassInjectableAddedWithUnknownScope() {
@@ -104,7 +124,8 @@ public class InjectableStoreConsistencyTest {
 
   @Nested
   class WhenClasses_A_And_H_AreAdded {
-    {
+    @BeforeEach
+    void beforeEach() {
       store.putAll(List.of(a, h));
     }
 
@@ -116,7 +137,8 @@ public class InjectableStoreConsistencyTest {
 
   @Nested
   class When_L_IsAdded {
-    {
+    @BeforeEach
+    void beforeEach() {
       store.putAll(List.of(l));
     }
 
@@ -138,7 +160,8 @@ public class InjectableStoreConsistencyTest {
 
   @Nested
   class WhenClassesAAndBAndCAndDAreAdded {
-    {
+    @BeforeEach
+    void beforeEach() {
       store.putAll(List.of(a, b, c, d));
     }
 
@@ -215,7 +238,8 @@ public class InjectableStoreConsistencyTest {
 
   @Nested
   class WhenClassesMAndNAndOAreAdded {
-    {
+    @BeforeEach
+    void beforeEach() {
       store.putAll(List.of(m, n, o));
     }
 

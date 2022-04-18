@@ -21,7 +21,7 @@ public class LifeCycleTest {
   private final Injector injector = Injectors.manual();
 
   @Test
-  void shouldManageLifeCycleForSingleton() {
+  void shouldManageLifeCycleForSingleton() throws Exception {
     injector.register(S.class);
 
     assertPostConstructs();
@@ -44,7 +44,7 @@ public class LifeCycleTest {
   }
 
   @Test
-  void shouldManageLifeCycleForSingletonAndItsDependents() {
+  void shouldManageLifeCycleForSingletonAndItsDependents() throws Exception {
     injector.register(G.class);
     injector.register(F.class);
     injector.register(E.class);
@@ -81,7 +81,7 @@ public class LifeCycleTest {
   }
 
   @Test
-  void shouldIgnoreExceptionsInDestroyMethods() {
+  void shouldIgnoreExceptionsInDestroyMethods() throws Exception {
     injector.register(Z.class);
     injector.register(Y.class);
     injector.register(X.class);

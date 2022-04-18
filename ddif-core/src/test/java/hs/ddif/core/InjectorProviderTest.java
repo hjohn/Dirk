@@ -4,7 +4,6 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.domain.NoSuchInstance;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
@@ -17,7 +16,6 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +37,7 @@ public class InjectorProviderTest {
   private Injector injector = Injectors.manual();
 
   @Test
-  public void optionalSuppliersShouldBreakCircularDependenciesAndAllowDelayedRegistration() {  // Only optional Suppliers can be used to delay registration of the provisioned class.
+  public void optionalSuppliersShouldBreakCircularDependenciesAndAllowDelayedRegistration() throws Exception {  // Only optional Suppliers can be used to delay registration of the provisioned class.
     // allowed:
     injector.register(BeanWithOptionalSupplier.class);
 
@@ -54,7 +52,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void providersShouldBreakCircularDependenciesOnly() {  // Required Suppliers cannot be used to delay registration of the provisioned class.
+  public void providersShouldBreakCircularDependenciesOnly() throws Exception {  // Required Suppliers cannot be used to delay registration of the provisioned class.
     assertThatThrownBy(() -> injector.register(BeanWithSupplier.class))
       .isExactlyInstanceOf(UnresolvableDependencyException.class)
       .hasMessage("Missing dependency [hs.ddif.core.InjectorProviderTest$SimpleBean] required for Field [private jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$SimpleBean> hs.ddif.core.InjectorProviderTest$BeanWithSupplier.simpleBeanSupplier]")
@@ -69,7 +67,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void getInstanceShouldReturnInjectedSupplierClass() {
+  public void getInstanceShouldReturnInjectedSupplierClass() throws Exception {
     Provider<Connection> anonymousSupplier = new Provider<>() {
       @Override
       public Connection get() {
@@ -92,27 +90,23 @@ public class InjectorProviderTest {
 
       assertThatThrownBy(() -> injector.getInstance(DatabaseSupplier.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
 
       assertThatThrownBy(() -> injector.getInstance(Database.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(NoSuchInstance.class)
         .hasNoCause();
     }
   }
 
   @Test
-  public void getInstanceShouldReturnInjectableFromSupplierInstance() {
+  public void getInstanceShouldReturnInjectableFromSupplierInstance() throws Exception {
     injector.registerInstance(new SimpleDatabaseSupplier());
 
     assertEquals(Database.class, injector.getInstance(Database.class).getClass());
   }
 
   @Test
-  public void classRegistrationShouldFailWhenImplicitSupplierWouldViolatesDependencies() {
+  public void classRegistrationShouldFailWhenImplicitSupplierWouldViolatesDependencies() throws Exception {
     for(int i = 0; i < 2; i++) {
       SimpleDatabaseSupplier provider = new SimpleDatabaseSupplier();
 
@@ -137,15 +131,12 @@ public class InjectorProviderTest {
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
         .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
   }
 
   @Test
-  public void classRemovalShouldFailWhenImplicitSupplierRemovalWouldViolatesDependencies() {
+  public void classRemovalShouldFailWhenImplicitSupplierRemovalWouldViolatesDependencies() throws Exception {
     for(int i = 0; i < 2; i++) {
       injector.register(SimpleDatabaseSupplier.class);
       injector.register(BeanWithDatabase.class);
@@ -164,9 +155,6 @@ public class InjectorProviderTest {
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
         .isExactlyInstanceOf(NoSuchInstanceException.class)
         .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(NoSuchInstance.class)
-        .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
   }
@@ -180,7 +168,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void getInstanceShouldReturnInstanceInjectedWithSupplierOfList() {
+  public void getInstanceShouldReturnInstanceInjectedWithSupplierOfList() throws Exception {
     injector.register(BeanWithProvidedListOfString.class);
     injector.registerInstance("a");
     injector.registerInstance("b");
@@ -219,7 +207,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void registerShouldThrowExceptionWhenDatabaseIsCreatedAndProvided() {
+  public void registerShouldThrowExceptionWhenDatabaseIsCreatedAndProvided() throws Exception {
     injector.registerInstance(new Database("jdbc:localhost"));
     injector.register(BeanWithDatabase.class);
 
@@ -231,14 +219,11 @@ public class InjectorProviderTest {
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseSupplier.class))  // Should not be part of Injector when registration fails
       .isExactlyInstanceOf(NoSuchInstanceException.class)
       .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstance.class)
-      .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier]")
       .hasNoCause();
   }
 
   @Test
-  public void registerShouldThrowExceptionWhenDatabaseIsCreatedAndProvided2() {
+  public void registerShouldThrowExceptionWhenDatabaseIsCreatedAndProvided2() throws Exception {
     injector.register(SimpleDatabaseSupplier.class);
     injector.register(BeanWithDatabase.class);
 
@@ -249,7 +234,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndProvided() {
+  public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndProvided() throws Exception {
     injector.registerInstance(new Database("jdbc:localhost"));
     injector.register(BeanWithDatabase.class);
 
@@ -261,14 +246,11 @@ public class InjectorProviderTest {
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseSupplier.class))  // Should not be part of Injector when registration fails
       .isExactlyInstanceOf(NoSuchInstanceException.class)
       .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstance.class)
-      .hasMessage("No such instance: [hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier]")
       .hasNoCause();
   }
 
   @Test
-  public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndProvided2() {
+  public void registerShouldThrowExceptionWhenDatabaseIsInstancedAndProvided2() throws Exception {
     injector.registerInstance(new SimpleDatabaseSupplier());
     injector.register(BeanWithDatabase.class);
 
@@ -279,7 +261,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void registrationAndUnregistrationOfInterfaceSupplierShouldWork() {
+  public void registrationAndUnregistrationOfInterfaceSupplierShouldWork() throws Exception {
     // Tests specifically if registering and unregistering a Supplier, that provides an interface instead of
     // of a concrete class, works.
     for(int i = 0; i < 2; i++) {
@@ -376,7 +358,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void providersShouldRespectQualifiers() {
+  public void providersShouldRespectQualifiers() throws Exception {
     injector.register(A.class);
     injector.register(B.class);
     injector.register(C.class);
@@ -387,8 +369,6 @@ public class InjectorProviderTest {
     assertThat(injector.getInstance(Z.class, Big.class)).isExactlyInstanceOf(Z.class);
     assertThatThrownBy(() -> injector.getInstance(Z.class, Small.class))
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstance.class)
       .hasNoCause();
 
     injector.register(X.class);
@@ -422,7 +402,7 @@ public class InjectorProviderTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  public void multipleSuppliersOfSameTypeShouldReturnMultipleInstances() {
+  public void multipleSuppliersOfSameTypeShouldReturnMultipleInstances() throws Exception {
     injector.register(B.class);  // provides @Green Z("green")
     injector.register(E.class);  // provides @Green Z("light green")
 
@@ -447,7 +427,7 @@ public class InjectorProviderTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  public void multipleProducersOfSameTypeShouldReturnMultipleInstances() {
+  public void multipleProducersOfSameTypeShouldReturnMultipleInstances() throws Exception {
     injector.register(V.class);  // produces @Green Z("green") and @Green Z("light green")
 
     assertThat(injector.getInstances(Z.class)).extracting(z -> z.name).containsExactlyInAnyOrder("green", "light green");
@@ -470,7 +450,7 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void providerShouldRespectScope() {
+  public void providerShouldRespectScope() throws Exception {
     injector.register(B.class);  // provides non-singleton Green Z
     injector.register(C.class);  // provides singleton Big Z
     injector.register(D.class);  // provider non-singleton Y
@@ -593,14 +573,19 @@ public class InjectorProviderTest {
   @Nested
   class WhenInjectorContainsPrimitiveValues {
     {
-      injector.registerInstance(7);
-      injector.registerInstance(2.5);
-      injector.registerInstance(true);
-      injector.registerInstance((byte)11);
+      try {
+        injector.registerInstance(7);
+        injector.registerInstance(2.5);
+        injector.registerInstance(true);
+        injector.registerInstance((byte)11);
+      }
+      catch(Exception e) {
+        throw new IllegalStateException(e);
+      }
     }
 
     @Test
-    void shouldInjectSuppliersWithCorrespondingPrimitives() {
+    void shouldInjectSuppliersWithCorrespondingPrimitives() throws Exception {
       injector.register(PrimitivesA.class);
 
       assertThat(injector.getInstance(PrimitivesA.class).calculate()).isEqualTo(23.0);

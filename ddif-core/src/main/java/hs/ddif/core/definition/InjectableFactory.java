@@ -33,6 +33,6 @@ public interface InjectableFactory {
    * @throws DefinitionException when the owner type does not own the member; when the injectable's type cannot be determined or is void;
    *   when the annotated element has multiple scope annotations or is inject annotated
    */
-  <T> Injectable<T> create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, Constructable<T> constructable);
+  <T> Injectable<T> create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, Constructable<T> constructable) throws DefinitionException;
 
 }

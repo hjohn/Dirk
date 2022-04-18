@@ -1,6 +1,8 @@
 package hs.ddif.plugins;
 
 import hs.ddif.api.CandidateRegistry;
+import hs.ddif.api.definition.AutoDiscoveryException;
+import hs.ddif.api.definition.DefinitionException;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -35,8 +37,10 @@ public class ComponentScanner {
    * Scans for annotated types and adds them to the given {@link CandidateRegistry}.
    *
    * @param registry a {@link CandidateRegistry} to add found types, cannot be {@code null}
+   * @throws AutoDiscoveryException when auto discovery fails to find all required types
+   * @throws DefinitionException when a definition problem was encountered
    */
-  public void scan(CandidateRegistry registry) {
+  public void scan(CandidateRegistry registry) throws AutoDiscoveryException, DefinitionException {
     List<Type> types = findComponentTypes(ComponentScanner.class.getClassLoader());
 
     LOGGER.fine("Registering types: " + types);

@@ -2,10 +2,10 @@ package hs.ddif.core;
 
 import hs.ddif.api.instantiation.InstantiationContext;
 import hs.ddif.api.instantiation.Instantiator;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.api.instantiation.domain.Key;
-import hs.ddif.api.instantiation.domain.MultipleInstances;
-import hs.ddif.api.instantiation.domain.NoSuchInstance;
+import hs.ddif.api.instantiation.domain.MultipleInstancesException;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.scope.CreationalContext;
 import hs.ddif.api.scope.OutOfScopeException;
 import hs.ddif.api.scope.ScopeResolver;
@@ -53,12 +53,12 @@ class DefaultInstantiationContext implements InstantiationContext {
   }
 
   @Override
-  public synchronized <T> T create(Key key) throws InstanceCreationFailure, MultipleInstances {
+  public synchronized <T> T create(Key key) throws InstanceCreationException, MultipleInstancesException {
     @SuppressWarnings("unchecked")
     Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
 
     if(injectables.size() > 1) {
-      throw new MultipleInstances(key, injectables);
+      throw new MultipleInstancesException(key, injectables);
     }
 
     if(injectables.size() == 0) {
@@ -69,7 +69,7 @@ class DefaultInstantiationContext implements InstantiationContext {
   }
 
   @Override
-  public synchronized <T> List<T> createAll(Key key) throws InstanceCreationFailure {
+  public synchronized <T> List<T> createAll(Key key) throws InstanceCreationException {
     List<T> instances = new ArrayList<>();
 
     @SuppressWarnings("unchecked")
@@ -86,15 +86,15 @@ class DefaultInstantiationContext implements InstantiationContext {
     return instances;
   }
 
-  private <T> T createInstance(Injectable<T> injectable) throws InstanceCreationFailure {
+  private <T> T createInstance(Injectable<T> injectable) throws InstanceCreationException {
     return createInstance(injectable, false);
   }
 
-  private <T> T createInstanceInScope(Injectable<T> injectable) throws InstanceCreationFailure {
+  private <T> T createInstanceInScope(Injectable<T> injectable) throws InstanceCreationException {
     return createInstance(injectable, true);
   }
 
-  private <T> T createInstance(Injectable<T> injectable, boolean allowOutOfScope) throws InstanceCreationFailure {
+  private <T> T createInstance(Injectable<T> injectable, boolean allowOutOfScope) throws InstanceCreationException {
     ScopeResolver scopeResolver = injectable.getScopeResolver();
 
     try {
@@ -119,7 +119,7 @@ class DefaultInstantiationContext implements InstantiationContext {
     }
     catch(OutOfScopeException e) {
       if(!allowOutOfScope) {
-        throw new InstanceCreationFailure(injectable.getType(), "could not be created", e);
+        throw new InstanceCreationException(injectable.getType(), "could not be created", e);
       }
 
       /*
@@ -130,11 +130,11 @@ class DefaultInstantiationContext implements InstantiationContext {
 
       return null;  // same as if scope hadn't been active in the first place
     }
-    catch(InstanceCreationFailure e) {
+    catch(InstanceCreationException e) {
       throw e;
     }
     catch(Exception e) {
-      throw new InstanceCreationFailure(injectable.getType(), "could not be created", e);
+      throw new InstanceCreationException(injectable.getType(), "could not be created", e);
     }
   }
 
@@ -199,11 +199,11 @@ class DefaultInstantiationContext implements InstantiationContext {
     }
 
     @Override
-    public Reference<T> create() throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
+    public Reference<T> create() throws InstanceCreationException, MultipleInstancesException, NoSuchInstanceException {
       return new LazyReference<>(this, injectable.create(getInjections()));
     }
 
-    private List<Injection> getInjections() throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
+    private List<Injection> getInjections() throws InstanceCreationException, MultipleInstancesException, NoSuchInstanceException {
       if(injections == null) {
         List<Injection> injections = new ArrayList<>();
 

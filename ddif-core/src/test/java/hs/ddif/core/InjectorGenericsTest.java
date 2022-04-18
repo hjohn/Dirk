@@ -25,7 +25,7 @@ public class InjectorGenericsTest {
   }
 
   @Test
-  public void shouldInjectInstancesWithMatchingGenerics() {
+  public void shouldInjectInstancesWithMatchingGenerics() throws Exception {
     injector.register(StringToIntConverter.class);
     injector.register(IntToStringConverter.class);
     injector.register(StringToStringListConverter.class);
@@ -43,7 +43,7 @@ public class InjectorGenericsTest {
   }
 
   @Test
-  public void shouldInjectProviderInstancesWithMatchingGenerics() {
+  public void shouldInjectProviderInstancesWithMatchingGenerics() throws Exception {
     injector.register(StringToIntConverter.class);
     injector.register(IntToStringConverter.class);
     injector.register(StringToStringListConverter.class);
@@ -61,7 +61,7 @@ public class InjectorGenericsTest {
   }
 
   @Test
-  public void shouldInjectListInstancesWithMatchingGenerics() {
+  public void shouldInjectListInstancesWithMatchingGenerics() throws Exception {
     injector.register(StringToIntConverter.class);
     injector.register(IntToStringConverter.class);
     injector.register(StringToStringListConverter.class);
@@ -79,7 +79,7 @@ public class InjectorGenericsTest {
   }
 
   @Test
-  public void shouldNotViolateSingularDependencies() {
+  public void shouldNotViolateSingularDependencies() throws Exception {
     injector.register(StringToIntConverter.class);
     injector.register(IntToStringConverter.class);
     injector.register(StringToStringListConverter.class);

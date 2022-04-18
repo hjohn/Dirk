@@ -1,5 +1,6 @@
 package hs.ddif.core.definition;
 
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.core.definition.factory.FieldObjectFactory;
 
 import java.lang.reflect.Field;
@@ -31,8 +32,9 @@ public class FieldInjectableFactory {
    * @param field a {@link Field}, cannot be {@code null}
    * @param ownerType the type of the owner of the field, cannot be {@code null} and must match with {@link Field#getDeclaringClass()}
    * @return a new {@link Injectable}, never {@code null}
+   * @throws DefinitionException when a definition problem was encountered
    */
-  public <T> Injectable<T> create(Field field, Type ownerType) {
+  public <T> Injectable<T> create(Field field, Type ownerType) throws DefinitionException {
     if(field == null) {
       throw new IllegalArgumentException("field cannot be null");
     }

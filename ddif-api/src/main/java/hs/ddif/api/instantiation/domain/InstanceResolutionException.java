@@ -1,10 +1,7 @@
 package hs.ddif.api.instantiation.domain;
 
-import hs.ddif.api.InstanceResolver;
-
 /**
- * Base class for exceptions that can be thrown during instance resolution by
- * an {@link InstanceResolver}.
+ * Base class for exceptions that can be thrown during instance resolution.
  */
 public abstract class InstanceResolutionException extends RuntimeException {
 
@@ -16,5 +13,14 @@ public abstract class InstanceResolutionException extends RuntimeException {
    */
   public InstanceResolutionException(String message, Throwable cause) {
     super(message, cause);
+  }
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param message a message, can be {@code null}
+   */
+  public InstanceResolutionException(String message) {
+    super(message);
   }
 }

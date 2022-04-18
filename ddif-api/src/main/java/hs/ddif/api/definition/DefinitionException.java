@@ -10,6 +10,15 @@ import java.util.Objects;
  * unsuitable for injection. This signals problems that can occur during
  * development of an application like attempting to register types for which
  * the framework has no means of creation or for which creation is ambiguous.
+ *
+ * <p>Definition problems can generally be solved by changing the types
+ * involved, like adding or removing annotations, changing visibility of
+ * fields or methods, etc.; reconfiguring the injector with different
+ * annotations or extensions may also solve definition problems.
+ *
+ * <p>Note: this exception specifically does not signal context sensitive
+ * problems that could be solved by registering or unregistering additional
+ * types; these are considered resolution problems, not definition problems.
  */
 public class DefinitionException extends RuntimeException {
 
@@ -32,25 +41,6 @@ public class DefinitionException extends RuntimeException {
    */
   public DefinitionException(AnnotatedElement element, String message) {
     this(element, message, null);
-  }
-
-  /**
-   * Constructs a new instance.
-   *
-   * @param throwable a {@link Throwable} that is to be converted to a definition exception, cannot be {@code null}
-   */
-  public DefinitionException(Throwable throwable) {
-    super(throwable.getMessage(), throwable);
-  }
-
-  /**
-   * Constructs a new instance.
-   *
-   * @param message a message describing the problem, cannot be {@code null}
-   * @param cause an underlying cause of the problem, can be {@code null}
-   */
-  public DefinitionException(String message, Throwable cause) {
-    super(Objects.requireNonNull(message), cause);
   }
 
   private static String describe(AnnotatedElement element) {

@@ -6,10 +6,10 @@ import hs.ddif.api.instantiation.Instantiator;
 import hs.ddif.api.instantiation.InstantiatorFactory;
 import hs.ddif.api.instantiation.TypeExtension;
 import hs.ddif.api.instantiation.TypeTrait;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.api.instantiation.domain.Key;
-import hs.ddif.api.instantiation.domain.MultipleInstances;
-import hs.ddif.api.instantiation.domain.NoSuchInstance;
+import hs.ddif.api.instantiation.domain.MultipleInstancesException;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.Collections;
@@ -49,7 +49,7 @@ public class DirectTypeExtension<T> implements TypeExtension<T> {
       }
 
       @Override
-      public T getInstance(InstantiationContext context) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance {
+      public T getInstance(InstantiationContext context) throws InstanceCreationException, MultipleInstancesException, NoSuchInstanceException {
         T instance = context.create(key);
 
         if(instance == null) {
@@ -57,7 +57,7 @@ public class DirectTypeExtension<T> implements TypeExtension<T> {
             return null;
           }
 
-          throw new NoSuchInstance(key);
+          throw new NoSuchInstanceException(key);
         }
 
         return instance;

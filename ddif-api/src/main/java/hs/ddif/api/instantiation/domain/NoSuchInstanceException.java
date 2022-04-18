@@ -8,10 +8,9 @@ public class NoSuchInstanceException extends InstanceResolutionException {
   /**
    * Constructs a new instance.
    *
-   * @param message a message, can be {@code null}
-   * @param cause a {@link Throwable} cause, can be {@code null}
+   * @param key a {@link Key}, cannot be {@code null}
    */
-  public NoSuchInstanceException(String message, Throwable cause) {
-    super(message, cause);
+  public NoSuchInstanceException(Key key) {
+    super("No such instance: [" + key + "]");
   }
 }

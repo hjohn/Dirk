@@ -3,8 +3,6 @@ package hs.ddif.core.config;
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.Injector;
 import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
-import hs.ddif.api.instantiation.domain.NoSuchInstance;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.Injectors;
@@ -24,7 +22,7 @@ public class ProviderInjectableExtensionInjectorTest {
   private Injector injector = Injectors.manual();
 
   @Test
-  void shouldUseProviderFromCandidate() {
+  void shouldUseProviderFromCandidate() throws Exception {
     injector.register(A.class);
 
     /*
@@ -51,7 +49,7 @@ public class ProviderInjectableExtensionInjectorTest {
   }
 
   @Test
-  void shouldAllowAddAndRemoveOfProviderWhenOnlyOptionalDependencyExists() {
+  void shouldAllowAddAndRemoveOfProviderWhenOnlyOptionalDependencyExists() throws Exception {
     injector.register(F.class);
 
     assertThat(injector.getInstance(F.class).b).isNull();
@@ -66,7 +64,7 @@ public class ProviderInjectableExtensionInjectorTest {
   }
 
   @Test
-  void shouldRejectDuplicateProviderWhenSingularDependencyExists() {
+  void shouldRejectDuplicateProviderWhenSingularDependencyExists() throws Exception {
     injector.register(A.class);
     injector.register(C.class);  // needs B via A
 
@@ -84,7 +82,7 @@ public class ProviderInjectableExtensionInjectorTest {
   }
 
   @Test
-  void shouldRejectDuplicateProviderWhenLazySingularDependencyExists() {
+  void shouldRejectDuplicateProviderWhenLazySingularDependencyExists() throws Exception {
     injector.register(A.class);
     injector.register(E.class);  // needs Provider<B> via A
 
@@ -102,7 +100,7 @@ public class ProviderInjectableExtensionInjectorTest {
   }
 
   @Test
-  void shouldRejectInjectingNullFromProvider() {
+  void shouldRejectInjectingNullFromProvider() throws Exception {
     Provider<B> providerInstance = new Provider<>() {
       @Override
       public B get() {
@@ -117,10 +115,7 @@ public class ProviderInjectableExtensionInjectorTest {
       .isExactlyInstanceOf(InstanceCreationException.class)
       .hasMessage("[class hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$C] could not be created")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(InstanceCreationFailure.class)
-      .hasMessage("[class hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$C] could not be created")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstance.class)
+      .isExactlyInstanceOf(NoSuchInstanceException.class)
       .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
 
@@ -135,9 +130,6 @@ public class ProviderInjectableExtensionInjectorTest {
 
     assertThatThrownBy(() -> provider.get())
       .isExactlyInstanceOf(NoSuchInstanceException.class)
-      .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstance.class)
       .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
 
@@ -157,14 +149,11 @@ public class ProviderInjectableExtensionInjectorTest {
     assertThatThrownBy(() -> instance.b.get())
       .isExactlyInstanceOf(NoSuchInstanceException.class)
       .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstance.class)
-      .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
   }
 
   @Test
-  void shouldAllowInjectingNullFromProviderIfOptional() {
+  void shouldAllowInjectingNullFromProviderIfOptional() throws Exception {
     injector.registerInstance(new Provider<B>() {
       @Override
       public B get() {

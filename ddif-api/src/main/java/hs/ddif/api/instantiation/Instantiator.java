@@ -1,9 +1,9 @@
 package hs.ddif.api.instantiation;
 
-import hs.ddif.api.instantiation.domain.InstanceCreationFailure;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.api.instantiation.domain.Key;
-import hs.ddif.api.instantiation.domain.MultipleInstances;
-import hs.ddif.api.instantiation.domain.NoSuchInstance;
+import hs.ddif.api.instantiation.domain.MultipleInstancesException;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 
 import java.util.Set;
 
@@ -43,11 +43,11 @@ public interface Instantiator<T> {
    *
    * @param context an {@link InstantiationContext}, never null
    * @return an instance of the type this instantiator produces, can be {@code null}
-   * @throws InstanceCreationFailure when the instance could not be created
-   * @throws MultipleInstances when multiple instances could be created but the instantiator required at most one
-   * @throws NoSuchInstance when no instance could be created but the instantiator required at least one
+   * @throws InstanceCreationException when the instance could not be created
+   * @throws MultipleInstancesException when multiple instances could be created but the instantiator required at most one
+   * @throws NoSuchInstanceException when no instance could be created but the instantiator required at least one
    */
-  T getInstance(InstantiationContext context) throws InstanceCreationFailure, MultipleInstances, NoSuchInstance;
+  T getInstance(InstantiationContext context) throws InstanceCreationException, MultipleInstancesException, NoSuchInstanceException;
 
   /**
    * Returns the {@link TypeTrait}s of this {@link Instantiator}.

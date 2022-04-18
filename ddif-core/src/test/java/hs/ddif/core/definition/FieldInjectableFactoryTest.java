@@ -69,7 +69,7 @@ public class FieldInjectableFactoryTest {
   }
 
   @Test
-  void createShouldAcceptValidParameters() throws NoSuchFieldException, SecurityException {
+  void createShouldAcceptValidParameters() throws NoSuchFieldException, SecurityException, DefinitionException {
     Injectable<String> injectable = factory.create(C.class.getField("b"), C.class);
 
     assertEquals(String.class, injectable.getType());

@@ -1,5 +1,6 @@
 package hs.ddif.core.definition;
 
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
@@ -35,8 +36,9 @@ public class InstanceInjectableFactory {
    * @param instance an instance, cannot be {@code null}
    * @param qualifiers an array of qualifier {@link Annotation}s
    * @return a new {@link Injectable}, never {@code null}
+   * @throws DefinitionException when a definition problem was encountered
    */
-  public <T> Injectable<T> create(T instance, Annotation... qualifiers) {
+  public <T> Injectable<T> create(T instance, Annotation... qualifiers) throws DefinitionException {
     if(instance == null) {
       throw new IllegalArgumentException("instance cannot be null");
     }

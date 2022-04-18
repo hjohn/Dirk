@@ -5,7 +5,6 @@ import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
-import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.ClassInjectableFactory;
@@ -29,7 +28,7 @@ public class UnresolvableDependencyExceptionTest {
   private final BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, null));
 
   @Test
-  void constructorShouldAcceptValidParameters() throws NoSuchMethodException, SecurityException, BadQualifiedTypeException {
+  void constructorShouldAcceptValidParameters() throws Exception {
     List<Binding> bindings = classInjectableFactory.create(A.class).getBindings();
     UnresolvableDependencyException e;
 

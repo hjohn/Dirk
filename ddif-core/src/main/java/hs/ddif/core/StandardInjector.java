@@ -4,10 +4,15 @@ import hs.ddif.api.CandidateRegistry;
 import hs.ddif.api.Injector;
 import hs.ddif.api.InstanceResolver;
 import hs.ddif.api.annotation.AnnotationStrategy;
+import hs.ddif.api.definition.AutoDiscoveryException;
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DiscoveryExtension;
 import hs.ddif.api.definition.LifeCycleCallbacksFactory;
 import hs.ddif.api.instantiation.InstantiatorFactory;
 import hs.ddif.api.instantiation.TypeExtension;
+import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.domain.MultipleInstancesException;
+import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.definition.BindingProvider;
@@ -94,22 +99,22 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public <T> T getInstance(Type type, Object... qualifiers) {
+  public <T> T getInstance(Type type, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException {
     return instanceResolver.getInstance(type, qualifiers);
   }
 
   @Override
-  public <T> T getInstance(Class<T> cls, Object... qualifiers) {
+  public <T> T getInstance(Class<T> cls, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException {
     return instanceResolver.getInstance(cls, qualifiers);
   }
 
   @Override
-  public <T> List<T> getInstances(Type type, Object... qualifiers) {
+  public <T> List<T> getInstances(Type type, Object... qualifiers) throws InstanceCreationException {
     return instanceResolver.getInstances(type, qualifiers);
   }
 
   @Override
-  public <T> List<T> getInstances(Class<T> cls, Object... qualifiers) {
+  public <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws InstanceCreationException {
     return instanceResolver.getInstances(cls, qualifiers);
   }
 
@@ -119,32 +124,32 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public void register(Type concreteType) {
+  public void register(Type concreteType) throws AutoDiscoveryException, DefinitionException {
     registry.register(concreteType);
   }
 
   @Override
-  public void register(List<Type> concreteTypes) {
+  public void register(List<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException {
     registry.register(concreteTypes);
   }
 
   @Override
-  public void registerInstance(Object instance, Annotation... qualifiers) {
+  public void registerInstance(Object instance, Annotation... qualifiers) throws DefinitionException {
     registry.registerInstance(instance, qualifiers);
   }
 
   @Override
-  public void remove(Type concreteType) {
+  public void remove(Type concreteType) throws AutoDiscoveryException, DefinitionException {
     registry.remove(concreteType);
   }
 
   @Override
-  public void remove(List<Type> concreteTypes) {
+  public void remove(List<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException {
     registry.remove(concreteTypes);
   }
 
   @Override
-  public void removeInstance(Object instance) {
+  public void removeInstance(Object instance) throws DefinitionException {
     registry.removeInstance(instance);
   }
 }

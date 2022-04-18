@@ -5,7 +5,6 @@ import hs.ddif.api.instantiation.Instantiator;
 import hs.ddif.api.instantiation.InstantiatorFactory;
 import hs.ddif.api.instantiation.TypeExtension;
 import hs.ddif.api.instantiation.TypeTrait;
-import hs.ddif.api.instantiation.domain.InstanceResolutionFailure;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Types;
 
@@ -56,14 +55,7 @@ public class ProviderTypeExtension<P, T> implements TypeExtension<P> {
 
       @Override
       public P getInstance(InstantiationContext context) {
-        return providerFactory.apply(() -> {
-          try {
-            return instantiator.getInstance(context);
-          }
-          catch(InstanceResolutionFailure f) {
-            throw f.toRuntimeException();
-          }
-        });
+        return providerFactory.apply(() -> instantiator.getInstance(context));
       }
 
       @Override

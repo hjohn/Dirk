@@ -1,5 +1,6 @@
 package hs.ddif.api;
 
+import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.instantiation.domain.InstanceCreationException;
 import hs.ddif.api.instantiation.domain.MultipleInstancesException;
 import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
@@ -64,8 +65,9 @@ public interface InstanceResolver {
    * @throws NoSuchInstanceException when no matching instance was available or could be created
    * @throws MultipleInstancesException when multiple matching instances were available
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
+   * @throws AutoDiscoveryException when the injector is configured for auto discovery, the type requested was not registered yet and discovery of the type and its dependencies failed
    */
-  <T> T getInstance(Type type, Object... qualifiers);
+  <T> T getInstance(Type type, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException;
 
   /**
    * Returns an instance of the given class matching the given criteria (if any) in
@@ -79,8 +81,9 @@ public interface InstanceResolver {
    * @throws NoSuchInstanceException when no matching instance was available or could be created
    * @throws MultipleInstancesException when multiple matching instances were available
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
+   * @throws AutoDiscoveryException when the injector is configured for auto discovery, the type requested was not registered yet and discovery of the type and its dependencies failed
    */
-  <T> T getInstance(Class<T> cls, Object... qualifiers);  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
+  <T> T getInstance(Class<T> cls, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException;  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
 
   /**
    * Returns all instances of the given {@link Type} matching the given criteria (if any) in
@@ -94,7 +97,7 @@ public interface InstanceResolver {
    * @return all instances of the given {@link Type} matching the given criteria (if any), never {@code null}, can be empty
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> List<T> getInstances(Type type, Object... qualifiers);
+  <T> List<T> getInstances(Type type, Object... qualifiers) throws InstanceCreationException;
 
   /**
    * Returns all instances of the given class matching the given criteria (if any) in
@@ -108,5 +111,5 @@ public interface InstanceResolver {
    * @return all instances of the given class matching the given criteria (if any), never {@code null}, can be empty
    * @throws InstanceCreationException when an error occurred during creation of a matching instance
    */
-  <T> List<T> getInstances(Class<T> cls, Object... qualifiers);
+  <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws InstanceCreationException;
 }

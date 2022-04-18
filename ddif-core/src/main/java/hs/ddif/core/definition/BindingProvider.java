@@ -1,6 +1,7 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.api.annotation.AnnotationStrategy;
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Types;
 
@@ -43,8 +44,9 @@ public class BindingProvider {
    * @param cls a {@link Class} to examine for bindings, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
    * @throws BindingException when an exception occurred while creating a binding
+   * @throws DefinitionException when a definition problem is encountered
    */
-  public List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) throws BindingException {
+  public List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) throws BindingException, DefinitionException {
     List<Binding> bindings = ofConstructor(constructor);
 
     bindings.addAll(ofMembers(cls));
@@ -69,8 +71,9 @@ public class BindingProvider {
    * @param cls a {@link Class} to examine for bindings, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}, but can be empty
    * @throws BindingException when an exception occurred while creating a binding
+   * @throws DefinitionException when a definition problem is encountered
    */
-  public List<Binding> ofMembers(Class<?> cls) throws BindingException {
+  public List<Binding> ofMembers(Class<?> cls) throws BindingException, DefinitionException {
     List<Binding> bindings = new ArrayList<>();
     Class<?> currentInjectableClass = cls;
     Map<TypeVariable<?>, Type> typeArguments = null;
@@ -157,8 +160,9 @@ public class BindingProvider {
    * @param cls a {@link Class}, cannot be {@code null}
    * @return a {@link Constructor} suitable for injection, never {@code null}
    * @throws BindingException when an exception occurred while creating a binding
+   * @throws DefinitionException when a definition problem is encountered
    */
-  public Constructor<?> getAnnotatedConstructor(Class<?> cls) throws BindingException {
+  public Constructor<?> getAnnotatedConstructor(Class<?> cls) throws BindingException, DefinitionException {
     return getConstructor(cls, true);
   }
 
@@ -170,12 +174,13 @@ public class BindingProvider {
    * @param cls a {@link Class}, cannot be {@code null}
    * @return a {@link Constructor} suitable for injection, never {@code null}
    * @throws BindingException when an exception occurred while creating a binding
+   * @throws DefinitionException when a definition problem is encountered
    */
-  public <T> Constructor<T> getConstructor(Class<T> cls) throws BindingException {
+  public <T> Constructor<T> getConstructor(Class<T> cls) throws BindingException, DefinitionException {
     return getConstructor(cls, false);
   }
 
-  private <T> Constructor<T> getConstructor(Class<T> cls, boolean annotatedOnly) throws BindingException {
+  private <T> Constructor<T> getConstructor(Class<T> cls, boolean annotatedOnly) throws BindingException, DefinitionException {
     Constructor<T> suitableConstructor = null;
     Constructor<T> defaultConstructor = null;
 

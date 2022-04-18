@@ -48,7 +48,7 @@ class DefaultInjectableFactory implements InjectableFactory {
   }
 
   @Override
-  public <T> Injectable<T> create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, Constructable<T> constructable) {
+  public <T> Injectable<T> create(Type ownerType, Member member, AnnotatedElement element, List<Binding> bindings, Constructable<T> constructable) throws DefinitionException {
     try {
       if(ownerType == null) {
         throw new IllegalArgumentException("ownerType cannot be null");
@@ -90,7 +90,7 @@ class DefaultInjectableFactory implements InjectableFactory {
     }
   }
 
-  private static Type extractType(Type ownerType, Member member, AnnotatedElement element) {
+  private static Type extractType(Type ownerType, Member member, AnnotatedElement element) throws DefinitionException {
     Map<TypeVariable<?>, Type> typeArguments = Types.getTypeArguments(ownerType, member.getDeclaringClass());
 
     if(typeArguments == null) {
