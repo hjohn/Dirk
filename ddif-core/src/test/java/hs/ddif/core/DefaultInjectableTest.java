@@ -1,12 +1,11 @@
 package hs.ddif.core;
 
 import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
-import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
+import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.injection.Constructable;
@@ -24,11 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
-import jakarta.inject.Singleton;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class DefaultInjectableTest {
-  private static final ScopeResolver SCOPE_RESOLVER = new SingletonScopeResolver(Singleton.class);
+  private static final ExtendedScopeResolver SCOPE_RESOLVER = mock(ExtendedScopeResolver.class);
 
   private final Binding binding1 = mock(Binding.class);
   private final Binding binding2 = mock(Binding.class);

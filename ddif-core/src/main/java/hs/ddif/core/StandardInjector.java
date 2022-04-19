@@ -57,14 +57,8 @@ public class StandardInjector implements Injector {
     Objects.requireNonNull(bindingProvider, "bindingProvider cannot be null");
     Objects.requireNonNull(lifeCycleCallbacksFactory, "lifeCycleCallbacksFactory cannot be null");
 
-    Class<? extends Annotation> singletonAnnotationClass = scopeResolvers.stream()
-      .filter(ScopeResolver::isSingleton)
-      .map(ScopeResolver::getAnnotationClass)
-      .findFirst()
-      .orElseThrow(() -> new IllegalArgumentException("scopeResolvers must contain a singleton ScopeResolver"));
-
     InjectableFactory injectableFactory = new DefaultInjectableFactory(
-      new ScopeResolverManager(scopeResolvers),
+      new ScopeResolverManager(scopeResolvers, strategy.getScopeStrategy().getDependentAnnotationClass()),
       strategy.getAnnotationStrategy(),
       strategy.getScopeStrategy(),
       typeExtensions.keySet()
@@ -83,7 +77,7 @@ public class StandardInjector implements Injector {
 
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap);
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, singletonAnnotationClass);
+    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, strategy.getScopeStrategy().getSingletonAnnotationClass());
 
     this.registry = new InjectableStoreCandidateRegistry(store, discovererFactory, instanceInjectableFactory);
     this.instanceResolver = new DefaultInstanceResolver(store, discovererFactory, new DefaultInstantiationContext(store, instantiatorBindingMap), instantiatorFactory);

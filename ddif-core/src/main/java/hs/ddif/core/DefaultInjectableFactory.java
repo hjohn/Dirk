@@ -3,10 +3,11 @@ package hs.ddif.core;
 import hs.ddif.api.annotation.AnnotationStrategy;
 import hs.ddif.api.annotation.ScopeStrategy;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.util.Annotations;
+import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
+import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.QualifiedType;
@@ -86,12 +87,18 @@ class DefaultInjectableFactory implements InjectableFactory {
         throw new DefinitionException(element, "cannot be registered as it conflicts with a TypeExtension for type: " + Types.raw(type));
       }
 
+      Class<? extends Annotation> scope = scopeStrategy.getScope(element);
+      ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(scope == null ? scopeStrategy.getDependentAnnotationClass() : scope);
+      boolean isPseudoScope = scopeStrategy.isPseudoScope(scopeResolver);
+
+      ExtendedScopeResolver extendedScopeResolver = new ExtendedScopeResolver(scopeResolver, isPseudoScope, scopeResolver.getAnnotationClass() == scopeStrategy.getDependentAnnotationClass());
+
       return new DefaultInjectable<>(
         ownerType,
         Types.getGenericSuperTypes(type).stream().filter(t -> !extendedTypes.contains(Types.raw(t))).collect(Collectors.toSet()),
         new QualifiedType(type, annotationStrategy.getQualifiers(element)),
         bindings,
-        scopeResolverManager.getScopeResolver(scopeStrategy.getScope(element) == null ? null : Annotations.of(scopeStrategy.getScope(element))),
+        extendedScopeResolver,
         element,
         constructable
       );

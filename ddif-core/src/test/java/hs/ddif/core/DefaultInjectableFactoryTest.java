@@ -10,6 +10,7 @@ import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.core.test.scope.TestScope;
 
 import java.lang.reflect.Field;
@@ -79,7 +80,7 @@ public class DefaultInjectableFactoryTest {
       Object.class
     );
     assertThat(injectable.getBindings()).isEqualTo(List.of());
-    assertThat(injectable.getScopeResolver()).isEqualTo(manager.getScopeResolver(null));
+    assertThat(injectable.getScopeResolver().getAnnotationClass()).isEqualTo(Dependent.class);
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class));
     assertThat(injectable.toString()).isEqualTo("Injectable[@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.DefaultInjectableFactoryTest$BookShop]");
   }
@@ -99,7 +100,7 @@ public class DefaultInjectableFactoryTest {
       Object.class
     );
     assertThat(injectable.getBindings()).isEqualTo(List.of());
-    assertThat(injectable.getScopeResolver()).isEqualTo(manager.getScopeResolver(Annotations.of(Singleton.class)));
+    assertThat(injectable.getScopeResolver().getAnnotationClass()).isEqualTo(Singleton.class);
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Green.class));
     assertThat(injectable.toString()).isEqualTo("Injectable[@hs.ddif.core.test.qualifiers.Green() hs.ddif.core.DefaultInjectableFactoryTest$BookShop <- public hs.ddif.core.DefaultInjectableFactoryTest$BookShop hs.ddif.core.DefaultInjectableFactoryTest$BookShopFactory.createBookShop()]");
   }
@@ -119,7 +120,7 @@ public class DefaultInjectableFactoryTest {
       Object.class
     );
     assertThat(injectable.getBindings()).isEqualTo(List.of());
-    assertThat(injectable.getScopeResolver()).isEqualTo(manager.getScopeResolver(Annotations.of(Singleton.class)));
+    assertThat(injectable.getScopeResolver().getAnnotationClass()).isEqualTo(Singleton.class);
     assertThat(injectable.getQualifiers()).isEmpty();
     assertThat(injectable.toString()).isEqualTo("Injectable[hs.ddif.core.DefaultInjectableFactoryTest$BookShop <- hs.ddif.core.DefaultInjectableFactoryTest$BookShop hs.ddif.core.DefaultInjectableFactoryTest$BookShopFactory.bookShop]");
   }

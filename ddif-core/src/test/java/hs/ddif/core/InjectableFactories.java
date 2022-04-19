@@ -17,6 +17,7 @@ import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.instantiation.TypeExtensions;
+import hs.ddif.core.test.scope.Dependent;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -30,7 +31,7 @@ import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
 
 public class InjectableFactories {
-  public static final ScopeStrategy SCOPE_STRATEGY = new SimpleScopeStrategy(Scope.class);
+  public static final ScopeStrategy SCOPE_STRATEGY = new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class);
   public static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
   public static final BindingProvider BINDING_PROVIDER = new BindingProvider(ANNOTATION_STRATEGY);
 
@@ -47,7 +48,7 @@ public class InjectableFactories {
   }
 
   public InjectableFactories() {
-    this(new ScopeResolverManager(List.of(new SingletonScopeResolver(Singleton.class))));
+    this(new ScopeResolverManager(List.of(new SingletonScopeResolver(Singleton.class)), Dependent.class));
   }
 
   public TypeExtensionStore getTypeExtensionStore() {
@@ -58,7 +59,7 @@ public class InjectableFactories {
     return scopeResolverManager;
   }
 
-  public ScopeResolver getScopeResolver(Annotation annotation) {
+  public ScopeResolver getScopeResolver(Class<? extends Annotation> annotation) {
     return scopeResolverManager.getScopeResolver(annotation);
   }
 

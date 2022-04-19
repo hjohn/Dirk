@@ -2,9 +2,9 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.api.instantiation.TypeTrait;
 import hs.ddif.api.instantiation.domain.Key;
-import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
+import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
@@ -26,8 +26,6 @@ import java.util.Set;
  * only injectables that can be fully resolved.
  */
 public class InjectableStore implements Resolver<Injectable<?>> {
-  private static final Class<Object> SINGLETON = Object.class;
-
   private final BindingManager bindingManager;
 
   /**
@@ -228,23 +226,21 @@ public class InjectableStore implements Resolver<Injectable<?>> {
   private static void ensureBindingScopeIsValid(Injectable<?> injectable, Injectable<?> dependentInjectable) {
 
     /*
-     * Perform scope check.  Having a dependency on a narrower scoped injectable would mean the injected
-     * dependency of narrower scope is not updated when the scope changes, resulting in unpredictable
-     * behaviour.
+     * Perform scope check.
      *
-     * Other frameworks solve this by injecting an adapter instead that relays calls to a specific instance
-     * of the dependency based on current scope.  As this is non-trivial a ScopeConflictException is
-     * thrown instead.
+     * The dependent injectable is injected into the given injectable.
+     *
+     * When the dependent injectable is a pseudo-scope, there is never any conflict.
+     * When both injectables have the same scope, there is never any conflict.
      */
 
-    ScopeResolver dependentScopeResolver = dependentInjectable.getScopeResolver();
-    ScopeResolver injectableScopeResolver = injectable.getScopeResolver();
+    ExtendedScopeResolver dependentScopeResolver = dependentInjectable.getScopeResolver();
+    ExtendedScopeResolver injectableScopeResolver = injectable.getScopeResolver();
 
-    Class<?> dependendentScopeAnnotation = dependentScopeResolver.isSingleton() ? SINGLETON : dependentScopeResolver.getAnnotationClass();
-    Class<?> injectableScopeAnnotation = injectableScopeResolver.isSingleton() ? SINGLETON : injectableScopeResolver.getAnnotationClass();
+    boolean needsProxy = !dependentScopeResolver.isPseudoScope() && dependentScopeResolver.getAnnotationClass() != injectableScopeResolver.getAnnotationClass();
 
-    if(isNarrowerScope(injectableScopeAnnotation, dependendentScopeAnnotation)) {
-      throw new ScopeConflictException(injectable + " is dependent on narrower scoped dependency: " + dependentInjectable.getType());
+    if(needsProxy) {
+      throw new ScopeConflictException("Type [" + injectable.getType() + "] with scope [" + injectableScopeResolver.getAnnotationClass() + "] is dependent on [" + dependentInjectable.getType() + "] with normal scope [" + dependentScopeResolver.getAnnotationClass() + "]; this requires the use of a provider");
     }
   }
 
@@ -306,14 +302,6 @@ public class InjectableStore implements Resolver<Injectable<?>> {
         }
       }
     }
-  }
-
-  private static boolean isNarrowerScope(Class<?> scope, Class<?> dependencyScope) {
-    if(scope == null || dependencyScope == null) {
-      return false;
-    }
-
-    return !dependencyScope.equals(SINGLETON) && !scope.equals(dependencyScope);
   }
 
   /**

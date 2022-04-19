@@ -192,9 +192,7 @@ class DefaultInstantiationContext implements InstantiationContext {
     private List<Injection> injections;
 
     LazyCreationalContext(LazyCreationalContext<?> parent, Injectable<T> injectable) {
-      boolean dependent = injectable.getScopeResolver().getAnnotationClass() == null;  // TODO this won't work if the dependent scope has an annotation associated with it
-
-      this.parent = dependent ? parent : null;
+      this.parent = injectable.getScopeResolver().isDependentScope() ? parent : null;
       this.injectable = injectable;
     }
 
