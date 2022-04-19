@@ -114,20 +114,20 @@ public class InjectorScopeTest {
       injector.register(TestScopedBean.class);
       injector.register(SomeUserBean.class);
 
-      TestScopedBean testScopedBean1 = injector.getInstance(SomeUserBean.class).testScopedBean;
-      TestScopedBean testScopedBean2 = injector.getInstance(SomeUserBean.class).testScopedBean;
+      TestScopedBean testScopedBean1 = injector.getInstance(SomeUserBean.class).testScopedBean.get();
+      TestScopedBean testScopedBean2 = injector.getInstance(SomeUserBean.class).testScopedBean.get();
 
       scopeResolver.currentScope = "a";
 
-      TestScopedBean testScopedBean3 = injector.getInstance(SomeUserBean.class).testScopedBean;
+      TestScopedBean testScopedBean3 = injector.getInstance(SomeUserBean.class).testScopedBean.get();
 
       scopeResolver.currentScope = "b";
 
-      TestScopedBean testScopedBean4 = injector.getInstance(SomeUserBean.class).testScopedBean;
+      TestScopedBean testScopedBean4 = injector.getInstance(SomeUserBean.class).testScopedBean.get();
 
       scopeResolver.currentScope = "a";
 
-      TestScopedBean testScopedBean5 = injector.getInstance(SomeUserBean.class).testScopedBean;
+      TestScopedBean testScopedBean5 = injector.getInstance(SomeUserBean.class).testScopedBean.get();
 
       assertEquals(testScopedBean1, testScopedBean2);
       assertEquals(testScopedBean3, testScopedBean5);
@@ -322,7 +322,7 @@ public class InjectorScopeTest {
   }
 
   public static class SomeUserBean {
-    @Inject TestScopedBean testScopedBean;
+    @Inject Provider<TestScopedBean> testScopedBean;
   }
 
   @TestScope

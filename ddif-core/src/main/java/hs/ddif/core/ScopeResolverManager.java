@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Manages {@link ScopeResolver}s.
@@ -23,8 +24,9 @@ class ScopeResolverManager {
    * Constructs a new instance.
    *
    * @param scopeResolvers a list of {@link ScopeResolver}, cannot be {@code null} but can be empty
+   * @param dependentAnnotationClass a dependent scope annotation {@link Class}, cannot be {@code null}
    */
-  public ScopeResolverManager(List<ScopeResolver> scopeResolvers) {
+  public ScopeResolverManager(List<ScopeResolver> scopeResolvers, Class<? extends Annotation> dependentAnnotationClass) {
     for(ScopeResolver scopeResolver : scopeResolvers) {
       if(scopeResolver.getAnnotationClass() == null) {
         throw new IllegalArgumentException("scopeResolvers cannot have a null annotation class: " + scopeResolver);
@@ -37,7 +39,7 @@ class ScopeResolverManager {
       }
     }
 
-    scopeResolversByAnnotation.put(null, new NullScopeResolver());
+    scopeResolversByAnnotation.put(Objects.requireNonNull(dependentAnnotationClass, "dependentAnnotationClass"), new DependentScopeResolver(dependentAnnotationClass));
   }
 
   /**
@@ -47,8 +49,8 @@ class ScopeResolverManager {
    * @param scope a scope {@link Annotation}, can be {@code null}
    * @return a {@link ScopeResolver}, never {@code null}
    */
-  public ScopeResolver getScopeResolver(Annotation scope) {
-    ScopeResolver scopeResolver = scopeResolversByAnnotation.get(scope == null ? null : scope.annotationType());
+  public ScopeResolver getScopeResolver(Class<? extends Annotation> scope) {
+    ScopeResolver scopeResolver = scopeResolversByAnnotation.get(scope);
 
     if(scopeResolver == null) {
       throw new UnknownScopeException("Unknown scope encountered: " + scope);
@@ -57,10 +59,16 @@ class ScopeResolverManager {
     return scopeResolver;
   }
 
-  private static class NullScopeResolver implements ScopeResolver {
+  private static class DependentScopeResolver implements ScopeResolver {
+    private final Class<? extends Annotation> dependentAnnotationClass;
+
+    DependentScopeResolver(Class<? extends Annotation> dependentAnnotationClass) {
+      this.dependentAnnotationClass = dependentAnnotationClass;
+    }
+
     @Override
     public Class<? extends Annotation> getAnnotationClass() {
-      return null;
+      return dependentAnnotationClass;
     }
 
     @Override

@@ -19,6 +19,7 @@ import hs.ddif.core.config.SetTypeExtension;
 import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.definition.BindingProvider;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +36,6 @@ import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
-import jakarta.inject.Singleton;
 
 public class InjectorBuilder {
   private static final Method PROVIDER_METHOD;
@@ -207,8 +207,9 @@ public class InjectorBuilder {
     }
 
     public Injector build() {
-      List<ScopeResolver> scopeResolvers = context.scopeResolvers.stream().anyMatch(ScopeResolver::isSingleton) ? context.scopeResolvers
-        : Stream.concat(context.scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(Singleton.class))).collect(Collectors.toList());
+      Class<? extends Annotation> singletonAnnotationClass = context.injectorStrategy.getScopeStrategy().getSingletonAnnotationClass();
+      List<ScopeResolver> scopeResolvers = context.scopeResolvers.stream().anyMatch(sr -> sr.getAnnotationClass() == singletonAnnotationClass) ? context.scopeResolvers
+        : Stream.concat(context.scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(singletonAnnotationClass))).collect(Collectors.toList());
 
       return new StandardInjector(context.typeExtensions, context.discoveryExtensions, scopeResolvers, context.injectorStrategy, context.bindingProvider, context.lifeCycleCallbacksFactory, context.autoDiscovery);
     }

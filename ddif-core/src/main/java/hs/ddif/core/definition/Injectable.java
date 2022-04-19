@@ -1,6 +1,5 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.core.definition.injection.Constructable;
 
 import java.lang.annotation.Annotation;
@@ -52,9 +51,9 @@ public interface Injectable<T> extends Constructable<T> {
   List<Binding> getBindings();
 
   /**
-   * Returns the {@link ScopeResolver} of this {@link Injectable}.
+   * Returns the {@link ExtendedScopeResolver} of this {@link Injectable}.
    *
-   * @return the {@link ScopeResolver} of this {@link Injectable}, never {@code null}
+   * @return the {@link ExtendedScopeResolver} of this {@link Injectable}, never {@code null}
    */
-  ScopeResolver getScopeResolver();
+  ExtendedScopeResolver getScopeResolver();
 }

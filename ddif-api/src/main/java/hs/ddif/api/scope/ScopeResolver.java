@@ -11,7 +11,7 @@ public interface ScopeResolver {
    * Returns the annotation this resolver handles. Returns {@code null} when
    * the handler handles unscoped injectables.
    *
-   * @return the annotation this resolver handles, can be {@code null}
+   * @return the annotation this resolver handles, never {@code null}
    */
   Class<? extends Annotation> getAnnotationClass();
 
@@ -42,12 +42,4 @@ public interface ScopeResolver {
    */
   void remove(Object key);
 
-  /**
-   * Checks if this scope resolver represents a singleton scope.
-   *
-   * @return {@code true} if this scope resolver represents a singleton scope, otherwise {@code false}
-   */
-  default boolean isSingleton() {
-    return false;
-  }
 }

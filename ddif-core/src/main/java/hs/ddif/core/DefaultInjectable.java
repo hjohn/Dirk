@@ -1,8 +1,8 @@
 package hs.ddif.core;
 
 import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.core.definition.Binding;
+import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.injection.Constructable;
@@ -26,7 +26,7 @@ final class DefaultInjectable<T> implements Injectable<T> {
   private final Set<Type> types;
   private final QualifiedType qualifiedType;
   private final List<Binding> bindings;
-  private final ScopeResolver scopeResolver;
+  private final ExtendedScopeResolver scopeResolver;
   private final Object discriminator;
   private final Constructable<T> constructable;
   private final int hashCode;
@@ -38,11 +38,11 @@ final class DefaultInjectable<T> implements Injectable<T> {
    * @param types a set of {@link Type} of this injectable, cannot be {@code null} or contain {@code null}s
    * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
    * @param bindings a list of {@link Binding}s, cannot be {@code null} or contain {@code null}s, but can be empty
-   * @param scopeResolver a {@link ScopeResolver}, cannot be {@code null}
+   * @param scopeResolver an {@link ExtendedScopeResolver}, cannot be {@code null}
    * @param discriminator an object to serve as a discriminator for similar injectables, can be {@code null}
    * @param constructable a {@link Constructable}, cannot be {@code null}
    */
-  DefaultInjectable(Type ownerType, Set<Type> types, QualifiedType qualifiedType, List<Binding> bindings, ScopeResolver scopeResolver, Object discriminator, Constructable<T> constructable) {
+  DefaultInjectable(Type ownerType, Set<Type> types, QualifiedType qualifiedType, List<Binding> bindings, ExtendedScopeResolver scopeResolver, Object discriminator, Constructable<T> constructable) {
     if(ownerType == null) {
       throw new IllegalArgumentException("ownerType cannot be null");
     }
@@ -100,7 +100,7 @@ final class DefaultInjectable<T> implements Injectable<T> {
   }
 
   @Override
-  public ScopeResolver getScopeResolver() {
+  public ExtendedScopeResolver getScopeResolver() {
     return scopeResolver;
   }
 

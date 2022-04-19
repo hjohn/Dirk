@@ -1,6 +1,5 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.api.util.Annotations;
 import hs.ddif.core.InjectableFactories;
 
 import java.util.List;
@@ -30,7 +29,7 @@ public class InstanceInjectableFactoryTest {
 
     assertThat(injectable.getType()).isEqualTo(String.class);
     assertThat(injectable.getBindings()).isEmpty();
-    assertThat(injectable.getScopeResolver()).isEqualTo(injectableFactories.getScopeResolver(Annotations.of(Singleton.class)));
+    assertThat(injectable.getScopeResolver().getAnnotationClass()).isEqualTo(Singleton.class);
     assertThat(injectable.create(List.of())).isEqualTo("Hello World");
   }
 }

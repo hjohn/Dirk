@@ -29,9 +29,4 @@ public class SingletonScopeResolver extends AbstractScopeResolver<String> {
   protected String getCurrentScope() {
     return "singleton";
   }
-
-  @Override
-  public boolean isSingleton() {
-    return true;
-  }
 }

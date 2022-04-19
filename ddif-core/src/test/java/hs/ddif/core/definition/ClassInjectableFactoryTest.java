@@ -1,9 +1,9 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.util.Annotations;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
 
@@ -32,14 +32,14 @@ public class ClassInjectableFactoryTest {
 
     assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
-    assertEquals(injectableFactories.getScopeResolver(Annotations.of(Singleton.class)), injectable.getScopeResolver());
+    assertEquals(Singleton.class, injectable.getScopeResolver().getAnnotationClass());
     assertThat(injectable.getBindings()).hasSize(0);
 
     Injectable<ClassWithDependencies> injectable2 = factory.create(ClassWithDependencies.class);
 
     assertEquals(ClassWithDependencies.class, injectable2.getType());
     assertEquals(Collections.singleton(ClassWithDependencies.class.getAnnotation(Red.class)), injectable2.getQualifiers());
-    assertEquals(injectableFactories.getScopeResolver(null), injectable2.getScopeResolver());
+    assertEquals(Dependent.class, injectable2.getScopeResolver().getAnnotationClass());
     assertThat(injectable2.getBindings()).hasSize(4);
 
     ClassWithDependencies instance = injectable2.create(Bindings.resolve(injectable2.getBindings(), 2, 4L, null, "a string"));

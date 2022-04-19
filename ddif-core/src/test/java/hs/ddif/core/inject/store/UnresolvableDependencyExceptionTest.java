@@ -42,12 +42,12 @@ public class UnresolvableDependencyExceptionTest {
     e = new UnresolvableDependencyException(
       new Key(Double.class, Set.of(Annotations.of(Red.class))),
       bindings.stream().filter(b -> Types.isAssignable(b.getType(), Double.class)).findFirst().get(),
-      Set.of(Injectables.create(), Injectables.create())
+      Set.of(Injectables.create("1"), Injectables.create("2"))
     );
 
     assertThat(e)
       .hasMessageStartingWith("Multiple candidates for dependency [@hs.ddif.core.test.qualifiers.Red() java.lang.Double] required for Field [")
-      .hasMessageEndingWith(": [Injectable(String.class), Injectable(String.class)]");
+      .hasMessageEndingWith(": [Injectable[java.lang.String], Injectable[java.lang.String]]");
 
     e = new UnresolvableDependencyException(
       new Key(Long.class),

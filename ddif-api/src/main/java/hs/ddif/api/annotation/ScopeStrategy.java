@@ -12,6 +12,21 @@ import java.lang.reflect.AnnotatedElement;
 public interface ScopeStrategy {
 
   /**
+   * Returns the annotation for the dependent pseudo-scope. Objects without
+   * a scope annotation will get this scope as their scope.
+   *
+   * @return an annotation class, can be {@code null}
+   */
+  Class<? extends Annotation> getDependentAnnotationClass();
+
+  /**
+   * Returns the annotation that marks the singleton pseudo-scope.
+   *
+   * @return an annotation class, never {@code null}
+   */
+  Class<? extends Annotation> getSingletonAnnotationClass();
+
+  /**
    * Returns the scope annotation on the given {@link AnnotatedElement}, if any.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
@@ -20,4 +35,11 @@ public interface ScopeStrategy {
    */
   Class<? extends Annotation> getScope(AnnotatedElement element) throws DefinitionException;
 
+  /**
+   * Returns whether the given {@link ScopeResolver} is handling a pseudo-scope.
+   *
+   * @param scopeResolver a {@link ScopeResolver}, cannot be {@code null}
+   * @return {@code true} if the given {@link ScopeResolver} is handling a pseudo-scope, otherwise {@code false}
+   */
+  boolean isPseudoScope(ScopeResolver scopeResolver);
 }

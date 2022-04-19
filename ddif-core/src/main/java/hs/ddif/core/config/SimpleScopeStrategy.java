@@ -17,14 +17,35 @@ import java.util.stream.Collectors;
  */
 public class SimpleScopeStrategy implements ScopeStrategy {
   private final Class<? extends Annotation> scopeAnnotationClass;
+  private final Class<? extends Annotation> singletonAnnotationClass;
+  private final Class<? extends Annotation> dependentAnnotationClass;
 
   /**
    * Constructs a new instance.
    *
    * @param scopeAnnotationClass an annotation {@link Class} to use for identifying scope annotations, cannot be {@code null}
+   * @param singletonAnnotationClass an annotation {@link Class} which indicates singletons, cannot be {@code null}
+   * @param dependentAnnotationClass an annotation {@link Class} which indicates dependent scoped objects, cannot be {@code null}
    */
-  public SimpleScopeStrategy(Class<? extends Annotation> scopeAnnotationClass) {
+  public SimpleScopeStrategy(Class<? extends Annotation> scopeAnnotationClass, Class<? extends Annotation> singletonAnnotationClass, Class<? extends Annotation> dependentAnnotationClass) {
     this.scopeAnnotationClass = Objects.requireNonNull(scopeAnnotationClass, "scopeAnnotationClass");
+    this.singletonAnnotationClass = Objects.requireNonNull(singletonAnnotationClass, "singletonAnnotationClass");
+    this.dependentAnnotationClass = Objects.requireNonNull(dependentAnnotationClass, "dependentAnnotationClass");
+  }
+
+  @Override
+  public boolean isPseudoScope(ScopeResolver scopeResolver) {
+    return scopeResolver.getAnnotationClass() == singletonAnnotationClass || scopeResolver.getAnnotationClass() == dependentAnnotationClass;
+  }
+
+  @Override
+  public Class<? extends Annotation> getDependentAnnotationClass() {
+    return dependentAnnotationClass;
+  }
+
+  @Override
+  public Class<? extends Annotation> getSingletonAnnotationClass() {
+    return singletonAnnotationClass;
   }
 
   @Override

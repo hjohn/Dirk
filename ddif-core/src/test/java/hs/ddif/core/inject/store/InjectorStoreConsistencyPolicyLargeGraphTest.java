@@ -3,12 +3,11 @@ package hs.ddif.core.inject.store;
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.instantiation.InstantiatorFactory;
 import hs.ddif.api.instantiation.domain.Key;
-import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.InstantiatorFactories;
-import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
+import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.injection.Injection;
@@ -26,10 +25,11 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import static org.mockito.Mockito.mock;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
 
 public class InjectorStoreConsistencyPolicyLargeGraphTest {
   private final Random rnd = new Random(4);
@@ -42,7 +42,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
     List<Injectable<?>> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
-    ScopeResolver scopeResolver = new SingletonScopeResolver(Singleton.class);
+    ExtendedScopeResolver scopeResolver = mock(ExtendedScopeResolver.class);
 
     for(int i = 0; i < 10000; i++) {
       store.checkInvariants();
@@ -80,7 +80,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
         }
 
         @Override
-        public ScopeResolver getScopeResolver() {
+        public ExtendedScopeResolver getScopeResolver() {
           return scopeResolver;
         }
 
