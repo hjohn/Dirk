@@ -45,15 +45,6 @@ public interface AnnotationStrategy {
   Set<Annotation> getQualifiers(AnnotatedElement element);
 
   /**
-   * Returns the scope annotation on the given {@link AnnotatedElement}.
-   *
-   * @param element an {@link AnnotatedElement}, cannot be {@code null}
-   * @return an {@link Annotation}, or {@code null} for the default scope
-   * @throws DefinitionException when the strategy detects an annotation problem
-   */
-  Annotation getScope(AnnotatedElement element) throws DefinitionException;
-
-  /**
    * Checks if the given {@link Annotation} is a qualifier annotation. This means it
    * is meta annotated by one of the configured qualifier annotations.
    *

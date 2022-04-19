@@ -1,7 +1,9 @@
 package hs.ddif.core;
 
 import hs.ddif.api.annotation.AnnotationStrategy;
+import hs.ddif.api.annotation.ScopeStrategy;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 class DefaultInjectableFactory implements InjectableFactory {
   private final ScopeResolverManager scopeResolverManager;
   private final AnnotationStrategy annotationStrategy;
+  private final ScopeStrategy scopeStrategy;
   private final Set<Class<?>> extendedTypes;
 
   /**
@@ -39,11 +42,13 @@ class DefaultInjectableFactory implements InjectableFactory {
    *
    * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
    * @param annotationStrategy a {@link AnnotationStrategy}, cannot be {@code null}
+   * @param scopeStrategy a {@link ScopeStrategy}, cannot be {@code null}
    * @param extendedTypes a set of {@link Class} for which type extensions are in use, cannot be {@code null} or contain {@code null} but can be empty
    */
-  DefaultInjectableFactory(ScopeResolverManager scopeResolverManager, AnnotationStrategy annotationStrategy, Set<Class<?>> extendedTypes) {
+  DefaultInjectableFactory(ScopeResolverManager scopeResolverManager, AnnotationStrategy annotationStrategy, ScopeStrategy scopeStrategy, Set<Class<?>> extendedTypes) {
     this.scopeResolverManager = Objects.requireNonNull(scopeResolverManager, "scopeResolverManager cannot be null");
     this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy cannot be null");
+    this.scopeStrategy = Objects.requireNonNull(scopeStrategy, "scopeStrategy cannot be null");
     this.extendedTypes = Objects.requireNonNull(extendedTypes, "extendedTypes cannot be null");
   }
 
@@ -69,6 +74,12 @@ class DefaultInjectableFactory implements InjectableFactory {
         throw new DefinitionException(element, "should not have an inject annotation, but found: " + injectAnnotations.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()));
       }
 
+      for(Binding binding : bindings) {
+        if(binding.getAnnotatedElement() != null && scopeStrategy.getScope(binding.getAnnotatedElement()) != null) {
+          throw new DefinitionException(binding.getAnnotatedElement(), "should not have a scope annotation, but found: " + scopeStrategy.getScope(binding.getAnnotatedElement()));
+        }
+      }
+
       Type type = member == null ? ownerType : extractType(ownerType, member, element);
 
       if(extendedTypes.contains(Types.raw(type))) {
@@ -80,7 +91,7 @@ class DefaultInjectableFactory implements InjectableFactory {
         Types.getGenericSuperTypes(type).stream().filter(t -> !extendedTypes.contains(Types.raw(t))).collect(Collectors.toSet()),
         new QualifiedType(type, annotationStrategy.getQualifiers(element)),
         bindings,
-        scopeResolverManager.getScopeResolver(annotationStrategy.getScope(element)),
+        scopeResolverManager.getScopeResolver(scopeStrategy.getScope(element) == null ? null : Annotations.of(scopeStrategy.getScope(element))),
         element,
         constructable
       );

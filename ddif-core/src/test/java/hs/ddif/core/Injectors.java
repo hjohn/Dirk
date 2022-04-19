@@ -9,8 +9,10 @@ import hs.ddif.api.definition.LifeCycleCallbacksFactory;
 import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
+import hs.ddif.core.config.DefaultInjectorStrategy;
 import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.config.ProviderDiscoveryExtension;
+import hs.ddif.core.config.SimpleScopeStrategy;
 import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.instantiation.TypeExtensions;
@@ -34,7 +36,7 @@ import jakarta.inject.Singleton;
  * Factory for {@link Injector}s of various types.
  */
 public class Injectors {
-  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, Opt.class);
+  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
   private static final Method PROVIDER_METHOD;
 
   static {
@@ -79,7 +81,7 @@ public class Injectors {
       TypeExtensions.create(ANNOTATION_STRATEGY),
       createDiscoveryExtensions(),
       finalScopeResolvers,
-      ANNOTATION_STRATEGY,
+      new DefaultInjectorStrategy(ANNOTATION_STRATEGY, new SimpleScopeStrategy(Scope.class)),
       bindingProvider,
       lifeCycleCallbacksFactory,
       autoDiscovering

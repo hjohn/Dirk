@@ -3,13 +3,14 @@ package hs.ddif.core;
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
-import hs.ddif.api.annotation.AnnotationStrategy;
+import hs.ddif.api.annotation.InjectorStrategy;
 import hs.ddif.api.definition.DiscoveryExtension;
 import hs.ddif.api.definition.LifeCycleCallbacksFactory;
 import hs.ddif.api.instantiation.TypeExtension;
 import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
+import hs.ddif.core.config.DefaultInjectorStrategy;
 import hs.ddif.core.config.ListTypeExtension;
 import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.config.ProviderDiscoveryExtension;
@@ -34,7 +35,6 @@ import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
-import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
 
 public class InjectorBuilder {
@@ -55,24 +55,24 @@ public class InjectorBuilder {
 
   public static class Builder {
 
-    public Builder1 annotationStrategy(AnnotationStrategy annotationStrategy) {
-      return new Builder1(annotationStrategy);
+    public Builder1 injectorStrategy(InjectorStrategy injectorStrategy) {
+      return new Builder1(injectorStrategy);
     }
 
-    public Builder1 defaultAnnotationStrategy() {
-      return new Builder1(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, Opt.class));
+    public Builder1 defaultInjectorStrategy() {
+      return new Builder1(new DefaultInjectorStrategy(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class), InjectableFactories.SCOPE_STRATEGY));
     }
 
     public Builder4 manual() {
-      return defaultAnnotationStrategy().defaultScopeResolvers().defaultLifeCycleCallbacksFactory().manual();
+      return defaultInjectorStrategy().defaultScopeResolvers().defaultLifeCycleCallbacksFactory().manual();
     }
   }
 
   public static class Context1 {
-    public final AnnotationStrategy annotationStrategy;
+    public final InjectorStrategy injectorStrategy;
 
-    Context1(AnnotationStrategy annotationStrategy) {
-      this.annotationStrategy = annotationStrategy;
+    Context1(InjectorStrategy injectorStrategy) {
+      this.injectorStrategy = injectorStrategy;
     }
   }
 
@@ -81,7 +81,7 @@ public class InjectorBuilder {
     public final List<ScopeResolver> scopeResolvers;
 
     Context2(Context1 context, List<ScopeResolver> scopeResolvers, Map<Class<?>, TypeExtension<?>> typeExtensions) {
-      super(context.annotationStrategy);
+      super(context.injectorStrategy);
 
       this.scopeResolvers = scopeResolvers;
       this.typeExtensions = Collections.unmodifiableMap(new HashMap<>(typeExtensions));
@@ -123,8 +123,8 @@ public class InjectorBuilder {
   public static class Builder1 {
     private final Context1 context;
 
-    Builder1(AnnotationStrategy annotationStrategy) {
-      this.context = new Context1(annotationStrategy);
+    Builder1(InjectorStrategy injectorStrategy) {
+      this.context = new Context1(injectorStrategy);
     }
 
     public Builder2 scopeResolvers(Function<Context1, List<ScopeResolver>> callback) {
@@ -142,8 +142,8 @@ public class InjectorBuilder {
     Builder2(Context1 context, List<ScopeResolver> scopeResolvers) {
       Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
 
-      typeExtensions.put(List.class, new ListTypeExtension<>(context.annotationStrategy));
-      typeExtensions.put(Set.class, new SetTypeExtension<>(context.annotationStrategy));
+      typeExtensions.put(List.class, new ListTypeExtension<>(context.injectorStrategy.getAnnotationStrategy()));
+      typeExtensions.put(Set.class, new SetTypeExtension<>(context.injectorStrategy.getAnnotationStrategy()));
       typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
 
       this.context = new Context2(context, scopeResolvers, typeExtensions);
@@ -151,13 +151,13 @@ public class InjectorBuilder {
 
     public Builder3 lifeCycleCallbacksFactory(Function<Context2, LifeCycleCallbacksFactory> callback) {
       LifeCycleCallbacksFactory lifeCycleCallbacksFactory = callback.apply(context);
-      BindingProvider bindingProvider = new BindingProvider(context.annotationStrategy);
+      BindingProvider bindingProvider = new BindingProvider(context.injectorStrategy.getAnnotationStrategy());
 
       return new Builder3(context, lifeCycleCallbacksFactory, bindingProvider);
     }
 
     public Builder3 defaultLifeCycleCallbacksFactory() {
-      return lifeCycleCallbacksFactory(context -> new AnnotationBasedLifeCycleCallbacksFactory(context.annotationStrategy, PostConstruct.class, PreDestroy.class));
+      return lifeCycleCallbacksFactory(context -> new AnnotationBasedLifeCycleCallbacksFactory(context.injectorStrategy.getAnnotationStrategy(), PostConstruct.class, PreDestroy.class));
     }
   }
 
@@ -210,7 +210,7 @@ public class InjectorBuilder {
       List<ScopeResolver> scopeResolvers = context.scopeResolvers.stream().anyMatch(ScopeResolver::isSingleton) ? context.scopeResolvers
         : Stream.concat(context.scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(Singleton.class))).collect(Collectors.toList());
 
-      return new StandardInjector(context.typeExtensions, context.discoveryExtensions, scopeResolvers, context.annotationStrategy, context.bindingProvider, context.lifeCycleCallbacksFactory, context.autoDiscovery);
+      return new StandardInjector(context.typeExtensions, context.discoveryExtensions, scopeResolvers, context.injectorStrategy, context.bindingProvider, context.lifeCycleCallbacksFactory, context.autoDiscovery);
     }
   }
 }
