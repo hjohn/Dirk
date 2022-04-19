@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
  * through bindings when gathering injectables for a {@link Type}.
  */
 class DefaultDiscovererFactory implements DiscovererFactory {
-  private static final Map<Type, List<Injectable<?>>> DERIVED_INJECTABLES = new WeakHashMap<>();
   private static final Discoverer EMPTY = new Discoverer() {
     @Override
     public Set<Injectable<?>> discover() {
@@ -48,6 +47,13 @@ class DefaultDiscovererFactory implements DiscovererFactory {
       return List.of();
     }
   };
+
+  /**
+   * Contains a cache of injectables derived with the given {@link DiscoveryExtension}s.
+   * This must not be static as then it would be shared among multiple injectors which
+   * may have a different set of extensions configured.
+   */
+  private final Map<Type, List<Injectable<?>>> derivedInjectables = new WeakHashMap<>();
 
   private final boolean autoDiscovery;
   private final List<DiscoveryExtension> extensions;
@@ -222,7 +228,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
       for(Type type : visitTypes) {
         if(visitedTypes.add(type)) {
-          if(!DERIVED_INJECTABLES.containsKey(type)) {
+          if(!derivedInjectables.containsKey(type)) {
             DerivedRegistry registry = new DerivedRegistry();
 
             for(DiscoveryExtension injectableExtension : extensions) {
@@ -230,10 +236,10 @@ class DefaultDiscovererFactory implements DiscovererFactory {
               injectableExtension.deriveTypes(registry, type);
             }
 
-            DERIVED_INJECTABLES.put(type, registry.derivedInjectables);
+            derivedInjectables.put(type, registry.derivedInjectables);
           }
 
-          extensionDiscoveries.addAll(DERIVED_INJECTABLES.get(type));
+          extensionDiscoveries.addAll(derivedInjectables.get(type));
         }
       }
 
