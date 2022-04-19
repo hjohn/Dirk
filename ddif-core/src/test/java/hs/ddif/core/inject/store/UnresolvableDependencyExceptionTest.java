@@ -21,11 +21,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Qualifier;
-import jakarta.inject.Scope;
 
 public class UnresolvableDependencyExceptionTest {
   private final ClassInjectableFactory classInjectableFactory = new InjectableFactories().forClass();
-  private final BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, null));
+  private final BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, null));
 
   @Test
   void constructorShouldAcceptValidParameters() throws Exception {

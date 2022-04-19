@@ -11,11 +11,13 @@ import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.core.StandardInjector;
 import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
+import hs.ddif.core.config.DefaultInjectorStrategy;
 import hs.ddif.core.config.ListTypeExtension;
 import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.config.ProviderDiscoveryExtension;
 import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
+import hs.ddif.core.config.SimpleScopeStrategy;
 import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.util.Classes;
@@ -44,7 +46,7 @@ import javax.inject.Singleton;
  */
 public class Injectors {
   private static final Logger LOGGER = Logger.getLogger(Injectors.class.getName());
-  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, Opt.class);
+  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
   private static final Method PROVIDER_METHOD;
 
   static {
@@ -89,7 +91,7 @@ public class Injectors {
       createTypeExtensions(),
       createDiscoveryExtensions(bindingProvider, lifeCycleCallbacksFactory),
       finalScopeResolvers,
-      ANNOTATION_STRATEGY,
+      new DefaultInjectorStrategy(ANNOTATION_STRATEGY, new SimpleScopeStrategy(Scope.class)),
       bindingProvider,
       lifeCycleCallbacksFactory,
       autoDiscovering

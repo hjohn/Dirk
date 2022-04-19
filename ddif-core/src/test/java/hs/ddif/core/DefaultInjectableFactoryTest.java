@@ -4,6 +4,7 @@ import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
+import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -28,7 +31,7 @@ import jakarta.inject.Singleton;
 
 public class DefaultInjectableFactoryTest {
   private final ScopeResolverManager manager = ScopeResolverManagers.create();
-  private final DefaultInjectableFactory factory = new DefaultInjectableFactory(manager, InjectableFactories.ANNOTATION_STRATEGY, Set.of(Provider.class, List.class, Set.class));
+  private final DefaultInjectableFactory factory = new DefaultInjectableFactory(manager, InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, Set.of(Provider.class, List.class, Set.class));
   private final Constructable<BookShop> constructable = new Constructable<>() {
     @Override
     public BookShop create(List<Injection> injections) {
@@ -42,17 +45,22 @@ public class DefaultInjectableFactoryTest {
 
   @Test
   void constructorShouldRejectInvalidParameters() {
-    assertThatThrownBy(() -> new DefaultInjectableFactory(null, InjectableFactories.ANNOTATION_STRATEGY, Set.of()))
+    assertThatThrownBy(() -> new DefaultInjectableFactory(null, InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, Set.of()))
       .isExactlyInstanceOf(NullPointerException.class)
       .hasMessage("scopeResolverManager cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectableFactory(manager, null, Set.of()))
+    assertThatThrownBy(() -> new DefaultInjectableFactory(manager, null, InjectableFactories.SCOPE_STRATEGY, Set.of()))
       .isExactlyInstanceOf(NullPointerException.class)
       .hasMessage("annotationStrategy cannot be null")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectableFactory(manager,  InjectableFactories.ANNOTATION_STRATEGY, null))
+    assertThatThrownBy(() -> new DefaultInjectableFactory(manager, InjectableFactories.ANNOTATION_STRATEGY, null, Set.of()))
+      .isExactlyInstanceOf(NullPointerException.class)
+      .hasMessage("scopeStrategy cannot be null")
+      .hasNoCause();
+
+    assertThatThrownBy(() -> new DefaultInjectableFactory(manager,  InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, null))
       .isExactlyInstanceOf(NullPointerException.class)
       .hasMessage("extendedTypes cannot be null")
       .hasNoCause();
@@ -165,6 +173,20 @@ public class DefaultInjectableFactoryTest {
   }
 
   @Test
+  void createShouldRejectBindingsWithScopeAnnotation() throws Exception {
+    Binding binding1 = mock(Binding.class);
+    Binding binding2 = mock(Binding.class);
+
+    when(binding1.getAnnotatedElement()).thenReturn(IllegallyScopeAnnotated.class.getDeclaredField("test"));
+    when(binding2.getAnnotatedElement()).thenReturn(IllegallyScopeAnnotated.class.getDeclaredField("test2"));
+
+    assertThatThrownBy(() -> factory.create(IllegallyScopeAnnotated.class, null, IllegallyScopeAnnotated.class, List.of(binding1, binding2), constructable))
+      .isExactlyInstanceOf(DefinitionException.class)
+      .hasMessage("Field [private java.lang.String hs.ddif.core.DefaultInjectableFactoryTest$IllegallyScopeAnnotated.test2] should not have a scope annotation, but found: interface jakarta.inject.Singleton")
+      .hasNoCause();
+  }
+
+  @Test
   void createShouldRejectBaseTypesWhichAreProvidedByTypeExtensions() {
     assertThatThrownBy(() -> factory.create(Provider.class, null, Provider.class, List.of(), constructable))
       .isExactlyInstanceOf(DefinitionException.class)
@@ -234,6 +256,11 @@ public class DefaultInjectableFactoryTest {
     String producerMethod() {
       return "";
     }
+  }
+
+  static class IllegallyScopeAnnotated {
+    @Inject private String test;
+    @Inject @Singleton private String test2;
   }
 
   static class UnresolvableProducer<T> {

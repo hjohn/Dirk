@@ -1,7 +1,6 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
@@ -24,14 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
-import jakarta.inject.Scope;
-import jakarta.inject.Singleton;
 
 public class BindingProviderTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation GREEN = Annotations.of(Green.class);
 
-  private BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Scope.class, null));
+  private BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, null));
 
   @Test
   public void ofMembersShouldBindToGenericFieldInSubclass() throws Exception {
@@ -148,14 +145,6 @@ public class BindingProviderTest {
       );
   }
 
-  @Test
-  public void ofMembersShouldRejectScopeAnnotations() {
-    assertThatThrownBy(() -> bindingProvider.ofMembers(ClassG.class))
-      .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [void hs.ddif.core.definition.BindingProviderTest$ClassG.setter(int)] cannot have both inject and scope annotations, but found: [@jakarta.inject.Inject()] and: [@jakarta.inject.Singleton()]")
-      .hasNoCause();
-  }
-
   @SuppressWarnings("unused")
   private static class ClassWithGenericFields<A, B> {
     @Inject private A fieldA;
@@ -240,15 +229,5 @@ public class BindingProviderTest {
 
   public static class ClassF {
     @Inject final String x = "";
-  }
-
-  public static class ClassG {
-    int a;
-
-    @Inject
-    @Singleton
-    void setter(int a) {
-      this.a = a;
-    }
   }
 }
