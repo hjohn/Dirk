@@ -1,5 +1,6 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.api.annotation.ProxyStrategy;
 import hs.ddif.api.instantiation.TypeTrait;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Types;
@@ -48,13 +49,17 @@ public class InjectableStore implements Resolver<Injectable<?>> {
    */
   private final QualifiedTypeStore<Injectable<?>> qualifiedTypeStore;
 
+  private final ProxyStrategy proxyStrategy;
+
   /**
    * Constructs a new instance.
    *
    * @param bindingManager an {@link BindingManager}, cannot be {@code null}
+   * @param proxyStrategy a {@link ProxyStrategy}, cannot be {@code null}
    */
-  public InjectableStore(BindingManager bindingManager) {
-    this.bindingManager = Objects.requireNonNull(bindingManager, "bindingManager cannot be null");
+  public InjectableStore(BindingManager bindingManager, ProxyStrategy proxyStrategy) {
+    this.bindingManager = Objects.requireNonNull(bindingManager, "bindingManager");
+    this.proxyStrategy = Objects.requireNonNull(proxyStrategy, "proxyStrategy");
     this.qualifiedTypeStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), i -> i.getTypes());
   }
 
@@ -223,15 +228,24 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     }
   }
 
-  private static void ensureBindingScopeIsValid(Injectable<?> injectable, Injectable<?> dependentInjectable) {
+  private void ensureBindingScopeIsValid(Injectable<?> injectable, Injectable<?> dependentInjectable) {
 
     /*
      * Perform scope check.
      *
      * The dependent injectable is injected into the given injectable.
      *
-     * When the dependent injectable is a pseudo-scope, there is never any conflict.
+     * When the dependent injectable is a pseudo-scope or is proxyable, there is never any conflict.
      * When both injectables have the same scope, there is never any conflict.
+     *
+     * The ProxyStrategy is responsible for creating proxies, and may not create any at all. It is 
+     * however entirely possible to use normal scopes (non pseudo-scopes) without proxies by making 
+     * use of an indirect form of injection like that which providers offer.
+     *
+     * Note that restrictions may apply to types in order to wrap them with a proxy. The early call
+     * here to create the proxy ensures that a proxy will be available later. Failing early here
+     * prevents the store from going into a state where unrelated objects may fail to be created
+     * because a dependent proxy cannot be created.
      */
 
     ExtendedScopeResolver dependentScopeResolver = dependentInjectable.getScopeResolver();
@@ -240,7 +254,12 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     boolean needsProxy = !dependentScopeResolver.isPseudoScope() && dependentScopeResolver.getAnnotationClass() != injectableScopeResolver.getAnnotationClass();
 
     if(needsProxy) {
-      throw new ScopeConflictException("Type [" + injectable.getType() + "] with scope [" + injectableScopeResolver.getAnnotationClass() + "] is dependent on [" + dependentInjectable.getType() + "] with normal scope [" + dependentScopeResolver.getAnnotationClass() + "]; this requires the use of a provider");
+      try {
+        proxyStrategy.createProxy(Types.raw(dependentInjectable.getType()));
+      }
+      catch(Exception e) {
+        throw new ScopeConflictException("Type [" + injectable.getType() + "] with scope [" + injectableScopeResolver.getAnnotationClass() + "] is dependent on [" + dependentInjectable.getType() + "] with normal scope [" + dependentScopeResolver.getAnnotationClass() + "]; this requires the use of a provider or proxy", e);
+      }
     }
   }
 

@@ -12,6 +12,7 @@ import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.DefaultInjectorStrategy;
 import hs.ddif.core.config.ListTypeExtension;
+import hs.ddif.core.config.NoProxyStrategy;
 import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.config.ProviderDiscoveryExtension;
 import hs.ddif.core.config.ProviderTypeExtension;
@@ -60,7 +61,11 @@ public class InjectorBuilder {
     }
 
     public Builder1 defaultInjectorStrategy() {
-      return new Builder1(new DefaultInjectorStrategy(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class), InjectableFactories.SCOPE_STRATEGY));
+      return new Builder1(new DefaultInjectorStrategy(
+        new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class),
+        InjectableFactories.SCOPE_STRATEGY,
+        new NoProxyStrategy()
+      ));
     }
 
     public Builder4 manual() {

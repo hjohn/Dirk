@@ -76,11 +76,11 @@ public class StandardInjector implements Injector {
     );
 
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-    InjectableStore store = new InjectableStore(instantiatorBindingMap);
+    InjectableStore store = new InjectableStore(instantiatorBindingMap, strategy.getProxyStrategy());
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, strategy.getScopeStrategy().getSingletonAnnotationClass());
 
     this.registry = new InjectableStoreCandidateRegistry(store, discovererFactory, instanceInjectableFactory);
-    this.instanceResolver = new DefaultInstanceResolver(store, discovererFactory, new DefaultInstantiationContext(store, instantiatorBindingMap), instantiatorFactory);
+    this.instanceResolver = new DefaultInstanceResolver(store, discovererFactory, new DefaultInstantiationContext(store, instantiatorBindingMap, strategy.getProxyStrategy()), instantiatorFactory);
   }
 
   @Override

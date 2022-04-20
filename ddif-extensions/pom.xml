@@ -14,5 +14,6 @@
 
   <modules>
     <module>extensions-assisted</module>
+    <module>extensions-proxy</module>
   </modules>
 </project>

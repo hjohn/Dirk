@@ -15,6 +15,16 @@ public abstract class InjectorStoreConsistencyException extends RuntimeException
    * Constructs a new instance.
    *
    * @param message a message
+   * @param cause a cause
+   */
+  public InjectorStoreConsistencyException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param message a message
    */
   public InjectorStoreConsistencyException(String message) {
     super(message);

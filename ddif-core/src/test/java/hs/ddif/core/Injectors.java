@@ -10,6 +10,7 @@ import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.DefaultInjectorStrategy;
+import hs.ddif.core.config.NoProxyStrategy;
 import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.config.ProviderDiscoveryExtension;
 import hs.ddif.core.config.SimpleScopeStrategy;
@@ -82,7 +83,11 @@ public class Injectors {
       TypeExtensions.create(ANNOTATION_STRATEGY),
       createDiscoveryExtensions(),
       finalScopeResolvers,
-      new DefaultInjectorStrategy(ANNOTATION_STRATEGY, new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class)),
+      new DefaultInjectorStrategy(
+        ANNOTATION_STRATEGY,
+        new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class),
+        new NoProxyStrategy()
+      ),
       bindingProvider,
       lifeCycleCallbacksFactory,
       autoDiscovering

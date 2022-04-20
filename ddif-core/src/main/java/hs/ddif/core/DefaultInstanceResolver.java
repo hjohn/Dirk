@@ -97,7 +97,7 @@ class DefaultInstanceResolver implements InstanceResolver {
         throw new AutoDiscoveryException("Unable to instantiate [" + key + "]" + (discoverer.getProblems().isEmpty() ? "" : discoverer.getProblems().stream().collect(Collectors.joining("\n    -> ", "\n    -> ", ""))), e);
       }
 
-      throw new AutoDiscoveryException("[" + key + "] and the discovered types " + gatheredInjectables.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()) + " could not be registered" + discoverer.getProblems().stream().collect(Collectors.joining("\n    -> ", "\n    -> ", "")), e);
+      throw new AutoDiscoveryException("[" + key + "] and the discovered types " + gatheredInjectables.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList()) + " could not be registered" + (discoverer.getProblems().isEmpty() ? "" : discoverer.getProblems().stream().collect(Collectors.joining("\n    -> ", "\n    -> ", ""))), e);
     }
 
     try {
