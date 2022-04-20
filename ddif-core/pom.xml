@@ -30,6 +30,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.github.hjohn.ddif.extensions</groupId>
+      <artifactId>extensions-proxy</artifactId>
+      <version>${revision}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.github.hjohn.ddif</groupId>
       <artifactId>ddif-test-util</artifactId>
       <version>${revision}</version>

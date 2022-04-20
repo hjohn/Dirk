@@ -18,4 +18,11 @@ public interface InjectorStrategy {
    * @return the {@link ScopeStrategy}, never {@code null}
    */
   ScopeStrategy getScopeStrategy();
+
+  /**
+   * Returns the {@link ProxyStrategy} to be used.
+   *
+   * @return the {@link ProxyStrategy}, never {@code null}
+   */
+  ProxyStrategy getProxyStrategy();
 }

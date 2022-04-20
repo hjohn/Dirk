@@ -49,7 +49,7 @@ public class InjectableStoreConsistencyTest {
 
   private InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(InjectableFactories.ANNOTATION_STRATEGY, TypeExtensions.create(InjectableFactories.ANNOTATION_STRATEGY));
   private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-  private InjectableStore store = new InjectableStore(instantiatorBindingMap);
+  private InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
 
   @BeforeEach
   void beforeEach() throws DefinitionException {

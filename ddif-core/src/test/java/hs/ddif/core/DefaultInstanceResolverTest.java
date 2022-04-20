@@ -61,8 +61,8 @@ public class DefaultInstanceResolverTest {
   private final TypeExtensionStore typeExtensionStore = injectableFactories.getTypeExtensionStore();
   private final InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
   private final InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-  private final InjectableStore store = new InjectableStore(instantiatorBindingMap);
-  private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap);
+  private final InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
+  private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
   private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
   private final FieldInjectableFactory fieldInjectableFactory = injectableFactories.forField();

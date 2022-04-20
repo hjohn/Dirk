@@ -2,6 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.annotation.AnnotationStrategy;
+import hs.ddif.api.annotation.ProxyStrategy;
 import hs.ddif.api.annotation.ScopeStrategy;
 import hs.ddif.api.definition.LifeCycleCallbacksFactory;
 import hs.ddif.api.instantiation.TypeExtension;
@@ -9,6 +10,7 @@ import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.config.DirectTypeExtension;
+import hs.ddif.core.config.NoProxyStrategy;
 import hs.ddif.core.config.SimpleScopeStrategy;
 import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.definition.BindingProvider;
@@ -31,6 +33,7 @@ import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
 
 public class InjectableFactories {
+  public static final ProxyStrategy PROXY_STRATEGY = new NoProxyStrategy();
   public static final ScopeStrategy SCOPE_STRATEGY = new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class);
   public static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
   public static final BindingProvider BINDING_PROVIDER = new BindingProvider(ANNOTATION_STRATEGY);

@@ -4,6 +4,7 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.api.instantiation.InstantiatorFactory;
 import hs.ddif.api.instantiation.domain.Key;
 import hs.ddif.api.util.Annotations;
+import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.InstantiatorFactories;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
@@ -38,7 +39,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
   void largeGraphTest() throws BadQualifiedTypeException {
     InstantiatorFactory instantiatorFactory = InstantiatorFactories.create();
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-    InjectableStore store = new InjectableStore(instantiatorBindingMap);
+    InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
     List<Injectable<?>> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 

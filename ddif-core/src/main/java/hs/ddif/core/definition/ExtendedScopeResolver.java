@@ -1,6 +1,5 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.scope.CreationalContext;
 import hs.ddif.api.scope.OutOfScopeException;
 import hs.ddif.api.scope.ScopeResolver;

@@ -1,5 +1,6 @@
 package hs.ddif.core;
 
+import hs.ddif.api.annotation.ProxyStrategy;
 import hs.ddif.api.instantiation.InstantiationContext;
 import hs.ddif.api.instantiation.Instantiator;
 import hs.ddif.api.instantiation.domain.InstanceCreationException;
@@ -9,16 +10,20 @@ import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
 import hs.ddif.api.scope.CreationalContext;
 import hs.ddif.api.scope.OutOfScopeException;
 import hs.ddif.api.scope.ScopeResolver;
+import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
+import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.injection.Injection;
 import hs.ddif.core.inject.store.BoundInstantiatorProvider;
 import hs.ddif.core.store.Resolver;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -40,16 +45,19 @@ class DefaultInstantiationContext implements InstantiationContext {
 
   private final Resolver<Injectable<?>> resolver;
   private final BoundInstantiatorProvider boundInstantiatorProvider;
+  private final ProxyStrategy proxyStrategy;
 
   /**
    * Constructs a new instance.
    *
    * @param resolver a {@link Resolver}, cannot be {@code null}
    * @param boundInstantiatorProvider an {@link BoundInstantiatorProvider}, cannot be {@code null}
+   * @param proxyStrategy a {@link ProxyStrategy}, cannot be {@code null}
    */
-  public DefaultInstantiationContext(Resolver<Injectable<?>> resolver, BoundInstantiatorProvider boundInstantiatorProvider) {
-    this.resolver = resolver;
-    this.boundInstantiatorProvider = boundInstantiatorProvider;
+  public DefaultInstantiationContext(Resolver<Injectable<?>> resolver, BoundInstantiatorProvider boundInstantiatorProvider, ProxyStrategy proxyStrategy) {
+    this.resolver = Objects.requireNonNull(resolver, "resolver");
+    this.boundInstantiatorProvider = Objects.requireNonNull(boundInstantiatorProvider, "boundInstantiatorProvider");
+    this.proxyStrategy = Objects.requireNonNull(proxyStrategy, "proxyStrategy");
   }
 
   @Override
@@ -95,18 +103,24 @@ class DefaultInstantiationContext implements InstantiationContext {
   }
 
   private <T> T createInstance(Injectable<T> injectable, boolean allowOutOfScope) throws InstanceCreationException {
-    ScopeResolver scopeResolver = injectable.getScopeResolver();
+    ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
 
     try {
       if(!allowOutOfScope || scopeResolver.isActive()) {
-        LazyCreationalContext<T> lazyCreationalContext = new LazyCreationalContext<>(stack.isEmpty() ? null : stack.getLast(), injectable);
+        LazyCreationalContext<?> parentCreationalContext = stack.isEmpty() ? null : stack.getLast();
+        LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(parentCreationalContext, injectable);
 
-        stack.addLast(lazyCreationalContext);
+        stack.addLast(creationalContext);
 
         try {
-          T instance = scopeResolver.get(injectable, lazyCreationalContext);
+          Class<? extends Annotation> parentScopeAnnotation = parentCreationalContext == null ? null : parentCreationalContext.injectable.getScopeResolver().getAnnotationClass();
+          boolean needsProxy = !scopeResolver.isPseudoScope() && parentScopeAnnotation != null && scopeResolver.getAnnotationClass() != parentScopeAnnotation;
 
-          lazyCreationalContext.add(injectable, instance);
+          T instance = needsProxy
+            ? proxyStrategy.<T>createProxy(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, creationalContext))
+            : scopeResolver.get(injectable, creationalContext);
+
+          creationalContext.add(injectable, instance);
 
           return instance;
         }
