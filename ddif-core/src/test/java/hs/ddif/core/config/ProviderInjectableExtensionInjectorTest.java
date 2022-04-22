@@ -2,8 +2,8 @@ package hs.ddif.core.config;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.Injector;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.NoSuchInstanceException;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.Injectors;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;

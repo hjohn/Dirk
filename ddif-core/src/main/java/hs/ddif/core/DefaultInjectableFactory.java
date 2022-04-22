@@ -1,9 +1,6 @@
 package hs.ddif.core;
 
-import hs.ddif.api.annotation.AnnotationStrategy;
-import hs.ddif.api.annotation.ScopeStrategy;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
@@ -12,6 +9,9 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InjectableFactory;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.injection.Constructable;
+import hs.ddif.spi.config.AnnotationStrategy;
+import hs.ddif.spi.config.ScopeStrategy;
+import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;

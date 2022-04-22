@@ -1,6 +1,6 @@
 package hs.ddif.core;
 
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.InstanceCreationException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;

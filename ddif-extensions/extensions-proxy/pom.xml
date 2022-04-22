@@ -13,7 +13,7 @@
   <dependencies>
     <dependency>
       <groupId>com.github.hjohn.ddif</groupId>
-      <artifactId>ddif-api</artifactId>
+      <artifactId>ddif-spi</artifactId>
       <version>${revision}</version>
     </dependency>
     <dependency>

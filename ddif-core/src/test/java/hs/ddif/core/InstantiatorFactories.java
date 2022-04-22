@@ -1,8 +1,8 @@
 package hs.ddif.core;
 
-import hs.ddif.api.annotation.AnnotationStrategy;
-import hs.ddif.api.instantiation.InstantiatorFactory;
-import hs.ddif.api.instantiation.TypeExtension;
+import hs.ddif.spi.config.AnnotationStrategy;
+import hs.ddif.spi.instantiation.InstantiatorFactory;
+import hs.ddif.spi.instantiation.TypeExtension;
 
 import java.util.Map;
 

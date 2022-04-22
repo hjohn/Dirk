@@ -1,6 +1,6 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.instantiation.Key;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;

@@ -1,6 +1,6 @@
 package hs.ddif.core;
 
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.InstanceCreationException;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;

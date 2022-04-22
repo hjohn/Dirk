@@ -2,7 +2,7 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.Injector;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.InstanceCreationException;
 import hs.ddif.core.Injectors;
 import hs.ddif.core.util.Nullable;
 

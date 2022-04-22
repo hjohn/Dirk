@@ -1,6 +1,6 @@
 package hs.ddif.core;
 
-import hs.ddif.api.instantiation.TypeExtension;
+import hs.ddif.spi.instantiation.TypeExtension;
 
 import java.util.Collections;
 import java.util.HashMap;

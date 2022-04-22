@@ -1,9 +1,9 @@
 package hs.ddif.core.config;
 
-import hs.ddif.api.annotation.AnnotationStrategy;
-import hs.ddif.api.annotation.InjectorStrategy;
-import hs.ddif.api.annotation.ProxyStrategy;
-import hs.ddif.api.annotation.ScopeStrategy;
+import hs.ddif.spi.config.AnnotationStrategy;
+import hs.ddif.spi.config.InjectorStrategy;
+import hs.ddif.spi.config.ProxyStrategy;
+import hs.ddif.spi.config.ScopeStrategy;
 
 import java.util.Objects;
 

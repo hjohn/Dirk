@@ -1,7 +1,5 @@
 package hs.ddif.api;
 
-import hs.ddif.api.scope.ScopeResolver;
-
 /**
  * An injector is a combination of a {@link CandidateRegistry} and an {@link InstanceResolver},
  * providing the functionality of both interfaces in a single type.
@@ -26,19 +24,6 @@ import hs.ddif.api.scope.ScopeResolver;
  * <li>Registering a class which either provides or produces instances of B (or a subclass); again
  *     this would make construction of A ambiguous.</li>
  * </ul>
- *
- * <h2>Scoping</h2>
- *
- * An injector may return existing instances or new instances depending on the scope of the type.
- * The most commonly used scopes are unscoped and singleton. The singleton scope result in the
- * type only ever being created once and the same instance is injected for all dependencies.
- * Unscoped types are created on demand and a new instance is created every time.
- *
- * <p>Custom scopes are supported through the {@link ScopeResolver} interface with which an
- * injector can be configured. Note that instances registered directly are always treated as
- * singletons as the injector has no way of creating these itself. If an instance is complicated
- * to construct, consider registering a provider or a class containing a producer annotated method
- * or field.
  */
 public interface Injector extends CandidateRegistry, InstanceResolver {
 

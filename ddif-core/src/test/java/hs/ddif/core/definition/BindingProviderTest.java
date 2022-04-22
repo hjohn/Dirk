@@ -1,7 +1,7 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;

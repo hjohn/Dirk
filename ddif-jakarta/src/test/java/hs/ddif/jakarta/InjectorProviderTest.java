@@ -4,7 +4,7 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.instantiation.NoSuchInstanceException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;

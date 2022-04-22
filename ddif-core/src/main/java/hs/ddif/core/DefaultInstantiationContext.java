@@ -1,15 +1,9 @@
 package hs.ddif.core;
 
-import hs.ddif.api.annotation.ProxyStrategy;
-import hs.ddif.api.instantiation.InstantiationContext;
-import hs.ddif.api.instantiation.Instantiator;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.instantiation.domain.Key;
-import hs.ddif.api.instantiation.domain.MultipleInstancesException;
-import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
-import hs.ddif.api.scope.CreationalContext;
-import hs.ddif.api.scope.OutOfScopeException;
-import hs.ddif.api.scope.ScopeResolver;
+import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.Key;
+import hs.ddif.api.instantiation.MultipleInstancesException;
+import hs.ddif.api.instantiation.NoSuchInstanceException;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
@@ -17,6 +11,12 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.injection.Injection;
 import hs.ddif.core.inject.store.BoundInstantiatorProvider;
 import hs.ddif.core.store.Resolver;
+import hs.ddif.spi.config.ProxyStrategy;
+import hs.ddif.spi.instantiation.InstantiationContext;
+import hs.ddif.spi.instantiation.Instantiator;
+import hs.ddif.spi.scope.CreationalContext;
+import hs.ddif.spi.scope.OutOfScopeException;
+import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;

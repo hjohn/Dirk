@@ -4,7 +4,7 @@ import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.instantiation.NoSuchInstanceException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectorBuilder;

@@ -1,6 +1,6 @@
 package hs.ddif.core.config;
 
-import hs.ddif.api.annotation.ProxyStrategy;
+import hs.ddif.spi.config.ProxyStrategy;
 
 import java.util.function.Function;
 

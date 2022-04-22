@@ -1,6 +1,6 @@
 package hs.ddif.core.definition.factory;
 
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.InstanceCreationException;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
 

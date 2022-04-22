@@ -1,9 +1,9 @@
 package hs.ddif.api;
 
 import hs.ddif.api.definition.AutoDiscoveryException;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.instantiation.domain.MultipleInstancesException;
-import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.MultipleInstancesException;
+import hs.ddif.api.instantiation.NoSuchInstanceException;
 
 import java.lang.reflect.Type;
 import java.util.List;

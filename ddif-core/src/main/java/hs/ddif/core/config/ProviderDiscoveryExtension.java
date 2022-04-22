@@ -1,8 +1,8 @@
 package hs.ddif.core.config;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.definition.DiscoveryExtension;
 import hs.ddif.api.util.Types;
+import hs.ddif.spi.discovery.DiscoveryExtension;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
