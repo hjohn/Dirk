@@ -1,10 +1,10 @@
 package hs.ddif.core.config;
 
-import hs.ddif.api.annotation.AnnotationStrategy;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.definition.LifeCycleCallbacksFactory;
-import hs.ddif.api.instantiation.LifeCycleCallbacks;
 import hs.ddif.core.util.Methods;
+import hs.ddif.spi.config.AnnotationStrategy;
+import hs.ddif.spi.config.LifeCycleCallbacks;
+import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;

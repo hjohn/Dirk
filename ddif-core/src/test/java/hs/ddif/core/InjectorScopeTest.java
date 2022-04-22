@@ -3,12 +3,12 @@ package hs.ddif.core;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
-import hs.ddif.api.scope.AbstractScopeResolver;
-import hs.ddif.api.scope.OutOfScopeException;
+import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.NoSuchInstanceException;
 import hs.ddif.core.inject.store.ScopeConflictException;
 import hs.ddif.core.test.scope.TestScope;
+import hs.ddif.spi.scope.AbstractScopeResolver;
+import hs.ddif.spi.scope.OutOfScopeException;
 
 import java.lang.annotation.Annotation;
 

@@ -1,9 +1,9 @@
 package hs.ddif.core;
 
-import hs.ddif.api.annotation.AnnotationStrategy;
-import hs.ddif.api.instantiation.TypeExtension;
 import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.instantiation.TypeExtensions;
+import hs.ddif.spi.config.AnnotationStrategy;
+import hs.ddif.spi.instantiation.TypeExtension;
 
 import java.util.Map;
 

@@ -2,16 +2,16 @@ package hs.ddif.core;
 
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AutoDiscoveryException;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.scope.AbstractScopeResolver;
-import hs.ddif.api.scope.OutOfScopeException;
-import hs.ddif.api.scope.ScopeResolver;
+import hs.ddif.api.instantiation.InstanceCreationException;
 import hs.ddif.core.config.DefaultInjectorStrategy;
 import hs.ddif.core.config.SimpleScopeStrategy;
 import hs.ddif.core.inject.store.ScopeConflictException;
 import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.extensions.proxy.ByteBuddyProxyStrategy;
+import hs.ddif.spi.scope.AbstractScopeResolver;
+import hs.ddif.spi.scope.OutOfScopeException;
+import hs.ddif.spi.scope.ScopeResolver;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;

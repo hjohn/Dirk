@@ -1,8 +1,8 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.api.scope.CreationalContext;
-import hs.ddif.api.scope.OutOfScopeException;
-import hs.ddif.api.scope.ScopeResolver;
+import hs.ddif.spi.scope.CreationalContext;
+import hs.ddif.spi.scope.OutOfScopeException;
+import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.util.Objects;

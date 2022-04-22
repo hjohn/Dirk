@@ -25,6 +25,7 @@
     <module>ddif-jakarta</module>
     <module>ddif-jsr330</module>
     <module>ddif-plugins</module>
+    <module>ddif-spi</module>
     <module>ddif-test-api</module>
     <module>ddif-test-plugin</module>
     <module>ddif-test-plugin-singleton</module>

@@ -1,9 +1,9 @@
 package hs.ddif.core.config;
 
-import hs.ddif.api.annotation.ScopeStrategy;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.api.util.Annotations;
+import hs.ddif.spi.config.ScopeStrategy;
+import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;

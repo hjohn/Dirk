@@ -1,7 +1,7 @@
 package hs.ddif.core.config;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.api.definition.DiscoveryExtension.Registry;
+import hs.ddif.spi.discovery.DiscoveryExtension.Registry;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

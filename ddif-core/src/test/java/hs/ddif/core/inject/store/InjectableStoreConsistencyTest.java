@@ -2,8 +2,6 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.InstantiatorFactory;
-import hs.ddif.api.scope.UnknownScopeException;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.InstantiatorFactories;
 import hs.ddif.core.definition.ClassInjectableFactory;
@@ -11,6 +9,8 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.instantiation.TypeExtensions;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
+import hs.ddif.spi.instantiation.InstantiatorFactory;
+import hs.ddif.spi.scope.UnknownScopeException;
 import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.List;

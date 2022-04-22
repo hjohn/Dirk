@@ -1,6 +1,6 @@
 package hs.ddif.core.config;
 
-import hs.ddif.api.scope.AbstractScopeResolver;
+import hs.ddif.spi.scope.AbstractScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.util.Objects;

@@ -1,6 +1,6 @@
 package hs.ddif.extensions.proxy;
 
-import hs.ddif.api.annotation.ProxyStrategy;
+import hs.ddif.spi.config.ProxyStrategy;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

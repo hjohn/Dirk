@@ -1,8 +1,8 @@
 package hs.ddif.core;
 
-import hs.ddif.api.scope.ScopeResolver;
 import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.test.scope.Dependent;
+import hs.ddif.spi.scope.ScopeResolver;
 
 import java.util.List;
 import java.util.stream.Collectors;

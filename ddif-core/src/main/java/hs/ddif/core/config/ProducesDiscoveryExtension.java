@@ -1,11 +1,11 @@
 package hs.ddif.core.config;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.definition.DiscoveryExtension;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.util.Fields;
 import hs.ddif.core.util.Methods;
+import hs.ddif.spi.discovery.DiscoveryExtension;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

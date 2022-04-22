@@ -1,14 +1,14 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.api.annotation.ProxyStrategy;
-import hs.ddif.api.instantiation.TypeTrait;
-import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
+import hs.ddif.spi.config.ProxyStrategy;
+import hs.ddif.spi.instantiation.TypeTrait;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
