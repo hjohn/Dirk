@@ -2,7 +2,7 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.Injector;
-import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.Injectors;
 import hs.ddif.core.util.Nullable;
 
@@ -27,7 +27,7 @@ public class InjectorStoreConsistencyPolicyStressTest {
   private final Random rnd = new Random(4);
 
   @Test
-  void shouldSurviveStressTest() throws InstanceCreationException {
+  void shouldSurviveStressTest() throws CreationException {
     Injector injector = Injectors.manual();
 
     List<Type> actual = new ArrayList<>();

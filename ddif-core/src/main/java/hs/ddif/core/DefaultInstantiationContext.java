@@ -1,9 +1,8 @@
 package hs.ddif.core;
 
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.Key;
-import hs.ddif.api.instantiation.MultipleInstancesException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
@@ -14,6 +13,7 @@ import hs.ddif.core.store.Resolver;
 import hs.ddif.spi.config.ProxyStrategy;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
+import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.scope.CreationalContext;
 import hs.ddif.spi.scope.OutOfScopeException;
 import hs.ddif.spi.scope.ScopeResolver;
@@ -61,12 +61,12 @@ class DefaultInstantiationContext implements InstantiationContext {
   }
 
   @Override
-  public synchronized <T> T create(Key key) throws InstanceCreationException, MultipleInstancesException {
+  public synchronized <T> T create(Key key) throws CreationException, AmbiguousResolutionException {
     @SuppressWarnings("unchecked")
     Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
 
     if(injectables.size() > 1) {
-      throw new MultipleInstancesException(key, injectables);
+      throw new AmbiguousResolutionException("Multiple matching instances: [" + key + "]: " + injectables);
     }
 
     if(injectables.size() == 0) {
@@ -77,7 +77,7 @@ class DefaultInstantiationContext implements InstantiationContext {
   }
 
   @Override
-  public synchronized <T> List<T> createAll(Key key) throws InstanceCreationException {
+  public synchronized <T> List<T> createAll(Key key) throws CreationException {
     List<T> instances = new ArrayList<>();
 
     @SuppressWarnings("unchecked")
@@ -94,15 +94,15 @@ class DefaultInstantiationContext implements InstantiationContext {
     return instances;
   }
 
-  private <T> T createInstance(Injectable<T> injectable) throws InstanceCreationException {
+  private <T> T createInstance(Injectable<T> injectable) throws CreationException {
     return createInstance(injectable, false);
   }
 
-  private <T> T createInstanceInScope(Injectable<T> injectable) throws InstanceCreationException {
+  private <T> T createInstanceInScope(Injectable<T> injectable) throws CreationException {
     return createInstance(injectable, true);
   }
 
-  private <T> T createInstance(Injectable<T> injectable, boolean allowOutOfScope) throws InstanceCreationException {
+  private <T> T createInstance(Injectable<T> injectable, boolean allowOutOfScope) throws CreationException {
     ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
 
     try {
@@ -133,7 +133,7 @@ class DefaultInstantiationContext implements InstantiationContext {
     }
     catch(OutOfScopeException e) {
       if(!allowOutOfScope) {
-        throw new InstanceCreationException(injectable.getType(), "could not be created", e);
+        throw new CreationException(injectable.getType(), "could not be created", e);
       }
 
       /*
@@ -144,11 +144,11 @@ class DefaultInstantiationContext implements InstantiationContext {
 
       return null;  // same as if scope hadn't been active in the first place
     }
-    catch(InstanceCreationException e) {
+    catch(CreationException e) {
       throw e;
     }
     catch(Exception e) {
-      throw new InstanceCreationException(injectable.getType(), "could not be created", e);
+      throw new CreationException(injectable.getType(), "could not be created", e);
     }
   }
 
@@ -211,11 +211,11 @@ class DefaultInstantiationContext implements InstantiationContext {
     }
 
     @Override
-    public Reference<T> create() throws InstanceCreationException, MultipleInstancesException, NoSuchInstanceException {
+    public Reference<T> create() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
       return new LazyReference<>(this, injectable.create(getInjections()));
     }
 
-    private List<Injection> getInjections() throws InstanceCreationException, MultipleInstancesException, NoSuchInstanceException {
+    private List<Injection> getInjections() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
       if(injections == null) {
         List<Injection> injections = new ArrayList<>();
 

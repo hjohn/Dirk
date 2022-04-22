@@ -1,6 +1,6 @@
 package hs.ddif.core.definition.injection;
 
-import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.CreationException;
 
 import java.util.List;
 
@@ -17,9 +17,9 @@ public interface Constructable<T> {
    *
    * @param injections a list of {@link Injection} containing values to be injected, never {@code null} or contains {@code null}s but can be empty
    * @return an instance, or {@code null} if it could not be provided
-   * @throws InstanceCreationException when instantiation fails
+   * @throws CreationException when instantiation fails
    */
-  T create(List<Injection> injections) throws InstanceCreationException;
+  T create(List<Injection> injections) throws CreationException;
 
   /**
    * Destroys an instance.

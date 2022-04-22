@@ -1,12 +1,12 @@
 package hs.ddif.core.config;
 
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.Key;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.util.Types;
 import hs.ddif.spi.config.AnnotationStrategy;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
+import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.TypeExtension;
 import hs.ddif.spi.instantiation.TypeTrait;
 
@@ -49,7 +49,7 @@ public class ListTypeExtension<T> implements TypeExtension<List<T>> {
       }
 
       @Override
-      public List<T> getInstance(InstantiationContext context) throws InstanceCreationException {
+      public List<T> getInstance(InstantiationContext context) throws CreationException {
         List<T> instances = context.createAll(elementKey);
 
         return instances.isEmpty() && optional ? null : instances;

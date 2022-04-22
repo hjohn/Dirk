@@ -4,9 +4,9 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.MultipleInstancesException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BindingException;
@@ -54,7 +54,6 @@ import hs.ddif.core.test.injectables.UnavailableBean;
 import hs.ddif.core.test.injectables.UnregisteredParentBean;
 import hs.ddif.core.util.Nullable;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -111,12 +110,12 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenGettingUnregisteredBean() {
-    assertThrows(NoSuchInstanceException.class, () -> injector.getInstance(ArrayList.class));
+    assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(ArrayList.class));
   }
 
   @Test
   public void shouldThrowExceptionWhenBeanIsAmbiguous() {
-    assertThrows(MultipleInstancesException.class, () -> injector.getInstance(SimpleCollectionItemInterface.class));
+    assertThrows(AmbiguousResolutionException.class, () -> injector.getInstance(SimpleCollectionItemInterface.class));
   }
 
   @Test
@@ -282,7 +281,7 @@ public class InjectorTest {
       }
     });
 
-    assertThrows(NoSuchInstanceException.class, () -> injector.getInstance(UnavailableBean.class));
+    assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(UnavailableBean.class));
   }
 
   /*
@@ -294,7 +293,7 @@ public class InjectorTest {
     injector.remove(BeanWithInjection.class);
 
     assertThatThrownBy(() -> injector.getInstance(BeanWithInjection.class))
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
       .hasNoCause();
   }
 
@@ -787,10 +786,8 @@ public class InjectorTest {
     injector.register(BeanDependentOnBeanWithBadPostConstruct.class);
 
     assertThatThrownBy(() -> injector.getInstance(BeanWithBadPostConstruct.class))
-      .isExactlyInstanceOf(InstanceCreationException.class)
+      .isExactlyInstanceOf(CreationException.class)
       .hasMessage("[class hs.ddif.core.InjectorTest$BeanWithBadPostConstruct] threw exception during post construction")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(InvocationTargetException.class)
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(NullPointerException.class)
       .hasNoCause();
@@ -955,12 +952,10 @@ public class InjectorTest {
     injector.register(BadPostConstruct.class);
 
     assertThatThrownBy(() -> injector.getInstance(BadPostConstruct.class))
-      .isExactlyInstanceOf(InstanceCreationException.class)
+      .isExactlyInstanceOf(CreationException.class)
       .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] threw exception during post construction")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(InvocationTargetException.class)
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(InstanceCreationException.class)
+      .isExactlyInstanceOf(CreationException.class)
       .hasMessage("[class hs.ddif.core.InjectorTest$BadPostConstruct] already under construction (dependency creation loop in setter, initializer or post-construct method?)")
       .hasNoCause();
   }

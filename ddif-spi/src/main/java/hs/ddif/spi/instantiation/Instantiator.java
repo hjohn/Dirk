@@ -1,9 +1,8 @@
 package hs.ddif.spi.instantiation;
 
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.Key;
-import hs.ddif.api.instantiation.MultipleInstancesException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 
 import java.util.Set;
 
@@ -43,11 +42,11 @@ public interface Instantiator<T> {
    *
    * @param context an {@link InstantiationContext}, never null
    * @return an instance of the type this instantiator produces, can be {@code null}
-   * @throws InstanceCreationException when the instance could not be created
-   * @throws MultipleInstancesException when multiple instances could be created but the instantiator required at most one
-   * @throws NoSuchInstanceException when no instance could be created but the instantiator required at least one
+   * @throws CreationException when the instance could not be created
+   * @throws AmbiguousResolutionException when multiple instances could be created but the instantiator required at most one
+   * @throws UnsatisfiedResolutionException when no instance could be created but the instantiator required at least one
    */
-  T getInstance(InstantiationContext context) throws InstanceCreationException, MultipleInstancesException, NoSuchInstanceException;
+  T getInstance(InstantiationContext context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException;
 
   /**
    * Returns the {@link TypeTrait}s of this {@link Instantiator}.

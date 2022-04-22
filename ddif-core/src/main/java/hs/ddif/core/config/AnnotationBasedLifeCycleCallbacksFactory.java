@@ -88,10 +88,15 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
     }
 
     @Override
-    public void postConstruct(Object instance) throws Exception {
+    public void postConstruct(Object instance) throws InvocationTargetException {
       for(Method method : postConstructMethods) {
-        method.setAccessible(true);
-        method.invoke(instance);
+        try {
+          method.setAccessible(true);
+          method.invoke(instance);
+        }
+        catch(IllegalAccessException | IllegalArgumentException e) {
+          throw new IllegalStateException(method + " call failed", e);
+        }
       }
     }
 

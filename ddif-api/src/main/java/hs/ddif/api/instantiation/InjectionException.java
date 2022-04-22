@@ -1,9 +1,9 @@
 package hs.ddif.api.instantiation;
 
 /**
- * Base class for exceptions that can be thrown during instance resolution.
+ * Base class for exceptions that can be thrown during injection.
  */
-public abstract class InstanceResolutionException extends RuntimeException {
+public abstract class InjectionException extends RuntimeException {
 
   /**
    * Constructs a new instance.
@@ -11,7 +11,7 @@ public abstract class InstanceResolutionException extends RuntimeException {
    * @param message a message, can be {@code null}
    * @param cause a {@link Throwable} cause, can be {@code null}
    */
-  public InstanceResolutionException(String message, Throwable cause) {
+  public InjectionException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -20,7 +20,7 @@ public abstract class InstanceResolutionException extends RuntimeException {
    *
    * @param message a message, can be {@code null}
    */
-  public InstanceResolutionException(String message) {
+  public InjectionException(String message) {
     super(message);
   }
 }

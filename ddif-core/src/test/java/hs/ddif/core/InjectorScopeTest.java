@@ -3,8 +3,8 @@ package hs.ddif.core;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.core.inject.store.ScopeConflictException;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.spi.scope.AbstractScopeResolver;
@@ -43,7 +43,7 @@ public class InjectorScopeTest {
       injector.register(TestScopedBean.class);
 
       assertThatThrownBy(() -> injector.getInstance(TestScopedBean.class))
-        .isExactlyInstanceOf(InstanceCreationException.class)
+        .isExactlyInstanceOf(CreationException.class)
         .hasMessage("[class hs.ddif.core.InjectorScopeTest$TestScopedBean] could not be created")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(OutOfScopeException.class)
@@ -64,7 +64,7 @@ public class InjectorScopeTest {
 
       injector.remove(S.class);
 
-      assertThatThrownBy(() -> injector.getInstance(S.class)).isExactlyInstanceOf(NoSuchInstanceException.class);
+      assertThatThrownBy(() -> injector.getInstance(S.class)).isExactlyInstanceOf(UnsatisfiedResolutionException.class);
 
       injector.register(S.class);
 

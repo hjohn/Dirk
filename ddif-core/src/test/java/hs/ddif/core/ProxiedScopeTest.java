@@ -2,7 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AutoDiscoveryException;
-import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.config.DefaultInjectorStrategy;
 import hs.ddif.core.config.SimpleScopeStrategy;
 import hs.ddif.core.inject.store.ScopeConflictException;
@@ -59,7 +59,7 @@ public class ProxiedScopeTest {
   void getInstanceShouldNotReturnProxies() throws Exception {
     // No scope active, creation fails:
     assertThatThrownBy(() -> injector.getInstance(B.class))
-      .isExactlyInstanceOf(InstanceCreationException.class);
+      .isExactlyInstanceOf(CreationException.class);
 
     currentScope = "A";
 
@@ -97,7 +97,7 @@ public class ProxiedScopeTest {
     C c = injector.getInstance(C.class);
 
     assertThatThrownBy(() -> c.b.get())
-      .isExactlyInstanceOf(InstanceCreationException.class);  // TODO perhaps OutOfScopeException be nicer here?
+      .isExactlyInstanceOf(CreationException.class);  // TODO perhaps OutOfScopeException be nicer here?
 
     currentScope = "A";
 

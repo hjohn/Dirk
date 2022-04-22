@@ -1,13 +1,13 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.spi.instantiation.Key;
 
 import java.lang.annotation.Annotation;
 import java.util.List;

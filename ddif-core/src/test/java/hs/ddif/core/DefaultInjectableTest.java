@@ -1,6 +1,6 @@
 package hs.ddif.core;
 
-import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
@@ -44,7 +44,7 @@ public class DefaultInjectableTest {
   };
 
   @Test
-  void constructorShouldAcceptValidParameters() throws InstanceCreationException, BadQualifiedTypeException {
+  void constructorShouldAcceptValidParameters() throws CreationException, BadQualifiedTypeException {
     Injectable<String> injectable = new DefaultInjectable<>(String.class, Set.of(String.class), new QualifiedType(String.class), List.of(), SCOPE_RESOLVER, null, constructable);
 
     assertThat(injectable.create(List.of())).isEqualTo("5");

@@ -3,9 +3,9 @@ package hs.ddif.core;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.MultipleInstancesException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.TypeReference;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
@@ -171,7 +171,7 @@ public class ProducesAnnotationTest {
     assertEquals("hi", injector.getInstance(String.class));
     assertEquals(123, injector.getInstance(Integer.class));
 
-    assertThrows(NoSuchInstanceException.class, () -> injector.getInstance(new TypeReference<GenericFactory2<Long>>() {}.getType()));
+    assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(new TypeReference<GenericFactory2<Long>>() {}.getType()));
 
     GenericFactory2<String> x1 = injector.getInstance(new TypeReference<GenericFactory2<String>>() {}.getType());
     GenericFactory2<String> x2 = injector.getInstance(StringFactory.class);
@@ -354,7 +354,7 @@ public class ProducesAnnotationTest {
 
       assertEquals("pre-toyota-15", car.name);
 
-      assertThrows(MultipleInstancesException.class, new Executable() {
+      assertThrows(AmbiguousResolutionException.class, new Executable() {
         @Override
         public void execute() throws Exception {
           injector.getInstance(Phone.class);
@@ -378,7 +378,7 @@ public class ProducesAnnotationTest {
     }
 
     @Test
-    void allPhonesShouldBeReturnedWhenGettingInstancesOfPhone() throws InstanceCreationException {
+    void allPhonesShouldBeReturnedWhenGettingInstancesOfPhone() throws CreationException {
       assertEquals(4, injector.getInstances(Phone.class).size());
     }
 

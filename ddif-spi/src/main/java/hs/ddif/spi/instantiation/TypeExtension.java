@@ -1,7 +1,5 @@
 package hs.ddif.spi.instantiation;
 
-import hs.ddif.api.instantiation.Key;
-
 import java.lang.reflect.AnnotatedElement;
 
 /**

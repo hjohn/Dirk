@@ -1,6 +1,6 @@
 package hs.ddif.core.store;
 
-import hs.ddif.api.instantiation.Key;
+import hs.ddif.spi.instantiation.Key;
 
 /**
  * Thrown when a {@link Key} could not be found.

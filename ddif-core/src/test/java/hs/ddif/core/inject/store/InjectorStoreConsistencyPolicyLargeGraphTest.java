@@ -1,7 +1,6 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.InstantiatorFactories;
@@ -13,6 +12,7 @@ import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.injection.Injection;
 import hs.ddif.core.util.Nullable;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
+import hs.ddif.spi.instantiation.Key;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;

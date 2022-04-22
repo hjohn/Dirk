@@ -1,7 +1,7 @@
 package hs.ddif.core.store;
 
-import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Types;
+import hs.ddif.spi.instantiation.Key;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;

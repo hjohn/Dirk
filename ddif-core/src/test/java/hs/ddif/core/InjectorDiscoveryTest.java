@@ -3,7 +3,7 @@ package hs.ddif.core;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.test.injectables.BeanWithInjection;
@@ -132,12 +132,12 @@ public class InjectorDiscoveryTest {
   }
 
   @Test
-  public void shouldReturnEmptyListWhenNoInstancesOfInterfaceKnown() throws InstanceCreationException {
+  public void shouldReturnEmptyListWhenNoInstancesOfInterfaceKnown() throws CreationException {
     assertThat(injector.getInstances(E.class)).isEmpty();  // auto discovery should not trigger for #getInstances
   }
 
   @Test
-  public void shouldReturnEmptyListWhenNoInstancesOfDiscoverableClassKnown() throws InstanceCreationException {
+  public void shouldReturnEmptyListWhenNoInstancesOfDiscoverableClassKnown() throws CreationException {
     assertThat(injector.getInstances(A.class)).isEmpty();  // auto discovery should not trigger for #getInstances
   }
 

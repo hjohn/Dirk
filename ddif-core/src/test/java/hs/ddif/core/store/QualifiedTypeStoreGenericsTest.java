@@ -1,7 +1,6 @@
 package hs.ddif.core.store;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.TypeReference;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectableFactories;
@@ -9,6 +8,7 @@ import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
+import hs.ddif.spi.instantiation.Key;
 
 import java.io.Serializable;
 import java.util.ArrayList;

@@ -1,8 +1,8 @@
 package hs.ddif.spi.scope;
 
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.MultipleInstancesException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 
 /**
  * Context used to create and destroy instances with injection information.
@@ -15,11 +15,11 @@ public interface CreationalContext<T> {
    * Creates a new instance of type {@code T} wrapped in a {@link Reference}.
    *
    * @return a {@link Reference}, never {@code null}
-   * @throws InstanceCreationException when an instance could not be created
-   * @throws MultipleInstancesException when multiple instances could be created but at most one was required
-   * @throws NoSuchInstanceException when no instance could be created but at least one was required
+   * @throws CreationException when an instance could not be created
+   * @throws AmbiguousResolutionException when multiple instances could be created but at most one was required
+   * @throws UnsatisfiedResolutionException when no instance could be created but at least one was required
    */
-  Reference<T> create() throws InstanceCreationException, MultipleInstancesException, NoSuchInstanceException;
+  Reference<T> create() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException;
 
   /**
    * A reference to an instance created by the {@link CreationalContext} with
