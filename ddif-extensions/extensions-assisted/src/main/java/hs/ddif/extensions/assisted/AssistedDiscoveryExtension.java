@@ -1,7 +1,7 @@
 package hs.ddif.extensions.assisted;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.util.Primitives;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
@@ -129,7 +129,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
         Constructor<?> constructor = bindingProvider.getConstructor(productClass);
         List<Binding> productBindings = bindingProvider.ofConstructorAndMembers(constructor, productClass);
         Constructable<?> constructable = new ClassObjectFactory<>(constructor, lifeCycleCallbacksFactory.create(productClass));
-        Interceptor<?> interceptor = new Interceptor<>(constructable, productClass, strategy);
+        Interceptor<?> interceptor = new Interceptor<>(constructable, strategy);
 
         /*
          * Construct ByteBuddy builder:
@@ -312,15 +312,13 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
    */
   public static class Interceptor<P> {
     private final Constructable<?> productConstructable;
-    private final Type productType;
     private final AssistedAnnotationStrategy<P> strategy;
     private final List<InjectionTemplate> templates = new ArrayList<>();
 
     private List<String> factoryParameterNames;
 
-    Interceptor(Constructable<?> productConstructable, Type productType, AssistedAnnotationStrategy<P> strategy) {
+    Interceptor(Constructable<?> productConstructable, AssistedAnnotationStrategy<P> strategy) {
       this.productConstructable = productConstructable;
-      this.productType = productType;
       this.strategy = strategy;
     }
 
@@ -342,35 +340,35 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
      * @param factoryInstance the factory instance, cannot be {@code null}
      * @param args an array of all arguments passed to the factory method, never {@code null}
      * @return the product of the factory, never {@code null}
-     * @throws InstanceCreationException when the product could not be created
+     * @throws CreationException when the product could not be created
      */
     @RuntimeType
-    public Object intercept(@This Object factoryInstance, @AllArguments Object[] args) throws InstanceCreationException {
-      try {
-        Map<String, Object> parameters = new HashMap<>();
+    public Object intercept(@This Object factoryInstance, @AllArguments Object[] args) throws CreationException {
+      Map<String, Object> parameters = new HashMap<>();
 
-        for(int i = 0; i < args.length; i++) {
-          parameters.put(factoryParameterNames.get(i), args[i]);
-        }
+      for(int i = 0; i < args.length; i++) {
+        parameters.put(factoryParameterNames.get(i), args[i]);
+      }
 
-        return productConstructable.create(createInjections(factoryInstance, parameters));
-      }
-      catch(Exception e) {
-        throw new InstanceCreationException(productType, "Exception while creating instance", e);
-      }
+      return productConstructable.create(createInjections(factoryInstance, parameters));
     }
 
-    private List<Injection> createInjections(Object factoryInstance, Map<String, Object> parameters) throws IllegalAccessException {
-      List<Injection> injections = new ArrayList<>();
+    private List<Injection> createInjections(Object factoryInstance, Map<String, Object> parameters) {
+      try {
+        List<Injection> injections = new ArrayList<>();
 
-      for(InjectionTemplate template : templates) {
-        @SuppressWarnings("unchecked")
-        Object value = template.field == null ? parameters.get(template.parameterName) : strategy.provision((P)template.field.get(factoryInstance));
+        for(InjectionTemplate template : templates) {
+          @SuppressWarnings("unchecked")
+          Object value = template.field == null ? parameters.get(template.parameterName) : strategy.provision((P)template.field.get(factoryInstance));
 
-        injections.add(new Injection(template.accessibleObject, value));
+          injections.add(new Injection(template.accessibleObject, value));
+        }
+
+        return injections;
       }
-
-      return injections;
+      catch(IllegalAccessException e) {
+        throw new IllegalStateException(e);
+      }
     }
 
     static class InjectionTemplate {

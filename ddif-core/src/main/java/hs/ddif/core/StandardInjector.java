@@ -5,9 +5,9 @@ import hs.ddif.api.Injector;
 import hs.ddif.api.InstanceResolver;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.MultipleInstancesException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.ClassInjectableFactory;
@@ -94,22 +94,22 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public <T> T getInstance(Type type, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException {
+  public <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, AutoDiscoveryException {
     return instanceResolver.getInstance(type, qualifiers);
   }
 
   @Override
-  public <T> T getInstance(Class<T> cls, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException {
+  public <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, AutoDiscoveryException {
     return instanceResolver.getInstance(cls, qualifiers);
   }
 
   @Override
-  public <T> List<T> getInstances(Type type, Object... qualifiers) throws InstanceCreationException {
+  public <T> List<T> getInstances(Type type, Object... qualifiers) throws CreationException {
     return instanceResolver.getInstances(type, qualifiers);
   }
 
   @Override
-  public <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws InstanceCreationException {
+  public <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws CreationException {
     return instanceResolver.getInstances(cls, qualifiers);
   }
 

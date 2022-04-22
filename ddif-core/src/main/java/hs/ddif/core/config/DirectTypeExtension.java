@@ -1,13 +1,13 @@
 package hs.ddif.core.config;
 
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.Key;
-import hs.ddif.api.instantiation.MultipleInstancesException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.spi.config.AnnotationStrategy;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
+import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.TypeExtension;
 import hs.ddif.spi.instantiation.TypeTrait;
 
@@ -49,7 +49,7 @@ public class DirectTypeExtension<T> implements TypeExtension<T> {
       }
 
       @Override
-      public T getInstance(InstantiationContext context) throws InstanceCreationException, MultipleInstancesException, NoSuchInstanceException {
+      public T getInstance(InstantiationContext context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
         T instance = context.create(key);
 
         if(instance == null) {
@@ -57,7 +57,7 @@ public class DirectTypeExtension<T> implements TypeExtension<T> {
             return null;
           }
 
-          throw new NoSuchInstanceException(key);
+          throw new UnsatisfiedResolutionException("No such instance: [" + key + "]");
         }
 
         return instance;

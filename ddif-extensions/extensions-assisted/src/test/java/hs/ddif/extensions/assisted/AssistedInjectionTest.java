@@ -4,7 +4,7 @@ import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectorBuilder;
@@ -55,7 +55,7 @@ public class AssistedInjectionTest {
 
       // The Product of the Factory should not be registered with the Injector:
       assertThatThrownBy(() -> injector.getInstance(TestAssistedSample.class))
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
         .hasMessage("No such instance: [hs.ddif.extensions.assisted.AssistedInjectionTest$TestAssistedSample]")
         .hasNoCause();
 
@@ -79,7 +79,7 @@ public class AssistedInjectionTest {
 
     // The Product of the Factory should not be registered with the Injector:
     assertThatThrownBy(() -> injector.getInstance(TestAssistedAbstractSample.class))
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
       .hasMessage("No such instance: [hs.ddif.extensions.assisted.AssistedInjectionTest$TestAssistedAbstractSample]")
       .hasNoCause();
 
@@ -99,7 +99,7 @@ public class AssistedInjectionTest {
 
     // The Product of the Factory should not be registered with the Injector:
     assertThatThrownBy(() -> injector.getInstance(TestAssistedAbstractSample.class))
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
       .hasMessage("No such instance: [hs.ddif.extensions.assisted.AssistedInjectionTest$TestAssistedAbstractSample]")
       .hasNoCause();
 

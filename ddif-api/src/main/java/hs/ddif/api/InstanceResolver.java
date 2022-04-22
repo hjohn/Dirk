@@ -1,9 +1,9 @@
 package hs.ddif.api;
 
 import hs.ddif.api.definition.AutoDiscoveryException;
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.MultipleInstancesException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -62,12 +62,12 @@ public interface InstanceResolver {
    * @param type the type of the instance required, cannot be {@code null}
    * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return an instance of the given class matching the given criteria, never {@code null}
-   * @throws NoSuchInstanceException when no matching instance was available or could be created
-   * @throws MultipleInstancesException when multiple matching instances were available
-   * @throws InstanceCreationException when an error occurred during creation of a matching instance
+   * @throws UnsatisfiedResolutionException when no matching instance was available or could be created
+   * @throws AmbiguousResolutionException when multiple matching instances were available
+   * @throws CreationException when an error occurred during creation of a matching instance
    * @throws AutoDiscoveryException when the injector is configured for auto discovery, the type requested was not registered yet and discovery of the type and its dependencies failed
    */
-  <T> T getInstance(Type type, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException;
+  <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, AutoDiscoveryException;
 
   /**
    * Returns an instance of the given class matching the given criteria (if any) in
@@ -78,12 +78,12 @@ public interface InstanceResolver {
    * @param cls the class of the instance required, cannot be {@code null}
    * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return an instance of the given class matching the given criteria (if any)
-   * @throws NoSuchInstanceException when no matching instance was available or could be created
-   * @throws MultipleInstancesException when multiple matching instances were available
-   * @throws InstanceCreationException when an error occurred during creation of a matching instance
+   * @throws UnsatisfiedResolutionException when no matching instance was available or could be created
+   * @throws AmbiguousResolutionException when multiple matching instances were available
+   * @throws CreationException when an error occurred during creation of a matching instance
    * @throws AutoDiscoveryException when the injector is configured for auto discovery, the type requested was not registered yet and discovery of the type and its dependencies failed
    */
-  <T> T getInstance(Class<T> cls, Object... qualifiers) throws NoSuchInstanceException, MultipleInstancesException, InstanceCreationException, AutoDiscoveryException;  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
+  <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, AutoDiscoveryException;  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
 
   /**
    * Returns all instances of the given {@link Type} matching the given criteria (if any) in
@@ -95,9 +95,9 @@ public interface InstanceResolver {
    * @param type the {@link Type} of the instances required, cannot be {@code null}
    * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return all instances of the given {@link Type} matching the given criteria (if any), never {@code null}, can be empty
-   * @throws InstanceCreationException when an error occurred during creation of a matching instance
+   * @throws CreationException when an error occurred during creation of a matching instance
    */
-  <T> List<T> getInstances(Type type, Object... qualifiers) throws InstanceCreationException;
+  <T> List<T> getInstances(Type type, Object... qualifiers) throws CreationException;
 
   /**
    * Returns all instances of the given class matching the given criteria (if any) in
@@ -109,7 +109,7 @@ public interface InstanceResolver {
    * @param cls the class of the instances required, cannot be {@code null}
    * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return all instances of the given class matching the given criteria (if any), never {@code null}, can be empty
-   * @throws InstanceCreationException when an error occurred during creation of a matching instance
+   * @throws CreationException when an error occurred during creation of a matching instance
    */
-  <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws InstanceCreationException;
+  <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws CreationException;
 }

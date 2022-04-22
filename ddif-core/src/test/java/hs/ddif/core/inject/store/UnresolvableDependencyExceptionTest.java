@@ -1,6 +1,5 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectableFactories;
@@ -10,6 +9,7 @@ import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.store.Injectables;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.spi.instantiation.Key;
 
 import java.util.Collections;
 import java.util.List;

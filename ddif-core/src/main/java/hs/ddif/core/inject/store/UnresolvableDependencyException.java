@@ -1,8 +1,8 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.api.instantiation.Key;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.spi.instantiation.Key;
 
 import java.util.Set;
 

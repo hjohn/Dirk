@@ -4,7 +4,7 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
@@ -89,11 +89,11 @@ public class InjectorProviderTest {
       injector.remove(DatabaseProvider.class);
 
       assertThatThrownBy(() -> injector.getInstance(DatabaseProvider.class))
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
         .hasNoCause();
 
       assertThatThrownBy(() -> injector.getInstance(Database.class))
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
         .hasNoCause();
     }
   }
@@ -129,7 +129,7 @@ public class InjectorProviderTest {
       injector.removeInstance(provider);
 
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
         .hasMessage("No such instance: [hs.ddif.jakarta.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
@@ -153,7 +153,7 @@ public class InjectorProviderTest {
       injector.remove(SimpleDatabaseProvider.class);
 
       assertThatThrownBy(() -> injector.getInstance(BeanWithDatabase.class))
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
         .hasMessage("No such instance: [hs.ddif.jakarta.InjectorProviderTest$BeanWithDatabase]")
         .hasNoCause();
     }
@@ -217,7 +217,7 @@ public class InjectorProviderTest {
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
       .hasMessage("No such instance: [hs.ddif.jakarta.InjectorProviderTest$SimpleDatabaseProvider]")
       .hasNoCause();
   }
@@ -244,7 +244,7 @@ public class InjectorProviderTest {
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseProvider.class))  // Should not be part of Injector when registration fails
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
       .hasMessage("No such instance: [hs.ddif.jakarta.InjectorProviderTest$SimpleDatabaseProvider]")
       .hasNoCause();
   }
@@ -274,8 +274,8 @@ public class InjectorProviderTest {
       injector.remove(AppendableProvider.class);
 
       assertFalse(injector.contains(AppendableProvider.class));
-      assertThrows(NoSuchInstanceException.class, () -> injector.getInstance(AppendableProvider.class));
-      assertThrows(NoSuchInstanceException.class, () -> injector.getInstance(Appendable.class));
+      assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(AppendableProvider.class));
+      assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(Appendable.class));
     }
   }
 
@@ -368,7 +368,7 @@ public class InjectorProviderTest {
     assertThat(injector.getInstance(Z.class, Green.class)).isExactlyInstanceOf(Z.class);
     assertThat(injector.getInstance(Z.class, Big.class)).isExactlyInstanceOf(Z.class);
     assertThatThrownBy(() -> injector.getInstance(Z.class, Small.class))
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
       .hasNoCause();
 
     injector.register(X.class);

@@ -1,9 +1,10 @@
 package hs.ddif.core.definition.factory;
 
-import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -30,7 +31,7 @@ public class MethodObjectFactory<T> implements Constructable<T> {
   }
 
   @Override
-  public T create(List<Injection> injections) throws InstanceCreationException {
+  public T create(List<Injection> injections) throws CreationException {
     try {
       Object[] values = new Object[injections.size() - (isStatic ? 0 : 1)];  // Parameters for method
       Object instance = null;
@@ -50,8 +51,11 @@ public class MethodObjectFactory<T> implements Constructable<T> {
 
       return value;
     }
+    catch(InvocationTargetException e) {
+      throw new CreationException(method, "call failed", e.getCause());
+    }
     catch(Exception e) {
-      throw new InstanceCreationException(method, "call failed", e);
+      throw new IllegalStateException(method + " call failed", e);
     }
   }
 

@@ -4,9 +4,9 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.api.InstanceResolver;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.MultipleInstancesException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
@@ -23,7 +23,6 @@ import hs.ddif.spi.scope.OutOfScopeException;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
@@ -78,12 +77,12 @@ public class DefaultInstanceResolverTest {
     @Test
     void shouldThrowExceptionWhenGettingSingleInstance() {
       assertThatThrownBy(() -> instanceResolver.getInstance(A.class))
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
         .hasNoCause();
     }
 
     @Test
-    void shouldReturnEmptySetWhenGettingMultipleInstances() throws InstanceCreationException {
+    void shouldReturnEmptySetWhenGettingMultipleInstances() throws CreationException {
       assertThat(instanceResolver.getInstances(A.class)).isEmpty();
     }
   }
@@ -121,7 +120,7 @@ public class DefaultInstanceResolverTest {
     }
 
     @Test
-    void getInstancesShouldReturnInstancesOfKnownTypes() throws InstanceCreationException {
+    void getInstancesShouldReturnInstancesOfKnownTypes() throws CreationException {
       assertThat(instanceResolver.getInstances(String.class)).hasSize(2);
     }
 
@@ -135,7 +134,7 @@ public class DefaultInstanceResolverTest {
     @Test
     void shouldThrowOutOfScopeExceptionWhenScopeNotActive() {
       assertThatThrownBy(() -> instanceResolver.getInstance(D.class))
-        .isExactlyInstanceOf(InstanceCreationException.class)
+        .isExactlyInstanceOf(CreationException.class)
         .hasMessage("[class hs.ddif.core.DefaultInstanceResolverTest$D] could not be created")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(OutOfScopeException.class)
@@ -146,12 +145,12 @@ public class DefaultInstanceResolverTest {
     @Test
     void shouldThrowExceptionWhenNotSingular() {
       assertThatThrownBy(() -> instanceResolver.getInstance(String.class))
-        .isExactlyInstanceOf(MultipleInstancesException.class)
+        .isExactlyInstanceOf(AmbiguousResolutionException.class)
         .hasNoCause();
     }
 
     @Test
-    void getInstancesShouldRetrieveScopedInstancesOnlyWhenActive() throws InstanceCreationException {
+    void getInstancesShouldRetrieveScopedInstancesOnlyWhenActive() throws CreationException {
       assertThat(instanceResolver.getInstances(E.class)).hasSize(1);
 
       currentScope = "Active!";
@@ -162,10 +161,8 @@ public class DefaultInstanceResolverTest {
     @Test
     void getInstancesShouldThrowExceptionWhenInstantiationFails() {
       assertThatThrownBy(() -> instanceResolver.getInstances(H.class))
-        .isExactlyInstanceOf(InstanceCreationException.class)
+        .isExactlyInstanceOf(CreationException.class)
         .hasMessage("Method [hs.ddif.core.DefaultInstanceResolverTest$H hs.ddif.core.DefaultInstanceResolverTest$B.createH()] call failed")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(InvocationTargetException.class)
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(RuntimeException.class)
         .hasMessage("can't create H")
@@ -173,21 +170,21 @@ public class DefaultInstanceResolverTest {
     }
 
     @Test
-    void getInstancesShouldRetrieveSingletons() throws InstanceCreationException {
+    void getInstancesShouldRetrieveSingletons() throws CreationException {
       assertThat(instanceResolver.getInstances(B.class))
         .hasSize(1)
         .containsExactlyInAnyOrderElementsOf(instanceResolver.getInstances(B.class));
     }
 
     @Test
-    void getInstancesShouldIgnoreNullInstancesFromProducers() throws InstanceCreationException {
+    void getInstancesShouldIgnoreNullInstancesFromProducers() throws CreationException {
       assertThat(instanceResolver.getInstances(I.class)).isEmpty();
     }
 
     @Test
     void getInstanceShouldRejectNullInstancesFromProducers() {
       assertThatThrownBy(() -> instanceResolver.getInstance(I.class))
-        .isExactlyInstanceOf(NoSuchInstanceException.class)
+        .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
         .hasMessage("No such instance: [hs.ddif.core.DefaultInstanceResolverTest$I]")
         .hasNoCause();
     }
@@ -195,10 +192,8 @@ public class DefaultInstanceResolverTest {
     @Test
     void getInstanceShouldThrowExceptionWhenInstantiationFails() {
       assertThatThrownBy(() -> instanceResolver.getInstance(H.class))
-        .isExactlyInstanceOf(InstanceCreationException.class)
+        .isExactlyInstanceOf(CreationException.class)
         .hasMessage("Method [hs.ddif.core.DefaultInstanceResolverTest$H hs.ddif.core.DefaultInstanceResolverTest$B.createH()] call failed")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(InvocationTargetException.class)
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(RuntimeException.class)
         .hasMessage("can't create H")
@@ -212,7 +207,7 @@ public class DefaultInstanceResolverTest {
     private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
 
     @Test
-    void getInstancesShouldNeverDiscoverTypes() throws InstanceCreationException {
+    void getInstancesShouldNeverDiscoverTypes() throws CreationException {
       assertThat(instanceResolver.getInstances(A.class)).isEmpty();
       assertThat(instanceResolver.getInstances(B.class)).isEmpty();
       assertThat(instanceResolver.getInstances(C.class)).isEmpty();

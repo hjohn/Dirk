@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
  * which trigger further dependency construction which eventually need
  * the current object under construction (causing a loop) and so on.
  */
-public class InstanceCreationException extends InstanceResolutionException {
+public class CreationException extends InjectionException {
 
   /**
    * Constructs a new instance.
@@ -20,7 +20,7 @@ public class InstanceCreationException extends InstanceResolutionException {
    * @param message a message
    * @param cause a {@link Throwable} to use as cause
    */
-  public InstanceCreationException(Member member, String message, Throwable cause) {
+  public CreationException(Member member, String message, Throwable cause) {
     super(describe(member) + " " + message, cause);
   }
 
@@ -31,7 +31,7 @@ public class InstanceCreationException extends InstanceResolutionException {
    * @param message a message
    * @param cause a {@link Throwable} to use as cause
    */
-  public InstanceCreationException(Type type, String message, Throwable cause) {
+  public CreationException(Type type, String message, Throwable cause) {
     super("[" + type + "] " + message, cause);
   }
 
@@ -41,7 +41,7 @@ public class InstanceCreationException extends InstanceResolutionException {
    * @param type type involved, cannot be {@code null}
    * @param message a message
    */
-  public InstanceCreationException(Type type, String message) {
+  public CreationException(Type type, String message) {
     super("[" + type + "] " + message);
   }
 

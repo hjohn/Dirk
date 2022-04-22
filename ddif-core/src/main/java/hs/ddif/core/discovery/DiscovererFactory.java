@@ -1,8 +1,8 @@
 package hs.ddif.core.discovery;
 
-import hs.ddif.api.instantiation.Key;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.store.Resolver;
+import hs.ddif.spi.instantiation.Key;
 
 import java.lang.reflect.Type;
 import java.util.List;

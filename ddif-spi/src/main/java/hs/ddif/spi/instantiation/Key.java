@@ -1,4 +1,4 @@
-package hs.ddif.api.instantiation;
+package hs.ddif.spi.instantiation;
 
 import hs.ddif.api.util.Primitives;
 

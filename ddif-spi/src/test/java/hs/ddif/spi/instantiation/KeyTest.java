@@ -1,4 +1,4 @@
-package hs.ddif.api.instantiation;
+package hs.ddif.spi.instantiation;
 
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
@@ -31,7 +31,7 @@ public class KeyTest {
 
     assertThat(key.getType()).isEqualTo(Types.parameterize(Supplier.class, String.class));
     assertThat(key.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class), Annotations.of(Green.class));
-    assertThat(key.toString()).isEqualTo("@hs.ddif.api.instantiation.KeyTest$Green() @hs.ddif.api.instantiation.KeyTest$Red() java.util.function.Supplier<java.lang.String>");
+    assertThat(key.toString()).isEqualTo("@hs.ddif.spi.instantiation.KeyTest$Green() @hs.ddif.spi.instantiation.KeyTest$Red() java.util.function.Supplier<java.lang.String>");
   }
 
   @Test

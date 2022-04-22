@@ -1,9 +1,9 @@
 package hs.ddif.core;
 
-import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Types;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
+import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.TypeExtension;
 
 import java.lang.reflect.AnnotatedElement;

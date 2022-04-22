@@ -1,6 +1,6 @@
 package hs.ddif.core;
 
-import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
@@ -105,7 +105,7 @@ final class DefaultInjectable<T> implements Injectable<T> {
   }
 
   @Override
-  public T create(List<Injection> injections) throws InstanceCreationException {
+  public T create(List<Injection> injections) throws CreationException {
     return constructable.create(injections);
   }
 

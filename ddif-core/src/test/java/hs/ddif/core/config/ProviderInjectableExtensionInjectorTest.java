@@ -2,8 +2,8 @@ package hs.ddif.core.config;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.Injector;
-import hs.ddif.api.instantiation.InstanceCreationException;
-import hs.ddif.api.instantiation.NoSuchInstanceException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.Injectors;
 import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
@@ -44,8 +44,8 @@ public class ProviderInjectableExtensionInjectorTest {
      * Both A and B should be unavailable now:
      */
 
-    assertThatThrownBy(() -> injector.getInstance(A.class)).isExactlyInstanceOf(NoSuchInstanceException.class);
-    assertThatThrownBy(() -> injector.getInstance(B.class)).isExactlyInstanceOf(NoSuchInstanceException.class);
+    assertThatThrownBy(() -> injector.getInstance(A.class)).isExactlyInstanceOf(UnsatisfiedResolutionException.class);
+    assertThatThrownBy(() -> injector.getInstance(B.class)).isExactlyInstanceOf(UnsatisfiedResolutionException.class);
   }
 
   @Test
@@ -112,10 +112,10 @@ public class ProviderInjectableExtensionInjectorTest {
     injector.register(C.class);
 
     assertThatThrownBy(() -> injector.getInstance(C.class))
-      .isExactlyInstanceOf(InstanceCreationException.class)
+      .isExactlyInstanceOf(CreationException.class)
       .hasMessage("[class hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$C] could not be created")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
       .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
 
@@ -129,7 +129,7 @@ public class ProviderInjectableExtensionInjectorTest {
     assertThat(provider).isNotEqualTo(providerInstance);
 
     assertThatThrownBy(() -> provider.get())
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
       .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
 
@@ -147,7 +147,7 @@ public class ProviderInjectableExtensionInjectorTest {
     assertThat(instance.b).isNotEqualTo(provider);  // wrapped providers are not singletons, this should be a different one
 
     assertThatThrownBy(() -> instance.b.get())
-      .isExactlyInstanceOf(NoSuchInstanceException.class)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
       .hasMessage("No such instance: [hs.ddif.core.config.ProviderInjectableExtensionInjectorTest$B]")
       .hasNoCause();
   }
