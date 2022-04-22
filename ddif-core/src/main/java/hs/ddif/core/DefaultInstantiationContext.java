@@ -94,6 +94,29 @@ class DefaultInstantiationContext implements InstantiationContext {
     return instances;
   }
 
+  /*
+   * Should we return Handle here, or something else that Instance would need to wrap again?
+   * Or should we accept the fact that Instance should be allowed to deal with the internal class Injectable
+   * or some sub-interface thereof so it can do its own wrapping in Handle?
+   */
+
+//  public synchronized <T> List<
+
+  @Override
+  public boolean isUnsatisfied(Key key) {
+    return resolver.resolve(key).isEmpty();
+  }
+
+  @Override
+  public boolean isAmbiguous(Key key) {
+    return resolver.resolve(key).size() > 1;
+  }
+
+  @Override
+  public boolean isResolvable(Key key) {
+    return resolver.resolve(key).size() == 1;
+  }
+
   private <T> T createInstance(Injectable<T> injectable) throws InstanceCreationException {
     return createInstance(injectable, false);
   }

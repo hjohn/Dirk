@@ -19,6 +19,8 @@
   <modules>
     <module>ddif-annotations</module>
     <module>ddif-api</module>
+    <module>ddif-cdi</module>
+    <module>ddif-cdi-minimal</module>
     <module>ddif-commons-lang3-minimal</module>
     <module>ddif-core</module>
     <module>ddif-extensions</module>
@@ -87,6 +89,11 @@
         <groupId>jakarta.annotation</groupId>
         <artifactId>jakarta.annotation-api</artifactId>
         <version>2.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.enterprise</groupId>
+        <artifactId>jakarta.enterprise.cdi-api</artifactId>
+        <version>4.0.0-RC5</version>
       </dependency>
       <dependency>
         <groupId>jakarta.inject</groupId>

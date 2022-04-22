@@ -35,5 +35,38 @@ public interface InstantiationContext {
    */
   <T> List<T> createAll(Key key) throws InstanceCreationException;
 
+  /**
+   * <p>
+   * Determines if there is no bean that matches the required type and qualifiers and is eligible for injection into the class
+   * into which the parent <code>Instance</code> was injected.
+   * </p>
+   *
+   * @return <code>true</code> if there is no bean that matches the required type and qualifiers and is eligible for injection
+   *         into the class into which the parent <code>Instance</code> was injected, or <code>false</code> otherwise.
+   */
+  boolean isUnsatisfied(Key key);
+
+  /**
+   * <p>
+   * Determines if there is more than one bean that matches the required type and qualifiers and is eligible for injection
+   * into the class into which the parent <code>Instance</code> was injected.
+   * </p>
+   *
+   * @return <code>true</code> if there is more than one bean that matches the required type and qualifiers and is eligible for
+   *         injection into the class into which the parent <code>Instance</code> was injected, or <code>false</code> otherwise.
+   */
+  boolean isAmbiguous(Key key);
+
+  /**
+   * <p>
+   * Determines if there is exactly one bean that matches the required type and qualifiers and is eligible for injection
+   * into the class into which the parent <code>Instance</code> was injected.
+   * </p>
+   *
+   * @since 2.0
+   * @return <code>true</code> if there is exactly one bean that matches the required type and qualifiers and is eligible for
+   *         injection into the class into which the parent <code>Instance</code> was injected, or <code>false</code> otherwise.
+   */
+  boolean isResolvable(Key key);
 }
 
