@@ -1,6 +1,6 @@
 package hs.ddif.core.discovery;
 
-import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.instantiation.Key;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.store.Resolver;
 

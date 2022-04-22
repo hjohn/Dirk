@@ -2,17 +2,17 @@ package hs.ddif.core;
 
 import hs.ddif.api.InstanceResolver;
 import hs.ddif.api.definition.AutoDiscoveryException;
-import hs.ddif.api.instantiation.InstantiationContext;
-import hs.ddif.api.instantiation.Instantiator;
-import hs.ddif.api.instantiation.InstantiatorFactory;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
-import hs.ddif.api.instantiation.domain.Key;
-import hs.ddif.api.instantiation.domain.MultipleInstancesException;
-import hs.ddif.api.instantiation.domain.NoSuchInstanceException;
+import hs.ddif.api.instantiation.InstanceCreationException;
+import hs.ddif.api.instantiation.Key;
+import hs.ddif.api.instantiation.MultipleInstancesException;
+import hs.ddif.api.instantiation.NoSuchInstanceException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.discovery.DiscovererFactory;
 import hs.ddif.core.inject.store.InjectableStore;
+import hs.ddif.spi.instantiation.InstantiationContext;
+import hs.ddif.spi.instantiation.Instantiator;
+import hs.ddif.spi.instantiation.InstantiatorFactory;
 
 import java.lang.reflect.Type;
 import java.util.Comparator;

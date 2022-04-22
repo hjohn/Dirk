@@ -1,10 +1,10 @@
 package hs.ddif.core.instantiation;
 
-import hs.ddif.api.annotation.AnnotationStrategy;
-import hs.ddif.api.instantiation.TypeExtension;
 import hs.ddif.core.config.ListTypeExtension;
 import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
+import hs.ddif.spi.config.AnnotationStrategy;
+import hs.ddif.spi.instantiation.TypeExtension;
 
 import java.util.HashMap;
 import java.util.List;

@@ -1,7 +1,7 @@
 package hs.ddif.core.store;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.TypeReference;
 import hs.ddif.api.util.Types;

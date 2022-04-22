@@ -1,9 +1,9 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.api.annotation.AnnotationStrategy;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Types;
+import hs.ddif.spi.config.AnnotationStrategy;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;

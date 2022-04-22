@@ -1,10 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.definition.DiscoveryExtension;
-import hs.ddif.api.definition.DiscoveryExtension.Registry;
-import hs.ddif.api.instantiation.InstantiatorFactory;
-import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ClassInjectableFactory;
@@ -15,6 +12,9 @@ import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.discovery.DiscovererFactory;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
+import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.spi.discovery.DiscoveryExtension.Registry;
+import hs.ddif.spi.instantiation.InstantiatorFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

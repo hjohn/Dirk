@@ -1,6 +1,6 @@
 package hs.ddif.core.inject.store;
 
-import hs.ddif.api.instantiation.domain.Key;
+import hs.ddif.api.instantiation.Key;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectableFactories;

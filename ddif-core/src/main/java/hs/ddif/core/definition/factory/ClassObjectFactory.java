@@ -1,9 +1,9 @@
 package hs.ddif.core.definition.factory;
 
-import hs.ddif.api.instantiation.LifeCycleCallbacks;
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.InstanceCreationException;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
+import hs.ddif.spi.config.LifeCycleCallbacks;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;

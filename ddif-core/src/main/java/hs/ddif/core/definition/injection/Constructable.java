@@ -1,6 +1,6 @@
 package hs.ddif.core.definition.injection;
 
-import hs.ddif.api.instantiation.domain.InstanceCreationException;
+import hs.ddif.api.instantiation.InstanceCreationException;
 
 import java.util.List;
 

@@ -1,9 +1,9 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.definition.LifeCycleCallbacksFactory;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.factory.ClassObjectFactory;
+import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;

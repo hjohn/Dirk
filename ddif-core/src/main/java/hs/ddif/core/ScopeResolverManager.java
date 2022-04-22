@@ -1,8 +1,8 @@
 package hs.ddif.core;
 
-import hs.ddif.api.scope.CreationalContext;
-import hs.ddif.api.scope.ScopeResolver;
-import hs.ddif.api.scope.UnknownScopeException;
+import hs.ddif.spi.scope.CreationalContext;
+import hs.ddif.spi.scope.ScopeResolver;
+import hs.ddif.spi.scope.UnknownScopeException;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
