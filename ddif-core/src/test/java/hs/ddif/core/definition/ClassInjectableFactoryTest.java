@@ -11,7 +11,6 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.Collections;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,9 +81,6 @@ public class ClassInjectableFactoryTest {
   public void createShouldRejectInjectableClassWithoutConstructors() {
     assertThatThrownBy(() -> factory.create(ClassWithoutPublicConstructors.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithoutPublicConstructors] could not be bound")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithoutPublicConstructors] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .hasNoCause();
   }
@@ -93,9 +89,6 @@ public class ClassInjectableFactoryTest {
   public void createShouldRejectInjectableClassWithMultipleAnnotatedConstructors() {
     assertThatThrownBy(() -> factory.create(ClassWithTooManyAnnotatedConstructors.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithTooManyAnnotatedConstructors] could not be bound")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithTooManyAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .hasNoCause();
   }
@@ -104,9 +97,6 @@ public class ClassInjectableFactoryTest {
   public void createShouldRejectInjectableClassWithAnnotatedFinalFields() {
     assertThatThrownBy(() -> factory.create(ClassWithAnnotatedFinalField.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithAnnotatedFinalField] could not be bound")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Field [private final java.lang.String hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithAnnotatedFinalField.a] of [class hs.ddif.core.definition.ClassInjectableFactoryTest$ClassWithAnnotatedFinalField] cannot be final")
       .hasNoCause();
   }

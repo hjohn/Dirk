@@ -5,7 +5,6 @@ import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.util.Primitives;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
-import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.factory.ClassObjectFactory;
 import hs.ddif.core.definition.injection.Constructable;
@@ -125,85 +124,80 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
     }
 
     private Class<?> generateFactoryClass() throws DefinitionException {
-      try {
-        Constructor<?> constructor = bindingProvider.getConstructor(productClass);
-        List<Binding> productBindings = bindingProvider.ofConstructorAndMembers(constructor, productClass);
-        Constructable<?> constructable = new ClassObjectFactory<>(constructor, lifeCycleCallbacksFactory.create(productClass));
-        Interceptor<?> interceptor = new Interceptor<>(constructable, strategy);
+      Constructor<?> constructor = bindingProvider.getConstructor(productClass);
+      List<Binding> productBindings = bindingProvider.ofConstructorAndMembers(constructor, productClass);
+      Constructable<?> constructable = new ClassObjectFactory<>(constructor, lifeCycleCallbacksFactory.create(productClass));
+      Interceptor<?> interceptor = new Interceptor<>(constructable, strategy);
 
-        /*
-         * Construct ByteBuddy builder:
-         */
+      /*
+       * Construct ByteBuddy builder:
+       */
 
-        Builder<?> builder = new ByteBuddy()
-          .subclass(factoryType, ConstructorStrategy.Default.IMITATE_SUPER_CLASS.withInheritedAnnotations())
-          .annotateType(Types.raw(factoryType).getDeclaredAnnotations())
-          .method(ElementMatchers.returns(productClass).and(ElementMatchers.isAbstract()))
-          .intercept(MethodDelegation.to(interceptor));
+      Builder<?> builder = new ByteBuddy()
+        .subclass(factoryType, ConstructorStrategy.Default.IMITATE_SUPER_CLASS.withInheritedAnnotations())
+        .annotateType(Types.raw(factoryType).getDeclaredAnnotations())
+        .method(ElementMatchers.returns(productClass).and(ElementMatchers.isAbstract()))
+        .intercept(MethodDelegation.to(interceptor));
 
-        /*
-         * Add a field per binding to the builder:
-         */
+      /*
+       * Add a field per binding to the builder:
+       */
 
-        List<String> providerFieldNames = new ArrayList<>();
-        Map<String, Binding> parameterBindings = new HashMap<>();
+      List<String> providerFieldNames = new ArrayList<>();
+      Map<String, Binding> parameterBindings = new HashMap<>();
 
-        for(int i = 0; i < productBindings.size(); i++) {
-          Binding binding = productBindings.get(i);
-          Parameter parameter = binding.getParameter();
-          AccessibleObject accessibleObject = binding.getAccessibleObject();
+      for(int i = 0; i < productBindings.size(); i++) {
+        Binding binding = productBindings.get(i);
+        Parameter parameter = binding.getParameter();
+        AccessibleObject accessibleObject = binding.getAccessibleObject();
 
-          if(strategy.isArgument(binding.getAnnotatedElement())) {
-            try {
-              String name = parameter == null ? strategy.determineArgumentName(accessibleObject) : strategy.determineArgumentName(parameter);
+        if(strategy.isArgument(binding.getAnnotatedElement())) {
+          try {
+            String name = parameter == null ? strategy.determineArgumentName(accessibleObject) : strategy.determineArgumentName(parameter);
 
-              if(parameterBindings.put(name, binding) != null) {
-                throw new DefinitionException(accessibleObject, "has a duplicate argument name: " + name);
-              }
-
-              providerFieldNames.add(null);
+            if(parameterBindings.put(name, binding) != null) {
+              throw new DefinitionException(accessibleObject, "has a duplicate argument name: " + name);
             }
-            catch(MissingArgumentException e) {
-              throw new DefinitionException(accessibleObject, "unable to determine argument name" + (parameter == null ? "" : " for parameter [" + parameter + "]"), e);
-            }
+
+            providerFieldNames.add(null);
           }
-          else {
-            List<Annotation> annotations = Arrays.asList(binding.getAnnotatedElement().getAnnotations());
-            String fieldName = "__binding" + i + "__" + toBindingString(binding) + "__";
-
-            if(parameter != null) {
-              annotations = new ArrayList<>(annotations);
-
-              annotations.add(strategy.injectAnnotation());
-            }
-
-            providerFieldNames.add(fieldName);
-            builder = builder
-              .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getType()), Visibility.PRIVATE)
-              .annotateField(annotations);
+          catch(MissingArgumentException e) {
+            throw new DefinitionException(accessibleObject, "unable to determine argument name" + (parameter == null ? "" : " for parameter [" + parameter + "]"), e);
           }
         }
+        else {
+          List<Annotation> annotations = Arrays.asList(binding.getAnnotatedElement().getAnnotations());
+          String fieldName = "__binding" + i + "__" + toBindingString(binding) + "__";
 
-        /*
-         * Generate the factory:
-         */
+          if(parameter != null) {
+            annotations = new ArrayList<>(annotations);
 
-        Class<?> cls = load(builder.make());
+            annotations.add(strategy.injectAnnotation());
+          }
 
-        /*
-         * Set the field list on the factory:
-         */
-
-        List<Field> providerFields = createProviderFields(cls, providerFieldNames);
-        List<String> names = validateProducerAndReturnArgumentNames(parameterBindings);
-
-        interceptor.initialize(parameterBindings, productBindings, providerFields, names);
-
-        return cls;
+          providerFieldNames.add(fieldName);
+          builder = builder
+            .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getType()), Visibility.PRIVATE)
+            .annotateField(annotations);
+        }
       }
-      catch(BindingException e) {
-        throw new DefinitionException(productClass, "could not be bound", e);
-      }
+
+      /*
+       * Generate the factory:
+       */
+
+      Class<?> cls = load(builder.make());
+
+      /*
+       * Set the field list on the factory:
+       */
+
+      List<Field> providerFields = createProviderFields(cls, providerFieldNames);
+      List<String> names = validateProducerAndReturnArgumentNames(parameterBindings);
+
+      interceptor.initialize(parameterBindings, productBindings, providerFields, names);
+
+      return cls;
     }
 
     private Class<?> load(Unloaded<?> unloaded) {

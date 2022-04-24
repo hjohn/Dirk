@@ -1,6 +1,7 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
@@ -102,7 +103,7 @@ public class BindingProviderTest {
   @Test
   public void getConstructorShouldRejectClassWithoutPublicDefaultConstructor() {
     assertThatThrownBy(() -> bindingProvider.getConstructor(ClassC.class))
-      .isExactlyInstanceOf(BindingException.class)
+      .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.definition.BindingProviderTest$ClassC] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .hasNoCause();
   }
@@ -110,7 +111,7 @@ public class BindingProviderTest {
   @Test
   public void getConstructorShouldRejectClassWithMultipleAnnotatedConstructors() {
     assertThatThrownBy(() -> bindingProvider.getConstructor(ClassD.class))
-      .isExactlyInstanceOf(BindingException.class)
+      .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("[class hs.ddif.core.definition.BindingProviderTest$ClassD] cannot have multiple Inject annotated constructors")
       .hasNoCause();
   }
@@ -118,7 +119,7 @@ public class BindingProviderTest {
   @Test
   public void ofMembersShouldRejectFinalField() {
     assertThatThrownBy(() -> bindingProvider.ofMembers(ClassF.class))
-      .isExactlyInstanceOf(BindingException.class)
+      .isExactlyInstanceOf(DefinitionException.class)
       .hasMessage("Field [final java.lang.String hs.ddif.core.definition.BindingProviderTest$ClassF.x] of [class hs.ddif.core.definition.BindingProviderTest$ClassF] cannot be final")
       .hasNoCause();
   }

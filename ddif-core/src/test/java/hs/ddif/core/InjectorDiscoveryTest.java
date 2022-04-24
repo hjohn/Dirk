@@ -6,7 +6,6 @@ import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.CreationException;
-import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.test.injectables.BeanWithInjection;
 import hs.ddif.core.test.injectables.BigRedBean;
 import hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithEmptyAndAnnotatedConstructor;
@@ -49,7 +48,7 @@ public class InjectorDiscoveryTest {
     assertThatThrownBy(() -> injector.getInstance(SampleWithDependencyOnSampleWithoutConstructorMatch.class))
       .isExactlyInstanceOf(AutoDiscoveryException.class)
       .hasMessage("[hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch] and the discovered types [Class [hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch]] could not be registered\n"
-        + "    -> [hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] required by [hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch], via Field [public hs.ddif.core.test.injectables.SampleWithoutConstructorMatch hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch.sampleWithoutConstructorMatch], is not registered and cannot be discovered (reason: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] could not be bound because [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)")
+        + "    -> [hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] required by [hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch], via Field [public hs.ddif.core.test.injectables.SampleWithoutConstructorMatch hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch.sampleWithoutConstructorMatch], is not registered and cannot be discovered (reason: [class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       .hasMessage("Missing dependency [hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] required for Field [public hs.ddif.core.test.injectables.SampleWithoutConstructorMatch hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithoutConstructorMatch.sampleWithoutConstructorMatch]")
@@ -64,7 +63,7 @@ public class InjectorDiscoveryTest {
     assertThatThrownBy(() -> injector.getInstance(SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.class))
       .isExactlyInstanceOf(AutoDiscoveryException.class)
       .hasMessage("[hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors] and the discovered types [Class [hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors]] could not be registered\n"
-        + "    -> [hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] required by [hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors], via Field [public hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.sample], is not registered and cannot be discovered (reason: [class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] could not be bound because [class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors)")
+        + "    -> [hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] required by [hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors], via Field [public hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.sample], is not registered and cannot be discovered (reason: [class hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors)")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       .hasMessage("Missing dependency [hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors] required for Field [public hs.ddif.core.test.injectables.SampleWithMultipleAnnotatedConstructors hs.ddif.core.test.injectables.SampleWithDependencyOnSampleWithMultipleAnnotatedConstructors.sample]")
@@ -75,17 +74,13 @@ public class InjectorDiscoveryTest {
   }
 
   @Test
-  public void shouldThrowBindingExceptionWhenAddingClassWithoutConstructorMatch() {
+  public void shouldThrowDefinitionExceptionWhenAddingClassWithoutConstructorMatch() {
     assertThatThrownBy(() -> injector.getInstance(SampleWithoutConstructorMatch.class))
       .isExactlyInstanceOf(AutoDiscoveryException.class)
       .hasMessage("Unable to instantiate [hs.ddif.core.test.injectables.SampleWithoutConstructorMatch]")
       .hasNoSuppressedExceptions()
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] could not be bound")
-      .hasNoSuppressedExceptions()
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("[class hs.ddif.core.test.injectables.SampleWithoutConstructorMatch] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
       .hasNoCause();
   }
@@ -121,7 +116,7 @@ public class InjectorDiscoveryTest {
   }
 
   @Test
-  public void shouldThrowBindingExceptionWhenDiscoveredClassRequiresQualifiers() {
+  public void shouldThrowDefinitionExceptionWhenDiscoveredClassRequiresQualifiers() {
     assertThatThrownBy(() -> injector.getInstance(G.class))
       .isExactlyInstanceOf(AutoDiscoveryException.class)
       .hasMessage("[hs.ddif.core.InjectorDiscoveryTest$G] and the discovered types [Class [hs.ddif.core.InjectorDiscoveryTest$G]] could not be registered\n"

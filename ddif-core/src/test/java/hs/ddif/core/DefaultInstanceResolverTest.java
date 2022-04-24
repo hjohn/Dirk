@@ -239,7 +239,7 @@ public class DefaultInstanceResolverTest {
       assertThatThrownBy(() -> instanceResolver.getInstance(L.class))
         .isExactlyInstanceOf(AutoDiscoveryException.class)
         .hasMessage("[hs.ddif.core.DefaultInstanceResolverTest$L] and the discovered types [Class [hs.ddif.core.DefaultInstanceResolverTest$K], Class [hs.ddif.core.DefaultInstanceResolverTest$L]] could not be registered\n"
-          + "    -> [hs.ddif.core.DefaultInstanceResolverTest$M] required by [hs.ddif.core.DefaultInstanceResolverTest$L], via Field [hs.ddif.core.DefaultInstanceResolverTest$M hs.ddif.core.DefaultInstanceResolverTest$L.m], is not registered and cannot be discovered (reason: [class hs.ddif.core.DefaultInstanceResolverTest$M] could not be bound because [class hs.ddif.core.DefaultInstanceResolverTest$M] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)")
+          + "    -> [hs.ddif.core.DefaultInstanceResolverTest$M] required by [hs.ddif.core.DefaultInstanceResolverTest$L], via Field [hs.ddif.core.DefaultInstanceResolverTest$M hs.ddif.core.DefaultInstanceResolverTest$L.m], is not registered and cannot be discovered (reason: [class hs.ddif.core.DefaultInstanceResolverTest$M] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)")
         .hasNoSuppressedExceptions()
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
