@@ -4,6 +4,7 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.api.InstanceResolver;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -92,7 +94,8 @@ public class DefaultInstanceResolverTest {
     private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
     private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
 
-    {
+    @BeforeEach
+    void beforeEach() throws DependencyException {
       try {
         store.putAll(List.of(
           classInjectableFactory.create(A.class),

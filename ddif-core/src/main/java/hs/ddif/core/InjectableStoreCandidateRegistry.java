@@ -3,6 +3,7 @@ package hs.ddif.core;
 import hs.ddif.api.CandidateRegistry;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DependencyException;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.discovery.DiscovererFactory;
@@ -40,36 +41,36 @@ class InjectableStoreCandidateRegistry implements CandidateRegistry {
   }
 
   @Override
-  public void register(Type type) throws AutoDiscoveryException, DefinitionException {
+  public void register(Type type) throws AutoDiscoveryException, DefinitionException, DependencyException {
     registerInternal(List.of(type));
   }
 
   @Override
-  public void register(List<Type> types) throws AutoDiscoveryException, DefinitionException {
+  public void register(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
     registerInternal(types);
   }
 
   @Override
-  public void registerInstance(Object instance, Annotation... qualifiers) throws DefinitionException {
+  public void registerInstance(Object instance, Annotation... qualifiers) throws DefinitionException, DependencyException {
     store.putAll(discovererFactory.create(store, instanceInjectableFactory.create(instance, qualifiers)).discover());
   }
 
   @Override
-  public void remove(Type type) throws AutoDiscoveryException, DefinitionException {
+  public void remove(Type type) throws AutoDiscoveryException, DefinitionException, DependencyException {
     removeInternal(List.of(type));
   }
 
   @Override
-  public void remove(List<Type> types) throws AutoDiscoveryException, DefinitionException {
+  public void remove(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
     removeInternal(types);
   }
 
   @Override
-  public void removeInstance(Object instance) throws DefinitionException {
+  public void removeInstance(Object instance) throws DefinitionException, DependencyException {
     store.removeAll(discovererFactory.create(store, instanceInjectableFactory.create(instance)).discover());
   }
 
-  private void registerInternal(List<Type> types) throws AutoDiscoveryException, DefinitionException {
+  private void registerInternal(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
     Discoverer discoverer = discovererFactory.create(store, types);
 
     try {
@@ -84,7 +85,7 @@ class InjectableStoreCandidateRegistry implements CandidateRegistry {
     }
   }
 
-  private void removeInternal(List<Type> types) throws AutoDiscoveryException, DefinitionException {
+  private void removeInternal(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
     Discoverer discoverer = discovererFactory.create(store, types);
 
     try {

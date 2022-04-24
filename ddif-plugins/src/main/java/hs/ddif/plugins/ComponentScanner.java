@@ -3,6 +3,7 @@ package hs.ddif.plugins;
 import hs.ddif.api.CandidateRegistry;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DependencyException;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -39,8 +40,9 @@ public class ComponentScanner {
    * @param registry a {@link CandidateRegistry} to add found types, cannot be {@code null}
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  public void scan(CandidateRegistry registry) throws AutoDiscoveryException, DefinitionException {
+  public void scan(CandidateRegistry registry) throws AutoDiscoveryException, DefinitionException, DependencyException {
     List<Type> types = findComponentTypes(ComponentScanner.class.getClassLoader());
 
     LOGGER.fine("Registering types: " + types);

@@ -6,6 +6,7 @@ import hs.ddif.api.definition.AmbiguousDependencyException;
 import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
@@ -291,7 +292,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldRemoveBean() throws AutoDiscoveryException, DefinitionException {
+  public void shouldRemoveBean() throws AutoDiscoveryException, DefinitionException, DependencyException {
     injector.remove(BeanWithInjection.class);
 
     assertThatThrownBy(() -> injector.getInstance(BeanWithInjection.class))

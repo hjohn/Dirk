@@ -105,7 +105,12 @@ class DefaultInstanceResolver implements InstanceResolver {
     }
     catch(Exception e) {
       if(!gatheredInjectables.isEmpty()) {
-        store.removeAll(gatheredInjectables);
+        try {
+          store.removeAll(gatheredInjectables);
+        }
+        catch(Exception e2) {  // this shouldn't occur, as it is always possible to unregister what was just registered
+          throw new IllegalStateException("Bad state, unable to unregister: " + gatheredInjectables);
+        }
       }
 
       throw e;

@@ -3,6 +3,7 @@ package hs.ddif.core;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.definition.BindingException;
@@ -142,7 +143,7 @@ public class InjectorDiscoveryTest {
   }
 
   @Test
-  public void registerShouldDiscoverNewTypes() throws AutoDiscoveryException, DefinitionException {
+  public void registerShouldDiscoverNewTypes() throws AutoDiscoveryException, DefinitionException, DependencyException {
     injector.register(B.class);
 
     assertNotNull(injector.contains(A.class));
