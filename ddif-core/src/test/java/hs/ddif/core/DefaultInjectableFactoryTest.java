@@ -13,9 +13,14 @@ import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.core.test.scope.TestScope;
 
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -82,7 +87,7 @@ public class DefaultInjectableFactoryTest {
     assertThat(injectable.getBindings()).isEqualTo(List.of());
     assertThat(injectable.getScopeResolver().getAnnotationClass()).isEqualTo(Dependent.class);
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class));
-    assertThat(injectable.toString()).isEqualTo("Injectable[@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.DefaultInjectableFactoryTest$BookShop]");
+    assertThat(injectable.toString()).isEqualTo("Class [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.DefaultInjectableFactoryTest$BookShop]");
   }
 
   @Test
@@ -102,7 +107,7 @@ public class DefaultInjectableFactoryTest {
     assertThat(injectable.getBindings()).isEqualTo(List.of());
     assertThat(injectable.getScopeResolver().getAnnotationClass()).isEqualTo(Singleton.class);
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Green.class));
-    assertThat(injectable.toString()).isEqualTo("Injectable[@hs.ddif.core.test.qualifiers.Green() hs.ddif.core.DefaultInjectableFactoryTest$BookShop <- public hs.ddif.core.DefaultInjectableFactoryTest$BookShop hs.ddif.core.DefaultInjectableFactoryTest$BookShopFactory.createBookShop()]");
+    assertThat(injectable.toString()).isEqualTo("Producer [@hs.ddif.core.test.qualifiers.Green() public hs.ddif.core.DefaultInjectableFactoryTest$BookShop hs.ddif.core.DefaultInjectableFactoryTest$BookShopFactory.createBookShop()]");
   }
 
   @Test
@@ -122,7 +127,44 @@ public class DefaultInjectableFactoryTest {
     assertThat(injectable.getBindings()).isEqualTo(List.of());
     assertThat(injectable.getScopeResolver().getAnnotationClass()).isEqualTo(Singleton.class);
     assertThat(injectable.getQualifiers()).isEmpty();
-    assertThat(injectable.toString()).isEqualTo("Injectable[hs.ddif.core.DefaultInjectableFactoryTest$BookShop <- hs.ddif.core.DefaultInjectableFactoryTest$BookShop hs.ddif.core.DefaultInjectableFactoryTest$BookShopFactory.bookShop]");
+    assertThat(injectable.toString()).isEqualTo("Producer [hs.ddif.core.DefaultInjectableFactoryTest$BookShop hs.ddif.core.DefaultInjectableFactoryTest$BookShopFactory.bookShop]");
+  }
+
+  @Test
+  void createShouldCreateInstanceBasedInjectable() throws Exception {
+    String instance = "Hello";
+    Annotation[] qualifiers = new Annotation[] {Annotations.of(Singleton.class), Annotations.of(Red.class)};
+
+    Injectable<String> injectable = factory.create(
+      instance.getClass(),
+      null,
+      new FakeAnnotatedElement(instance, qualifiers),
+      List.of(),
+      new Constructable<>() {
+        @Override
+        public String create(List<Injection> injections) {
+          return instance;
+        }
+
+        @Override
+        public void destroy(String instance) {
+        }
+      }
+    );
+
+    assertThat(injectable).isNotNull();
+    assertThat(injectable.getType()).isEqualTo(String.class);
+    assertThat(injectable.getTypes()).contains(
+      CharSequence.class,
+      Serializable.class,
+      Types.parameterize(Comparable.class, String.class),
+      String.class,
+      Object.class
+    );
+    assertThat(injectable.getBindings()).isEqualTo(List.of());
+    assertThat(injectable.getScopeResolver().getAnnotationClass()).isEqualTo(Singleton.class);
+    assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class));
+    assertThat(injectable.toString()).isEqualTo("Instance of [@hs.ddif.core.test.qualifiers.Red() java.lang.String -> Hello]");
   }
 
   @Test
@@ -270,6 +312,56 @@ public class DefaultInjectableFactoryTest {
 
   static class UnknownProducer<T> {
     T shop;
+  }
+
+  private static class FakeAnnotatedElement implements AnnotatedElement {
+    private final Object instance;
+    private final Annotation[] qualifiers;
+
+    FakeAnnotatedElement(Object instance, Annotation... qualifiers) {
+      this.instance = instance;
+      this.qualifiers = qualifiers;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+      return (T)Arrays.stream(qualifiers).filter(q -> q.annotationType().equals(annotationClass)).findFirst().orElse(null);
+    }
+
+    @Override
+    public Annotation[] getAnnotations() {
+      return qualifiers.clone();
+    }
+
+    @Override
+    public Annotation[] getDeclaredAnnotations() {
+      return qualifiers.clone();
+    }
+
+    @Override
+    public int hashCode() {
+      return instance.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if(this == obj) {
+        return true;
+      }
+      if(obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+
+      FakeAnnotatedElement other = (FakeAnnotatedElement)obj;
+
+      return Objects.equals(instance, other.instance);
+    }
+
+    @Override
+    public String toString() {
+      return instance.toString();
+    }
   }
 }
 

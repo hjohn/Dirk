@@ -1,7 +1,12 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.api.definition.AmbiguousDependencyException;
+import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
+import hs.ddif.api.definition.CyclicDependencyException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.UnsatisfiedDependencyException;
+import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.InstantiatorFactories;
 import hs.ddif.core.definition.ClassInjectableFactory;
@@ -22,7 +27,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import jakarta.inject.Inject;
@@ -78,28 +82,26 @@ public class InjectableStoreConsistencyTest {
 
   @Test
   void addAllShouldRejectInjectablesWithCyclicDependency() {
-    CyclicDependencyException ex = assertThrows(CyclicDependencyException.class, () -> store.putAll(List.of(e, b, c, d)));
-
-    assertEquals(4, ex.getCycle().size());
+    assertThrows(CyclicDependencyException.class, () -> store.putAll(List.of(e, b, c, d)));
   }
 
   @Test
   void addBShouldFailAsItHasUnresolvableDependency() {
-    assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(b)));
+    assertThrows(UnsatisfiedDependencyException.class, () -> store.putAll(List.of(b)));
   }
 
   @Test
   void addAAndBAndHShouldFailsAsThereAreMultipleCandidatesOfZForB() {
-    assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(a, b, h)));
+    assertThrows(AmbiguousDependencyException.class, () -> store.putAll(List.of(a, b, h)));
   }
 
   @Test
   void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB2() {
-    assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(b, a, h)));
+    assertThrows(AmbiguousDependencyException.class, () -> store.putAll(List.of(b, a, h)));
   }
   @Test
   void addAAndBAndHShouldFailsAsItThereAreMultipleCandidatesOfZForB3() {
-    assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(a, h, b)));
+    assertThrows(AmbiguousDependencyException.class, () -> store.putAll(List.of(a, h, b)));
   }
 
   @Test
@@ -131,7 +133,7 @@ public class InjectableStoreConsistencyTest {
 
     @Test
     void add_L_ShouldFailBecause_Z_IsProvidedTwice() {
-      assertThrows(UnresolvableDependencyException.class, () -> store.putAll(List.of(l)));
+      assertThrows(AmbiguousDependencyException.class, () -> store.putAll(List.of(l)));
     }
   }
 
@@ -154,7 +156,7 @@ public class InjectableStoreConsistencyTest {
 
     @Test
     void add_A_and_H_ShouldFailBecause_Z_IsProvidedTwice() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(a, h)));
+      assertThrows(AmbiguousRequiredDependencyException.class, () -> store.putAll(List.of(a, h)));
     }
   }
 
@@ -172,22 +174,22 @@ public class InjectableStoreConsistencyTest {
 
     @Test
     void removeAShouldFail() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(a)));
+      assertThrows(UnsatisfiedRequiredDependencyException.class, () -> store.removeAll(List.of(a)));
     }
 
     @Test
     void removeBShouldFail() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(b)));
+      assertThrows(UnsatisfiedRequiredDependencyException.class, () -> store.removeAll(List.of(b)));
     }
 
     @Test
     void removeCShouldFail() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(c)));
+      assertThrows(UnsatisfiedRequiredDependencyException.class, () -> store.removeAll(List.of(c)));
     }
 
     @Test
     void removeAAndCAndDShouldFail() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(c, a, d)));
+      assertThrows(UnsatisfiedRequiredDependencyException.class, () -> store.removeAll(List.of(c, a, d)));
     }
 
     @Test
@@ -202,12 +204,12 @@ public class InjectableStoreConsistencyTest {
 
     @Test
     void addEShouldFailAsEWouldCreateCyclicDependency() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(e)));
+      assertThrows(AmbiguousRequiredDependencyException.class, () -> store.putAll(List.of(e)));
     }
 
     @Test
     void addGAndFAndEShouldFailAsEWouldCreateCyclicDependency() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(g, f, e)));
+      assertThrows(AmbiguousRequiredDependencyException.class, () -> store.putAll(List.of(g, f, e)));
     }
 
     @Test
@@ -222,12 +224,12 @@ public class InjectableStoreConsistencyTest {
 
     @Test
     void addHShouldFailAsZWouldBeProvidedTwice() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(h)));
+      assertThrows(AmbiguousRequiredDependencyException.class, () -> store.putAll(List.of(h)));
     }
 
     @Test
     void addGAndFAndHShouldFailAsZWouldBeProvidedTwice() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.putAll(List.of(g, h, f)));
+      assertThrows(AmbiguousRequiredDependencyException.class, () -> store.putAll(List.of(g, h, f)));
     }
 
     @Test
@@ -245,12 +247,12 @@ public class InjectableStoreConsistencyTest {
 
     @Test
     void removeMShouldFailAsRequiredByN() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(m)));
+      assertThrows(UnsatisfiedRequiredDependencyException.class, () -> store.removeAll(List.of(m)));
     }
 
     @Test
     void removeNShouldFailAsRequiredByM() {
-      assertThrows(ViolatesSingularDependencyException.class, () -> store.removeAll(List.of(n)));
+      assertThrows(UnsatisfiedRequiredDependencyException.class, () -> store.removeAll(List.of(n)));
     }
 
     @Test

@@ -4,6 +4,7 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.api.InstanceResolver;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
@@ -14,7 +15,6 @@ import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
-import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
@@ -138,7 +138,7 @@ public class DefaultInstanceResolverTest {
         .hasMessage("[class hs.ddif.core.DefaultInstanceResolverTest$D] could not be created")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(OutOfScopeException.class)
-        .hasMessage("Scope not active: interface hs.ddif.core.DefaultInstanceResolverTest$TestScoped for: Injectable[hs.ddif.core.DefaultInstanceResolverTest$D]")
+        .hasMessage("Scope not active: interface hs.ddif.core.DefaultInstanceResolverTest$TestScoped for: Class [hs.ddif.core.DefaultInstanceResolverTest$D]")
         .hasNoCause();
     }
 
@@ -235,11 +235,11 @@ public class DefaultInstanceResolverTest {
     void getInstanceShouldNotRegisterUnresolvableDependencies() {
       assertThatThrownBy(() -> instanceResolver.getInstance(L.class))
         .isExactlyInstanceOf(AutoDiscoveryException.class)
-        .hasMessage("[hs.ddif.core.DefaultInstanceResolverTest$L] and the discovered types [Injectable[hs.ddif.core.DefaultInstanceResolverTest$K], Injectable[hs.ddif.core.DefaultInstanceResolverTest$L]] could not be registered\n"
+        .hasMessage("[hs.ddif.core.DefaultInstanceResolverTest$L] and the discovered types [Class [hs.ddif.core.DefaultInstanceResolverTest$K], Class [hs.ddif.core.DefaultInstanceResolverTest$L]] could not be registered\n"
           + "    -> [hs.ddif.core.DefaultInstanceResolverTest$M] required by [hs.ddif.core.DefaultInstanceResolverTest$L], via Field [hs.ddif.core.DefaultInstanceResolverTest$M hs.ddif.core.DefaultInstanceResolverTest$L.m], is not registered and cannot be discovered (reason: [class hs.ddif.core.DefaultInstanceResolverTest$M] could not be bound because [class hs.ddif.core.DefaultInstanceResolverTest$M] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)")
         .hasNoSuppressedExceptions()
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(UnresolvableDependencyException.class)
+        .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
         .hasMessage("Missing dependency [hs.ddif.core.DefaultInstanceResolverTest$M] required for Field [hs.ddif.core.DefaultInstanceResolverTest$M hs.ddif.core.DefaultInstanceResolverTest$L.m]")
         .hasNoSuppressedExceptions()
         .hasNoCause();

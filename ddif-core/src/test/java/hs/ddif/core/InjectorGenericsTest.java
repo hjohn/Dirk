@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.api.Injector;
-import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
+import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,7 +86,7 @@ public class InjectorGenericsTest {
     injector.register(InjectableWithConverters.class);
 
     assertThatThrownBy(() -> injector.remove(StringToIntConverter.class))
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class);
+      .isExactlyInstanceOf(UnsatisfiedRequiredDependencyException.class);
   }
 
   public static class InjectableWithConverters {

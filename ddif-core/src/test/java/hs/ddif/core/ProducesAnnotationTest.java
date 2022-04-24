@@ -2,15 +2,15 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
+import hs.ddif.api.definition.CyclicDependencyException;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.TypeReference;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
-import hs.ddif.core.inject.store.CyclicDependencyException;
-import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.store.DuplicateKeyException;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
@@ -49,7 +49,7 @@ public class ProducesAnnotationTest {
 
   @Test
   void registerShouldRejectFactoryWithUnresolvableProducerDependencies() {
-    UnresolvableDependencyException e = assertThrows(UnresolvableDependencyException.class, () -> injector.register(SimpleFactory1.class));
+    UnsatisfiedDependencyException e = assertThrows(UnsatisfiedDependencyException.class, () -> injector.register(SimpleFactory1.class));
 
     assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Integer] required for Parameter 0 [class java.lang.Integer] of [");
     assertFalse(injector.contains(Object.class));
@@ -57,7 +57,7 @@ public class ProducesAnnotationTest {
 
   @Test
   void registerShouldRejectFactoryWithUnresolvableDependencies() {
-    UnresolvableDependencyException e = assertThrows(UnresolvableDependencyException.class, () -> injector.register(SimpleFactory2.class));
+    UnsatisfiedDependencyException e = assertThrows(UnsatisfiedDependencyException.class, () -> injector.register(SimpleFactory2.class));
 
     assertThat(e).hasMessageStartingWith("Missing dependency [java.lang.Integer] required for Field [");
     assertFalse(injector.contains(Object.class));
@@ -65,15 +65,9 @@ public class ProducesAnnotationTest {
 
   @Test
   void registerShouldRejectCyclicalFactories() {
-    CyclicDependencyException e;
+    assertThrows(CyclicDependencyException.class, () -> injector.register(CyclicalFactory1.class));
+    assertThrows(CyclicDependencyException.class, () -> injector.register(CyclicalFactory2.class));
 
-    e = assertThrows(CyclicDependencyException.class, () -> injector.register(CyclicalFactory1.class));
-
-    assertEquals(2, e.getCycle().size());
-
-    e = assertThrows(CyclicDependencyException.class, () -> injector.register(CyclicalFactory2.class));
-
-    assertEquals(3, e.getCycle().size());
     assertFalse(injector.contains(Object.class));
   }
 
@@ -198,7 +192,7 @@ public class ProducesAnnotationTest {
 
   @Test
   public void shouldNotRegisterAutoDiscoveryDependentFactoryWithoutUsingAutoDiscovery() {
-    assertThrows(UnresolvableDependencyException.class, () -> injector.register(AutoDiscoveryDependentFactory.class));
+    assertThrows(UnsatisfiedDependencyException.class, () -> injector.register(AutoDiscoveryDependentFactory.class));
     assertFalse(injector.contains(Object.class));
   }
 
@@ -255,7 +249,7 @@ public class ProducesAnnotationTest {
   @Test
   public void shouldNotRegisterClassWhichDependsOnUnregisteredClass() {
     assertThatThrownBy(() -> injector.register(StaticFieldBasedPhoneProducer.class))
-      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       .hasMessage("Missing dependency [hs.ddif.core.ProducesAnnotationTest$Thing3] required for Field [hs.ddif.core.ProducesAnnotationTest$Thing3 hs.ddif.core.ProducesAnnotationTest$StaticFieldBasedPhoneProducer.thing]")
       .hasNoCause();
     assertFalse(injector.contains(Object.class));

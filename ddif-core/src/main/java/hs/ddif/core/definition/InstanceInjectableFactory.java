@@ -108,5 +108,10 @@ public class InstanceInjectableFactory {
 
       return Objects.equals(instance, other.instance);
     }
+
+    @Override
+    public String toString() {
+      return instance.toString();
+    }
   }
 }

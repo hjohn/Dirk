@@ -2,16 +2,18 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
+import hs.ddif.api.definition.AmbiguousDependencyException;
+import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.UnsatisfiedDependencyException;
+import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BindingException;
-import hs.ddif.core.inject.store.UnresolvableDependencyException;
-import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.core.store.DuplicateKeyException;
 import hs.ddif.core.store.NoSuchKeyException;
 import hs.ddif.core.test.injectables.AbstractBean;
@@ -202,8 +204,8 @@ public class InjectorTest {
 
     // adding another string would mean the optional string injection point would become ambiguous
     assertThatThrownBy(() -> injector.registerInstance("another-string"))
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[java.lang.String] would be provided again by: class java.lang.String")
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
+      .hasMessage("Registering [Instance of [java.lang.String -> another-string]] would make existing required bindings ambiguous: [Field [private java.lang.String hs.ddif.core.InjectorTest$OptionalDependent.string]]; already satisfied by [Instance of [java.lang.String -> new]]")
       .hasNoCause();
 
     injector.removeInstance("new");
@@ -312,13 +314,13 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingBeanWouldViolateSingularDependencies() {
-    assertThrows(ViolatesSingularDependencyException.class, () -> injector.remove(SimpleBean.class));
+    assertThrows(UnsatisfiedRequiredDependencyException.class, () -> injector.remove(SimpleBean.class));
   }
 
   @Test
   public void shouldRepeatedlyThrowExceptionWhenRemovingBeanWouldViolateSingularDependencies() {
-    assertThrows(ViolatesSingularDependencyException.class, () -> injector.remove(SimpleBean.class));
-    assertThrows(ViolatesSingularDependencyException.class, () -> injector.remove(SimpleBean.class));
+    assertThrows(UnsatisfiedRequiredDependencyException.class, () -> injector.remove(SimpleBean.class));
+    assertThrows(UnsatisfiedRequiredDependencyException.class, () -> injector.remove(SimpleBean.class));
   }
 
   @Test
@@ -382,35 +384,35 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRegisteringBeanWithUnresolvedDependencies() {
-    assertThrows(UnresolvableDependencyException.class, () -> injector.register(BeanWithUnresolvedDependency.class));
+    assertThrows(UnsatisfiedDependencyException.class, () -> injector.register(BeanWithUnresolvedDependency.class));
   }
 
   @Test
   @Disabled("Providers should be able to break circular dependencies...")
   public void shouldThrowExceptionWhenRegisteringBeanWithUnresolvedProviderDependencies() {
-    assertThrows(UnresolvableDependencyException.class, () -> injector.register(BeanWithUnresolvedProviderDependency.class));
+    assertThrows(UnsatisfiedDependencyException.class, () -> injector.register(BeanWithUnresolvedProviderDependency.class));
   }
 
   @Test
   public void shouldThrowExceptionWhenRegisteringBeanWithAmbiguousDependencies() {
-    assertThrows(UnresolvableDependencyException.class, () -> injector.register(BeanWithDirectCollectionItemDependency.class));
+    assertThrows(AmbiguousDependencyException.class, () -> injector.register(BeanWithDirectCollectionItemDependency.class));
   }
 
   @Test
   public void shouldRepeatedlyThrowExceptionWhenRegisteringBeanWithUnresolvedDependencies() {
-    assertThrows(UnresolvableDependencyException.class, () -> injector.register(BeanWithUnresolvedDependency.class));
-    assertThrows(UnresolvableDependencyException.class, () -> injector.register(BeanWithUnresolvedDependency.class));
+    assertThrows(UnsatisfiedDependencyException.class, () -> injector.register(BeanWithUnresolvedDependency.class));
+    assertThrows(UnsatisfiedDependencyException.class, () -> injector.register(BeanWithUnresolvedDependency.class));
   }
 
   @Test
   public void shouldThrowExceptionWhenRegisteringBeanWouldViolateSingularDependencies() {
-    assertThrows(ViolatesSingularDependencyException.class, () -> injector.register(SimpleChildBean.class));
+    assertThrows(AmbiguousRequiredDependencyException.class, () -> injector.register(SimpleChildBean.class));
   }
 
   @Test
   public void shouldRepeatedlyThrowExceptionWhenRegisteringBeanWouldViolateSingularDependencies() {
-    assertThrows(ViolatesSingularDependencyException.class, () -> injector.register(SimpleChildBean.class));
-    assertThrows(ViolatesSingularDependencyException.class, () -> injector.register(SimpleChildBean.class));
+    assertThrows(AmbiguousRequiredDependencyException.class, () -> injector.register(SimpleChildBean.class));
+    assertThrows(AmbiguousRequiredDependencyException.class, () -> injector.register(SimpleChildBean.class));
   }
 
   /*
@@ -447,7 +449,7 @@ public class InjectorTest {
     injector.register(BigBean.class);
 
     assertThatThrownBy(() -> injector.register(BeanWithBigRedInjection.class))  // Won't match BigBean, so won't match anything
-      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       .hasNoCause();
   }
 
@@ -457,7 +459,7 @@ public class InjectorTest {
     injector.register(BeanWithBigInjection.class);
 
     assertThatThrownBy(() -> injector.register(BigRedBean.class))  // Would also match injection for BeanWithBigInjection
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
   }
 
@@ -467,7 +469,7 @@ public class InjectorTest {
     injector.register(BeanWithBigInjection.class);
 
     assertThatThrownBy(() -> injector.remove(BigRedBean.class))
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedRequiredDependencyException.class)
       .hasNoCause();
   }
 
@@ -692,7 +694,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRegisteringProviderWouldViolateSingularDependencies() {
-    assertThrows(ViolatesSingularDependencyException.class, () -> injector.registerInstance(new Provider<SimpleChildBean>() {
+    assertThrows(AmbiguousRequiredDependencyException.class, () -> injector.registerInstance(new Provider<SimpleChildBean>() {
       @Override
       public SimpleChildBean get() {
         return new SimpleChildBean();
@@ -881,7 +883,7 @@ public class InjectorTest {
     injector.register(BeanThatNeedsInterface.class);
 
     assertThatThrownBy(() -> injector.register(Bean2.class))
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
   }
 
@@ -892,7 +894,7 @@ public class InjectorTest {
     injector.register(BeanThatNeedsInterface.class);
 
     assertThatThrownBy(() -> injector.register(Bean1.class))
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
   }
 
@@ -903,7 +905,7 @@ public class InjectorTest {
     injector.register(BeanThatNeedsInterface.class);
 
     assertThatThrownBy(() -> injector.register(Bean3.class))
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
   }
 
@@ -914,7 +916,7 @@ public class InjectorTest {
     injector.register(BeanThatNeedsInterface.class);
 
     assertThatThrownBy(() -> injector.register(Bean1.class))
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
   }
 

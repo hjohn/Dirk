@@ -4,12 +4,12 @@ import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectorBuilder;
 import hs.ddif.core.definition.BindingException;
-import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 
@@ -340,7 +340,7 @@ public class AssistedInjectionTest {
     // Registering TestAssistedSampleFactory should fail because the product TestAssistedSample
     // requires TestService which was not registered yet.
     assertThatThrownBy(() -> injector.register(TestAssistedSampleFactory.class))
-      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       .hasMessageStartingWith("Missing dependency [hs.ddif.extensions.assisted.AssistedInjectionTest$TestService] required for")
       .hasNoCause();
   }
