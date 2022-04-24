@@ -1,6 +1,8 @@
 package hs.ddif.core.store;
 
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DuplicateDependencyException;
+import hs.ddif.api.definition.MissingDependencyException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.TypeReference;
 import hs.ddif.api.util.Types;
@@ -59,7 +61,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldStore() throws DefinitionException {
+  public void shouldStore() throws Exception {
     store.put(classInjectableFactory.create(BeanWithBigRedInjection.class));
 
     assertThat(store.resolve(new Key(Object.class, Set.of(BIG, RED)))).isEmpty();
@@ -70,17 +72,17 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldNotAllowRemovingInjectablesThatWereNeverAdded() throws DefinitionException {
+  public void shouldNotAllowRemovingInjectablesThatWereNeverAdded() throws Exception {
     store.put(classInjectableFactory.create(Y.class));
 
     assertThat(store.resolve(new Key(Y.class))).isNotNull();
     assertThat(store.resolve(new Key(X.class))).isNotNull();
 
-    assertThrows(NoSuchKeyException.class, () -> store.remove(classInjectableFactory.create(X.class)));
+    assertThrows(MissingDependencyException.class, () -> store.remove(classInjectableFactory.create(X.class)));
   }
 
   @Test
-  public void shouldStoreWithQualifier() throws DefinitionException {
+  public void shouldStoreWithQualifier() throws Exception {
     store.put(instanceInjectableFactory.create("a", named("parameter-a")));
     store.put(instanceInjectableFactory.create("a", named("parameter-b")));
     store.put(instanceInjectableFactory.create("c", named("parameter-c")));
@@ -96,7 +98,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldStoreMultipleOfSameType() throws DefinitionException {
+  public void shouldStoreMultipleOfSameType() throws Exception {
     store.put(instanceInjectableFactory.create("a"));
     store.put(instanceInjectableFactory.create("b"));
     store.put(instanceInjectableFactory.create("c"));
@@ -106,17 +108,17 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() throws DefinitionException {
+  public void shouldThrowExceptionWhenStoringSameInstanceWithSameQualifier() throws Exception {
     store.put(instanceInjectableFactory.create(new String("a"), named("parameter-a")));
 
     assertThatThrownBy(() -> store.put(instanceInjectableFactory.create(new String("a"), named("parameter-a"))))
-      .isExactlyInstanceOf(DuplicateKeyException.class)
-      .hasMessage("[@jakarta.inject.Named(value=parameter-a) java.lang.String] is already present")
+      .isExactlyInstanceOf(DuplicateDependencyException.class)
+      .hasMessage("[@jakarta.inject.Named(value=parameter-a) java.lang.String] already exists")
       .hasNoCause();
   }
 
   @Test
-  public void shouldRemoveWithQualifier() throws DefinitionException {
+  public void shouldRemoveWithQualifier() throws Exception {
     store.put(instanceInjectableFactory.create("a", named("parameter-a")));
     store.put(instanceInjectableFactory.create("a", named("parameter-b")));
     store.put(instanceInjectableFactory.create("c", named("parameter-c")));
@@ -126,7 +128,7 @@ public class QualifiedTypeStoreTest {
     store.remove(instanceInjectableFactory.create("c", named("parameter-c")));
   }
 
-  private void setupStore() throws DefinitionException {
+  private void setupStore() throws Exception {
     store.put(instanceInjectableFactory.create("a", named("parameter-a")));
     store.put(instanceInjectableFactory.create("a", named("parameter-b"), Annotations.of(Red.class)));
     store.put(instanceInjectableFactory.create("c", named("parameter-c")));
@@ -147,7 +149,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void shouldResolve() throws DefinitionException {
+  public void shouldResolve() throws Exception {
     setupStore();
 
     // All Strings
@@ -200,7 +202,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void resolveShouldFindInjectablesWhenCriteriaIsAnAnnotationClass() throws DefinitionException {  // Tests that Annotation classes are converted to a descriptor internally
+  public void resolveShouldFindInjectablesWhenCriteriaIsAnAnnotationClass() throws Exception {  // Tests that Annotation classes are converted to a descriptor internally
     setupStore();
 
     assertEquals(3, store.resolve(new Key(Object.class, Set.of(RED))).size());
@@ -225,7 +227,7 @@ public class QualifiedTypeStoreTest {
       store.put(classInjectableFactory.create(A.class));
       fail();
     }
-    catch(DuplicateKeyException e) {
+    catch(DuplicateDependencyException e) {
       // expected, check if store is intact:
       assertTrue(store.contains(new Key(A.class)));
       assertEquals(1, store.resolve(new Key(A.class)).size());
@@ -238,7 +240,7 @@ public class QualifiedTypeStoreTest {
       store.putAll(List.of(classInjectableFactory.create(A.class), classInjectableFactory.create(A.class)));
       fail();
     }
-    catch(DuplicateKeyException e) {
+    catch(DuplicateDependencyException e) {
       // expected, check if store is intact:
       assertFalse(store.contains(new Key(A.class)));
     }
@@ -251,7 +253,7 @@ public class QualifiedTypeStoreTest {
       store.putAll(List.of(classInjectableFactory.create(B.class), classInjectableFactory.create(A.class)));
       fail();
     }
-    catch(DuplicateKeyException e) {
+    catch(DuplicateDependencyException e) {
       // expected, check if store is intact:
       assertTrue(store.contains(new Key(A.class)));
       assertFalse(store.contains(new Key(B.class)));
@@ -260,7 +262,7 @@ public class QualifiedTypeStoreTest {
   }
 
   @Test
-  public void containsShouldWork() throws DefinitionException {
+  public void containsShouldWork() throws Exception {
     store.put(classInjectableFactory.create(A.class));
 
     assertTrue(store.contains(new Key(A.class, Set.of(BIG))));

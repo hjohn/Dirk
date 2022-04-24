@@ -7,6 +7,8 @@ import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DependencyException;
+import hs.ddif.api.definition.DuplicateDependencyException;
+import hs.ddif.api.definition.MissingDependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
@@ -15,8 +17,6 @@ import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BindingException;
-import hs.ddif.core.store.DuplicateKeyException;
-import hs.ddif.core.store.NoSuchKeyException;
 import hs.ddif.core.test.injectables.AbstractBean;
 import hs.ddif.core.test.injectables.BeanWithBigInjection;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
@@ -310,7 +310,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingUnregisteredBean() {
-    assertThrows(NoSuchKeyException.class, () -> injector.remove(Exception.class));
+    assertThrows(MissingDependencyException.class, () -> injector.remove(Exception.class));
   }
 
   @Test
@@ -371,7 +371,7 @@ public class InjectorTest {
     injector.register(String.class);
 
     assertThatThrownBy(() -> injector.register(String.class))
-      .isExactlyInstanceOf(DuplicateKeyException.class)
+      .isExactlyInstanceOf(DuplicateDependencyException.class)
       .hasNoCause();
   }
 
@@ -557,7 +557,7 @@ public class InjectorTest {
 
   @Test
   public void shouldThrowExceptionWhenRemovingUnregisteredSuperClass() {
-    assertThrows(NoSuchKeyException.class, () -> injector.remove(UnregisteredParentBean.class));
+    assertThrows(MissingDependencyException.class, () -> injector.remove(UnregisteredParentBean.class));
   }
 
   /*
@@ -712,7 +712,7 @@ public class InjectorTest {
       }
     });
 
-    assertThrows(NoSuchKeyException.class, () -> injector.removeInstance(new Provider<String>() {
+    assertThrows(MissingDependencyException.class, () -> injector.removeInstance(new Provider<String>() {
       @Override
       public String get() {
         return "a string";
@@ -729,7 +729,7 @@ public class InjectorTest {
       }
     });
 
-    assertThrows(NoSuchKeyException.class, () -> injector.remove(String.class));
+    assertThrows(MissingDependencyException.class, () -> injector.remove(String.class));
   }
 
   @Test

@@ -159,7 +159,7 @@ public class DefaultDiscovererFactoryTest {
       }
 
       @Test
-      void shouldReturnEmptySetWhenTypeAlreadyResolvable() throws DefinitionException {
+      void shouldReturnEmptySetWhenTypeAlreadyResolvable() throws Exception {
         store.put(classInjectableFactory.create(A.class));
 
         assertThat(gatherer.create(store, new Key(A.class)).discover()).isEmpty();
