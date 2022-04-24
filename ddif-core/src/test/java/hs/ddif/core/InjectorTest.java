@@ -16,7 +16,6 @@ import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
-import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.test.injectables.AbstractBean;
 import hs.ddif.core.test.injectables.BeanWithBigInjection;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
@@ -568,9 +567,6 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenFinalFieldAnnotatedWithInject() throws SecurityException {
     assertThatThrownBy(() -> injector.register(FieldInjectionSampleWithAnnotatedFinalField.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] could not be bound")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Field [private final hs.ddif.core.test.injectables.SimpleBean hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField.injectedValue] of [class hs.ddif.core.test.injectables.FieldInjectionSampleWithAnnotatedFinalField] cannot be final")
       .hasNoCause();
   }
@@ -626,9 +622,6 @@ public class InjectorTest {
   public void shouldRejectSetterWithoutParameters() {
     assertThatThrownBy(() -> injector.register(BadA.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.InjectorTest$BadA] could not be bound")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Method [void hs.ddif.core.InjectorTest$BadA.setNothing()] of [class hs.ddif.core.InjectorTest$BadA] must have parameters")
       .hasNoCause();
   }
@@ -657,9 +650,6 @@ public class InjectorTest {
   public void shouldThrowExceptionWhenMultipleConstructorsAnnotatedWithInject() {
     assertThatThrownBy(() -> injector.register(ConstructorInjectionSampleWithMultipleAnnotatedConstructors.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] could not be bound")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("[class hs.ddif.core.test.injectables.ConstructorInjectionSampleWithMultipleAnnotatedConstructors] cannot have multiple Inject annotated constructors")
       .hasNoCause();
   }

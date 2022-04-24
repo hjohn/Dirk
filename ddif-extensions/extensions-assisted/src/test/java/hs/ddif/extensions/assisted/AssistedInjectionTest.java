@@ -9,7 +9,6 @@ import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectorBuilder;
-import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -228,7 +226,7 @@ public class AssistedInjectionTest {
   @Disabled("Only works if sources are compiled without parameter information")
   public void registerShouldRejectProducerWithMissingParameterName() {
     assertThatThrownBy(() -> injector.register(TestAssistedInjectionClassWithProducerWithMissingParameterName.class))
-      .isExactlyInstanceOf(BindingException.class)
+      .isExactlyInstanceOf(DefinitionException.class)
       .hasMessageContaining("Missing parameter name.")
       .hasNoCause();
   }
@@ -248,7 +246,7 @@ public class AssistedInjectionTest {
   @Disabled("Only works if sources are compiled without parameter information")
   public void registerShouldRejectTargetWithConstructorWithMissingParameterName() {
     assertThatThrownBy(() -> injector.register(TestAssistedInjectionTargetWithConstructorWithMissingParameterName.class))
-      .isExactlyInstanceOf(BindingException.class)
+      .isExactlyInstanceOf(DefinitionException.class)
       .hasMessageContaining("Missing parameter name.")
       .hasNoCause();
   }
@@ -351,10 +349,6 @@ public class AssistedInjectionTest {
 
     assertThatThrownBy(() -> injector.register(ProducerWithFinalBinding.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessageStartingWith("[class hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithFinalBinding")
-      .hasMessageEndingWith("] could not be bound")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
       .hasMessageStartingWith("Field [final int hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithFinalBinding.i] of [class hs.ddif.extensions.assisted.AssistedInjectionTest$ProducerWithFinalBinding$")
       .hasMessageEndingWith("] cannot be final")
       .hasNoCause();
@@ -382,9 +376,6 @@ public class AssistedInjectionTest {
 
     assertThatThrownBy(() -> injector.register(ProducerWithBadBindings.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[class hs.ddif.extensions.assisted.AssistedInjectionTest$BadProduct] could not be bound")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(BindingException.class)
       .hasMessage("Field [final int hs.ddif.extensions.assisted.AssistedInjectionTest$BadProduct.x] of [class hs.ddif.extensions.assisted.AssistedInjectionTest$BadProduct] cannot be final")
       .hasNoCause();
   }

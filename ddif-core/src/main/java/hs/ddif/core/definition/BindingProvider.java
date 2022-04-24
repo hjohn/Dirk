@@ -43,10 +43,9 @@ public class BindingProvider {
    * @param constructor a {@link Constructor} to examine for bindings, cannot be {@code null}
    * @param cls a {@link Class} to examine for bindings, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
-   * @throws BindingException when an exception occurred while creating a binding
    * @throws DefinitionException when a definition problem is encountered
    */
-  public List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) throws BindingException, DefinitionException {
+  public List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) throws DefinitionException {
     List<Binding> bindings = ofConstructor(constructor);
 
     bindings.addAll(ofMembers(cls));
@@ -70,10 +69,9 @@ public class BindingProvider {
    *
    * @param cls a {@link Class} to examine for bindings, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}, but can be empty
-   * @throws BindingException when an exception occurred while creating a binding
    * @throws DefinitionException when a definition problem is encountered
    */
-  public List<Binding> ofMembers(Class<?> cls) throws BindingException, DefinitionException {
+  public List<Binding> ofMembers(Class<?> cls) throws  DefinitionException {
     List<Binding> bindings = new ArrayList<>();
     Class<?> currentInjectableClass = cls;
     Map<TypeVariable<?>, Type> typeArguments = null;
@@ -82,7 +80,7 @@ public class BindingProvider {
       for(Field field : currentInjectableClass.getDeclaredFields()) {
         if(!annotationStrategy.getInjectAnnotations(field).isEmpty()) {
           if(Modifier.isFinal(field.getModifiers())) {
-            throw new BindingException(cls, field, "cannot be final");
+            throw new DefinitionException(field, "of [" + cls + "] cannot be final");
           }
 
           if(typeArguments == null) {
@@ -102,7 +100,7 @@ public class BindingProvider {
       for(Method method : currentInjectableClass.getDeclaredMethods()) {
         if(!annotationStrategy.getInjectAnnotations(method).isEmpty()) {
           if(method.getParameterCount() == 0) {
-            throw new BindingException(cls, method, "must have parameters");
+            throw new DefinitionException(method, "of [" + cls + "] must have parameters");
           }
 
           bindings.addAll(ofExecutable(method, cls));
@@ -159,10 +157,9 @@ public class BindingProvider {
    *
    * @param cls a {@link Class}, cannot be {@code null}
    * @return a {@link Constructor} suitable for injection, never {@code null}
-   * @throws BindingException when an exception occurred while creating a binding
    * @throws DefinitionException when a definition problem is encountered
    */
-  public Constructor<?> getAnnotatedConstructor(Class<?> cls) throws BindingException, DefinitionException {
+  public Constructor<?> getAnnotatedConstructor(Class<?> cls) throws DefinitionException {
     return getConstructor(cls, true);
   }
 
@@ -173,14 +170,13 @@ public class BindingProvider {
    * @param <T> the class type
    * @param cls a {@link Class}, cannot be {@code null}
    * @return a {@link Constructor} suitable for injection, never {@code null}
-   * @throws BindingException when an exception occurred while creating a binding
    * @throws DefinitionException when a definition problem is encountered
    */
-  public <T> Constructor<T> getConstructor(Class<T> cls) throws BindingException, DefinitionException {
+  public <T> Constructor<T> getConstructor(Class<T> cls) throws DefinitionException {
     return getConstructor(cls, false);
   }
 
-  private <T> Constructor<T> getConstructor(Class<T> cls, boolean annotatedOnly) throws BindingException, DefinitionException {
+  private <T> Constructor<T> getConstructor(Class<T> cls, boolean annotatedOnly) throws DefinitionException {
     Constructor<T> suitableConstructor = null;
     Constructor<T> defaultConstructor = null;
 
@@ -190,7 +186,7 @@ public class BindingProvider {
     for(Constructor<T> constructor : declaredConstructors) {
       if(!annotationStrategy.getInjectAnnotations(constructor).isEmpty()) {
         if(suitableConstructor != null) {
-          throw new BindingException(cls, "cannot have multiple Inject annotated constructors");
+          throw new DefinitionException(cls, "cannot have multiple Inject annotated constructors");
         }
 
         suitableConstructor = constructor;
@@ -201,7 +197,7 @@ public class BindingProvider {
     }
 
     if(suitableConstructor == null && defaultConstructor == null) {
-      throw new BindingException(cls, "should have at least one suitable constructor; annotate a constructor" + (annotatedOnly ? "" : " or provide an empty public constructor"));
+      throw new DefinitionException(cls, "should have at least one suitable constructor; annotate a constructor" + (annotatedOnly ? "" : " or provide an empty public constructor"));
     }
 
     return suitableConstructor == null ? defaultConstructor : suitableConstructor;

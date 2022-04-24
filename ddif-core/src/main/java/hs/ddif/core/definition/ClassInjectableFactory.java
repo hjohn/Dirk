@@ -54,14 +54,9 @@ public class ClassInjectableFactory {
       throw new DefinitionException(cls, "cannot have unresolvable type variables: " + Arrays.toString(cls.getTypeParameters()));
     }
 
-    try {
-      Constructor<T> constructor = bindingProvider.getConstructor(cls);
-      List<Binding> bindings = bindingProvider.ofConstructorAndMembers(constructor, cls);
+    Constructor<T> constructor = bindingProvider.getConstructor(cls);
+    List<Binding> bindings = bindingProvider.ofConstructorAndMembers(constructor, cls);
 
-      return injectableFactory.create(type, null, cls, bindings, new ClassObjectFactory<>(constructor, lifeCycleCallbacksFactory.create(cls)));
-    }
-    catch(BindingException e) {
-      throw new DefinitionException(cls, "could not be bound", e);
-    }
+    return injectableFactory.create(type, null, cls, bindings, new ClassObjectFactory<>(constructor, lifeCycleCallbacksFactory.create(cls)));
   }
 }

@@ -5,7 +5,6 @@ import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.definition.BadQualifiedTypeException;
-import hs.ddif.core.definition.BindingException;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
@@ -269,7 +268,7 @@ public class DefaultDiscovererFactoryTest {
 
         assertThat(discoverer.getProblems()).containsExactlyInAnyOrder(
           "[hs.ddif.core.DefaultDiscovererFactoryTest$C] required by [hs.ddif.core.DefaultDiscovererFactoryTest$Bad_A], via Field [hs.ddif.core.DefaultDiscovererFactoryTest$C hs.ddif.core.DefaultDiscovererFactoryTest$Bad_A.c], "
-          + "is not registered and cannot be discovered (reason: [class hs.ddif.core.DefaultDiscovererFactoryTest$C] could not be bound because [class hs.ddif.core.DefaultDiscovererFactoryTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)"
+          + "is not registered and cannot be discovered (reason: [class hs.ddif.core.DefaultDiscovererFactoryTest$C] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)"
         );
       }
 
@@ -296,22 +295,14 @@ public class DefaultDiscovererFactoryTest {
 
         assertThatThrownBy(() -> discoverer.discover())
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] could not be bound")
+          .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
           .satisfies(throwable -> {
             assertThat(throwable.getSuppressed()[0])
               .isExactlyInstanceOf(DefinitionException.class)
-              .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$Z] could not be bound")
-              .hasNoSuppressedExceptions()
-              .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-              .isExactlyInstanceOf(BindingException.class)
               .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$Z] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
               .hasNoSuppressedExceptions()
               .hasNoCause();
           })
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
-          .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
-          .hasNoSuppressedExceptions()
           .hasNoCause();
 
         assertThat(discoverer.getProblems()).isEmpty();
@@ -320,10 +311,6 @@ public class DefaultDiscovererFactoryTest {
 
         assertThatThrownBy(() -> discoverer2.discover())
           .isExactlyInstanceOf(DefinitionException.class)
-          .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] could not be bound")
-          .hasNoSuppressedExceptions()
-          .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-          .isExactlyInstanceOf(BindingException.class)
           .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$X] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor")
           .hasNoSuppressedExceptions()
           .hasNoCause();
