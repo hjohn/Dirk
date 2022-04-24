@@ -1,4 +1,4 @@
-package hs.ddif.core.inject.store;
+package hs.ddif.api.definition;
 
 /**
  * Base exception which signals when an Injector would no longer be able to
@@ -9,7 +9,7 @@ package hs.ddif.core.inject.store;
  * correct functioning of another class would make the Injector unable to
  * supply that other class, and so an exception is thrown instead.
  */
-public abstract class InjectorStoreConsistencyException extends RuntimeException {
+public abstract class DependencyException extends RuntimeException {
 
   /**
    * Constructs a new instance.
@@ -17,7 +17,7 @@ public abstract class InjectorStoreConsistencyException extends RuntimeException
    * @param message a message
    * @param cause a cause
    */
-  public InjectorStoreConsistencyException(String message, Throwable cause) {
+  public DependencyException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -26,7 +26,7 @@ public abstract class InjectorStoreConsistencyException extends RuntimeException
    *
    * @param message a message
    */
-  public InjectorStoreConsistencyException(String message) {
+  public DependencyException(String message) {
     super(message);
   }
 

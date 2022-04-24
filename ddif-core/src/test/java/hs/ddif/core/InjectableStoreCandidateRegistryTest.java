@@ -2,7 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.api.CandidateRegistry;
 import hs.ddif.api.definition.AutoDiscoveryException;
-import hs.ddif.core.inject.store.UnresolvableDependencyException;
+import hs.ddif.api.definition.UnsatisfiedDependencyException;
 
 import java.util.List;
 
@@ -24,12 +24,12 @@ public class InjectableStoreCandidateRegistryTest {
       .hasMessage("Unable to register [class hs.ddif.core.InjectableStoreCandidateRegistryTest$A]\n"
         + "    -> [hs.ddif.core.InjectableStoreCandidateRegistryTest$B] required by [hs.ddif.core.InjectableStoreCandidateRegistryTest$A], via Field [hs.ddif.core.InjectableStoreCandidateRegistryTest$B hs.ddif.core.InjectableStoreCandidateRegistryTest$A.b], is not registered and cannot be discovered (reason: [class hs.ddif.core.InjectableStoreCandidateRegistryTest$B] could not be bound because [class hs.ddif.core.InjectableStoreCandidateRegistryTest$B] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       .hasMessage("Missing dependency [hs.ddif.core.InjectableStoreCandidateRegistryTest$B] required for Field [hs.ddif.core.InjectableStoreCandidateRegistryTest$B hs.ddif.core.InjectableStoreCandidateRegistryTest$A.b]")
       .hasNoCause();
 
     assertThatThrownBy(() -> manual.register(A.class))
-      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       .hasMessage("Missing dependency [hs.ddif.core.InjectableStoreCandidateRegistryTest$B] required for Field [hs.ddif.core.InjectableStoreCandidateRegistryTest$B hs.ddif.core.InjectableStoreCandidateRegistryTest$A.b]")
       .hasNoCause();
   }
@@ -42,12 +42,12 @@ public class InjectableStoreCandidateRegistryTest {
         + "    -> [hs.ddif.core.InjectableStoreCandidateRegistryTest$B] required by [hs.ddif.core.InjectableStoreCandidateRegistryTest$A], via Field [hs.ddif.core.InjectableStoreCandidateRegistryTest$B hs.ddif.core.InjectableStoreCandidateRegistryTest$A.b], is not registered and cannot be discovered (reason: [class hs.ddif.core.InjectableStoreCandidateRegistryTest$B] could not be bound because [class hs.ddif.core.InjectableStoreCandidateRegistryTest$B] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)\n"
         + "    -> [hs.ddif.core.InjectableStoreCandidateRegistryTest$E] required by [hs.ddif.core.InjectableStoreCandidateRegistryTest$D] required by [hs.ddif.core.InjectableStoreCandidateRegistryTest$C], via Parameter 0 [class hs.ddif.core.InjectableStoreCandidateRegistryTest$E] of [public hs.ddif.core.InjectableStoreCandidateRegistryTest$D(hs.ddif.core.InjectableStoreCandidateRegistryTest$E)], is not registered and cannot be discovered (reason: [class hs.ddif.core.InjectableStoreCandidateRegistryTest$E] could not be bound because Field [final java.lang.String hs.ddif.core.InjectableStoreCandidateRegistryTest$E.d] of [class hs.ddif.core.InjectableStoreCandidateRegistryTest$E] cannot be final)")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       // message not verified as it is (currently) random which of the two problems the InjectableStore will throw first
       .hasNoCause();
 
     assertThatThrownBy(() -> manual.register(List.of(A.class, C.class)))
-      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       // message not verified as it is (currently) random which of the two problems the InjectableStore will throw first
       .hasNoCause();
   }

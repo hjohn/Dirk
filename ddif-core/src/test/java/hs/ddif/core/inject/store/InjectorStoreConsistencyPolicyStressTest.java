@@ -2,6 +2,7 @@ package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.Injector;
+import hs.ddif.api.definition.CyclicDependencyException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.Injectors;
 import hs.ddif.core.util.Nullable;

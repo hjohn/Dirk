@@ -1,10 +1,10 @@
-package hs.ddif.core.inject.store;
+package hs.ddif.api.definition;
 
 /**
  * Thrown during registration when an injectable is determined to be dependent on
  * an injectable with a narrower scope.
  */
-public class ScopeConflictException extends InjectorStoreConsistencyException {
+public class ScopeConflictException extends DependencyException {
 
   /**
    * Constructs a new instance.

@@ -3,11 +3,12 @@ package hs.ddif.core;
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
+import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.UnsatisfiedDependencyException;
+import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
-import hs.ddif.core.inject.store.UnresolvableDependencyException;
-import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.core.store.DuplicateKeyException;
 
 import java.lang.annotation.Retention;
@@ -54,7 +55,7 @@ public class InjectorProviderTest {
   @Test
   public void providersShouldBreakCircularDependenciesOnly() throws Exception {  // Required Suppliers cannot be used to delay registration of the provisioned class.
     assertThatThrownBy(() -> injector.register(BeanWithSupplier.class))
-      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       .hasMessage("Missing dependency [hs.ddif.core.InjectorProviderTest$SimpleBean] required for Field [private jakarta.inject.Provider<hs.ddif.core.InjectorProviderTest$SimpleBean> hs.ddif.core.InjectorProviderTest$BeanWithSupplier.simpleBeanSupplier]")
       .hasNoCause();
 
@@ -121,8 +122,8 @@ public class InjectorProviderTest {
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
 
       assertThatThrownBy(() -> injector.removeInstance(provider))
-        .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-        .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] is only provided by: class hs.ddif.core.InjectorProviderTest$Database")
+        .isExactlyInstanceOf(UnsatisfiedRequiredDependencyException.class)
+        .hasMessage("Removing [Producer [public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier.get()]] would make existing required bindings unsatisfiable: [Field [hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$BeanWithDatabase.database]]")
         .hasNoCause();
 
       injector.remove(BeanWithDatabase.class);
@@ -143,8 +144,8 @@ public class InjectorProviderTest {
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
       assertThatThrownBy(() -> injector.remove(SimpleDatabaseSupplier.class))
-        .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-        .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] is only provided by: class hs.ddif.core.InjectorProviderTest$Database")
+        .isExactlyInstanceOf(UnsatisfiedRequiredDependencyException.class)
+        .hasMessage("Removing [Producer [public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier.get()]] would make existing required bindings unsatisfiable: [Field [hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$BeanWithDatabase.database]]")
         .hasNoCause();
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());
@@ -212,8 +213,8 @@ public class InjectorProviderTest {
     injector.register(BeanWithDatabase.class);
 
     assertThatThrownBy(() -> injector.register(SimpleDatabaseSupplier.class))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
+      .hasMessageStartingWith("Registering [Producer [public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier.get()]] would make existing required bindings ambiguous: [Field [hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$BeanWithDatabase.database]]; already satisfied by [Instance of [hs.ddif.core.InjectorProviderTest$Database -> hs.ddif.core.InjectorProviderTest$Database@")
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseSupplier.class))  // Should not be part of Injector when registration fails
@@ -228,8 +229,9 @@ public class InjectorProviderTest {
     injector.register(BeanWithDatabase.class);
 
     assertThatThrownBy(() -> injector.registerInstance(new Database("jdbc:localhost")))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
+      .hasMessageStartingWith("Registering [Instance of [hs.ddif.core.InjectorProviderTest$Database -> hs.ddif.core.InjectorProviderTest$Database@")
+      .hasMessageEndingWith("]] would make existing required bindings ambiguous: [Field [hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$BeanWithDatabase.database]]; already satisfied by [Producer [public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier.get()]]")
       .hasNoCause();
   }
 
@@ -239,8 +241,8 @@ public class InjectorProviderTest {
     injector.register(BeanWithDatabase.class);
 
     assertThatThrownBy(() -> injector.registerInstance(new SimpleDatabaseSupplier()))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
+      .hasMessageStartingWith("Registering [Producer [public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier.get()]] would make existing required bindings ambiguous: [Field [hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$BeanWithDatabase.database]]; already satisfied by [Instance of [hs.ddif.core.InjectorProviderTest$Database -> hs.ddif.core.InjectorProviderTest$Database@")
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.getInstance(SimpleDatabaseSupplier.class))  // Should not be part of Injector when registration fails
@@ -255,8 +257,9 @@ public class InjectorProviderTest {
     injector.register(BeanWithDatabase.class);
 
     assertThatThrownBy(() -> injector.registerInstance(new Database("jdbc:localhost")))  // Not allowed as BeanWithDatabase expects just one dependency to match, and now there are two sources for Database
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
-      .hasMessage("[hs.ddif.core.InjectorProviderTest$Database] would be provided again by: class hs.ddif.core.InjectorProviderTest$Database")
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
+      .hasMessageStartingWith("Registering [Instance of [hs.ddif.core.InjectorProviderTest$Database -> hs.ddif.core.InjectorProviderTest$Database@")
+      .hasMessageEndingWith("]] would make existing required bindings ambiguous: [Field [hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$BeanWithDatabase.database]]; already satisfied by [Producer [public hs.ddif.core.InjectorProviderTest$Database hs.ddif.core.InjectorProviderTest$SimpleDatabaseSupplier.get()]]")
       .hasNoCause();
   }
 

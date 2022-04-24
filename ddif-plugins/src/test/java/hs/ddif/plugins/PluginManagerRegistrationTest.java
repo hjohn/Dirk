@@ -1,8 +1,8 @@
 package hs.ddif.plugins;
 
 import hs.ddif.api.Injector;
+import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.util.Annotations;
-import hs.ddif.core.inject.store.UnresolvableDependencyException;
 import hs.ddif.jsr330.Injectors;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableDependency;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableInjectAnnotatedDependency;
@@ -51,7 +51,7 @@ public class PluginManagerRegistrationTest {
     ComponentScanner scanner = new DefaultComponentScannerFactory().create("hs.ddif.plugins.test.project");
 
     assertThatThrownBy(() -> scanner.scan(injector.getCandidateRegistry()))
-      .isExactlyInstanceOf(UnresolvableDependencyException.class)
+      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
       .hasNoCause();
 
     injector.register(TestAutoDiscoverableDependency.class);

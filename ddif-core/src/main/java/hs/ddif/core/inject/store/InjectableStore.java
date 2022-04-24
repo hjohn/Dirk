@@ -1,5 +1,11 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.api.definition.AmbiguousDependencyException;
+import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
+import hs.ddif.api.definition.CyclicDependencyException;
+import hs.ddif.api.definition.ScopeConflictException;
+import hs.ddif.api.definition.UnsatisfiedDependencyException;
+import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
@@ -21,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A store for {@link Injectable}s which ensures that it at all times contains
@@ -214,8 +221,11 @@ public class InjectableStore implements Resolver<Injectable<?>> {
         Set<Injectable<?>> injectables = qualifiedTypeStore.resolve(key);
 
         // The binding is a single binding, if there are more than one matches it is ambiguous, and if there is no match then it must be optional
-        if(injectables.size() > 1 || (typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE) && injectables.size() < 1)) {
-          throw new UnresolvableDependencyException(key, binding, injectables);
+        if(injectables.size() > 1) {
+          throw new AmbiguousDependencyException("Multiple candidates for dependency [" + key + "] required for " + binding + ": " + injectables);
+        }
+        if(typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE) && injectables.size() < 1) {
+          throw new UnsatisfiedDependencyException("Missing dependency [" + key + "] required for " + binding);
         }
 
         // Check scope only for non lazy bindings. Lazy ones that inject a Provider can be used anywhere.
@@ -238,8 +248,8 @@ public class InjectableStore implements Resolver<Injectable<?>> {
      * When the dependent injectable is a pseudo-scope or is proxyable, there is never any conflict.
      * When both injectables have the same scope, there is never any conflict.
      *
-     * The ProxyStrategy is responsible for creating proxies, and may not create any at all. It is 
-     * however entirely possible to use normal scopes (non pseudo-scopes) without proxies by making 
+     * The ProxyStrategy is responsible for creating proxies, and may not create any at all. It is
+     * however entirely possible to use normal scopes (non pseudo-scopes) without proxies by making
      * use of an indirect form of injection like that which providers offer.
      *
      * Note that restrictions may apply to types in order to wrap them with a proxy. The early call
@@ -309,8 +319,25 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     List<Injectable<?>> cycle = new CycleDetector().hasCycle();
 
     if(!cycle.isEmpty()) {
-      throw new CyclicDependencyException(cycle);
+      throw new CyclicDependencyException(format(cycle));
     }
+  }
+
+  private static String format(List<? extends Injectable<?>> cycle) {
+    StringBuilder b = new StringBuilder();
+
+    b.append("     -----\n");
+    b.append("    |     |\n");
+
+    for(Injectable<?> i : cycle) {
+      b.append("    |     V\n");
+      b.append("    | " + i + "\n");
+      b.append("    |     |\n");
+    }
+
+    b.append("     -----\n");
+
+    return b.toString();
   }
 
   void checkInvariants() {
@@ -353,7 +380,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
               node.increaseSources(source);
 
               if(violation == null && node.isInvalid()) {
-                violation = new Violation(type, key, true);
+                violation = new Violation(source, key, true);
               }
             }
           }
@@ -394,7 +421,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
               node.decreaseSources(source);
 
               if(violation == null && node.isInvalid()) {
-                violation = new Violation(type, key, false);
+                violation = new Violation(source, key, false);
               }
             }
           }
@@ -434,19 +461,27 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     );
   }
 
-  private static class Violation {
-    final Type type;
+  private class Violation {
+    final Injectable<?> source;
     final Key key;
     final boolean isAdd;
 
-    Violation(Type type, Key key, boolean isAdd) {
-      this.type = type;
+    Violation(Injectable<?> source, Key key, boolean isAdd) {
+      this.source = source;
       this.key = key;
       this.isAdd = isAdd;
     }
 
     void doThrow() {
-      throw new ViolatesSingularDependencyException(type, key, isAdd);
+      Set<Binding> bindings = bindingManager.findBindings(source.getType(), source.getQualifiers());  // expensive, but only for throwing exception
+
+      if(isAdd) {
+        String satisfiedBy = qualifiedTypeStore.resolve(key).stream().filter(i -> !i.equals(source)).map(Object::toString).collect(Collectors.joining(", ", "[", "]"));
+
+        throw new AmbiguousRequiredDependencyException("Registering [" + source + "] would make existing required bindings ambiguous: " + bindings + "; already satisfied by " + satisfiedBy);
+      }
+
+      throw new UnsatisfiedRequiredDependencyException("Removing [" + source + "] would make existing required bindings unsatisfiable: " + bindings);
     }
   }
 

@@ -2,11 +2,11 @@ package hs.ddif.core.config;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.Injector;
+import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.Injectors;
-import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.core.store.NoSuchKeyException;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -69,15 +69,15 @@ public class ProviderInjectableExtensionInjectorTest {
     injector.register(C.class);  // needs B via A
 
     assertThatThrownBy(() -> injector.registerInstance(new B()))  // Provides B as instance
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.registerInstance(new D()))  // Provides B via D provider instance
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.register(D.class))  // Provides B via D provider
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
   }
 
@@ -87,15 +87,15 @@ public class ProviderInjectableExtensionInjectorTest {
     injector.register(E.class);  // needs Provider<B> via A
 
     assertThatThrownBy(() -> injector.registerInstance(new B()))  // Provides B as instance
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.registerInstance(new D()))  // Provides B via D provider instance
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
 
     assertThatThrownBy(() -> injector.register(D.class))  // Provides B via D provider
-      .isExactlyInstanceOf(ViolatesSingularDependencyException.class)
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class)
       .hasNoCause();
   }
 

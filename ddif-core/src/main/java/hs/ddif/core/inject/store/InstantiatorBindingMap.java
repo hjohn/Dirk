@@ -1,12 +1,16 @@
 package hs.ddif.core.inject.store;
 
+import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.TypeTrait;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -83,6 +87,21 @@ public class InstantiatorBindingMap implements BoundInstantiatorProvider, Bindin
     if(ref.decreaseReferences()) {
       instantiators.remove(binding);
     }
+  }
+
+  @Override
+  public Set<Binding> findBindings(Type type, Set<Annotation> qualifiers) {
+    Set<Binding> matches = new HashSet<>();
+
+    for(Binding binding : instantiators.keySet()) {
+      Key key = binding.getKey();
+
+      if(Types.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
+        matches.add(binding);
+      }
+    }
+
+    return matches;
   }
 
   private static class Reference<T> {

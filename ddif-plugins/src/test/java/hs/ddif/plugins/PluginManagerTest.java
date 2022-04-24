@@ -1,9 +1,9 @@
 package hs.ddif.plugins;
 
 import hs.ddif.api.Injector;
+import hs.ddif.api.definition.AmbiguousDependencyException;
+import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
 import hs.ddif.api.definition.AutoDiscoveryException;
-import hs.ddif.core.inject.store.UnresolvableDependencyException;
-import hs.ddif.core.inject.store.ViolatesSingularDependencyException;
 import hs.ddif.jsr330.Injectors;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
@@ -20,11 +20,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class PluginManagerTest {
   private static final URL PLUGIN_URL;
@@ -132,7 +132,7 @@ public class PluginManagerTest {
     injector.register(DatabaseBean.class);  // Provides Database
     injector.register(BeanWithDatabase.class);  // Requires an unambiguous Database dependency
 
-    assertThrows(ViolatesSingularDependencyException.class, () -> pluginManager.loadPlugin(PLUGIN_URL));  // Provides Database as well, but fails as BeanWithDatabase's dependency would become ambigious
+    assertThrows(AmbiguousRequiredDependencyException.class, () -> pluginManager.loadPlugin(PLUGIN_URL));  // Provides Database as well, but fails as BeanWithDatabase's dependency would become ambigious
   }
 
   @Test
@@ -140,23 +140,15 @@ public class PluginManagerTest {
     injector.register(DatabaseBean.class);
     injector.register(BeanWithDatabase.class);  // Requires an unambiguous Database dependency
 
-    try {
-      pluginManager.loadPlugin(PLUGIN_URL);
-      fail();
-    }
-    catch(ViolatesSingularDependencyException e) {
-    }
+    assertThatThrownBy(() -> pluginManager.loadPlugin(PLUGIN_URL))
+      .isExactlyInstanceOf(AmbiguousRequiredDependencyException.class);
 
     injector.remove(BeanWithDatabase.class);  // Removes the requirement on an unambiguous Database
 
     pluginManager.loadPlugin(PLUGIN_URL);  // Plugin now loads
 
-    try {
-      injector.register(BeanWithDatabase.class);  // Fails, requires an unambiguous Database dependency
-      fail();
-    }
-    catch(UnresolvableDependencyException e) {
-    }
+    assertThatThrownBy(() -> injector.register(BeanWithDatabase.class))  // Fails, requires an unambiguous Database dependency
+      .isExactlyInstanceOf(AmbiguousDependencyException.class);
 
     injector.remove(DatabaseBean.class);  // Removes one of the Database beans
     injector.register(BeanWithDatabase.class);  // Succeeds, requires an unambiguous Database dependency

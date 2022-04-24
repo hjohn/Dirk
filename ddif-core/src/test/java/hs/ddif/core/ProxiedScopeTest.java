@@ -2,10 +2,10 @@ package hs.ddif.core;
 
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AutoDiscoveryException;
+import hs.ddif.api.definition.ScopeConflictException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.config.DefaultInjectorStrategy;
 import hs.ddif.core.config.SimpleScopeStrategy;
-import hs.ddif.core.inject.store.ScopeConflictException;
 import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.extensions.proxy.ByteBuddyProxyStrategy;
@@ -146,7 +146,7 @@ public class ProxiedScopeTest {
   void shouldRejectProxyingFinalClass() {
     assertThatThrownBy(() -> injector.getInstance(G.class))
       .isExactlyInstanceOf(AutoDiscoveryException.class)
-      .hasMessage("[hs.ddif.core.ProxiedScopeTest$G] and the discovered types [Injectable[hs.ddif.core.ProxiedScopeTest$G], Injectable[hs.ddif.core.ProxiedScopeTest$H]] could not be registered")
+      .hasMessage("[hs.ddif.core.ProxiedScopeTest$G] and the discovered types [Class [hs.ddif.core.ProxiedScopeTest$G], Class [hs.ddif.core.ProxiedScopeTest$H]] could not be registered")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(ScopeConflictException.class)
       .hasMessage("Type [class hs.ddif.core.ProxiedScopeTest$G] with scope [interface hs.ddif.core.test.scope.Dependent] is dependent on [class hs.ddif.core.ProxiedScopeTest$H] with normal scope [interface hs.ddif.core.test.scope.TestScope]; this requires the use of a provider or proxy")

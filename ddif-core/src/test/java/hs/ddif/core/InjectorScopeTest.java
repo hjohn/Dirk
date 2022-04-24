@@ -3,9 +3,9 @@ package hs.ddif.core;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.ScopeConflictException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
-import hs.ddif.core.inject.store.ScopeConflictException;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.spi.scope.AbstractScopeResolver;
 import hs.ddif.spi.scope.OutOfScopeException;
@@ -47,7 +47,7 @@ public class InjectorScopeTest {
         .hasMessage("[class hs.ddif.core.InjectorScopeTest$TestScopedBean] could not be created")
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(OutOfScopeException.class)
-        .hasMessage("Scope not active: interface hs.ddif.core.test.scope.TestScope for: Injectable[hs.ddif.core.InjectorScopeTest$TestScopedBean]")
+        .hasMessage("Scope not active: interface hs.ddif.core.test.scope.TestScope for: Class [hs.ddif.core.InjectorScopeTest$TestScopedBean]")
         .hasNoCause();
     }
 
