@@ -5,6 +5,7 @@ import hs.ddif.api.definition.AmbiguousDependencyException;
 import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
 import hs.ddif.api.definition.CyclicDependencyException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.core.InjectableFactories;
@@ -115,19 +116,19 @@ public class InjectableStoreConsistencyTest {
   }
 
   @Test
-  void addLShouldWork() {
+  void addLShouldWork() throws DependencyException {
     store.putAll(List.of(l));
   }
 
   @Test
-  void addLAndAShouldWork() {
+  void addLAndAShouldWork() throws DependencyException {
     store.putAll(List.of(l, a));
   }
 
   @Nested
   class WhenClasses_A_And_H_AreAdded {
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws DependencyException {
       store.putAll(List.of(a, h));
     }
 
@@ -140,17 +141,17 @@ public class InjectableStoreConsistencyTest {
   @Nested
   class When_L_IsAdded {
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws DependencyException {
       store.putAll(List.of(l));
     }
 
     @Test
-    void remove_L_ShouldWork() {
+    void remove_L_ShouldWork() throws DependencyException {
       store.removeAll(List.of(l));
     }
 
     @Test
-    void add_A_ShouldWork() {
+    void add_A_ShouldWork() throws DependencyException {
       store.putAll(List.of(a));
     }
 
@@ -163,12 +164,12 @@ public class InjectableStoreConsistencyTest {
   @Nested
   class WhenClassesAAndBAndCAndDAreAdded {
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws DependencyException {
       store.putAll(List.of(a, b, c, d));
     }
 
     @Test
-    void removeAllShouldWork() {
+    void removeAllShouldWork() throws DependencyException {
       store.removeAll(List.of(a, b, c, d));
     }
 
@@ -193,12 +194,12 @@ public class InjectableStoreConsistencyTest {
     }
 
     @Test
-    void removeDShouldWork() {
+    void removeDShouldWork() throws DependencyException {
       store.removeAll(List.of(d));
     }
 
     @Test
-    void removeCAndDShouldWork() {
+    void removeCAndDShouldWork() throws DependencyException {
       store.removeAll(List.of(c, d));
     }
 
@@ -213,12 +214,12 @@ public class InjectableStoreConsistencyTest {
     }
 
     @Test
-    void addFShouldWork() {
+    void addFShouldWork() throws DependencyException {
       store.putAll(List.of(f));
     }
 
     @Test
-    void addGAndFShouldWork() {
+    void addGAndFShouldWork() throws DependencyException {
       store.putAll(List.of(g, f));
     }
 
@@ -233,7 +234,7 @@ public class InjectableStoreConsistencyTest {
     }
 
     @Test
-    void addLShouldWork() {
+    void addLShouldWork() throws DependencyException {
       store.putAll(List.of(l));
     }
   }
@@ -241,7 +242,7 @@ public class InjectableStoreConsistencyTest {
   @Nested
   class WhenClassesMAndNAndOAreAdded {
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws DependencyException {
       store.putAll(List.of(m, n, o));
     }
 
@@ -256,7 +257,7 @@ public class InjectableStoreConsistencyTest {
     }
 
     @Test
-    void removeOShouldWorkAsMOnlyDependsOnItOptionally() {
+    void removeOShouldWorkAsMOnlyDependsOnItOptionally() throws DependencyException {
       store.removeAll(List.of(o));
     }
   }

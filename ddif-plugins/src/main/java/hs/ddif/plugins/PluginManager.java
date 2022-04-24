@@ -3,6 +3,7 @@ package hs.ddif.plugins;
 import hs.ddif.api.CandidateRegistry;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DependencyException;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -45,8 +46,9 @@ public class PluginManager {
    * @return a {@link Plugin}, never {@code null}
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  public Plugin loadPluginAndScan(String... packageNamePrefixes) throws AutoDiscoveryException, DefinitionException {
+  public Plugin loadPluginAndScan(String... packageNamePrefixes) throws AutoDiscoveryException, DefinitionException, DependencyException {
     ClassLoader classLoader = this.getClass().getClassLoader();
 
     LOGGER.fine("Scanning packages: " + Arrays.toString(packageNamePrefixes));
@@ -62,9 +64,10 @@ public class PluginManager {
    * @return a {@link Plugin}, never {@code null}
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
   @SuppressWarnings("resource")
-  public Plugin loadPluginAndScan(URL... urls) throws AutoDiscoveryException, DefinitionException {
+  public Plugin loadPluginAndScan(URL... urls) throws AutoDiscoveryException, DefinitionException, DependencyException {
     URLClassLoader classLoader = new UnloadTrackingClassLoader(urls);
 
     LOGGER.fine("Scanning Plugin at: " + Arrays.toString(urls));
@@ -79,8 +82,9 @@ public class PluginManager {
    * @param plugin a {@link Plugin} to unload, cannot be {@code null}
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  public void unload(Plugin plugin) throws AutoDiscoveryException, DefinitionException {
+  public void unload(Plugin plugin) throws AutoDiscoveryException, DefinitionException, DependencyException {
     baseRegistry.remove(plugin.getTypes());  // may fail
     plugin.destroy();  // can't fail
   }
@@ -91,9 +95,11 @@ public class PluginManager {
    * @param urls one or more jar files
    * @return a {@link Plugin}, never {@code null}
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
+   * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
   @SuppressWarnings("resource")
-  public Plugin loadPlugin(URL... urls) throws AutoDiscoveryException, DefinitionException {
+  public Plugin loadPlugin(URL... urls) throws AutoDiscoveryException, DefinitionException, DependencyException {
     URLClassLoader classLoader = new UnloadTrackingClassLoader(urls);
 
     try {
@@ -126,7 +132,7 @@ public class PluginManager {
     }
   }
 
-  private Plugin createPlugin(String name, List<Type> types, ClassLoader classLoader) throws AutoDiscoveryException, DefinitionException {
+  private Plugin createPlugin(String name, List<Type> types, ClassLoader classLoader) throws AutoDiscoveryException, DefinitionException, DependencyException {
     Plugin plugin = new Plugin(name, types, classLoader);
 
     baseRegistry.register(plugin.getTypes());
@@ -167,7 +173,7 @@ public class PluginManager {
       this.classLoader = classLoader;
     }
 
-    Plugin loadPlugin(String pluginName) throws AutoDiscoveryException, DefinitionException {
+    Plugin loadPlugin(String pluginName) throws AutoDiscoveryException, DefinitionException, DependencyException {
       List<Type> types = componentScanner.findComponentTypes(classLoader);
 
       LOGGER.fine("Registering types: " + types);

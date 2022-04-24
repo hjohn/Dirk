@@ -1,6 +1,7 @@
 package hs.ddif.core.inject.store;
 
 import hs.ddif.annotations.Opt;
+import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.util.Annotations;
 import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.InstantiatorFactories;
@@ -36,7 +37,7 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
   private final Random rnd = new Random(4);
 
   @Test
-  void largeGraphTest() throws BadQualifiedTypeException {
+  void largeGraphTest() throws BadQualifiedTypeException, DependencyException {
     InstantiatorFactory instantiatorFactory = InstantiatorFactories.create();
     InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
     InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);

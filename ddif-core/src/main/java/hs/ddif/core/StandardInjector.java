@@ -5,8 +5,9 @@ import hs.ddif.api.Injector;
 import hs.ddif.api.InstanceResolver;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.definition.BindingProvider;
@@ -119,32 +120,32 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public void register(Type concreteType) throws AutoDiscoveryException, DefinitionException {
+  public void register(Type concreteType) throws AutoDiscoveryException, DefinitionException, DependencyException {
     registry.register(concreteType);
   }
 
   @Override
-  public void register(List<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException {
+  public void register(List<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException, DependencyException {
     registry.register(concreteTypes);
   }
 
   @Override
-  public void registerInstance(Object instance, Annotation... qualifiers) throws DefinitionException {
+  public void registerInstance(Object instance, Annotation... qualifiers) throws DefinitionException, DependencyException {
     registry.registerInstance(instance, qualifiers);
   }
 
   @Override
-  public void remove(Type concreteType) throws AutoDiscoveryException, DefinitionException {
+  public void remove(Type concreteType) throws AutoDiscoveryException, DefinitionException, DependencyException {
     registry.remove(concreteType);
   }
 
   @Override
-  public void remove(List<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException {
+  public void remove(List<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException, DependencyException {
     registry.remove(concreteTypes);
   }
 
   @Override
-  public void removeInstance(Object instance) throws DefinitionException {
+  public void removeInstance(Object instance) throws DefinitionException, DependencyException {
     registry.removeInstance(instance);
   }
 }

@@ -2,6 +2,7 @@ package hs.ddif.api;
 
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DependencyException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -45,8 +46,9 @@ public interface CandidateRegistry {
    * @param type the type to register, cannot be {@code null}
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  void register(Type type) throws AutoDiscoveryException, DefinitionException;
+  void register(Type type) throws AutoDiscoveryException, DefinitionException, DependencyException;
 
   /**
    * Registers the given {@link Type}s, and all their derived candidates if any, if all
@@ -60,8 +62,9 @@ public interface CandidateRegistry {
    * @param types a list of types to register, cannot be {@code null} or contain {@code null}s
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  void register(List<Type> types) throws AutoDiscoveryException, DefinitionException;
+  void register(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException;
 
   /**
    * Registers an instance, and all its derived candidates if any, as a
@@ -74,8 +77,9 @@ public interface CandidateRegistry {
    * @param instance the instance to register with the Injector
    * @param qualifiers optional list of qualifiers for this instance
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  void registerInstance(Object instance, Annotation... qualifiers) throws DefinitionException;
+  void registerInstance(Object instance, Annotation... qualifiers) throws DefinitionException, DependencyException;
 
   /**
    * Removes the given {@link Type}, and all its derived candidates if any, if
@@ -88,8 +92,9 @@ public interface CandidateRegistry {
    * @param type the type to remove, cannot be {@code null}
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  void remove(Type type) throws AutoDiscoveryException, DefinitionException;
+  void remove(Type type) throws AutoDiscoveryException, DefinitionException, DependencyException;
 
   /**
    * Removes the given {@link Type}s, all their derived candidates if any, if
@@ -102,8 +107,9 @@ public interface CandidateRegistry {
    * @param types a list of types to remove, cannot be {@code null} or contain {@code null}s
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  void remove(List<Type> types) throws AutoDiscoveryException, DefinitionException;
+  void remove(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException;
 
   /**
    * Removes an instance, and all its derived candidates if any, if doing so
@@ -114,6 +120,7 @@ public interface CandidateRegistry {
    *
    * @param instance the instance to remove, cannot be {@code null}
    * @throws DefinitionException when a definition problem was encountered
+   * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  void removeInstance(Object instance) throws DefinitionException;
+  void removeInstance(Object instance) throws DefinitionException, DependencyException;
 }

@@ -3,6 +3,7 @@ package hs.ddif.core.inject.store;
 import hs.ddif.api.definition.AmbiguousDependencyException;
 import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
 import hs.ddif.api.definition.CyclicDependencyException;
+import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.definition.ScopeConflictException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
@@ -25,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -101,8 +101,9 @@ public class InjectableStore implements Resolver<Injectable<?>> {
    * the store will be unmodified.
    *
    * @param injectables a collection of {@link Injectable}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @throws DependencyException when adding an injectable would violate store rules
    */
-  public synchronized void putAll(Collection<Injectable<?>> injectables) {
+  public synchronized void putAll(Collection<Injectable<?>> injectables) throws DependencyException {
     qualifiedTypeStore.putAll(injectables);
 
     try {
@@ -116,10 +117,12 @@ public class InjectableStore implements Resolver<Injectable<?>> {
           ensureRequiredBindingsAreAvailable(injectable);
         }
 
-        addInjectables(injectables).ifPresent(violation -> {
+        RegistrationViolation violation = addInjectables(injectables);
+
+        if(violation != null) {
           removeInjectables(injectables);
           violation.doThrow();
-        });
+        }
       }
       catch(Exception e) {
         removeBindings(injectables);
@@ -139,15 +142,18 @@ public class InjectableStore implements Resolver<Injectable<?>> {
    * the store will be unmodified.
    *
    * @param injectables a collection of {@link Injectable}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @throws DependencyException when adding an injectable would violate store rules
    */
-  public synchronized void removeAll(Collection<Injectable<?>> injectables) {
+  public synchronized void removeAll(Collection<Injectable<?>> injectables) throws DependencyException {
     qualifiedTypeStore.removeAll(injectables);
 
     try {
-      removeInjectables(injectables).ifPresent(violation -> {
+      RemoveViolation violation = removeInjectables(injectables);
+
+      if(violation != null) {
         addInjectables(injectables);
         violation.doThrow();
-      });
+      }
 
       removeBindings(injectables);
       removeScopedInstances(injectables);
@@ -181,7 +187,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     }
   }
 
-  private Optional<Violation> addInjectables(Collection<Injectable<?>> injectables) {
+  private RegistrationViolation addInjectables(Collection<Injectable<?>> injectables) {
     for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
         Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
@@ -194,7 +200,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     return addSources(injectables);
   }
 
-  private Optional<Violation> removeInjectables(Collection<Injectable<?>> injectables) {
+  private RemoveViolation removeInjectables(Collection<Injectable<?>> injectables) {
     for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
         Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
@@ -207,7 +213,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     return removeSources(injectables);
   }
 
-  private void ensureRequiredBindingsAreAvailable(Injectable<?> injectable) {
+  private void ensureRequiredBindingsAreAvailable(Injectable<?> injectable) throws AmbiguousDependencyException, UnsatisfiedDependencyException, ScopeConflictException {
 
     /*
      * Check the created bindings for unresolved or ambiguous dependencies and scope problems:
@@ -238,7 +244,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     }
   }
 
-  private void ensureBindingScopeIsValid(Injectable<?> injectable, Injectable<?> dependentInjectable) {
+  private void ensureBindingScopeIsValid(Injectable<?> injectable, Injectable<?> dependentInjectable) throws ScopeConflictException {
 
     /*
      * Perform scope check.
@@ -273,7 +279,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     }
   }
 
-  private void ensureNoCyclicDependencies(Collection<Injectable<?>> injectables) {
+  private void ensureNoCyclicDependencies(Collection<Injectable<?>> injectables) throws CyclicDependencyException {
     class CycleDetector {
       Set<Injectable<?>> input = new HashSet<>(injectables);
       Set<Injectable<?>> visited = new HashSet<>();
@@ -360,10 +366,10 @@ public class InjectableStore implements Resolver<Injectable<?>> {
    * be completely undone by calling {@link #removeSources(Collection)} with the same sources.
    *
    * @param sources a collection of sources to add, cannot be {@code null}
-   * @return an optional {@link Violation} if one was detected, never {@code null}
+   * @return a {@link RegistrationViolation} if one was detected, otherwise {@code null}
    */
-  private Optional<Violation> addSources(Collection<Injectable<?>> sources) {
-    Violation violation = null;
+  private RegistrationViolation addSources(Collection<Injectable<?>> sources) {
+    RegistrationViolation violation = null;
 
     for(Injectable<?> source : sources) {
       Type type = source.getType();
@@ -380,7 +386,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
               node.increaseSources(source);
 
               if(violation == null && node.isInvalid()) {
-                violation = new Violation(source, key, true);
+                violation = new RegistrationViolation(source, key);
               }
             }
           }
@@ -388,7 +394,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
       }
     }
 
-    return Optional.ofNullable(violation);
+    return violation;
   }
 
   /**
@@ -401,10 +407,10 @@ public class InjectableStore implements Resolver<Injectable<?>> {
    * be completely undone by calling {@link #addSources(Collection)} with the same sources.
    *
    * @param sources a collection of sources to remove, cannot be {@code null}
-   * @return an optional {@link Violation} if one was detected, never {@code null}
+   * @return a {@link RemoveViolation} if one was detected, otherwise {@code null}
    */
-  private Optional<Violation> removeSources(Collection<Injectable<?>> sources) {
-    Violation violation = null;
+  private RemoveViolation removeSources(Collection<Injectable<?>> sources) {
+    RemoveViolation violation = null;
 
     for(Injectable<?> source : sources) {
       Type type = source.getType();
@@ -421,7 +427,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
               node.decreaseSources(source);
 
               if(violation == null && node.isInvalid()) {
-                violation = new Violation(source, key, false);
+                violation = new RemoveViolation(source);
               }
             }
           }
@@ -429,7 +435,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
       }
     }
 
-    return Optional.ofNullable(violation);
+    return violation;
   }
 
   private void addTarget(Key key, boolean minimumOne, boolean maximumOne, Collection<Injectable<?>> sources) {
@@ -461,25 +467,32 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     );
   }
 
-  private class Violation {
+  private class RegistrationViolation {
     final Injectable<?> source;
     final Key key;
-    final boolean isAdd;
 
-    Violation(Injectable<?> source, Key key, boolean isAdd) {
+    RegistrationViolation(Injectable<?> source, Key key) {
       this.source = source;
       this.key = key;
-      this.isAdd = isAdd;
     }
 
-    void doThrow() {
+    void doThrow() throws AmbiguousRequiredDependencyException {
       Set<Binding> bindings = bindingManager.findBindings(source.getType(), source.getQualifiers());  // expensive, but only for throwing exception
+      String satisfiedBy = qualifiedTypeStore.resolve(key).stream().filter(i -> !i.equals(source)).map(Object::toString).collect(Collectors.joining(", ", "[", "]"));
 
-      if(isAdd) {
-        String satisfiedBy = qualifiedTypeStore.resolve(key).stream().filter(i -> !i.equals(source)).map(Object::toString).collect(Collectors.joining(", ", "[", "]"));
+      throw new AmbiguousRequiredDependencyException("Registering [" + source + "] would make existing required bindings ambiguous: " + bindings + "; already satisfied by " + satisfiedBy);
+    }
+  }
 
-        throw new AmbiguousRequiredDependencyException("Registering [" + source + "] would make existing required bindings ambiguous: " + bindings + "; already satisfied by " + satisfiedBy);
-      }
+  private class RemoveViolation {
+    final Injectable<?> source;
+
+    RemoveViolation(Injectable<?> source) {
+      this.source = source;
+    }
+
+    void doThrow() throws UnsatisfiedRequiredDependencyException {
+      Set<Binding> bindings = bindingManager.findBindings(source.getType(), source.getQualifiers());  // expensive, but only for throwing exception
 
       throw new UnsatisfiedRequiredDependencyException("Removing [" + source + "] would make existing required bindings unsatisfiable: " + bindings);
     }
