@@ -4,6 +4,7 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.CyclicDependencyException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DuplicateDependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
@@ -11,7 +12,6 @@ import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.TypeReference;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
-import hs.ddif.core.store.DuplicateKeyException;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
@@ -135,7 +135,7 @@ public class ProducesAnnotationTest {
     injector.register(StringMethodFactory.class);
     injector.register(Types.parameterize(GenericFactory1.class, Long.class));
 
-    assertThrows(DuplicateKeyException.class, () -> injector.register(Types.parameterize(GenericFactory1.class, Long.class)));
+    assertThrows(DuplicateDependencyException.class, () -> injector.register(Types.parameterize(GenericFactory1.class, Long.class)));
 
     List<String> x1 = injector.getInstance(new TypeReference<ArrayList<String>>() {}.getType());
     List<Long> y1 = injector.getInstance(new TypeReference<ArrayList<Long>>() {}.getType());
@@ -314,7 +314,7 @@ public class ProducesAnnotationTest {
 
     @Test
     void registeringAFactoryTwiceShouldThrowException() {
-      assertThrows(DuplicateKeyException.class, new Executable() {
+      assertThrows(DuplicateDependencyException.class, new Executable() {
         @Override
         public void execute() throws Exception {
           injector.register(UnscopedFactory.class);

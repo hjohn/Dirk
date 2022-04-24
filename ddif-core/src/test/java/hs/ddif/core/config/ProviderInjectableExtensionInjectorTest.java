@@ -3,11 +3,11 @@ package hs.ddif.core.config;
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
+import hs.ddif.api.definition.MissingDependencyException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.Injectors;
-import hs.ddif.core.store.NoSuchKeyException;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ public class ProviderInjectableExtensionInjectorTest {
      * Removal of a class that was never registered directly should fail:
      */
 
-    assertThatThrownBy(() -> injector.remove(B.class)).isExactlyInstanceOf(NoSuchKeyException.class);
+    assertThatThrownBy(() -> injector.remove(B.class)).isExactlyInstanceOf(MissingDependencyException.class);
 
     injector.remove(A.class);
 

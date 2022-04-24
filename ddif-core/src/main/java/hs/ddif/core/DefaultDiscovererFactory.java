@@ -1,6 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DuplicateDependencyException;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ClassInjectableFactory;
@@ -143,10 +144,15 @@ class DefaultDiscovererFactory implements DiscovererFactory {
     }
 
     SimpleDiscoverer(Resolver<Injectable<?>> resolver, Injectable<?> injectable) {
-      this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
+      try {
+        this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
 
-      tempStore.put(injectable);
-      visitTypes.add(injectable.getType());
+        tempStore.put(injectable);
+        visitTypes.add(injectable.getType());
+      }
+      catch(DuplicateDependencyException e) {
+        throw new IllegalStateException("Assertion error", e);
+      }
     }
 
     @Override
@@ -199,7 +205,12 @@ class DefaultDiscovererFactory implements DiscovererFactory {
         return false;
       }
 
-      tempStore.putAll(injectables);
+      try {
+        tempStore.putAll(injectables);
+      }
+      catch(DuplicateDependencyException e) {
+        throw new IllegalStateException("Assertion error", e);
+      }
 
       for(Injectable<?> injectable : injectables) {
         Key injectableKey = new Key(injectable.getType(), injectable.getQualifiers());

@@ -1,6 +1,5 @@
 package hs.ddif.core.store;
 
-import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.util.TypeReference;
 import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectableFactories;
@@ -68,7 +67,7 @@ public class QualifiedTypeStoreGenericsTest {
   }
 
   @Test
-  public void shouldAcceptGenericTypesWithoutTypeVariables() throws DefinitionException {
+  public void shouldAcceptGenericTypesWithoutTypeVariables() throws Exception {
     store.put(classInjectableFactory.create(Types.parameterize(ArrayList.class, String.class)));  // type is fully specified, so accepted
   }
 
@@ -77,7 +76,7 @@ public class QualifiedTypeStoreGenericsTest {
    * problems.  This test only handles a few potential cases, and may need extending.
    */
   @Test
-  public void shouldResolveInjectablesWithMultipleGenericParameters() throws DefinitionException {
+  public void shouldResolveInjectablesWithMultipleGenericParameters() throws Exception {
     store.put(classInjectableFactory.create(OrangeToOrangeJuiceConverter.class));
     store.put(classInjectableFactory.create(AppleToSlicedAppleConverter.class));
 

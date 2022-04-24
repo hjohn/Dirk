@@ -5,11 +5,11 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.api.definition.DuplicateDependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.util.Annotations;
-import hs.ddif.core.store.DuplicateKeyException;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -115,8 +115,8 @@ public class InjectorProviderTest {
       injector.register(BeanWithDatabase.class);
 
       assertThatThrownBy(() -> injector.register(SimpleDatabaseProvider.class))
-        .isExactlyInstanceOf(DuplicateKeyException.class)
-        .hasMessage("[hs.ddif.jakarta.InjectorProviderTest$Database] is already present")
+        .isExactlyInstanceOf(DuplicateDependencyException.class)
+        .hasMessage("[hs.ddif.jakarta.InjectorProviderTest$Database] already exists")
         .hasNoCause();
 
       assertEquals(BeanWithDatabase.class, injector.getInstance(BeanWithDatabase.class).getClass());

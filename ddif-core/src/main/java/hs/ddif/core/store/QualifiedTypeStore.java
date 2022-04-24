@@ -1,5 +1,7 @@
 package hs.ddif.core.store;
 
+import hs.ddif.api.definition.DuplicateDependencyException;
+import hs.ddif.api.definition.MissingDependencyException;
 import hs.ddif.api.util.Types;
 import hs.ddif.spi.instantiation.Key;
 
@@ -175,8 +177,9 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
    * Adds a type {@code T} to the store.
    *
    * @param qualifiedType a type {@code T}, cannot be {@code null}
+   * @throws DuplicateDependencyException when a dependency was already present in the store
    */
-  public synchronized void put(T qualifiedType) {
+  public synchronized void put(T qualifiedType) throws DuplicateDependencyException {
     putAll(List.of(qualifiedType));
   }
 
@@ -184,8 +187,9 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
    * Removes a type {@code T} from the store.
    *
    * @param qualifiedType a type {@code T}, cannot be {@code null}
+   * @throws MissingDependencyException when a dependency was not present in the store
    */
-  public synchronized void remove(T qualifiedType) {
+  public synchronized void remove(T qualifiedType) throws MissingDependencyException {
     removeAll(List.of(qualifiedType));
   }
 
@@ -194,8 +198,9 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
    * the store will be unmodified.
    *
    * @param qualifiedTypes a collection of type {@code T}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @throws DuplicateDependencyException when a dependency was already present in the store
    */
-  public synchronized void putAll(Collection<T> qualifiedTypes) {
+  public synchronized void putAll(Collection<T> qualifiedTypes) throws DuplicateDependencyException {
     for(T qualifiedType : qualifiedTypes) {
       ensureQualifiedTypeIsValid(qualifiedType);
     }
@@ -233,8 +238,9 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
    * the store will be unmodified.
    *
    * @param qualifiedTypes a collection of type {@code T}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @throws MissingDependencyException when a dependency was not present in the store
    */
-  public synchronized void removeAll(Collection<T> qualifiedTypes) {
+  public synchronized void removeAll(Collection<T> qualifiedTypes) throws MissingDependencyException {
     // First check the qualified types for fatal issues, exception does not need to be caught:
     for(T qualifiedType : qualifiedTypes) {
       ensureQualifiedTypeIsValid(qualifiedType);
@@ -243,7 +249,7 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
       Map<Annotation, Set<T>> existingQualifiedTypes = qualifiedTypesByQualifierByType.get(Types.raw(key.getType()));
 
       if(existingQualifiedTypes == null || !existingQualifiedTypes.get(null).contains(qualifiedType)) {
-        throw new NoSuchKeyException(key);
+        throw new MissingDependencyException("[" + key + "] not present");
       }
     }
 
@@ -313,11 +319,11 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
     }
   }
 
-  private void ensureNotDuplicate(T qualifiedType) {
+  private void ensureNotDuplicate(T qualifiedType) throws DuplicateDependencyException {
     Map<Annotation, Set<T>> qualifiedTypesByQualifier = qualifiedTypesByQualifierByType.get(Object.class);
 
     if(qualifiedTypesByQualifier != null && qualifiedTypesByQualifier.get(null).contains(qualifiedType)) {
-      throw new DuplicateKeyException(keyExtractor.apply(qualifiedType));
+      throw new DuplicateDependencyException("[" + keyExtractor.apply(qualifiedType) + "] already exists");
     }
   }
 
