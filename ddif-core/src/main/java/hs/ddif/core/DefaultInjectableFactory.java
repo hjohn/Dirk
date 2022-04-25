@@ -1,7 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
@@ -12,6 +11,7 @@ import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.spi.config.AnnotationStrategy;
 import hs.ddif.spi.config.ScopeStrategy;
 import hs.ddif.spi.scope.ScopeResolver;
+import hs.ddif.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;

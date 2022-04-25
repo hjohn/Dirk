@@ -2,8 +2,6 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.util.Annotations;
-import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
@@ -13,9 +11,11 @@ import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.instantiation.TypeExtensions;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.library.ProducesDiscoveryExtension;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.Key;
 import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
+import hs.ddif.util.Annotations;
 
 import java.util.List;
 import java.util.Set;

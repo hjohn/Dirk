@@ -1,10 +1,10 @@
 package hs.ddif.core;
 
-import hs.ddif.api.util.Types;
 import hs.ddif.spi.instantiation.InjectionTarget;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.TypeExtension;
+import hs.ddif.util.Types;
 
 /**
  * Produces type specific {@link Instantiator}s.

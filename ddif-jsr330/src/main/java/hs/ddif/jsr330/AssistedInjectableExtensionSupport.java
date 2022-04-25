@@ -2,13 +2,13 @@ package hs.ddif.jsr330;
 
 import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
-import hs.ddif.api.util.Annotations;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.extensions.assisted.AssistedAnnotationStrategy;
 import hs.ddif.extensions.assisted.AssistedDiscoveryExtension;
 import hs.ddif.extensions.assisted.ConfigurableAssistedAnnotationStrategy;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.util.Annotations;
 
 import java.lang.reflect.AnnotatedElement;
 

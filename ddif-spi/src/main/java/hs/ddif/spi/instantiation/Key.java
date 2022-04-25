@@ -1,6 +1,6 @@
 package hs.ddif.spi.instantiation;
 
-import hs.ddif.api.util.Primitives;
+import hs.ddif.util.Primitives;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;

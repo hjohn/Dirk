@@ -9,14 +9,14 @@ import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
-import hs.ddif.api.util.TypeReference;
-import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.qualifiers.Small;
 import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
+import hs.ddif.util.TypeReference;
+import hs.ddif.util.Types;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -22,6 +22,11 @@
       <version>${revision}</version>
     </dependency>
     <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-library</artifactId>
+      <version>${revision}</version>
+    </dependency>
+    <dependency>
       <groupId>com.github.hjohn.ddif.extensions</groupId>
       <artifactId>extensions-assisted</artifactId>
       <version>${revision}</version>

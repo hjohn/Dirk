@@ -6,12 +6,12 @@ import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
-import hs.ddif.api.util.Annotations;
-import hs.ddif.api.util.Types;
 import hs.ddif.core.InjectorBuilder;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.util.Annotations;
+import hs.ddif.util.Types;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.ParameterizedType;

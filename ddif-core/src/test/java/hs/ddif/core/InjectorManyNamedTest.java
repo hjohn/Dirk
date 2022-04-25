@@ -3,7 +3,7 @@ package hs.ddif.core;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DependencyException;
-import hs.ddif.api.util.Annotations;
+import hs.ddif.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;

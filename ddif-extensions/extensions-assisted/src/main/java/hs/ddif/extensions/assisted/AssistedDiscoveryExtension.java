@@ -2,8 +2,6 @@ package hs.ddif.extensions.assisted;
 
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.CreationException;
-import hs.ddif.api.util.Primitives;
-import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.factory.ClassObjectFactory;
@@ -11,6 +9,8 @@ import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.util.Primitives;
+import hs.ddif.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;

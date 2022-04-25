@@ -1,7 +1,7 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.api.util.Primitives;
-import hs.ddif.api.util.Types;
+import hs.ddif.util.Primitives;
+import hs.ddif.util.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;

@@ -9,7 +9,7 @@ import hs.ddif.api.definition.DuplicateDependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
-import hs.ddif.api.util.Annotations;
+import hs.ddif.util.Annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

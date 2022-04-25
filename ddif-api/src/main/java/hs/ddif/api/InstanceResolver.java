@@ -1,8 +1,8 @@
 package hs.ddif.api;
 
 import hs.ddif.api.definition.AutoDiscoveryException;
-import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 
 import java.lang.reflect.Type;
@@ -13,7 +13,7 @@ import java.util.function.Predicate;
  * Provides methods to resolve {@link Type}s to instances.
  *
  * <p>All methods support filtering by qualifier annotation, by providing either an {@link java.lang.annotation.Annotation}
- * instance (obtainable via {@link hs.ddif.api.util.Annotations#of(Class)}) or by providing a
+ * instance (obtainable via {@code Annotations#of(Class)}) or by providing a
  * {@link Class} instance of &lt;? extends Annotation&gt;. Annotations should be qualifier annotations or
  * no matches will be found.
  *
@@ -21,8 +21,8 @@ import java.util.function.Predicate;
  * custom filtering.
  *
  * <p>Filtering by generic type is possible by providing {@link java.lang.reflect.ParameterizedType} or a {@link java.lang.reflect.WildcardType}.
- * There are various ways to construct such types, see for example {@link hs.ddif.api.util.Types} and
- * {@link hs.ddif.api.util.TypeReference}.
+ * There are various ways to construct such types, see for example {@code hs.ddif.util.Types} and
+ * {@code hs.ddif.util.TypeReference}.
  *
  * <p>Examples:<br>
  *
