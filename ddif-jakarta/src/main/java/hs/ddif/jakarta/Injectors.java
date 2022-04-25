@@ -82,7 +82,6 @@ public class Injectors {
   }
 
   private static Injector createInjector(boolean autoDiscovering, ScopeResolver... scopeResolvers) {
-    BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
     LifeCycleCallbacksFactory lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(ANNOTATION_STRATEGY, PostConstruct.class, PreDestroy.class);
 
     List<ScopeResolver> finalScopeResolvers = Arrays.stream(scopeResolvers).anyMatch(sr -> sr.getAnnotationClass() == Singleton.class) ? Arrays.asList(scopeResolvers)
@@ -90,14 +89,13 @@ public class Injectors {
 
     return new StandardInjector(
       createTypeExtensions(),
-      createDiscoveryExtensions(bindingProvider, lifeCycleCallbacksFactory),
+      createDiscoveryExtensions(lifeCycleCallbacksFactory),
       finalScopeResolvers,
       new DefaultInjectorStrategy(
         ANNOTATION_STRATEGY,
         new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class),
         new NoProxyStrategy()
       ),
-      bindingProvider,
       lifeCycleCallbacksFactory,
       autoDiscovering
     );
@@ -113,7 +111,7 @@ public class Injectors {
     return typeExtensions;
   }
 
-  private static List<DiscoveryExtension> createDiscoveryExtensions(BindingProvider bindingProvider, LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
+  private static List<DiscoveryExtension> createDiscoveryExtensions(LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
     List<DiscoveryExtension> injectableExtensions = new ArrayList<>();
 
     injectableExtensions.add(new ProviderDiscoveryExtension(PROVIDER_METHOD));
@@ -122,7 +120,7 @@ public class Injectors {
     if(Classes.isAvailable("hs.ddif.extensions.assisted.AssistedInjectableExtension")) {
       LOGGER.info("Using AssistedInjectableExtension found on classpath");
 
-      injectableExtensions.add(AssistedInjectableExtensionSupport.create(bindingProvider, lifeCycleCallbacksFactory));
+      injectableExtensions.add(AssistedInjectableExtensionSupport.create(new BindingProvider(ANNOTATION_STRATEGY), lifeCycleCallbacksFactory));
     }
 
     return injectableExtensions;

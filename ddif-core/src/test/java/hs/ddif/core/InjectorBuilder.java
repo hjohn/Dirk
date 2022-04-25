@@ -13,7 +13,6 @@ import hs.ddif.core.config.ProviderDiscoveryExtension;
 import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
 import hs.ddif.core.config.SingletonScopeResolver;
-import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.spi.config.InjectorStrategy;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 import hs.ddif.spi.discovery.DiscoveryExtension;
@@ -95,13 +94,11 @@ public class InjectorBuilder {
 
   public static class Context3 extends Context2 {
     public final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
-    public final BindingProvider bindingProvider;
 
-    Context3(Context2 context, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, BindingProvider bindingProvider) {
+    Context3(Context2 context, LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
       super(context, context.scopeResolvers, context.typeExtensions);
 
       this.lifeCycleCallbacksFactory = lifeCycleCallbacksFactory;
-      this.bindingProvider = bindingProvider;
     }
   }
 
@@ -109,7 +106,7 @@ public class InjectorBuilder {
     public final boolean autoDiscovery;
 
     Context4(Context3 context, boolean autoDiscovery) {
-      super(context, context.lifeCycleCallbacksFactory, context.bindingProvider);
+      super(context, context.lifeCycleCallbacksFactory);
 
       this.autoDiscovery = autoDiscovery;
     }
@@ -156,9 +153,8 @@ public class InjectorBuilder {
 
     public Builder3 lifeCycleCallbacksFactory(Function<Context2, LifeCycleCallbacksFactory> callback) {
       LifeCycleCallbacksFactory lifeCycleCallbacksFactory = callback.apply(context);
-      BindingProvider bindingProvider = new BindingProvider(context.injectorStrategy.getAnnotationStrategy());
 
-      return new Builder3(context, lifeCycleCallbacksFactory, bindingProvider);
+      return new Builder3(context, lifeCycleCallbacksFactory);
     }
 
     public Builder3 defaultLifeCycleCallbacksFactory() {
@@ -169,8 +165,8 @@ public class InjectorBuilder {
   public static class Builder3 {
     private final Context3 context;
 
-    Builder3(Context2 context, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, BindingProvider bindingProvider) {
-      this.context = new Context3(context, lifeCycleCallbacksFactory, bindingProvider);
+    Builder3(Context2 context, LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
+      this.context = new Context3(context, lifeCycleCallbacksFactory);
     }
 
     public Builder4 autoDiscovering() {
@@ -216,7 +212,7 @@ public class InjectorBuilder {
       List<ScopeResolver> scopeResolvers = context.scopeResolvers.stream().anyMatch(sr -> sr.getAnnotationClass() == singletonAnnotationClass) ? context.scopeResolvers
         : Stream.concat(context.scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(singletonAnnotationClass))).collect(Collectors.toList());
 
-      return new StandardInjector(context.typeExtensions, context.discoveryExtensions, scopeResolvers, context.injectorStrategy, context.bindingProvider, context.lifeCycleCallbacksFactory, context.autoDiscovery);
+      return new StandardInjector(context.typeExtensions, context.discoveryExtensions, scopeResolvers, context.injectorStrategy, context.lifeCycleCallbacksFactory, context.autoDiscovery);
     }
   }
 }

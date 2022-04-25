@@ -46,16 +46,14 @@ public class StandardInjector implements Injector {
    * @param discoveryExtensions a list of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param scopeResolvers a list of {@link ScopeResolver}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param strategy an {@link InjectorStrategy}, cannot be {@code null}
-   * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
    * @param lifeCycleCallbacksFactory a {@link LifeCycleCallbacksFactory}, cannot be @{code null}
    * @param autoDiscovery {@code true} if the injector should automatically register (auto discover) types encountered during instantiation that have not been explicitly registered, or {code false} to allow manual registration only
    */
-  public StandardInjector(Map<Class<?>, TypeExtension<?>> typeExtensions, List<DiscoveryExtension> discoveryExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, BindingProvider bindingProvider, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, boolean autoDiscovery) {
+  public StandardInjector(Map<Class<?>, TypeExtension<?>> typeExtensions, List<DiscoveryExtension> discoveryExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, boolean autoDiscovery) {
     Objects.requireNonNull(typeExtensions, "typeExtensions cannot be null");
     Objects.requireNonNull(discoveryExtensions, "discoveryExtensions cannot be null");
     Objects.requireNonNull(scopeResolvers, "scopeResolvers cannot be null");
     Objects.requireNonNull(strategy, "strategy cannot be null");
-    Objects.requireNonNull(bindingProvider, "bindingProvider cannot be null");
     Objects.requireNonNull(lifeCycleCallbacksFactory, "lifeCycleCallbacksFactory cannot be null");
 
     InjectableFactory injectableFactory = new DefaultInjectableFactory(
@@ -66,7 +64,7 @@ public class StandardInjector implements Injector {
     );
 
     InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(new TypeExtensionStore(new DirectTypeExtension<>(strategy.getAnnotationStrategy()), typeExtensions));
-
+    BindingProvider bindingProvider = new BindingProvider(strategy.getAnnotationStrategy());
     DiscovererFactory discovererFactory = new DefaultDiscovererFactory(
       autoDiscovery,
       discoveryExtensions,
