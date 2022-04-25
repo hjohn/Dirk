@@ -78,7 +78,7 @@ public class Injectors {
       : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(Singleton.class))).collect(Collectors.toList());
 
     return new StandardInjector(
-      TypeExtensions.create(ANNOTATION_STRATEGY),
+      TypeExtensions.create(),
       createDiscoveryExtensions(),
       finalScopeResolvers,
       new DefaultInjectorStrategy(

@@ -1,6 +1,7 @@
 package hs.ddif.core.config;
 
 import hs.ddif.api.util.Types;
+import hs.ddif.spi.instantiation.InjectionTarget;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
@@ -8,7 +9,6 @@ import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.TypeExtension;
 import hs.ddif.spi.instantiation.TypeTrait;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.TypeVariable;
 import java.util.Objects;
 import java.util.Set;
@@ -42,9 +42,20 @@ public class ProviderTypeExtension<P, T> implements TypeExtension<P> {
   }
 
   @Override
-  public Instantiator<P> create(InstantiatorFactory instantiatorFactory, Key key, AnnotatedElement element) {
+  public Instantiator<P> create(InstantiatorFactory instantiatorFactory, InjectionTarget injectionTarget) {
+    Key key = injectionTarget.getKey();
     Key elementKey = new Key(Types.getTypeParameter(key.getType(), providerClass, typeVariable), key.getQualifiers());
-    Instantiator<T> instantiator = instantiatorFactory.getInstantiator(elementKey, element);
+    Instantiator<T> instantiator = instantiatorFactory.getInstantiator(new InjectionTarget() {
+      @Override
+      public Key getKey() {
+        return elementKey;
+      }
+
+      @Override
+      public boolean isOptional() {
+        return injectionTarget.isOptional();
+      }
+    });
     Set<TypeTrait> typeTraits = Stream.concat(instantiator.getTypeTraits().stream(), Stream.of(TypeTrait.LAZY)).collect(Collectors.toUnmodifiableSet());
 
     return new Instantiator<>() {

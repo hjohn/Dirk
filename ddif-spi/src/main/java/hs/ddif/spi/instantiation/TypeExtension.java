@@ -1,7 +1,5 @@
 package hs.ddif.spi.instantiation;
 
-import java.lang.reflect.AnnotatedElement;
-
 /**
  * Interface for customizing how a specific type can be instantiated.
  *
@@ -11,15 +9,12 @@ public interface TypeExtension<T> {
 
   /**
    * Creates a new {@link Instantiator} which will produce a type matching
-   * the given {@link Key}. Depending on the {@link Instantiator} produced the
-   * instantiation process may undergo further customization based on annotations
-   * found at the injection site, represented by the given {@link AnnotatedElement}.
+   * suitable for injection into the given {@link InjectionTarget}.
    *
    * @param instantiatorFactory an {@link InstantiatorFactory} to get delegate {@link Instantiator}s, cannot be {@code null}
-   * @param key a {@link Key}, cannot be {@code null}
-   * @param element an {@link AnnotatedElement}, can be {@code null}
+   * @param injectionTarget an {@link InjectionTarget}, cannot be {@code null}
    * @return an {@link Instantiator}, never {@code null}
    */
-  Instantiator<T> create(InstantiatorFactory instantiatorFactory, Key key, AnnotatedElement element);
+  Instantiator<T> create(InstantiatorFactory instantiatorFactory, InjectionTarget injectionTarget);
 
 }

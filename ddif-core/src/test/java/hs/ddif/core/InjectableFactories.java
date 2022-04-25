@@ -3,7 +3,6 @@ package hs.ddif.core;
 import hs.ddif.annotations.Opt;
 import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.ConfigurableAnnotationStrategy;
-import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.config.NoProxyStrategy;
 import hs.ddif.core.config.SimpleScopeStrategy;
 import hs.ddif.core.config.SingletonScopeResolver;
@@ -41,8 +40,8 @@ public class InjectableFactories {
   private final ScopeResolverManager scopeResolverManager;
   private final DefaultInjectableFactory factory;
   private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
-  private final Map<Class<?>, TypeExtension<?>> typeExtensions = TypeExtensions.create(ANNOTATION_STRATEGY);
-  private final TypeExtensionStore typeExtensionStore = new TypeExtensionStore(new DirectTypeExtension<>(ANNOTATION_STRATEGY), typeExtensions);
+  private final Map<Class<?>, TypeExtension<?>> typeExtensions = TypeExtensions.create();
+  private final TypeExtensionStore typeExtensionStore = new TypeExtensionStore(new DirectTypeExtension<>(), typeExtensions);
 
   public InjectableFactories(ScopeResolverManager scopeResolverManager) {
     this.scopeResolverManager = scopeResolverManager;

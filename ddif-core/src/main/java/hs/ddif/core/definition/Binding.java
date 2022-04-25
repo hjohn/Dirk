@@ -1,11 +1,10 @@
 package hs.ddif.core.definition;
 
-import hs.ddif.spi.instantiation.Key;
+import hs.ddif.spi.instantiation.InjectionTarget;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
 
 /**
  * Bindings represent targets where values can be injected into an instance. This
@@ -22,14 +21,7 @@ import java.lang.reflect.Type;
  * <li>An owner class. In order to access non-static methods and fields the owner class is required as a binding. Both the parameter and the accessible object are {@code null} in this case.</li>
  * </ul>
  */
-public interface Binding {
-
-  /**
-   * Returns the {@link Key} of this binding.
-   *
-   * @return the {@link Key} of this binding, never {@code null}
-   */
-  Key getKey();
+public interface Binding extends InjectionTarget {
 
   /**
    * Returns the target {@link AccessibleObject} for the binding. This is {@code null}
@@ -58,14 +50,5 @@ public interface Binding {
     Parameter parameter = getParameter();
 
     return parameter == null ? getAccessibleObject() : parameter;
-  }
-
-  /**
-   * Returns the {@link Type} of the binding.
-   *
-   * @return the {@link Type} of the binding, never {@code null}
-   */
-  default Type getType() {
-    return getKey().getType();
   }
 }

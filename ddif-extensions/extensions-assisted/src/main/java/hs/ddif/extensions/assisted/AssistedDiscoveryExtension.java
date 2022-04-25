@@ -177,7 +177,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
 
           providerFieldNames.add(fieldName);
           builder = builder
-            .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getType()), Visibility.PRIVATE)
+            .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getKey().getType()), Visibility.PRIVATE)
             .annotateField(annotations);
         }
       }
@@ -220,7 +220,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
       List<String> names = new ArrayList<>();
 
       if(factoryMethod.getParameterCount() != argumentBindings.size()) {
-        throw new DefinitionException(factoryMethod, "should have " + argumentBindings.size() + " argument(s) of types: " + argumentBindings.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getType())));
+        throw new DefinitionException(factoryMethod, "should have " + argumentBindings.size() + " argument(s) of types: " + argumentBindings.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getKey().getType())));
       }
 
       Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
@@ -246,8 +246,8 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
 
             Type factoryArgumentType = Types.resolveVariables(factoryTypeArguments, Primitives.toBoxed(genericParameterTypes[i]));
 
-            if(!argumentBindings.get(name).getType().equals(factoryArgumentType)) {
-              throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
+            if(!argumentBindings.get(name).getKey().getType().equals(factoryArgumentType)) {
+              throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getKey().getType() + "] but was: " + factoryArgumentType);
             }
 
             if(!encounteredNames.add(name)) {
@@ -285,7 +285,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
 
       for(int i = 0; i < parameters.length; i++) {
         Type factoryArgumentType = Primitives.toBoxed(Types.resolveVariables(factoryTypeArguments, genericParameterTypes[i]));
-        List<String> matches = argumentBindings.entrySet().stream().filter(e -> e.getValue().getType().equals(factoryArgumentType)).map(Map.Entry::getKey).collect(Collectors.toList());
+        List<String> matches = argumentBindings.entrySet().stream().filter(e -> e.getValue().getKey().getType().equals(factoryArgumentType)).map(Map.Entry::getKey).collect(Collectors.toList());
 
         if(matches.size() == 1) {
           names.add(matches.get(0));

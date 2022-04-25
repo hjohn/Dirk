@@ -32,8 +32,9 @@ public interface AnnotationStrategy {
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
    * @return {@code true} if the given {@link AnnotatedElement} is optional, otherwise {@code false}
+   * @throws DefinitionException when the strategy detects an annotation problem
    */
-  boolean isOptional(AnnotatedElement element);
+  boolean isOptional(AnnotatedElement element) throws DefinitionException;
 
   /**
    * Returns all {@link Annotation}s on the given {@link AnnotatedElement} which

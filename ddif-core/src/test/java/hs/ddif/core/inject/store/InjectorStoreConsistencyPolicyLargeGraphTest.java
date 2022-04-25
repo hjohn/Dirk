@@ -115,6 +115,11 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
     }
 
     @Override
+    public boolean isOptional() {
+      return false;
+    }
+
+    @Override
     public AccessibleObject getAccessibleObject() {
       return null;
     }
