@@ -69,7 +69,7 @@ public class InstantiatorBindingMap implements BoundInstantiatorProvider, Bindin
     Reference<Instantiator<?>> ref = instantiators.get(binding);
 
     if(ref == null) {
-      instantiators.put(binding, new Reference<>(instantiatorFactory.getInstantiator(binding.getKey(), binding.getAnnotatedElement())));
+      instantiators.put(binding, new Reference<>(instantiatorFactory.getInstantiator(binding)));
     }
     else {
       ref.increaseReferences();

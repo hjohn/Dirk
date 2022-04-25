@@ -52,7 +52,7 @@ public class InjectableStoreConsistencyTest {
   private Injectable<N> n;
   private Injectable<O> o;
 
-  private InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(InjectableFactories.ANNOTATION_STRATEGY, TypeExtensions.create(InjectableFactories.ANNOTATION_STRATEGY));
+  private InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(TypeExtensions.create());
   private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
 

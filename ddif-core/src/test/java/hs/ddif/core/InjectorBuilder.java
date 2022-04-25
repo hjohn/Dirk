@@ -138,8 +138,8 @@ public class InjectorBuilder {
     Builder2(Context1 context, List<ScopeResolver> scopeResolvers) {
       Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
 
-      typeExtensions.put(List.class, new ListTypeExtension<>(context.injectorStrategy.getAnnotationStrategy()));
-      typeExtensions.put(Set.class, new SetTypeExtension<>(context.injectorStrategy.getAnnotationStrategy()));
+      typeExtensions.put(List.class, new ListTypeExtension<>());
+      typeExtensions.put(Set.class, new SetTypeExtension<>());
       typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
 
       this.context = new Context2(context, scopeResolvers, typeExtensions);

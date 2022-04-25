@@ -2,7 +2,7 @@ package hs.ddif.core.config;
 
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.util.Types;
-import hs.ddif.spi.config.AnnotationStrategy;
+import hs.ddif.spi.instantiation.InjectionTarget;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
@@ -10,7 +10,6 @@ import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.TypeExtension;
 import hs.ddif.spi.instantiation.TypeTrait;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.TypeVariable;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -27,21 +26,11 @@ public class SetTypeExtension<T> implements TypeExtension<Set<T>> {
   private static final TypeVariable<?> TYPE_VARIABLE = Set.class.getTypeParameters()[0];
   private static final Set<TypeTrait> NONE = EnumSet.noneOf(TypeTrait.class);
 
-  private final AnnotationStrategy annotationStrategy;
-
-  /**
-   * Constructs a new instance.
-   *
-   * @param annotationStrategy an {@link AnnotationStrategy}, cannot be {@code null}
-   */
-  public SetTypeExtension(AnnotationStrategy annotationStrategy) {
-    this.annotationStrategy = annotationStrategy;
-  }
-
   @Override
-  public Instantiator<Set<T>> create(InstantiatorFactory factory, Key key, AnnotatedElement element) {
+  public Instantiator<Set<T>> create(InstantiatorFactory factory, InjectionTarget injectionTarget) {
+    Key key = injectionTarget.getKey();
     Key elementKey = new Key(Types.getTypeParameter(key.getType(), Set.class, TYPE_VARIABLE), key.getQualifiers());
-    boolean optional = annotationStrategy.isOptional(element);
+    boolean optional = injectionTarget.isOptional();
 
     return new Instantiator<>() {
       @Override

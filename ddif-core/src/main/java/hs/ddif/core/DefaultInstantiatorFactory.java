@@ -1,12 +1,10 @@
 package hs.ddif.core;
 
 import hs.ddif.api.util.Types;
+import hs.ddif.spi.instantiation.InjectionTarget;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
-import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.TypeExtension;
-
-import java.lang.reflect.AnnotatedElement;
 
 /**
  * Produces type specific {@link Instantiator}s.
@@ -24,9 +22,9 @@ class DefaultInstantiatorFactory implements InstantiatorFactory {
   }
 
   @Override
-  public <T> Instantiator<T> getInstantiator(Key key, AnnotatedElement element) {
-    TypeExtension<T> extension = typeExtensionStore.getExtension(Types.raw(key.getType()));
+  public <T> Instantiator<T> getInstantiator(InjectionTarget injectionTarget) {
+    TypeExtension<T> extension = typeExtensionStore.getExtension(Types.raw(injectionTarget.getKey().getType()));
 
-    return extension.create(this, key, element);
+    return extension.create(this, injectionTarget);
   }
 }

@@ -1,9 +1,9 @@
-package hs.ddif.core.config;
+package hs.ddif.core;
 
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
-import hs.ddif.spi.config.AnnotationStrategy;
+import hs.ddif.spi.instantiation.InjectionTarget;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
@@ -11,7 +11,6 @@ import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.TypeExtension;
 import hs.ddif.spi.instantiation.TypeTrait;
 
-import java.lang.reflect.AnnotatedElement;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
@@ -23,41 +22,30 @@ import java.util.Set;
  *
  * @param <T> the instantiated type
  */
-public class DirectTypeExtension<T> implements TypeExtension<T> {
+class DirectTypeExtension<T> implements TypeExtension<T> {
   private static final Set<TypeTrait> REQUIRES_AT_MOST_ONE = Collections.unmodifiableSet(EnumSet.of(TypeTrait.REQUIRES_AT_MOST_ONE));
   private static final Set<TypeTrait> REQUIRES_EXACTLY_ONE = Collections.unmodifiableSet(EnumSet.of(TypeTrait.REQUIRES_AT_MOST_ONE, TypeTrait.REQUIRES_AT_LEAST_ONE));
 
-  private final AnnotationStrategy annotationStrategy;
-
-  /**
-   * Constructs a new instance.
-   *
-   * @param annotationStrategy an {@link AnnotationStrategy}, cannot be {@code null}
-   */
-  public DirectTypeExtension(AnnotationStrategy annotationStrategy) {
-    this.annotationStrategy = annotationStrategy;
-  }
-
   @Override
-  public Instantiator<T> create(InstantiatorFactory factory, Key key, AnnotatedElement element) {
-    Set<TypeTrait> typeTraits = annotationStrategy.isOptional(element) ? REQUIRES_AT_MOST_ONE : REQUIRES_EXACTLY_ONE;
+  public Instantiator<T> create(InstantiatorFactory factory, InjectionTarget injectionTarget) {
+    Set<TypeTrait> typeTraits = injectionTarget.isOptional() ? REQUIRES_AT_MOST_ONE : REQUIRES_EXACTLY_ONE;
 
     return new Instantiator<>() {
       @Override
       public Key getKey() {
-        return key;
+        return injectionTarget.getKey();
       }
 
       @Override
       public T getInstance(InstantiationContext context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
-        T instance = context.create(key);
+        T instance = context.create(injectionTarget.getKey());
 
         if(instance == null) {
           if(!typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE)) {
             return null;
           }
 
-          throw new UnsatisfiedResolutionException("No such instance: [" + key + "]");
+          throw new UnsatisfiedResolutionException("No such instance: [" + injectionTarget.getKey() + "]");
         }
 
         return instance;

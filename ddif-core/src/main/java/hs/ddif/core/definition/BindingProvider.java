@@ -93,7 +93,7 @@ public class BindingProvider {
 
           Type type = Types.resolveVariables(typeArguments, field.getGenericType());
 
-          bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(field)), field, null));
+          bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(field)), annotationStrategy.isOptional(field), field, null));
         }
       }
 
@@ -216,18 +216,19 @@ public class BindingProvider {
     for(int i = 0; i < parameters.length; i++) {
       Type type = Types.resolveVariables(typeArguments, params[i]);
 
-      bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(parameters[i])), executable, parameters[i]));
+      bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(parameters[i])), annotationStrategy.isOptional(parameters[i]), executable, parameters[i]));
     }
 
     return bindings;
   }
 
   private static Binding ownerBinding(Type ownerType) {
-    return new DefaultBinding(new Key(ownerType), null, null);
+    return new DefaultBinding(new Key(ownerType), false, null, null);
   }
 
   private static class DefaultBinding implements Binding {
     private final Key key;
+    private final boolean optional;
     private final AccessibleObject accessibleObject;
     private final Parameter parameter;
 
@@ -235,10 +236,11 @@ public class BindingProvider {
      * Constructs a new instance.
      *
      * @param key a {@link Key}, cannot be {@code null}
+     * @param optional {@code true} when the binding is optional, otherwise {@code false}
      * @param accessibleObject an {@link AccessibleObject}, can be {@code null}
      * @param parameter a {@link Parameter}, cannot be {@code null} for {@link java.lang.reflect.Executable}s and must be {@code null} otherwise
      */
-    public DefaultBinding(Key key, AccessibleObject accessibleObject, Parameter parameter) {
+    public DefaultBinding(Key key, boolean optional, AccessibleObject accessibleObject, Parameter parameter) {
       if(key == null) {
         throw new IllegalArgumentException("key cannot be null");
       }
@@ -250,6 +252,7 @@ public class BindingProvider {
       }
 
       this.key = key;
+      this.optional = optional;
       this.accessibleObject = accessibleObject;
       this.parameter = parameter;
     }
@@ -257,6 +260,11 @@ public class BindingProvider {
     @Override
     public Key getKey() {
       return key;
+    }
+
+    @Override
+    public boolean isOptional() {
+      return optional;
     }
 
     @Override

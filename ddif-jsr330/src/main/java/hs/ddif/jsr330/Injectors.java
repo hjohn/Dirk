@@ -104,8 +104,8 @@ public class Injectors {
   private static Map<Class<?>, TypeExtension<?>> createTypeExtensions() {
     Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
 
-    typeExtensions.put(List.class, new ListTypeExtension<>(ANNOTATION_STRATEGY));
-    typeExtensions.put(Set.class, new SetTypeExtension<>(ANNOTATION_STRATEGY));
+    typeExtensions.put(List.class, new ListTypeExtension<>());
+    typeExtensions.put(Set.class, new SetTypeExtension<>());
     typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
 
     return typeExtensions;

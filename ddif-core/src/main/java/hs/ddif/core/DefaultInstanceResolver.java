@@ -9,6 +9,7 @@ import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.discovery.DiscovererFactory;
 import hs.ddif.core.inject.store.InjectableStore;
+import hs.ddif.spi.instantiation.InjectionTarget;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
@@ -81,7 +82,7 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   private <T> T getInstance(Key key) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, AutoDiscoveryException {
-    Instantiator<T> instantiator = instantiatorFactory.getInstantiator(key, null);
+    Instantiator<T> instantiator = instantiatorFactory.getInstantiator(new InternalInjectionTarget(key));
     Discoverer discoverer = discovererFactory.create(store, instantiator.getKey());
     Set<Injectable<?>> gatheredInjectables = Set.of();
 
@@ -119,5 +120,23 @@ class DefaultInstanceResolver implements InstanceResolver {
 
   private <T> List<T> getInstances(Key key) throws CreationException {
     return instantiationContext.createAll(key);
+  }
+
+  private static class InternalInjectionTarget implements InjectionTarget {
+    private final Key key;
+
+    public InternalInjectionTarget(Key key) {
+      this.key = key;
+    }
+
+    @Override
+    public Key getKey() {
+      return key;
+    }
+
+    @Override
+    public boolean isOptional() {
+      return false;
+    }
   }
 }

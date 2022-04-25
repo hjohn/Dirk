@@ -9,7 +9,6 @@ import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
-import hs.ddif.core.config.DirectTypeExtension;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
@@ -60,7 +59,7 @@ public class StandardInjector implements Injector {
       typeExtensions.keySet()
     );
 
-    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(new TypeExtensionStore(new DirectTypeExtension<>(strategy.getAnnotationStrategy()), typeExtensions));
+    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(new TypeExtensionStore(new DirectTypeExtension<>(), typeExtensions));
     BindingProvider bindingProvider = new BindingProvider(strategy.getAnnotationStrategy());
     DiscovererFactory discovererFactory = new DefaultDiscovererFactory(
       autoDiscovery,

@@ -218,7 +218,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
         visitTypes.add(injectable.getType());
 
         for(Binding binding : injectable.getBindings()) {
-          Key key = instantiatorFactory.getInstantiator(binding.getKey(), binding.getAnnotatedElement()).getKey();
+          Key key = instantiatorFactory.getInstantiator(binding).getKey();
 
           if(includingResolver.resolve(key).isEmpty()) {
             via.put(key, injectableKey);
