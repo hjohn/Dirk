@@ -1,9 +1,9 @@
 package hs.ddif.core.definition;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.util.Annotations;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
+import hs.ddif.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;

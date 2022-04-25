@@ -8,7 +8,7 @@ import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.discovery.DiscovererFactory;
-import hs.ddif.core.inject.store.InjectableStore;
+import hs.ddif.core.store.InjectableStore;
 import hs.ddif.spi.instantiation.InjectionTarget;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;

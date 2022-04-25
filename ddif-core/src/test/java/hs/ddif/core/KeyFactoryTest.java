@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
-import hs.ddif.api.util.Annotations;
 import hs.ddif.core.test.qualifiers.Red;
+import hs.ddif.util.Annotations;
 
 import org.junit.jupiter.api.Test;
 

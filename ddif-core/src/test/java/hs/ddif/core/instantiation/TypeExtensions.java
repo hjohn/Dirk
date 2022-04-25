@@ -1,8 +1,8 @@
 package hs.ddif.core.instantiation;
 
-import hs.ddif.core.config.ListTypeExtension;
-import hs.ddif.core.config.ProviderTypeExtension;
-import hs.ddif.core.config.SetTypeExtension;
+import hs.ddif.library.ListTypeExtension;
+import hs.ddif.library.ProviderTypeExtension;
+import hs.ddif.library.SetTypeExtension;
 import hs.ddif.spi.instantiation.TypeExtension;
 
 import java.util.HashMap;

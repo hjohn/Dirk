@@ -2,7 +2,6 @@ package hs.ddif.core;
 
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DuplicateDependencyException;
-import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
@@ -16,6 +15,7 @@ import hs.ddif.spi.discovery.DiscoveryExtension;
 import hs.ddif.spi.discovery.DiscoveryExtension.Registry;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.Key;
+import hs.ddif.util.Types;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

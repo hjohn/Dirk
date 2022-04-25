@@ -7,7 +7,7 @@ import hs.ddif.api.definition.DependencyException;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.discovery.DiscovererFactory;
-import hs.ddif.core.inject.store.InjectableStore;
+import hs.ddif.core.store.InjectableStore;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;

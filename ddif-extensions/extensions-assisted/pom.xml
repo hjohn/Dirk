@@ -35,6 +35,12 @@
       <type>test-jar</type>
     </dependency>
     <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-library</artifactId>
+      <version>${revision}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>jakarta.annotation</groupId>
       <artifactId>jakarta.annotation-api</artifactId>
       <scope>test</scope>

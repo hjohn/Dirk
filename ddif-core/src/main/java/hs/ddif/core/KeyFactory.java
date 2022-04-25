@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
-import hs.ddif.api.util.Annotations;
 import hs.ddif.spi.instantiation.Key;
+import hs.ddif.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;

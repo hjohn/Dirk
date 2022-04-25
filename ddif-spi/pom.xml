@@ -16,6 +16,11 @@
       <artifactId>ddif-api</artifactId>
       <version>${revision}</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-util</artifactId>
+      <version>${revision}</version>
+    </dependency>
 
     <!-- Test -->
     <dependency>

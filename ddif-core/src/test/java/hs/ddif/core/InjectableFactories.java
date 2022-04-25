@@ -1,11 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.annotations.Opt;
-import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
-import hs.ddif.core.config.ConfigurableAnnotationStrategy;
-import hs.ddif.core.config.NoProxyStrategy;
-import hs.ddif.core.config.SimpleScopeStrategy;
-import hs.ddif.core.config.SingletonScopeResolver;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
@@ -13,6 +8,11 @@ import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.instantiation.TypeExtensions;
 import hs.ddif.core.test.scope.Dependent;
+import hs.ddif.library.AnnotationBasedLifeCycleCallbacksFactory;
+import hs.ddif.library.ConfigurableAnnotationStrategy;
+import hs.ddif.library.NoProxyStrategy;
+import hs.ddif.library.SimpleScopeStrategy;
+import hs.ddif.library.SingletonScopeResolver;
 import hs.ddif.spi.config.AnnotationStrategy;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 import hs.ddif.spi.config.ProxyStrategy;

@@ -17,15 +17,16 @@
       <version>${revision}</version>
     </dependency>
 
-    <dependency>
-      <groupId>io.leangen.geantyref</groupId>
-      <artifactId>geantyref</artifactId>
-    </dependency>
-
     <!-- Test -->
     <dependency>
       <groupId>com.github.hjohn.ddif</groupId>
       <artifactId>ddif-annotations</artifactId>
+      <version>${revision}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-library</artifactId>
       <version>${revision}</version>
       <scope>test</scope>
     </dependency>

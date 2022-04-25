@@ -2,13 +2,13 @@ package hs.ddif.plugins;
 
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
-import hs.ddif.api.util.Annotations;
 import hs.ddif.jsr330.Injectors;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableDependency;
 import hs.ddif.plugins.test.project.TestAutoDiscoverableInjectAnnotatedDependency;
 import hs.ddif.plugins.test.project.TestClassWithSetterInjection;
 import hs.ddif.plugins.test.project.TestDatabase;
 import hs.ddif.plugins.test.project.TestStatement;
+import hs.ddif.util.Annotations;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;

@@ -14,8 +14,6 @@ import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
-import hs.ddif.api.util.Annotations;
-import hs.ddif.api.util.Types;
 import hs.ddif.core.test.injectables.AbstractBean;
 import hs.ddif.core.test.injectables.BeanWithBigInjection;
 import hs.ddif.core.test.injectables.BeanWithBigRedInjection;
@@ -55,6 +53,8 @@ import hs.ddif.core.test.injectables.SubclassOfBeanWithInjectionWithSameNamedInj
 import hs.ddif.core.test.injectables.UnavailableBean;
 import hs.ddif.core.test.injectables.UnregisteredParentBean;
 import hs.ddif.core.util.Nullable;
+import hs.ddif.util.Annotations;
+import hs.ddif.util.Types;
 
 import java.util.ArrayList;
 import java.util.Arrays;

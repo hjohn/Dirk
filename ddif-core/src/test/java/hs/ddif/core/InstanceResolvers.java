@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
-import hs.ddif.core.inject.store.InjectableStore;
-import hs.ddif.core.inject.store.InstantiatorBindingMap;
+import hs.ddif.core.store.InjectableStore;
+import hs.ddif.core.store.InstantiatorBindingMap;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package hs.ddif.spi.instantiation;
 
-import hs.ddif.api.util.Annotations;
-import hs.ddif.api.util.Types;
+import hs.ddif.util.Annotations;
+import hs.ddif.util.Types;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;

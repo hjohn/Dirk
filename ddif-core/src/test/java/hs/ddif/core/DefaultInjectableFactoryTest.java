@@ -1,8 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.util.Annotations;
-import hs.ddif.api.util.Types;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.Injectable;
@@ -12,6 +10,8 @@ import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.core.test.scope.TestScope;
+import hs.ddif.util.Annotations;
+import hs.ddif.util.Types;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
