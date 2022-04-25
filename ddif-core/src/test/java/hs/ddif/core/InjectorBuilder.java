@@ -12,9 +12,10 @@ import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.config.ProviderDiscoveryExtension;
 import hs.ddif.core.config.ProviderTypeExtension;
 import hs.ddif.core.config.SetTypeExtension;
+import hs.ddif.core.config.SimpleScopeStrategy;
 import hs.ddif.core.config.SingletonScopeResolver;
+import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.spi.config.InjectorStrategy;
-import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 import hs.ddif.spi.discovery.DiscoveryExtension;
 import hs.ddif.spi.instantiation.TypeExtension;
 import hs.ddif.spi.scope.ScopeResolver;
@@ -36,6 +37,8 @@ import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
+import jakarta.inject.Singleton;
 
 public class InjectorBuilder {
   private static final Method PROVIDER_METHOD;
@@ -62,13 +65,14 @@ public class InjectorBuilder {
     public Builder1 defaultInjectorStrategy() {
       return new Builder1(new DefaultInjectorStrategy(
         new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class),
-        InjectableFactories.SCOPE_STRATEGY,
-        new NoProxyStrategy()
+        new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class),
+        new NoProxyStrategy(),
+        new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class)
       ));
     }
 
     public Builder4 manual() {
-      return defaultInjectorStrategy().defaultScopeResolvers().defaultLifeCycleCallbacksFactory().manual();
+      return defaultInjectorStrategy().defaultScopeResolvers().manual();
     }
   }
 
@@ -92,21 +96,11 @@ public class InjectorBuilder {
     }
   }
 
-  public static class Context3 extends Context2 {
-    public final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
-
-    Context3(Context2 context, LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
-      super(context, context.scopeResolvers, context.typeExtensions);
-
-      this.lifeCycleCallbacksFactory = lifeCycleCallbacksFactory;
-    }
-  }
-
-  public static class Context4 extends Context3 {
+  public static class Context4 extends Context2 {
     public final boolean autoDiscovery;
 
-    Context4(Context3 context, boolean autoDiscovery) {
-      super(context, context.lifeCycleCallbacksFactory);
+    Context4(Context2 context, boolean autoDiscovery) {
+      super(context, context.scopeResolvers, context.typeExtensions);
 
       this.autoDiscovery = autoDiscovery;
     }
@@ -151,24 +145,6 @@ public class InjectorBuilder {
       this.context = new Context2(context, scopeResolvers, typeExtensions);
     }
 
-    public Builder3 lifeCycleCallbacksFactory(Function<Context2, LifeCycleCallbacksFactory> callback) {
-      LifeCycleCallbacksFactory lifeCycleCallbacksFactory = callback.apply(context);
-
-      return new Builder3(context, lifeCycleCallbacksFactory);
-    }
-
-    public Builder3 defaultLifeCycleCallbacksFactory() {
-      return lifeCycleCallbacksFactory(context -> new AnnotationBasedLifeCycleCallbacksFactory(context.injectorStrategy.getAnnotationStrategy(), PostConstruct.class, PreDestroy.class));
-    }
-  }
-
-  public static class Builder3 {
-    private final Context3 context;
-
-    Builder3(Context2 context, LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
-      this.context = new Context3(context, lifeCycleCallbacksFactory);
-    }
-
     public Builder4 autoDiscovering() {
       return new Builder4(context, true);
     }
@@ -181,7 +157,7 @@ public class InjectorBuilder {
   public static class Builder4 {
     private final Context4 context;
 
-    Builder4(Context3 context, boolean autoDiscovery) {
+    Builder4(Context2 context, boolean autoDiscovery) {
       this.context = new Context4(context, autoDiscovery);
     }
 
@@ -212,7 +188,7 @@ public class InjectorBuilder {
       List<ScopeResolver> scopeResolvers = context.scopeResolvers.stream().anyMatch(sr -> sr.getAnnotationClass() == singletonAnnotationClass) ? context.scopeResolvers
         : Stream.concat(context.scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(singletonAnnotationClass))).collect(Collectors.toList());
 
-      return new StandardInjector(context.typeExtensions, context.discoveryExtensions, scopeResolvers, context.injectorStrategy, context.lifeCycleCallbacksFactory, context.autoDiscovery);
+      return new StandardInjector(context.typeExtensions, context.discoveryExtensions, scopeResolvers, context.injectorStrategy, context.autoDiscovery);
     }
   }
 }

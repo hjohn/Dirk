@@ -82,7 +82,7 @@ public class Injectors {
   }
 
   private static Injector createInjector(boolean autoDiscovering, ScopeResolver... scopeResolvers) {
-    LifeCycleCallbacksFactory lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(ANNOTATION_STRATEGY, PostConstruct.class, PreDestroy.class);
+    LifeCycleCallbacksFactory lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
 
     List<ScopeResolver> finalScopeResolvers = Arrays.stream(scopeResolvers).anyMatch(sr -> sr.getAnnotationClass() == Singleton.class) ? Arrays.asList(scopeResolvers)
       : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(Singleton.class))).collect(Collectors.toList());
@@ -94,9 +94,9 @@ public class Injectors {
       new DefaultInjectorStrategy(
         ANNOTATION_STRATEGY,
         new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class),
-        new NoProxyStrategy()
+        new NoProxyStrategy(),
+        lifeCycleCallbacksFactory
       ),
-      lifeCycleCallbacksFactory,
       autoDiscovering
     );
   }

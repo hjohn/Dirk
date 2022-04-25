@@ -4,6 +4,7 @@ import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.ScopeConflictException;
 import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.core.config.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.core.config.DefaultInjectorStrategy;
 import hs.ddif.core.config.SimpleScopeStrategy;
 import hs.ddif.core.test.scope.Dependent;
@@ -24,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Scope;
@@ -47,10 +50,10 @@ public class ProxiedScopeTest {
     .injectorStrategy(new DefaultInjectorStrategy(
       InjectableFactories.ANNOTATION_STRATEGY,
       new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class),
-      new ByteBuddyProxyStrategy()
+      new ByteBuddyProxyStrategy(),
+      new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class)
     ))
     .scopeResolvers(context -> List.of(scopeResolver))
-    .defaultLifeCycleCallbacksFactory()
     .autoDiscovering()
     .defaultDiscoveryExtensions()
     .build();
