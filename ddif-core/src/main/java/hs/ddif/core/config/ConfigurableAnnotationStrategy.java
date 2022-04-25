@@ -55,9 +55,4 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
   public Set<Annotation> getQualifiers(AnnotatedElement element) {
     return Annotations.findDirectlyMetaAnnotatedAnnotations(element, qualifierAnnotation);
   }
-
-  @Override
-  public boolean isQualifier(Annotation annotation) {
-    return annotation.annotationType().isAnnotationPresent(qualifierAnnotation);
-  }
 }

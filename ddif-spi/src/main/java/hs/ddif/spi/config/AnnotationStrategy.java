@@ -37,19 +37,12 @@ public interface AnnotationStrategy {
 
   /**
    * Returns all {@link Annotation}s on the given {@link AnnotatedElement} which
-   * are meta annotated by a qualifier annotation.
+   * are qualifier annotations.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
    * @return a modifiable set of {@link Annotation}s, never {@code null} or contains {@code null}, but can be empty
+   * @throws DefinitionException when the strategy detects an annotation problem
    */
-  Set<Annotation> getQualifiers(AnnotatedElement element);
+  Set<Annotation> getQualifiers(AnnotatedElement element) throws DefinitionException;
 
-  /**
-   * Checks if the given {@link Annotation} is a qualifier annotation. This means it
-   * is meta annotated by one of the configured qualifier annotations.
-   *
-   * @param annotation an {@link Annotation}, cannot be {@code null}
-   * @return {@code true} if the given annotation is a qualifier annotation, otherwise {@code false}
-   */
-  boolean isQualifier(Annotation annotation);
 }
