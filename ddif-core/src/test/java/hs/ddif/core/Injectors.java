@@ -11,7 +11,6 @@ import hs.ddif.core.config.ProducesDiscoveryExtension;
 import hs.ddif.core.config.ProviderDiscoveryExtension;
 import hs.ddif.core.config.SimpleScopeStrategy;
 import hs.ddif.core.config.SingletonScopeResolver;
-import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.instantiation.TypeExtensions;
 import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.spi.config.AnnotationStrategy;
@@ -73,7 +72,6 @@ public class Injectors {
   }
 
   private static Injector createInjector(boolean autoDiscovering, ScopeResolver... scopeResolvers) {
-    BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
     LifeCycleCallbacksFactory lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(ANNOTATION_STRATEGY, PostConstruct.class, PreDestroy.class);
 
     List<ScopeResolver> finalScopeResolvers = Arrays.stream(scopeResolvers).anyMatch(sr -> sr.getAnnotationClass() == Singleton.class) ? Arrays.asList(scopeResolvers)
@@ -88,7 +86,6 @@ public class Injectors {
         new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class),
         new NoProxyStrategy()
       ),
-      bindingProvider,
       lifeCycleCallbacksFactory,
       autoDiscovering
     );
