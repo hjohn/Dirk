@@ -47,7 +47,7 @@ public class InjectableFactories {
   public InjectableFactories(ScopeResolverManager scopeResolverManager) {
     this.scopeResolverManager = scopeResolverManager;
     this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, SCOPE_STRATEGY, typeExtensions.keySet());
-    this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(ANNOTATION_STRATEGY, PostConstruct.class, PreDestroy.class);
+    this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
   }
 
   public InjectableFactories() {

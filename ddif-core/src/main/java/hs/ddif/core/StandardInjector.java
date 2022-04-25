@@ -20,7 +20,6 @@ import hs.ddif.core.discovery.DiscovererFactory;
 import hs.ddif.core.inject.store.InjectableStore;
 import hs.ddif.core.inject.store.InstantiatorBindingMap;
 import hs.ddif.spi.config.InjectorStrategy;
-import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 import hs.ddif.spi.discovery.DiscoveryExtension;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.TypeExtension;
@@ -46,15 +45,13 @@ public class StandardInjector implements Injector {
    * @param discoveryExtensions a list of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param scopeResolvers a list of {@link ScopeResolver}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param strategy an {@link InjectorStrategy}, cannot be {@code null}
-   * @param lifeCycleCallbacksFactory a {@link LifeCycleCallbacksFactory}, cannot be @{code null}
    * @param autoDiscovery {@code true} if the injector should automatically register (auto discover) types encountered during instantiation that have not been explicitly registered, or {code false} to allow manual registration only
    */
-  public StandardInjector(Map<Class<?>, TypeExtension<?>> typeExtensions, List<DiscoveryExtension> discoveryExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, boolean autoDiscovery) {
+  public StandardInjector(Map<Class<?>, TypeExtension<?>> typeExtensions, List<DiscoveryExtension> discoveryExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, boolean autoDiscovery) {
     Objects.requireNonNull(typeExtensions, "typeExtensions cannot be null");
     Objects.requireNonNull(discoveryExtensions, "discoveryExtensions cannot be null");
     Objects.requireNonNull(scopeResolvers, "scopeResolvers cannot be null");
     Objects.requireNonNull(strategy, "strategy cannot be null");
-    Objects.requireNonNull(lifeCycleCallbacksFactory, "lifeCycleCallbacksFactory cannot be null");
 
     InjectableFactory injectableFactory = new DefaultInjectableFactory(
       new ScopeResolverManager(scopeResolvers, strategy.getScopeStrategy().getDependentAnnotationClass()),
@@ -69,7 +66,7 @@ public class StandardInjector implements Injector {
       autoDiscovery,
       discoveryExtensions,
       instantiatorFactory,
-      new ClassInjectableFactory(bindingProvider, injectableFactory, lifeCycleCallbacksFactory),
+      new ClassInjectableFactory(bindingProvider, injectableFactory, strategy.getLifeCycleCallbacksFactory()),
       new MethodInjectableFactory(bindingProvider, injectableFactory),
       new FieldInjectableFactory(bindingProvider, injectableFactory)
     );

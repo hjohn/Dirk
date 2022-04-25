@@ -35,7 +35,6 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
 
   private final Class<? extends Annotation> postConstruct;
   private final Class<? extends Annotation> preDestroy;
-  private final AnnotationStrategy annotationStrategy;
 
   /**
    * Constructs a new instance.
@@ -44,8 +43,7 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
    * @param postConstruct a marker annotation {@link Class} for post construct methods, cannot be {@code null}
    * @param preDestroy a marker annotation {@link Class} for pre-destroy methods, cannot be {@code null}
    */
-  public AnnotationBasedLifeCycleCallbacksFactory(AnnotationStrategy annotationStrategy, Class<? extends Annotation> postConstruct, Class<? extends Annotation> preDestroy) {
-    this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy cannot be null");
+  public AnnotationBasedLifeCycleCallbacksFactory(Class<? extends Annotation> postConstruct, Class<? extends Annotation> preDestroy) {
     this.postConstruct = Objects.requireNonNull(postConstruct, "postConstruct cannot be null");
     this.preDestroy = Objects.requireNonNull(preDestroy, "preDestroy cannot be null");
   }
@@ -69,12 +67,9 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
     return new DefaultLifeCycleCallbacks(postConstructMethods, preDestroyMethods);
   }
 
-  private void checkMethod(Method method) throws DefinitionException {
+  private static void checkMethod(Method method) throws DefinitionException {
     if(method.getParameterCount() > 0) {
       throw new DefinitionException(method, "cannot have parameters when annotated as a lifecycle method (post construct or pre destroy)");
-    }
-    if(!annotationStrategy.getInjectAnnotations(method).isEmpty()) {
-      throw new DefinitionException(method, "cannot be inject annotated when annotated as a lifecycle method (post construct or pre destroy): " + annotationStrategy.getInjectAnnotations(method));
     }
   }
 

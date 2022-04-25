@@ -25,4 +25,11 @@ public interface InjectorStrategy {
    * @return the {@link ProxyStrategy}, never {@code null}
    */
   ProxyStrategy getProxyStrategy();
+
+  /**
+   * Returns the {@link LifeCycleCallbacksFactory} to be used.
+   *
+   * @return a {@link LifeCycleCallbacksFactory}, never {@code null}
+   */
+  LifeCycleCallbacksFactory getLifeCycleCallbacksFactory();
 }
