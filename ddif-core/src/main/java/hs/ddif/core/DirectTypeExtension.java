@@ -27,6 +27,11 @@ class DirectTypeExtension<T> implements TypeExtension<T> {
   private static final Set<TypeTrait> REQUIRES_EXACTLY_ONE = Collections.unmodifiableSet(EnumSet.of(TypeTrait.REQUIRES_AT_MOST_ONE, TypeTrait.REQUIRES_AT_LEAST_ONE));
 
   @Override
+  public Class<?> getInstantiatorType() {
+    throw new UnsupportedOperationException();  // not required for the default internal extension
+  }
+
+  @Override
   public Instantiator<T> create(InstantiatorFactory factory, InjectionTarget injectionTarget) {
     Set<TypeTrait> typeTraits = injectionTarget.isOptional() ? REQUIRES_AT_MOST_ONE : REQUIRES_EXACTLY_ONE;
 

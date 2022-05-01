@@ -26,6 +26,11 @@ public class ListTypeExtension<T> implements TypeExtension<List<T>> {
   private static final Set<TypeTrait> NONE = EnumSet.noneOf(TypeTrait.class);
 
   @Override
+  public Class<?> getInstantiatorType() {
+    return List.class;
+  }
+
+  @Override
   public Instantiator<List<T>> create(InstantiatorFactory factory, InjectionTarget injectionTarget) {
     Key key = injectionTarget.getKey();
     Key elementKey = new Key(Types.getTypeParameter(key.getType(), List.class, TYPE_VARIABLE), key.getQualifiers());

@@ -22,7 +22,7 @@ import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -40,12 +40,12 @@ public class InjectableFactories {
   private final ScopeResolverManager scopeResolverManager;
   private final DefaultInjectableFactory factory;
   private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
-  private final Map<Class<?>, TypeExtension<?>> typeExtensions = TypeExtensions.create();
+  private final List<TypeExtension<?>> typeExtensions = TypeExtensions.create();
   private final TypeExtensionStore typeExtensionStore = new TypeExtensionStore(new DirectTypeExtension<>(), typeExtensions);
 
   public InjectableFactories(ScopeResolverManager scopeResolverManager) {
     this.scopeResolverManager = scopeResolverManager;
-    this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, SCOPE_STRATEGY, typeExtensions.keySet());
+    this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, SCOPE_STRATEGY, typeExtensions.stream().map(TypeExtension::getInstantiatorType).collect(Collectors.toSet()));
     this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
   }
 

@@ -42,6 +42,11 @@ public class ProviderTypeExtension<P, T> implements TypeExtension<P> {
   }
 
   @Override
+  public Class<?> getInstantiatorType() {
+    return providerClass;
+  }
+
+  @Override
   public Instantiator<P> create(InstantiatorFactory instantiatorFactory, InjectionTarget injectionTarget) {
     Key key = injectionTarget.getKey();
     Key elementKey = new Key(Types.getTypeParameter(key.getType(), providerClass, typeVariable), key.getQualifiers());

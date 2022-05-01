@@ -8,6 +8,13 @@ package hs.ddif.spi.instantiation;
 public interface TypeExtension<T> {
 
   /**
+   * Returns the type of the {@link Instantiator}s produced by this extension.
+   *
+   * @return a {@link Class}, never {@code null}
+   */
+  Class<?> getInstantiatorType();
+
+  /**
    * Creates a new {@link Instantiator} which will produce a type matching
    * suitable for injection into the given {@link InjectionTarget}.
    *

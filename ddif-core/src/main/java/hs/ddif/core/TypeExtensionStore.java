@@ -2,9 +2,10 @@ package hs.ddif.core;
 
 import hs.ddif.spi.instantiation.TypeExtension;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A store for {@link TypeExtension}s.
@@ -15,7 +16,7 @@ class TypeExtensionStore {
    * Map containing {@link TypeExtension} by their supported type. Key {@code null}
    * is used as the default extension.
    */
-  private final Map<Class<?>, TypeExtension<?>> typeExtensions;
+  private final Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
 
   private final TypeExtension<?> defaultExtension;
 
@@ -23,14 +24,13 @@ class TypeExtensionStore {
    * Constructs a new instance.
    *
    * @param defaultExtension a default {@link TypeExtension} used when there is no type match, cannot be {@code null}
-   * @param typeExtensions a map of {@link TypeExtension}s, cannot be {@code null} but can be empty
+   * @param typeExtensions a collection of {@link TypeExtension}s, cannot be {@code null} but can be empty
    */
-  public TypeExtensionStore(TypeExtension<?> defaultExtension, Map<Class<?>, TypeExtension<?>> typeExtensions) {
-    Map<Class<?>, TypeExtension<?>> map = new HashMap<>();
+  public TypeExtensionStore(TypeExtension<?> defaultExtension, Collection<TypeExtension<?>> typeExtensions) {
+    for(TypeExtension<?> extension : typeExtensions) {
+      this.typeExtensions.put(Objects.requireNonNull(extension.getInstantiatorType(), "instantiatorType of " + extension), extension);
+    }
 
-    map.putAll(typeExtensions);
-
-    this.typeExtensions = Collections.unmodifiableMap(map);
     this.defaultExtension = defaultExtension;
   }
 
