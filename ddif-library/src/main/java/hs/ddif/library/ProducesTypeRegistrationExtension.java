@@ -1,7 +1,7 @@
 package hs.ddif.library;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.util.Fields;
 import hs.ddif.util.Methods;
 import hs.ddif.util.Types;
@@ -15,7 +15,7 @@ import java.lang.reflect.Type;
  * Extension which looks for members annotated with a produces annotation, and if found registers
  * these with the injector.
  */
-public class ProducesDiscoveryExtension implements DiscoveryExtension {
+public class ProducesTypeRegistrationExtension implements TypeRegistrationExtension {
   private final Class<? extends Annotation> produces;
 
   /**
@@ -23,7 +23,7 @@ public class ProducesDiscoveryExtension implements DiscoveryExtension {
    *
    * @param produces an annotation {@link Class} marking producer fields and methods, cannot be {@code null}
    */
-  public ProducesDiscoveryExtension(Class<? extends Annotation> produces) {
+  public ProducesTypeRegistrationExtension(Class<? extends Annotation> produces) {
     this.produces = produces;
   }
 

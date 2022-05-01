@@ -4,10 +4,10 @@ import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.extensions.assisted.AssistedAnnotationStrategy;
-import hs.ddif.extensions.assisted.AssistedDiscoveryExtension;
+import hs.ddif.extensions.assisted.AssistedTypeRegistrationExtension;
 import hs.ddif.extensions.assisted.ConfigurableAssistedAnnotationStrategy;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
-import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.util.Annotations;
 
 import java.lang.reflect.AnnotatedElement;
@@ -15,13 +15,13 @@ import java.lang.reflect.AnnotatedElement;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
-class AssistedInjectableExtensionSupport {
+class AssistedTypeRegistrationExtensionSupport {
   private static final Inject INJECT = Annotations.of(Inject.class);
 
-  static DiscoveryExtension create(BindingProvider bindingProvider, LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
-    AssistedAnnotationStrategy<?> ASSISTED_ANNOTATION_STRATEGY = new ConfigurableAssistedAnnotationStrategy<>(Assisted.class, Argument.class, AssistedInjectableExtensionSupport::extractArgumentName, INJECT, Provider.class, Provider::get);
+  static TypeRegistrationExtension create(BindingProvider bindingProvider, LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
+    AssistedAnnotationStrategy<?> ASSISTED_ANNOTATION_STRATEGY = new ConfigurableAssistedAnnotationStrategy<>(Assisted.class, Argument.class, AssistedTypeRegistrationExtensionSupport::extractArgumentName, INJECT, Provider.class, Provider::get);
 
-    return new AssistedDiscoveryExtension(bindingProvider, lifeCycleCallbacksFactory, ASSISTED_ANNOTATION_STRATEGY);
+    return new AssistedTypeRegistrationExtension(bindingProvider, lifeCycleCallbacksFactory, ASSISTED_ANNOTATION_STRATEGY);
   }
 
   private static String extractArgumentName(AnnotatedElement element) {

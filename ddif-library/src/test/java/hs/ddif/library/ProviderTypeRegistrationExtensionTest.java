@@ -1,7 +1,7 @@
 package hs.ddif.library;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.spi.discovery.DiscoveryExtension.Registry;
+import hs.ddif.spi.discovery.TypeRegistrationExtension.Registry;
 import hs.ddif.util.Types;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,13 +13,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import jakarta.inject.Provider;
 
-public class ProviderDiscoveryExtensionTest {
+public class ProviderTypeRegistrationExtensionTest {
   private Registry registry = mock(Registry.class);
-  private ProviderDiscoveryExtension extension;
+  private ProviderTypeRegistrationExtension extension;
 
   @BeforeEach
   void beforeEach() throws NoSuchMethodException, SecurityException {
-    extension = new ProviderDiscoveryExtension(Provider.class.getMethod("get"));
+    extension = new ProviderTypeRegistrationExtension(Provider.class.getMethod("get"));
   }
 
   @Test

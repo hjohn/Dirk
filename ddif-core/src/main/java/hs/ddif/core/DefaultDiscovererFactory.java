@@ -11,8 +11,8 @@ import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.discovery.DiscovererFactory;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
-import hs.ddif.spi.discovery.DiscoveryExtension;
-import hs.ddif.spi.discovery.DiscoveryExtension.Registry;
+import hs.ddif.spi.discovery.TypeRegistrationExtension;
+import hs.ddif.spi.discovery.TypeRegistrationExtension.Registry;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.Key;
 import hs.ddif.util.Types;
@@ -51,14 +51,14 @@ class DefaultDiscovererFactory implements DiscovererFactory {
   };
 
   /**
-   * Contains a cache of injectables derived with the given {@link DiscoveryExtension}s.
+   * Contains a cache of injectables derived with the given {@link TypeRegistrationExtension}s.
    * This must not be static as then it would be shared among multiple injectors which
    * may have a different set of extensions configured.
    */
   private final Map<Type, List<Injectable<?>>> derivedInjectables = new WeakHashMap<>();
 
   private final boolean autoDiscovery;
-  private final Collection<DiscoveryExtension> extensions;
+  private final Collection<TypeRegistrationExtension> extensions;
   private final InstantiatorFactory instantiatorFactory;
   private final ClassInjectableFactory classInjectableFactory;
   private final MethodInjectableFactory methodInjectableFactory;
@@ -67,14 +67,14 @@ class DefaultDiscovererFactory implements DiscovererFactory {
   /**
    * Constructs a new instance.
    *
-   * @param extensions a collection of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param extensions a collection of {@link TypeRegistrationExtension}s, cannot be {@code null} or contain {@code null}s but can be empty
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
    * @param instantiatorFactory an {@link InstantiatorFactory}, cannot be {@code null}
    * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
    * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
    * @param fieldInjectableFactory a {@link FieldInjectableFactory}, cannot be {@code null}
    */
-  public DefaultDiscovererFactory(boolean autoDiscovery, Collection<DiscoveryExtension> extensions, InstantiatorFactory instantiatorFactory, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
+  public DefaultDiscovererFactory(boolean autoDiscovery, Collection<TypeRegistrationExtension> extensions, InstantiatorFactory instantiatorFactory, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
     this.autoDiscovery = autoDiscovery;
     this.extensions = extensions;
     this.instantiatorFactory = instantiatorFactory;
@@ -243,9 +243,9 @@ class DefaultDiscovererFactory implements DiscovererFactory {
           if(!derivedInjectables.containsKey(type)) {
             DerivedRegistry registry = new DerivedRegistry();
 
-            for(DiscoveryExtension injectableExtension : extensions) {
+            for(TypeRegistrationExtension extension : extensions) {
               // extension don't necessarily resolve the type examined; they might though through for example a static producer which produces itself
-              injectableExtension.deriveTypes(registry, type);
+              extension.deriveTypes(registry, type);
             }
 
             derivedInjectables.put(type, registry.derivedInjectables);

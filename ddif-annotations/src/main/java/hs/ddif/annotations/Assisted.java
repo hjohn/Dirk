@@ -8,7 +8,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Marks a type with a single abstract method to be automatically created by the
- * assisted injectable extension. To qualify the type must be:
+ * assisted type registration extension. To qualify the type must be:
  *
  * <ul>
  * <li>annotated with the {@link Assisted} annotation</li>

@@ -9,14 +9,14 @@ import hs.ddif.library.ConfigurableAnnotationStrategy;
 import hs.ddif.library.DefaultInjectorStrategy;
 import hs.ddif.library.ListInjectionTargetExtension;
 import hs.ddif.library.NoProxyStrategy;
-import hs.ddif.library.ProducesDiscoveryExtension;
-import hs.ddif.library.ProviderDiscoveryExtension;
+import hs.ddif.library.ProducesTypeRegistrationExtension;
+import hs.ddif.library.ProviderTypeRegistrationExtension;
 import hs.ddif.library.ProviderInjectionTargetExtension;
 import hs.ddif.library.SetInjectionTargetExtension;
 import hs.ddif.library.SimpleScopeStrategy;
 import hs.ddif.library.SingletonScopeResolver;
 import hs.ddif.spi.config.InjectorStrategy;
-import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.scope.ScopeResolver;
 
@@ -105,12 +105,12 @@ public class InjectorBuilder {
   }
 
   public static class Context5 extends Context4 {
-    public final List<DiscoveryExtension> discoveryExtensions;
+    public final List<TypeRegistrationExtension> typeRegistrationExtensions;
 
-    Context5(Context4 context, List<DiscoveryExtension> discoveryExtensions) {
+    Context5(Context4 context, List<TypeRegistrationExtension> typeRegistrationExtensions) {
       super(context, context.autoDiscovery);
 
-      this.discoveryExtensions = discoveryExtensions;
+      this.typeRegistrationExtensions = typeRegistrationExtensions;
     }
   }
 
@@ -159,26 +159,26 @@ public class InjectorBuilder {
       this.context = new Context4(context, autoDiscovery);
     }
 
-    public Builder5 discoveryExtensions(Function<Context4, List<DiscoveryExtension>> callback) {
-      List<DiscoveryExtension> discoveryExtensions = new ArrayList<>();
+    public Builder5 typeRegistrationExtensions(Function<Context4, List<TypeRegistrationExtension>> callback) {
+      List<TypeRegistrationExtension> typeRegistrationExtensions = new ArrayList<>();
 
-      discoveryExtensions.add(new ProviderDiscoveryExtension(PROVIDER_METHOD));
-      discoveryExtensions.add(new ProducesDiscoveryExtension(Produces.class));
-      discoveryExtensions.addAll(callback.apply(context));
+      typeRegistrationExtensions.add(new ProviderTypeRegistrationExtension(PROVIDER_METHOD));
+      typeRegistrationExtensions.add(new ProducesTypeRegistrationExtension(Produces.class));
+      typeRegistrationExtensions.addAll(callback.apply(context));
 
-      return new Builder5(context, discoveryExtensions);
+      return new Builder5(context, typeRegistrationExtensions);
     }
 
     public Builder5 defaultDiscoveryExtensions() {
-      return discoveryExtensions(context -> List.of());
+      return typeRegistrationExtensions(context -> List.of());
     }
   }
 
   public static class Builder5 {
     private final Context5 context;
 
-    Builder5(Context4 context, List<DiscoveryExtension> discoveryExtensions) {
-      this.context = new Context5(context, discoveryExtensions);
+    Builder5(Context4 context, List<TypeRegistrationExtension> typeRegistrationExtensions) {
+      this.context = new Context5(context, typeRegistrationExtensions);
     }
 
     public Injector build() {
@@ -186,7 +186,7 @@ public class InjectorBuilder {
       List<ScopeResolver> scopeResolvers = context.scopeResolvers.stream().anyMatch(sr -> sr.getAnnotationClass() == singletonAnnotationClass) ? context.scopeResolvers
         : Stream.concat(context.scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(singletonAnnotationClass))).collect(Collectors.toList());
 
-      return new StandardInjector(context.injectionTargetExtensions, context.discoveryExtensions, scopeResolvers, context.injectorStrategy, context.autoDiscovery);
+      return new StandardInjector(context.injectionTargetExtensions, context.typeRegistrationExtensions, scopeResolvers, context.injectorStrategy, context.autoDiscovery);
     }
   }
 }

@@ -7,9 +7,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 /**
- * Extensions for discovering additional types given a newly registered type.
+ * An extension called during registration of types to derive and register 
+ * additional types for a given type.
  */
-public interface DiscoveryExtension {
+public interface TypeRegistrationExtension {
 
   /**
    * Allows registration of newly derived types.
@@ -44,13 +45,11 @@ public interface DiscoveryExtension {
   }
 
   /**
-   * Called during registration of newly discovered types to allow the extension
-   * to register further types that can be directly derived from the given {@link Type}.
-   * For example, the given type could have special annotations which supply further
-   * types. These in turn could require dependencies (as parameters) that may need to
-   * be auto discovered first.
+   * Called during registration of new types to allow the extension to register further
+   * types that can be directly derived from the given {@link Type}. For example, the given
+   * type could have special annotations which define further types.
    *
-   * @param type a {@link Type} use as base for derivation, never {@code null}
+   * @param type a {@link Type} used as a base for derivation, never {@code null}
    * @param registry a {@link Registry} where derived types can be registered, never {@code null}
    * @throws DefinitionException when a definition problem was encountered during derivation
    */

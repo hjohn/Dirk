@@ -10,15 +10,15 @@ import hs.ddif.library.ConfigurableAnnotationStrategy;
 import hs.ddif.library.DefaultInjectorStrategy;
 import hs.ddif.library.ListInjectionTargetExtension;
 import hs.ddif.library.NoProxyStrategy;
-import hs.ddif.library.ProducesDiscoveryExtension;
-import hs.ddif.library.ProviderDiscoveryExtension;
+import hs.ddif.library.ProducesTypeRegistrationExtension;
+import hs.ddif.library.ProviderTypeRegistrationExtension;
 import hs.ddif.library.ProviderInjectionTargetExtension;
 import hs.ddif.library.SetInjectionTargetExtension;
 import hs.ddif.library.SimpleScopeStrategy;
 import hs.ddif.library.SingletonScopeResolver;
 import hs.ddif.spi.config.AnnotationStrategy;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
-import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.scope.ScopeResolver;
 import hs.ddif.util.Classes;
@@ -106,19 +106,19 @@ public class Injectors {
     );
   }
 
-  private static List<DiscoveryExtension> createDiscoveryExtensions(LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
-    List<DiscoveryExtension> injectableExtensions = new ArrayList<>();
+  private static List<TypeRegistrationExtension> createDiscoveryExtensions(LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
+    List<TypeRegistrationExtension> extensions = new ArrayList<>();
 
-    injectableExtensions.add(new ProviderDiscoveryExtension(PROVIDER_METHOD));
-    injectableExtensions.add(new ProducesDiscoveryExtension(Produces.class));
+    extensions.add(new ProviderTypeRegistrationExtension(PROVIDER_METHOD));
+    extensions.add(new ProducesTypeRegistrationExtension(Produces.class));
 
-    if(Classes.isAvailable("hs.ddif.extensions.assisted.AssistedInjectableExtension")) {
-      LOGGER.info("Using AssistedInjectableExtension found on classpath");
+    if(Classes.isAvailable("hs.ddif.extensions.assisted.AssistedTypeRegistrationExtension")) {
+      LOGGER.info("Using AssistedTypeRegistrationExtension found on classpath");
 
-      injectableExtensions.add(AssistedInjectableExtensionSupport.create(new BindingProvider(ANNOTATION_STRATEGY), lifeCycleCallbacksFactory));
+      extensions.add(AssistedTypeRegistrationExtensionSupport.create(new BindingProvider(ANNOTATION_STRATEGY), lifeCycleCallbacksFactory));
     }
 
-    return injectableExtensions;
+    return extensions;
   }
 }
 
