@@ -11,6 +11,7 @@ import hs.ddif.core.store.InjectableStore;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,7 +47,7 @@ class InjectableStoreCandidateRegistry implements CandidateRegistry {
   }
 
   @Override
-  public void register(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
+  public void register(Collection<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
     registerInternal(types);
   }
 
@@ -61,7 +62,7 @@ class InjectableStoreCandidateRegistry implements CandidateRegistry {
   }
 
   @Override
-  public void remove(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
+  public void remove(Collection<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
     removeInternal(types);
   }
 
@@ -70,7 +71,7 @@ class InjectableStoreCandidateRegistry implements CandidateRegistry {
     store.removeAll(discovererFactory.create(store, instanceInjectableFactory.create(instance, qualifiers)).discover());
   }
 
-  private void registerInternal(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
+  private void registerInternal(Collection<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
     Discoverer discoverer = discovererFactory.create(store, types);
 
     try {
@@ -85,7 +86,7 @@ class InjectableStoreCandidateRegistry implements CandidateRegistry {
     }
   }
 
-  private void removeInternal(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
+  private void removeInternal(Collection<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
     Discoverer discoverer = discovererFactory.create(store, types);
 
     try {

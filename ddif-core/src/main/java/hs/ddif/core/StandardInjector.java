@@ -42,12 +42,12 @@ public class StandardInjector implements Injector {
    * Constructs a new instance.
    *
    * @param typeExtensions a collection of {@link TypeExtension}s, cannot be {@code null} or contain {@code null} but can be empty
-   * @param discoveryExtensions a list of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null} but can be empty
+   * @param discoveryExtensions a collection of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param scopeResolvers a list of {@link ScopeResolver}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param strategy an {@link InjectorStrategy}, cannot be {@code null}
    * @param autoDiscovery {@code true} if the injector should automatically register (auto discover) types encountered during instantiation that have not been explicitly registered, or {code false} to allow manual registration only
    */
-  public StandardInjector(Collection<TypeExtension<?>> typeExtensions, List<DiscoveryExtension> discoveryExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, boolean autoDiscovery) {
+  public StandardInjector(Collection<TypeExtension<?>> typeExtensions, Collection<DiscoveryExtension> discoveryExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, boolean autoDiscovery) {
     Objects.requireNonNull(typeExtensions, "typeExtensions cannot be null");
     Objects.requireNonNull(discoveryExtensions, "discoveryExtensions cannot be null");
     Objects.requireNonNull(scopeResolvers, "scopeResolvers cannot be null");
@@ -120,7 +120,7 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public void register(List<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException, DependencyException {
+  public void register(Collection<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException, DependencyException {
     registry.register(concreteTypes);
   }
 
@@ -135,7 +135,7 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public void remove(List<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException, DependencyException {
+  public void remove(Collection<Type> concreteTypes) throws AutoDiscoveryException, DefinitionException, DependencyException {
     registry.remove(concreteTypes);
   }
 

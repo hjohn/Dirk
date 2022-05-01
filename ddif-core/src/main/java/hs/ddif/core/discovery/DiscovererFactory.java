@@ -5,7 +5,7 @@ import hs.ddif.core.store.Resolver;
 import hs.ddif.spi.instantiation.Key;
 
 import java.lang.reflect.Type;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Gathers fully expanded sets of {@link Injectable}s based on the given inputs.
@@ -39,10 +39,10 @@ public interface DiscovererFactory {
    * or discovered using the given types as starting point.
    *
    * @param resolver a {@link Resolver}, cannot be {@code null}
-   * @param types a list of {@link Type}s, cannot be {@code null} or contain {@code null}s
+   * @param types a collection of {@link Type}s, cannot be {@code null} or contain {@code null}s
    * @return a {@link Discoverer}, never {@code null}
    */
-  Discoverer create(Resolver<Injectable<?>> resolver, List<Type> types);
+  Discoverer create(Resolver<Injectable<?>> resolver, Collection<Type> types);
 
   /**
    * Given a {@link Key}, returns a {@link Discoverer} which will produce an injectable for
