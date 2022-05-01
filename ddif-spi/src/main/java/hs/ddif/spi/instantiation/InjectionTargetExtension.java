@@ -1,11 +1,16 @@
 package hs.ddif.spi.instantiation;
 
 /**
- * Interface for customizing how a specific type can be instantiated.
+ * An interface to allow for custom handling of {@link InjectionTarget}s of type
+ * {@code T} using a custom {@link Instantiator}.
  *
- * @param <T> the type customized
+ * <p>Whenever an {@link InjectionTarget} of type {@code T} needs injection this
+ * extension will be called to provide the {@link Instantiator} which can provide
+ * the value for this type of target.
+ *
+ * @param <T> the type handled
  */
-public interface TypeExtension<T> {
+public interface InjectionTargetExtension<T> {
 
   /**
    * Returns the type of the {@link Instantiator}s produced by this extension.

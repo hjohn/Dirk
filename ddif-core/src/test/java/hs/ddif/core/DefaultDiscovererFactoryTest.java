@@ -8,7 +8,7 @@ import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.discovery.Discoverer;
-import hs.ddif.core.instantiation.TypeExtensions;
+import hs.ddif.core.instantiation.InjectionTargetExtensions;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.library.ProducesDiscoveryExtension;
@@ -33,7 +33,7 @@ import jakarta.inject.Provider;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class DefaultDiscovererFactoryTest {
-  private final InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(TypeExtensions.create());
+  private final InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(InjectionTargetExtensions.create());
   private final QualifiedTypeStore<Injectable<?>> store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), Injectable::getTypes);
   private final InjectableFactories injectableFactories = new InjectableFactories();
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();

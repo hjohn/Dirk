@@ -7,17 +7,17 @@ import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.library.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.library.ConfigurableAnnotationStrategy;
 import hs.ddif.library.DefaultInjectorStrategy;
-import hs.ddif.library.ListTypeExtension;
+import hs.ddif.library.ListInjectionTargetExtension;
 import hs.ddif.library.NoProxyStrategy;
 import hs.ddif.library.ProducesDiscoveryExtension;
 import hs.ddif.library.ProviderDiscoveryExtension;
-import hs.ddif.library.ProviderTypeExtension;
-import hs.ddif.library.SetTypeExtension;
+import hs.ddif.library.ProviderInjectionTargetExtension;
+import hs.ddif.library.SetInjectionTargetExtension;
 import hs.ddif.library.SimpleScopeStrategy;
 import hs.ddif.library.SingletonScopeResolver;
 import hs.ddif.spi.config.InjectorStrategy;
 import hs.ddif.spi.discovery.DiscoveryExtension;
-import hs.ddif.spi.instantiation.TypeExtension;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
@@ -83,14 +83,14 @@ public class InjectorBuilder {
   }
 
   public static class Context2 extends Context1 {
-    public final List<TypeExtension<?>> typeExtensions;
+    public final List<InjectionTargetExtension<?>> injectionTargetExtensions;
     public final List<ScopeResolver> scopeResolvers;
 
-    Context2(Context1 context, List<ScopeResolver> scopeResolvers, Collection<TypeExtension<?>> typeExtensions) {
+    Context2(Context1 context, List<ScopeResolver> scopeResolvers, Collection<InjectionTargetExtension<?>> injectionTargetExtensions) {
       super(context.injectorStrategy);
 
       this.scopeResolvers = scopeResolvers;
-      this.typeExtensions = Collections.unmodifiableList(new ArrayList<>(typeExtensions));
+      this.injectionTargetExtensions = Collections.unmodifiableList(new ArrayList<>(injectionTargetExtensions));
     }
   }
 
@@ -98,7 +98,7 @@ public class InjectorBuilder {
     public final boolean autoDiscovery;
 
     Context4(Context2 context, boolean autoDiscovery) {
-      super(context, context.scopeResolvers, context.typeExtensions);
+      super(context, context.scopeResolvers, context.injectionTargetExtensions);
 
       this.autoDiscovery = autoDiscovery;
     }
@@ -134,13 +134,13 @@ public class InjectorBuilder {
     private final Context2 context;
 
     Builder2(Context1 context, List<ScopeResolver> scopeResolvers) {
-      List<TypeExtension<?>> typeExtensions = List.of(
-        new ListTypeExtension<>(),
-        new SetTypeExtension<>(),
-        new ProviderTypeExtension<>(Provider.class, s -> s::get)
+      List<InjectionTargetExtension<?>> extensions = List.of(
+        new ListInjectionTargetExtension<>(),
+        new SetInjectionTargetExtension<>(),
+        new ProviderInjectionTargetExtension<>(Provider.class, s -> s::get)
       );
 
-      this.context = new Context2(context, scopeResolvers, typeExtensions);
+      this.context = new Context2(context, scopeResolvers, extensions);
     }
 
     public Builder4 autoDiscovering() {
@@ -186,7 +186,7 @@ public class InjectorBuilder {
       List<ScopeResolver> scopeResolvers = context.scopeResolvers.stream().anyMatch(sr -> sr.getAnnotationClass() == singletonAnnotationClass) ? context.scopeResolvers
         : Stream.concat(context.scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(singletonAnnotationClass))).collect(Collectors.toList());
 
-      return new StandardInjector(context.typeExtensions, context.discoveryExtensions, scopeResolvers, context.injectorStrategy, context.autoDiscovery);
+      return new StandardInjector(context.injectionTargetExtensions, context.discoveryExtensions, scopeResolvers, context.injectorStrategy, context.autoDiscovery);
     }
   }
 }

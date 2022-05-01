@@ -6,7 +6,7 @@ import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
-import hs.ddif.core.instantiation.TypeExtensions;
+import hs.ddif.core.instantiation.InjectionTargetExtensions;
 import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.library.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.library.ConfigurableAnnotationStrategy;
@@ -17,7 +17,7 @@ import hs.ddif.spi.config.AnnotationStrategy;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 import hs.ddif.spi.config.ProxyStrategy;
 import hs.ddif.spi.config.ScopeStrategy;
-import hs.ddif.spi.instantiation.TypeExtension;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
@@ -40,12 +40,12 @@ public class InjectableFactories {
   private final ScopeResolverManager scopeResolverManager;
   private final DefaultInjectableFactory factory;
   private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
-  private final List<TypeExtension<?>> typeExtensions = TypeExtensions.create();
-  private final TypeExtensionStore typeExtensionStore = new TypeExtensionStore(new DirectTypeExtension<>(), typeExtensions);
+  private final List<InjectionTargetExtension<?>> injectionTargetExtensions = InjectionTargetExtensions.create();
+  private final InjectionTargetExtensionStore injectionTargetExtensionStore = new InjectionTargetExtensionStore(new DirectInjectionTargetExtension<>(), injectionTargetExtensions);
 
   public InjectableFactories(ScopeResolverManager scopeResolverManager) {
     this.scopeResolverManager = scopeResolverManager;
-    this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, SCOPE_STRATEGY, typeExtensions.stream().map(TypeExtension::getInstantiatorType).collect(Collectors.toSet()));
+    this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, SCOPE_STRATEGY, injectionTargetExtensions.stream().map(InjectionTargetExtension::getInstantiatorType).collect(Collectors.toSet()));
     this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
   }
 
@@ -53,8 +53,8 @@ public class InjectableFactories {
     this(new ScopeResolverManager(List.of(new SingletonScopeResolver(Singleton.class)), Dependent.class));
   }
 
-  public TypeExtensionStore getTypeExtensionStore() {
-    return typeExtensionStore;
+  public InjectionTargetExtensionStore getInjectionTargetExtensionStore() {
+    return injectionTargetExtensionStore;
   }
 
   public ScopeResolverManager getScopeResolverManager() {

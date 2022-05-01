@@ -8,18 +8,18 @@ import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.library.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.library.ConfigurableAnnotationStrategy;
 import hs.ddif.library.DefaultInjectorStrategy;
-import hs.ddif.library.ListTypeExtension;
+import hs.ddif.library.ListInjectionTargetExtension;
 import hs.ddif.library.NoProxyStrategy;
 import hs.ddif.library.ProducesDiscoveryExtension;
 import hs.ddif.library.ProviderDiscoveryExtension;
-import hs.ddif.library.ProviderTypeExtension;
-import hs.ddif.library.SetTypeExtension;
+import hs.ddif.library.ProviderInjectionTargetExtension;
+import hs.ddif.library.SetInjectionTargetExtension;
 import hs.ddif.library.SimpleScopeStrategy;
 import hs.ddif.library.SingletonScopeResolver;
 import hs.ddif.spi.config.AnnotationStrategy;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 import hs.ddif.spi.discovery.DiscoveryExtension;
-import hs.ddif.spi.instantiation.TypeExtension;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.scope.ScopeResolver;
 import hs.ddif.util.Classes;
 
@@ -85,7 +85,7 @@ public class Injectors {
       : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(Singleton.class))).collect(Collectors.toList());
 
     return new StandardInjector(
-      createTypeExtensions(),
+      createInjectionTargetExtensions(),
       createDiscoveryExtensions(lifeCycleCallbacksFactory),
       finalScopeResolvers,
       new DefaultInjectorStrategy(
@@ -98,11 +98,11 @@ public class Injectors {
     );
   }
 
-  private static List<TypeExtension<?>> createTypeExtensions() {
+  private static List<InjectionTargetExtension<?>> createInjectionTargetExtensions() {
     return List.of(
-      new ListTypeExtension<>(),
-      new SetTypeExtension<>(),
-      new ProviderTypeExtension<>(Provider.class, s -> s::get)
+      new ListInjectionTargetExtension<>(),
+      new SetInjectionTargetExtension<>(),
+      new ProviderInjectionTargetExtension<>(Provider.class, s -> s::get)
     );
   }
 

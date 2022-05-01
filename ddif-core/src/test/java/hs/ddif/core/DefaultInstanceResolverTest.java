@@ -59,8 +59,8 @@ public class DefaultInstanceResolverTest {
 
   private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);
   private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager);
-  private final TypeExtensionStore typeExtensionStore = injectableFactories.getTypeExtensionStore();
-  private final InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(typeExtensionStore);
+  private final InjectionTargetExtensionStore injectionTargetExtensionStore = injectableFactories.getInjectionTargetExtensionStore();
+  private final InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(injectionTargetExtensionStore);
   private final InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private final InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
   private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);

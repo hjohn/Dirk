@@ -12,7 +12,7 @@ import hs.ddif.core.InjectableFactories;
 import hs.ddif.core.InstantiatorFactories;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.instantiation.TypeExtensions;
+import hs.ddif.core.instantiation.InjectionTargetExtensions;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
@@ -52,7 +52,7 @@ public class InjectableStoreConsistencyTest {
   private Injectable<N> n;
   private Injectable<O> o;
 
-  private InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(TypeExtensions.create());
+  private InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(InjectionTargetExtensions.create());
   private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
   private InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
 
