@@ -64,6 +64,16 @@ public class ByteBuddyProxyStrategy implements ProxyStrategy {
    * package it was created in.
    */
   public static class Interceptor {
+
+    /**
+     * Intercepts a proxied method.
+     *
+     * @param method the proxied {@link Method}, cannot be {@code null}
+     * @param args the args with which the method was called, cannot be {@code null}
+     * @param instanceSupplier an {@link hs.ddif.spi.config.ProxyStrategy.InstanceSupplier} to supply the underlying object which was proxied, cannot be {@code null}
+     * @return the result of the proxied method, can be {@code null}
+     * @throws Throwable when the proxied method threw an exception
+     */
     @RuntimeType
     public static Object intercept(@Origin Method method, @AllArguments Object[] args, @FieldValue(FIELD_NAME) InstanceSupplier<?> instanceSupplier) throws Throwable {
       try {
