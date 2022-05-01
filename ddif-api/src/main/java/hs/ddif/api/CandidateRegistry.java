@@ -6,7 +6,7 @@ import hs.ddif.api.definition.DependencyException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Provides methods to manage injection candidates, like registering and removing.<p>
@@ -59,12 +59,12 @@ public interface CandidateRegistry {
    * would result in ambiguous dependencies for previously registered
    * types, then this method will throw an exception.
    *
-   * @param types a list of types to register, cannot be {@code null} or contain {@code null}s
+   * @param types a collection of types to register, cannot be {@code null} or contain {@code null}s
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
    * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  void register(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException;
+  void register(Collection<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException;
 
   /**
    * Registers an instance, and all its derived candidates if any, as a
@@ -104,12 +104,12 @@ public interface CandidateRegistry {
    * If there would be broken dependencies then the removal will fail
    * and an exception is thrown.
    *
-   * @param types a list of types to remove, cannot be {@code null} or contain {@code null}s
+   * @param types a collection of types to remove, cannot be {@code null} or contain {@code null}s
    * @throws AutoDiscoveryException when auto discovery fails to find all required types
    * @throws DefinitionException when a definition problem was encountered
    * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  void remove(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException;
+  void remove(Collection<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException;
 
   /**
    * Removes an instance, and all its derived candidates if any, if doing so

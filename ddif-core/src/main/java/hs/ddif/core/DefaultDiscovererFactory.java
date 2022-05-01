@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -57,7 +58,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
   private final Map<Type, List<Injectable<?>>> derivedInjectables = new WeakHashMap<>();
 
   private final boolean autoDiscovery;
-  private final List<DiscoveryExtension> extensions;
+  private final Collection<DiscoveryExtension> extensions;
   private final InstantiatorFactory instantiatorFactory;
   private final ClassInjectableFactory classInjectableFactory;
   private final MethodInjectableFactory methodInjectableFactory;
@@ -66,14 +67,14 @@ class DefaultDiscovererFactory implements DiscovererFactory {
   /**
    * Constructs a new instance.
    *
-   * @param extensions a list of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null}s but can be empty
+   * @param extensions a collection of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null}s but can be empty
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
    * @param instantiatorFactory an {@link InstantiatorFactory}, cannot be {@code null}
    * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
    * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
    * @param fieldInjectableFactory a {@link FieldInjectableFactory}, cannot be {@code null}
    */
-  public DefaultDiscovererFactory(boolean autoDiscovery, List<DiscoveryExtension> extensions, InstantiatorFactory instantiatorFactory, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
+  public DefaultDiscovererFactory(boolean autoDiscovery, Collection<DiscoveryExtension> extensions, InstantiatorFactory instantiatorFactory, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
     this.autoDiscovery = autoDiscovery;
     this.extensions = extensions;
     this.instantiatorFactory = instantiatorFactory;
@@ -83,7 +84,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
   }
 
   @Override
-  public Discoverer create(Resolver<Injectable<?>> resolver, List<Type> types) {  // used during normal registration
+  public Discoverer create(Resolver<Injectable<?>> resolver, Collection<Type> types) {  // used during normal registration
     return new SimpleDiscoverer(resolver, types);
   }
 
@@ -127,7 +128,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
     private final IncludingResolver includingResolver;
 
-    SimpleDiscoverer(Resolver<Injectable<?>> resolver, List<Type> types) {
+    SimpleDiscoverer(Resolver<Injectable<?>> resolver, Collection<Type> types) {
       this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
 
       for(Key key : types.stream().map(Key::new).collect(Collectors.toList())) {
