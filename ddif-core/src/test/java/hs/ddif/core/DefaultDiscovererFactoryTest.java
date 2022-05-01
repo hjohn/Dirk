@@ -11,7 +11,7 @@ import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.instantiation.InjectionTargetExtensions;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
-import hs.ddif.library.ProducesDiscoveryExtension;
+import hs.ddif.library.ProducesTypeRegistrationExtension;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.Key;
 import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
@@ -49,13 +49,13 @@ public class DefaultDiscovererFactoryTest {
 
   @Nested
   class When_autoDiscovery_isDisabled {
-    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(false, List.of(new ProducesDiscoveryExtension(Produces.class)), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    private final DefaultDiscovererFactory factory = new DefaultDiscovererFactory(false, List.of(new ProducesTypeRegistrationExtension(Produces.class)), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
 
     @Nested
     class And_gather_With_Injectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.create(store, classInjectableFactory.create(A.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, classInjectableFactory.create(A.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
@@ -68,10 +68,10 @@ public class DefaultDiscovererFactoryTest {
     class And_gather_With_Key_IsCalled {
       @Test
       void shouldAlwaysReturnEmptySet() throws Exception {
-        assertThat(gatherer.create(store, new Key(A.class)).discover()).isEmpty();
-        assertThat(gatherer.create(store, new Key(A.class, Set.of(Annotations.of(Red.class)))).discover()).isEmpty();
-        assertThat(gatherer.create(store, new Key(I.class)).discover()).isEmpty();
-        assertThat(gatherer.create(store, new Key(Bad_C.class)).discover()).isEmpty();
+        assertThat(factory.create(store, new Key(A.class)).discover()).isEmpty();
+        assertThat(factory.create(store, new Key(A.class, Set.of(Annotations.of(Red.class)))).discover()).isEmpty();
+        assertThat(factory.create(store, new Key(I.class)).discover()).isEmpty();
+        assertThat(factory.create(store, new Key(Bad_C.class)).discover()).isEmpty();
       }
     }
 
@@ -79,7 +79,7 @@ public class DefaultDiscovererFactoryTest {
     class And_gather_With_Types_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.create(store, List.of(A.class, D.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, List.of(A.class, D.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           methodInjectableFactory.create(A.class.getDeclaredMethod("createC", D.class, E.class), A.class),
@@ -92,13 +92,13 @@ public class DefaultDiscovererFactoryTest {
 
   @Nested
   class When_autoDiscovery_isEnabled {
-    private final DefaultDiscovererFactory gatherer = new DefaultDiscovererFactory(true, List.of(new ProducesDiscoveryExtension(Produces.class)), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    private final DefaultDiscovererFactory factory = new DefaultDiscovererFactory(true, List.of(new ProducesTypeRegistrationExtension(Produces.class)), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
 
     @Nested
     class And_gather_With_Injectable_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.create(store, classInjectableFactory.create(A.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, classInjectableFactory.create(A.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           classInjectableFactory.create(D.class),
@@ -112,7 +112,7 @@ public class DefaultDiscovererFactoryTest {
     class And_gather_With_Key_IsCalled {
       @Test
       void shouldDiscoverTypesAndFindProducedTypes() throws Exception {
-        assertThat(gatherer.create(store, new Key(A.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(A.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           fieldInjectableFactory.create(A.class.getDeclaredField("b"), A.class),
           classInjectableFactory.create(D.class),
@@ -123,7 +123,7 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldDiscoverThroughBindingsOfProducerMethod() throws Exception {
-        assertThat(gatherer.create(store, new Key(F.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(F.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(A.class),
           classInjectableFactory.create(D.class),
           classInjectableFactory.create(F.class),
@@ -136,14 +136,14 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldDiscoverClassWhichProducesItself() throws Exception {
-        assertThat(gatherer.create(store, new Key(H.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(H.class)).discover()).containsExactlyInAnyOrder(
           fieldInjectableFactory.create(H.class.getDeclaredField("h"), H.class)
         );
       }
 
       @Test
       void shouldDiscoverThroughBindingsClassesWhichProduceThemselves() throws Exception {
-        assertThat(gatherer.create(store, new Key(K.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(K.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(K.class),
           fieldInjectableFactory.create(H.class.getDeclaredField("h"), H.class)
         );
@@ -151,7 +151,7 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldDiscoverThroughBindingClassesWrappedInProvider() throws Exception {
-        assertThat(gatherer.create(store, new Key(L.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(L.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(L.class),
           classInjectableFactory.create(G.class)
         );
@@ -161,12 +161,12 @@ public class DefaultDiscovererFactoryTest {
       void shouldReturnEmptySetWhenTypeAlreadyResolvable() throws Exception {
         store.put(classInjectableFactory.create(A.class));
 
-        assertThat(gatherer.create(store, new Key(A.class)).discover()).isEmpty();
+        assertThat(factory.create(store, new Key(A.class)).discover()).isEmpty();
       }
 
       @Test
       void shouldRejectWhenDiscoveredTypeMissesRequiredQualifiers() {
-        assertThatThrownBy(() -> gatherer.create(store, new Key(A.class, Set.of(Annotations.of(Red.class)))).discover())
+        assertThatThrownBy(() -> factory.create(store, new Key(A.class, Set.of(Annotations.of(Red.class)))).discover())
           .isExactlyInstanceOf(DefinitionException.class)
           .hasMessage("[class hs.ddif.core.DefaultDiscovererFactoryTest$A] is missing the required qualifiers: [@hs.ddif.core.test.qualifiers.Red()]")
           .hasNoSuppressedExceptions()
@@ -175,7 +175,7 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldRejectTypeThatIsAbstract() {
-        assertThatThrownBy(() -> gatherer.create(store, new Key(I.class)).discover())
+        assertThatThrownBy(() -> factory.create(store, new Key(I.class)).discover())
           .isExactlyInstanceOf(DefinitionException.class)
           .hasMessage("[interface hs.ddif.core.DefaultDiscovererFactoryTest$I] cannot be abstract")
           .hasNoSuppressedExceptions()
@@ -184,14 +184,14 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldDiscoverAbstractTypeThatProducesItself() throws Exception {
-        assertThat(gatherer.create(store, new Key(M.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(M.class)).discover()).containsExactlyInAnyOrder(
           fieldInjectableFactory.create(M.class.getDeclaredField("m"), M.class)
         );
       }
 
       @Test
       void shouldNotIncludeTypeThatHasQualifiers() throws DefinitionException {
-        assertThat(gatherer.create(store, new Key(Bad_C.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(Bad_C.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_C.class)
           // J was not included as it was required to have qualifiers
         );
@@ -199,7 +199,7 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldNotIncludeUndiscoverableDependency() throws DefinitionException {
-        assertThat(gatherer.create(store, new Key(Bad_A.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(Bad_A.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_A.class)
           // C was not included as it has no suitable constructor
         );
@@ -207,7 +207,7 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldNotIncludeUndiscoverableDependencyInDependency() throws DefinitionException {
-        assertThat(gatherer.create(store, new Key(Bad_D.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(Bad_D.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_D.class),
           classInjectableFactory.create(Bad_A.class)
           // C through Bad_A was not included as it has no suitable constructor
@@ -216,7 +216,7 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldNotIncludeUndiscoverableDependencies() throws DefinitionException {
-        assertThat(gatherer.create(store, new Key(Bad_B.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(Bad_B.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_B.class)
           // C and E are not included as neither has a suitable constructor
         );
@@ -224,7 +224,7 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldReturnAllWaysTypeCanBeCreated() throws Exception {
-        assertThat(gatherer.create(store, new Key(Bad_H.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, new Key(Bad_H.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_H.class),
           fieldInjectableFactory.create(Bad_H.class.getDeclaredField("h"), Bad_H.class)
         );
@@ -235,7 +235,7 @@ public class DefaultDiscovererFactoryTest {
     class And_gather_With_Types_IsCalled {
       @Test
       void shouldFindProducedTypes() throws Exception {
-        assertThat(gatherer.create(store, List.of(Y.class)).discover()).containsExactlyInAnyOrder(
+        assertThat(factory.create(store, List.of(Y.class)).discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Y.class),
           fieldInjectableFactory.create(W.class.getDeclaredField("w"), W.class),
           fieldInjectableFactory.create(W.class.getDeclaredField("x"), W.class),
@@ -245,7 +245,7 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldThrowDefinitionExceptionWhenContainingBadProducer() {
-        Discoverer discoverer = gatherer.create(store, List.of(Bad_E.class));
+        Discoverer discoverer = factory.create(store, List.of(Bad_E.class));
 
         assertThatThrownBy(discoverer::discover)
           .isExactlyInstanceOf(DefinitionException.class)
@@ -260,7 +260,7 @@ public class DefaultDiscovererFactoryTest {
 
       @Test
       void shouldFindAsManyTypesAsPossibleAndReturnProblems() throws DefinitionException {
-        Discoverer discoverer = gatherer.create(store, List.of(Bad_A.class));
+        Discoverer discoverer = factory.create(store, List.of(Bad_A.class));
 
         assertThat(discoverer.discover()).containsExactlyInAnyOrder(
           classInjectableFactory.create(Bad_A.class)
@@ -291,7 +291,7 @@ public class DefaultDiscovererFactoryTest {
          * from Y.
          */
 
-        Discoverer discoverer = gatherer.create(store, List.of(X.class, Y.class, Z.class));
+        Discoverer discoverer = factory.create(store, List.of(X.class, Y.class, Z.class));
 
         assertThatThrownBy(() -> discoverer.discover())
           .isExactlyInstanceOf(DefinitionException.class)
@@ -307,7 +307,7 @@ public class DefaultDiscovererFactoryTest {
 
         assertThat(discoverer.getProblems()).isEmpty();
 
-        Discoverer discoverer2 = gatherer.create(store, List.of(X.class, Y.class));
+        Discoverer discoverer2 = factory.create(store, List.of(X.class, Y.class));
 
         assertThatThrownBy(() -> discoverer2.discover())
           .isExactlyInstanceOf(DefinitionException.class)

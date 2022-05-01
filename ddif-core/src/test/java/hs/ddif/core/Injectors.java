@@ -9,13 +9,13 @@ import hs.ddif.library.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.library.ConfigurableAnnotationStrategy;
 import hs.ddif.library.DefaultInjectorStrategy;
 import hs.ddif.library.NoProxyStrategy;
-import hs.ddif.library.ProducesDiscoveryExtension;
-import hs.ddif.library.ProviderDiscoveryExtension;
+import hs.ddif.library.ProducesTypeRegistrationExtension;
+import hs.ddif.library.ProviderTypeRegistrationExtension;
 import hs.ddif.library.SimpleScopeStrategy;
 import hs.ddif.library.SingletonScopeResolver;
 import hs.ddif.spi.config.AnnotationStrategy;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
-import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.reflect.Method;
@@ -79,7 +79,7 @@ public class Injectors {
 
     return new StandardInjector(
       InjectionTargetExtensions.create(),
-      createDiscoveryExtensions(),
+      createTypeRegistrationExtensions(),
       finalScopeResolvers,
       new DefaultInjectorStrategy(
         ANNOTATION_STRATEGY,
@@ -91,13 +91,13 @@ public class Injectors {
     );
   }
 
-  private static List<DiscoveryExtension> createDiscoveryExtensions() {
-    List<DiscoveryExtension> injectableExtensions = new ArrayList<>();
+  private static List<TypeRegistrationExtension> createTypeRegistrationExtensions() {
+    List<TypeRegistrationExtension> extensions = new ArrayList<>();
 
-    injectableExtensions.add(new ProviderDiscoveryExtension(PROVIDER_METHOD));
-    injectableExtensions.add(new ProducesDiscoveryExtension(Produces.class));
+    extensions.add(new ProviderTypeRegistrationExtension(PROVIDER_METHOD));
+    extensions.add(new ProducesTypeRegistrationExtension(Produces.class));
 
-    return injectableExtensions;
+    return extensions;
   }
 }
 

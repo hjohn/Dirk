@@ -37,7 +37,7 @@ public class AssistedInjectionTest {
 
   private Injector injector = InjectorBuilder.builder()
     .manual()
-    .discoveryExtensions(context -> List.of(new AssistedDiscoveryExtension(new BindingProvider(context.injectorStrategy.getAnnotationStrategy()), context.injectorStrategy.getLifeCycleCallbacksFactory(), ASSISTED_ANNOTATION_STRATEGY)))
+    .typeRegistrationExtensions(context -> List.of(new AssistedTypeRegistrationExtension(new BindingProvider(context.injectorStrategy.getAnnotationStrategy()), context.injectorStrategy.getLifeCycleCallbacksFactory(), ASSISTED_ANNOTATION_STRATEGY)))
     .build();
 
   private static String extractArgumentName(AnnotatedElement element) {

@@ -1,7 +1,7 @@
 package hs.ddif.library;
 
 import hs.ddif.annotations.Produces;
-import hs.ddif.spi.discovery.DiscoveryExtension.Registry;
+import hs.ddif.spi.discovery.TypeRegistrationExtension.Registry;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,9 +11,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class ProducesDiscoveryExtensionTest {
+public class ProducesTypeRegistrationExtensionTest {
   private Registry registry = mock(Registry.class);
-  private ProducesDiscoveryExtension extension = new ProducesDiscoveryExtension(Produces.class);
+  private ProducesTypeRegistrationExtension extension = new ProducesTypeRegistrationExtension(Produces.class);
 
   @Test
   void shouldFindProducesAnnotatedMethods() throws Exception {

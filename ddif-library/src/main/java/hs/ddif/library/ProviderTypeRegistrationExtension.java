@@ -1,7 +1,7 @@
 package hs.ddif.library;
 
 import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.util.Types;
 
 import java.lang.reflect.Method;
@@ -9,9 +9,9 @@ import java.lang.reflect.Type;
 
 /**
  * This extension detects if a class implements a method of a provider interface and registers
- * an additional injectable for the type the provider provides.
+ * an additional type for the type the provider provides.
  */
-public class ProviderDiscoveryExtension implements DiscoveryExtension {
+public class ProviderTypeRegistrationExtension implements TypeRegistrationExtension {
   private final Method providerMethod;
 
   /**
@@ -19,7 +19,7 @@ public class ProviderDiscoveryExtension implements DiscoveryExtension {
    *
    * @param providerMethod a getter {@link Method} of a provider type, cannot be {@code null}
    */
-  public ProviderDiscoveryExtension(Method providerMethod) {
+  public ProviderTypeRegistrationExtension(Method providerMethod) {
     this.providerMethod = providerMethod;
   }
 

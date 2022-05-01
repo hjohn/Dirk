@@ -8,7 +8,7 @@ import hs.ddif.core.definition.factory.ClassObjectFactory;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
-import hs.ddif.spi.discovery.DiscoveryExtension;
+import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.util.Primitives;
 import hs.ddif.util.Types;
 
@@ -49,7 +49,7 @@ import net.bytebuddy.matcher.ElementMatchers;
  * the configured assist annotation. The types must have a single abstract method with a
  * concrete, non primitive return type.
  */
-public class AssistedDiscoveryExtension implements DiscoveryExtension {
+public class AssistedTypeRegistrationExtension implements TypeRegistrationExtension {
   private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
   private final BindingProvider bindingProvider;
   private final AssistedAnnotationStrategy<?> strategy;
@@ -61,7 +61,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
    * @param lifeCycleCallbacksFactory a {@link LifeCycleCallbacksFactory}, cannot be {@code null}
    * @param strategy an {@link AssistedAnnotationStrategy}, cannot be {@code null}
    */
-  public AssistedDiscoveryExtension(BindingProvider bindingProvider, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, AssistedAnnotationStrategy<?> strategy) {
+  public AssistedTypeRegistrationExtension(BindingProvider bindingProvider, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, AssistedAnnotationStrategy<?> strategy) {
     this.lifeCycleCallbacksFactory = lifeCycleCallbacksFactory;
     this.bindingProvider = bindingProvider;
     this.strategy = strategy;
@@ -71,7 +71,7 @@ public class AssistedDiscoveryExtension implements DiscoveryExtension {
   public void deriveTypes(Registry registry, Type factoryType) throws DefinitionException {
     Class<?> factoryClass = Types.raw(factoryType);
 
-    if(strategy.providerClass().equals(factoryClass)) {
+    if(factoryClass == null || strategy.providerClass().equals(factoryClass)) {
 
       /*
        * Always reject the provider class even if its parameterized type is assist annotated as

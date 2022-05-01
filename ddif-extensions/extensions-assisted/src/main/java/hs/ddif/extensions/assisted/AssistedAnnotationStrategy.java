@@ -6,7 +6,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Parameter;
 
 /**
- * Annotation strategy for {@link AssistedDiscoveryExtension}. This strategy
+ * Annotation strategy for {@link AssistedTypeRegistrationExtension}. This strategy
  * configures which marker annotation triggers generation of the assisted producer
  * implementation, which argument annotation can be used to indicate arguments,
  * and how to extract argument names from fields, methods and parameters.
