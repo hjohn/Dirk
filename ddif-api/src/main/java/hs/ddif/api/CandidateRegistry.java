@@ -119,8 +119,9 @@ public interface CandidateRegistry {
    * and an exception is thrown.
    *
    * @param instance the instance to remove, cannot be {@code null}
+   * @param qualifiers optional list of qualifiers for this instance
    * @throws DefinitionException when a definition problem was encountered
    * @throws DependencyException when dependencies between registered types cannot be resolved
    */
-  void removeInstance(Object instance) throws DefinitionException, DependencyException;
+  void removeInstance(Object instance, Annotation... qualifiers) throws DefinitionException, DependencyException;
 }

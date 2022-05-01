@@ -349,7 +349,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldRegisterStringInstances() throws Exception {
+  public void shouldRegisterAndRemoveStringInstances() throws Exception {
     injector.registerInstance("a");
     injector.registerInstance("b");
     injector.registerInstance("c");
@@ -357,12 +357,30 @@ public class InjectorTest {
 
     assertThat(injector.getInstances(String.class))
       .containsExactlyInAnyOrder("a", "b", "c", "d");
+
+    injector.removeInstance("a");
+    injector.removeInstance("b");
+    injector.removeInstance("c");
+    injector.removeInstance("d");
+
+    assertThat(injector.getInstances(String.class)).isEmpty();
   }
 
   @Test
-  public void shouldRegisterSameStringInstancesWithDifferentQualifiers() throws Exception {
+  public void shouldRegisterAndRemoveSameStringInstancesWithDifferentQualifiers() throws Exception {
     injector.registerInstance("a", Annotations.of(Named.class, Map.of("value", "name-1")));
     injector.registerInstance("a", Annotations.of(Named.class, Map.of("value", "name-2")));
+
+    assertThat(injector.getInstances(String.class))
+      .containsExactlyInAnyOrder("a", "a");
+
+    injector.removeInstance("a", Annotations.of(Named.class, Map.of("value", "name-1")));
+
+    assertThat(injector.getInstances(String.class)).containsExactlyInAnyOrder("a");
+
+    injector.removeInstance("a", Annotations.of(Named.class, Map.of("value", "name-2")));
+
+    assertThat(injector.getInstances(String.class)).isEmpty();
   }
 
   @Test
@@ -659,19 +677,7 @@ public class InjectorTest {
    */
 
   @Test
-  public void shouldRegisterAndUseProvider() throws Exception {
-    injector.registerInstance(new Provider<String>() {
-      @Override
-      public String get() {
-        return "a string";
-      }
-    });
-
-    assertEquals("a string", injector.getInstance(String.class));
-  }
-
-  @Test
-  public void shouldRemoveProvider() throws Exception {
+  public void shouldRegisterAndRemoveProviderInstance() throws Exception {
     Provider<String> provider = new Provider<>() {
       @Override
       public String get() {
@@ -680,7 +686,13 @@ public class InjectorTest {
     };
 
     injector.registerInstance(provider);
+
+    assertEquals("a string", injector.getInstance(String.class));
+
     injector.removeInstance(provider);
+
+    assertThatThrownBy(() -> injector.getInstance(String.class))
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class);
   }
 
   @Test
@@ -723,18 +735,32 @@ public class InjectorTest {
   }
 
   @Test
-  public void shouldRegisterInstance() throws Exception {
+  public void shouldRegisterAndRemoveInstance() throws Exception {
     injector.registerInstance(new String("hello there!"));
+
+    assertThat(injector.getInstances(String.class)).isNotEmpty();
+
+    injector.removeInstance(new String("hello there!"));
+
+    assertThat(injector.getInstances(String.class)).isEmpty();
   }
 
   @Test
   public void shouldRegisterInstanceEvenWithBadAnnotations() throws Exception {
-    injector.registerInstance(new SampleWithMultipleAnnotatedConstructors());  // note, not a class, but an instantiated object!
+    SampleWithMultipleAnnotatedConstructors sample = new SampleWithMultipleAnnotatedConstructors();
+
+    injector.registerInstance(sample);  // note, not a class, but an instantiated object!
+
+    assertThat(injector.getInstance(SampleWithMultipleAnnotatedConstructors.class)).isEqualTo(sample);
   }
 
   @Test
   public void shouldRegisterInstanceEvenWithAnnotatedFinalFields() throws Exception {
-    injector.registerInstance(new SampleWithAnnotatedFinalFields());  // note, not a class, but an instantiated object!
+    SampleWithAnnotatedFinalFields sample = new SampleWithAnnotatedFinalFields();
+
+    injector.registerInstance(sample);  // note, not a class, but an instantiated object!
+
+    assertThat(injector.getInstance(SampleWithAnnotatedFinalFields.class)).isEqualTo(sample);
   }
 
   @Test

@@ -139,7 +139,7 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public void removeInstance(Object instance) throws DefinitionException, DependencyException {
-    registry.removeInstance(instance);
+  public void removeInstance(Object instance, Annotation... qualifiers) throws DefinitionException, DependencyException {
+    registry.removeInstance(instance, qualifiers);
   }
 }
