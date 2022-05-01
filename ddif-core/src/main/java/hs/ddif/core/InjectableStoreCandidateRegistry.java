@@ -66,8 +66,8 @@ class InjectableStoreCandidateRegistry implements CandidateRegistry {
   }
 
   @Override
-  public void removeInstance(Object instance) throws DefinitionException, DependencyException {
-    store.removeAll(discovererFactory.create(store, instanceInjectableFactory.create(instance)).discover());
+  public void removeInstance(Object instance, Annotation... qualifiers) throws DefinitionException, DependencyException {
+    store.removeAll(discovererFactory.create(store, instanceInjectableFactory.create(instance, qualifiers)).discover());
   }
 
   private void registerInternal(List<Type> types) throws AutoDiscoveryException, DefinitionException, DependencyException {
