@@ -23,11 +23,9 @@ import hs.ddif.spi.scope.ScopeResolver;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -85,14 +83,14 @@ public class InjectorBuilder {
   }
 
   public static class Context2 extends Context1 {
-    public final Map<Class<?>, TypeExtension<?>> typeExtensions;
+    public final List<TypeExtension<?>> typeExtensions;
     public final List<ScopeResolver> scopeResolvers;
 
-    Context2(Context1 context, List<ScopeResolver> scopeResolvers, Map<Class<?>, TypeExtension<?>> typeExtensions) {
+    Context2(Context1 context, List<ScopeResolver> scopeResolvers, Collection<TypeExtension<?>> typeExtensions) {
       super(context.injectorStrategy);
 
       this.scopeResolvers = scopeResolvers;
-      this.typeExtensions = Collections.unmodifiableMap(new HashMap<>(typeExtensions));
+      this.typeExtensions = Collections.unmodifiableList(new ArrayList<>(typeExtensions));
     }
   }
 
@@ -136,11 +134,11 @@ public class InjectorBuilder {
     private final Context2 context;
 
     Builder2(Context1 context, List<ScopeResolver> scopeResolvers) {
-      Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
-
-      typeExtensions.put(List.class, new ListTypeExtension<>());
-      typeExtensions.put(Set.class, new SetTypeExtension<>());
-      typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
+      List<TypeExtension<?>> typeExtensions = List.of(
+        new ListTypeExtension<>(),
+        new SetTypeExtension<>(),
+        new ProviderTypeExtension<>(Provider.class, s -> s::get)
+      );
 
       this.context = new Context2(context, scopeResolvers, typeExtensions);
     }

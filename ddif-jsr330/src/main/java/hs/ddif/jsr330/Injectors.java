@@ -26,10 +26,7 @@ import hs.ddif.util.Classes;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -101,14 +98,12 @@ public class Injectors {
     );
   }
 
-  private static Map<Class<?>, TypeExtension<?>> createTypeExtensions() {
-    Map<Class<?>, TypeExtension<?>> typeExtensions = new HashMap<>();
-
-    typeExtensions.put(List.class, new ListTypeExtension<>());
-    typeExtensions.put(Set.class, new SetTypeExtension<>());
-    typeExtensions.put(Provider.class, new ProviderTypeExtension<>(Provider.class, s -> s::get));
-
-    return typeExtensions;
+  private static List<TypeExtension<?>> createTypeExtensions() {
+    return List.of(
+      new ListTypeExtension<>(),
+      new SetTypeExtension<>(),
+      new ProviderTypeExtension<>(Provider.class, s -> s::get)
+    );
   }
 
   private static List<DiscoveryExtension> createDiscoveryExtensions(LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {

@@ -27,6 +27,11 @@ public class SetTypeExtension<T> implements TypeExtension<Set<T>> {
   private static final Set<TypeTrait> NONE = EnumSet.noneOf(TypeTrait.class);
 
   @Override
+  public Class<?> getInstantiatorType() {
+    return Set.class;
+  }
+
+  @Override
   public Instantiator<Set<T>> create(InstantiatorFactory factory, InjectionTarget injectionTarget) {
     Key key = injectionTarget.getKey();
     Key elementKey = new Key(Types.getTypeParameter(key.getType(), Set.class, TYPE_VARIABLE), key.getQualifiers());
