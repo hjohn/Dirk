@@ -2,7 +2,7 @@ package hs.ddif.api.definition;
 
 /**
  * Thrown when an attempt is made to register or remove a type that would cause a
- * dependency required by another injectable to be ambiguous or unresolvable (either
+ * dependency required by another type to be ambiguous or unresolvable (either
  * by providing a second alternative or by not providing one anymore).<p>
  *
  * For example, when a type exists that requires a Database implementation and

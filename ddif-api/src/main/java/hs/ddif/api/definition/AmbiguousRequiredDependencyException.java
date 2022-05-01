@@ -4,7 +4,7 @@ import java.util.Objects;
 
 /**
  * Thrown when an attempt is made to register a type that would cause a
- * dependency required by another injectable to become ambiguous.
+ * dependency required by another type to become ambiguous.
  */
 public class AmbiguousRequiredDependencyException extends RequiredDependencyException {
 

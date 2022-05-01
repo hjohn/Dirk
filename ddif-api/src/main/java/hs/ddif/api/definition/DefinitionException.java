@@ -6,10 +6,19 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 
 /**
- * Thrown during registration of types or instances when these types are
- * unsuitable for injection. This signals problems that can occur during
- * development of an application like attempting to register types for which
- * the framework has no means of creation or for which creation is ambiguous.
+ * Thrown during registration of types or instances when the type is incorrectly
+ * annotated, cannot be constructed or cannot be injected. Retrying the
+ * registration will not solve problems of this type and generally points to
+ * annotation, visibility or type definition problems. For example:
+ *
+ * <ul>
+ * <li>No suitable or ambiguous constructor, for example when no constructors
+ * or multiple constructors are inject annotated</li>
+ * <li>Injection annotation on a final field or setter without parameters</li>
+ * <li>Conflicting scope annotations</li>
+ * <li>Registering an abstract type or a generic type with unresolvable type variables</li>
+ * <li>Using non-qualifier annotations when registering an instance</li>
+ * </ul>
  *
  * <p>Definition problems can generally be solved by changing the types
  * involved, like adding or removing annotations, changing visibility of

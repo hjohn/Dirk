@@ -4,7 +4,7 @@ import java.util.Objects;
 
 /**
  * Thrown when an attempt is made to remove a type that would cause a
- * dependency required by another injectable to become unresolvable.
+ * dependency required by another type to become unresolvable.
  */
 public class UnsatisfiedRequiredDependencyException extends DependencyException {
 
