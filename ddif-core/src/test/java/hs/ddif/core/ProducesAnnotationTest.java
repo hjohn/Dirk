@@ -726,14 +726,14 @@ public class ProducesAnnotationTest {
   }
 
   @Test
-  public void shouldRejectRegisteringClassWithProducerProducingExactTypeProvidedByATypeExtension() {
+  public void shouldRejectRegisteringClassWithProducerProducingExactTypeProvidedByAnInjectionTargetExtension() {
     assertThatThrownBy(() -> injector.register(P.class))
       .isExactlyInstanceOf(DefinitionException.class)
       .hasNoCause();
   }
 
   @Test
-  public void shouldAllowRegisteringClassWithProducerProducingSubtypeProvidedByATypeExtension() throws Exception {
+  public void shouldAllowRegisteringClassWithProducerProducingSubtypeProvidedByAnInjectionTargetExtension() throws Exception {
     injector.register(R.class);
 
     assertNotNull(injector.getInstance(R.class));

@@ -1,14 +1,14 @@
-package hs.ddif.jakarta;
+package hs.ddif.jsr330;
 
 import hs.ddif.api.Injector;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 import org.junit.jupiter.api.Test;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
-
-public class ProviderTypeExtensionInjectorTest {
+public class ProviderInjectionTargetExtensionInjectorTest {
   private Injector injector = Injectors.manual();
 
   // Singleton -> Singleton = OK

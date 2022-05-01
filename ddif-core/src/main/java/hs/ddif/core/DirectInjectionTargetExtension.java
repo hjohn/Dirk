@@ -8,7 +8,7 @@ import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.Key;
-import hs.ddif.spi.instantiation.TypeExtension;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.instantiation.TypeTrait;
 
 import java.util.Collections;
@@ -16,13 +16,13 @@ import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * Type extension for {@link Instantiator}s which attempt to directly create or
+ * An {@link InjectionTargetExtension} for {@link Instantiator}s which attempt to directly create or
  * implement types. This is the most basic form of instantiation of a type that
  * is supported by default.
  *
  * @param <T> the instantiated type
  */
-class DirectTypeExtension<T> implements TypeExtension<T> {
+class DirectInjectionTargetExtension<T> implements InjectionTargetExtension<T> {
   private static final Set<TypeTrait> REQUIRES_AT_MOST_ONE = Collections.unmodifiableSet(EnumSet.of(TypeTrait.REQUIRES_AT_MOST_ONE));
   private static final Set<TypeTrait> REQUIRES_EXACTLY_ONE = Collections.unmodifiableSet(EnumSet.of(TypeTrait.REQUIRES_AT_MOST_ONE, TypeTrait.REQUIRES_AT_LEAST_ONE));
 

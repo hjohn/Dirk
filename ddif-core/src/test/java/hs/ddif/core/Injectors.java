@@ -3,7 +3,7 @@ package hs.ddif.core;
 import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
-import hs.ddif.core.instantiation.TypeExtensions;
+import hs.ddif.core.instantiation.InjectionTargetExtensions;
 import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.library.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.library.ConfigurableAnnotationStrategy;
@@ -78,7 +78,7 @@ public class Injectors {
       : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(Singleton.class))).collect(Collectors.toList());
 
     return new StandardInjector(
-      TypeExtensions.create(),
+      InjectionTargetExtensions.create(),
       createDiscoveryExtensions(),
       finalScopeResolvers,
       new DefaultInjectorStrategy(

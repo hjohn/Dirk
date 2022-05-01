@@ -44,7 +44,7 @@ class DefaultInjectableFactory implements InjectableFactory {
    * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
    * @param annotationStrategy a {@link AnnotationStrategy}, cannot be {@code null}
    * @param scopeStrategy a {@link ScopeStrategy}, cannot be {@code null}
-   * @param extendedTypes a set of {@link Class} for which type extensions are in use, cannot be {@code null} or contain {@code null} but can be empty
+   * @param extendedTypes a set of {@link Class} for which injection target extensions are in use, cannot be {@code null} or contain {@code null} but can be empty
    */
   DefaultInjectableFactory(ScopeResolverManager scopeResolverManager, AnnotationStrategy annotationStrategy, ScopeStrategy scopeStrategy, Set<Class<?>> extendedTypes) {
     this.scopeResolverManager = Objects.requireNonNull(scopeResolverManager, "scopeResolverManager cannot be null");
@@ -84,7 +84,7 @@ class DefaultInjectableFactory implements InjectableFactory {
       Type type = member == null ? ownerType : extractType(ownerType, member, element);
 
       if(extendedTypes.contains(Types.raw(type))) {
-        throw new DefinitionException(element, "cannot be registered as it conflicts with a TypeExtension for type: " + Types.raw(type));
+        throw new DefinitionException(element, "cannot be registered as it conflicts with an InjectionTargetExtension for type: " + Types.raw(type));
       }
 
       Class<? extends Annotation> scope = scopeStrategy.getScope(element);

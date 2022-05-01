@@ -230,10 +230,10 @@ public class DefaultInjectableFactoryTest {
   }
 
   @Test
-  void createShouldRejectBaseTypesWhichAreProvidedByTypeExtensions() {
+  void createShouldRejectBaseTypesWhichAreProvidedByInjectionTargetExtensions() {
     assertThatThrownBy(() -> factory.create(Provider.class, null, Provider.class, List.of(), constructable))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("[interface jakarta.inject.Provider] cannot be registered as it conflicts with a TypeExtension for type: interface jakarta.inject.Provider")
+      .hasMessage("[interface jakarta.inject.Provider] cannot be registered as it conflicts with an InjectionTargetExtension for type: interface jakarta.inject.Provider")
       .hasNoCause();
   }
 

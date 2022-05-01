@@ -5,7 +5,7 @@ import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.Key;
-import hs.ddif.spi.instantiation.TypeExtension;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.instantiation.TypeTrait;
 import hs.ddif.util.Types;
 
@@ -18,13 +18,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Configurable provider type extension which allows selecting the type of provider
+ * Configurable provider {@link InjectionTargetExtension} which allows selecting the type of provider
  * it should handle.
  *
  * @param <P> the type of the provider
  * @param <T> the type the provider provides
  */
-public class ProviderTypeExtension<P, T> implements TypeExtension<P> {
+public class ProviderInjectionTargetExtension<P, T> implements InjectionTargetExtension<P> {
   private final Class<P> providerClass;
   private final Function<Supplier<T>, P> providerFactory;
   private final TypeVariable<?> typeVariable;
@@ -35,7 +35,7 @@ public class ProviderTypeExtension<P, T> implements TypeExtension<P> {
    * @param providerClass a {@link Class} representing the provider type, cannot be {@code null}
    * @param providerFactory a function to create the provider instance given a supplier, cannot be {@code null}
    */
-  public ProviderTypeExtension(Class<P> providerClass, Function<Supplier<T>, P> providerFactory) {
+  public ProviderInjectionTargetExtension(Class<P> providerClass, Function<Supplier<T>, P> providerFactory) {
     this.providerClass = Objects.requireNonNull(providerClass, "providerClass cannot be null");
     this.providerFactory = Objects.requireNonNull(providerFactory, "providerFactory cannot be null");
     this.typeVariable = providerClass.getTypeParameters()[0];

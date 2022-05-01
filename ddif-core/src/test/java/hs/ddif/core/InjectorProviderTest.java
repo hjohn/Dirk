@@ -187,7 +187,7 @@ public class InjectorProviderTest {
   public void nestedSuppliersShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.registerInstance(new NestedDatabaseSupplier()))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [public jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$NestedDatabaseSupplier.get()] cannot be registered as it conflicts with a TypeExtension for type: interface jakarta.inject.Provider")
+      .hasMessage("Method [public jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$NestedDatabaseSupplier.get()] cannot be registered as it conflicts with an InjectionTargetExtension for type: interface jakarta.inject.Provider")
       .hasNoCause();
   }
 
@@ -195,7 +195,7 @@ public class InjectorProviderTest {
   public void producerFieldProducingSupplierShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.register(SupplierFieldProducer.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Field [private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierFieldProducer.product] cannot be registered as it conflicts with a TypeExtension for type: interface jakarta.inject.Provider")
+      .hasMessage("Field [private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierFieldProducer.product] cannot be registered as it conflicts with an InjectionTargetExtension for type: interface jakarta.inject.Provider")
       .hasNoCause();
   }
 
@@ -203,7 +203,7 @@ public class InjectorProviderTest {
   public void producerMethodProducingSupplierShouldNotBeAllowed() {
     assertThatThrownBy(() -> injector.register(SupplierMethodProducer.class))
       .isExactlyInstanceOf(DefinitionException.class)
-      .hasMessage("Method [private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierMethodProducer.product()] cannot be registered as it conflicts with a TypeExtension for type: interface jakarta.inject.Provider")
+      .hasMessage("Method [private static jakarta.inject.Provider hs.ddif.core.InjectorProviderTest$SupplierMethodProducer.product()] cannot be registered as it conflicts with an InjectionTargetExtension for type: interface jakarta.inject.Provider")
       .hasNoCause();
   }
 

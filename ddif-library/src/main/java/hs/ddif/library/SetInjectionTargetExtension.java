@@ -6,7 +6,7 @@ import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.Key;
-import hs.ddif.spi.instantiation.TypeExtension;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.instantiation.TypeTrait;
 import hs.ddif.util.Types;
 
@@ -17,12 +17,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Type extension for {@link Instantiator}s that gather all matching injectables
+ * An {@link InjectionTargetExtension} for {@link Instantiator}s that gather all matching injectables
  * in a {@link Set}.
  *
  * @param <T> the type of element in the collection
  */
-public class SetTypeExtension<T> implements TypeExtension<Set<T>> {
+public class SetInjectionTargetExtension<T> implements InjectionTargetExtension<Set<T>> {
   private static final TypeVariable<?> TYPE_VARIABLE = Set.class.getTypeParameters()[0];
   private static final Set<TypeTrait> NONE = EnumSet.noneOf(TypeTrait.class);
 

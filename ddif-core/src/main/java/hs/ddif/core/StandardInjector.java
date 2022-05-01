@@ -21,7 +21,7 @@ import hs.ddif.core.store.InstantiatorBindingMap;
 import hs.ddif.spi.config.InjectorStrategy;
 import hs.ddif.spi.discovery.DiscoveryExtension;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
-import hs.ddif.spi.instantiation.TypeExtension;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
@@ -41,14 +41,14 @@ public class StandardInjector implements Injector {
   /**
    * Constructs a new instance.
    *
-   * @param typeExtensions a collection of {@link TypeExtension}s, cannot be {@code null} or contain {@code null} but can be empty
+   * @param injectionTargetExtensions a collection of {@link InjectionTargetExtension}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param discoveryExtensions a collection of {@link DiscoveryExtension}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param scopeResolvers a list of {@link ScopeResolver}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param strategy an {@link InjectorStrategy}, cannot be {@code null}
    * @param autoDiscovery {@code true} if the injector should automatically register (auto discover) types encountered during instantiation that have not been explicitly registered, or {code false} to allow manual registration only
    */
-  public StandardInjector(Collection<TypeExtension<?>> typeExtensions, Collection<DiscoveryExtension> discoveryExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, boolean autoDiscovery) {
-    Objects.requireNonNull(typeExtensions, "typeExtensions cannot be null");
+  public StandardInjector(Collection<InjectionTargetExtension<?>> injectionTargetExtensions, Collection<DiscoveryExtension> discoveryExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, boolean autoDiscovery) {
+    Objects.requireNonNull(injectionTargetExtensions, "injectionTargetExtensions cannot be null");
     Objects.requireNonNull(discoveryExtensions, "discoveryExtensions cannot be null");
     Objects.requireNonNull(scopeResolvers, "scopeResolvers cannot be null");
     Objects.requireNonNull(strategy, "strategy cannot be null");
@@ -57,10 +57,10 @@ public class StandardInjector implements Injector {
       new ScopeResolverManager(scopeResolvers, strategy.getScopeStrategy().getDependentAnnotationClass()),
       strategy.getAnnotationStrategy(),
       strategy.getScopeStrategy(),
-      typeExtensions.stream().map(TypeExtension::getInstantiatorType).collect(Collectors.toSet())
+      injectionTargetExtensions.stream().map(InjectionTargetExtension::getInstantiatorType).collect(Collectors.toSet())
     );
 
-    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(new TypeExtensionStore(new DirectTypeExtension<>(), typeExtensions));
+    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(new InjectionTargetExtensionStore(new DirectInjectionTargetExtension<>(), injectionTargetExtensions));
     BindingProvider bindingProvider = new BindingProvider(strategy.getAnnotationStrategy());
     DiscovererFactory discovererFactory = new DefaultDiscovererFactory(
       autoDiscovery,

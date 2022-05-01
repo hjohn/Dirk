@@ -1,7 +1,7 @@
 package hs.ddif.core;
 
 import hs.ddif.spi.instantiation.InstantiatorFactory;
-import hs.ddif.spi.instantiation.TypeExtension;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
 
 import java.util.Collection;
 import java.util.List;
@@ -12,7 +12,7 @@ public class InstantiatorFactories {
     return create(List.of());
   }
 
-  public static InstantiatorFactory create(Collection<TypeExtension<?>> typeExtensions) {
-    return new DefaultInstantiatorFactory(TypeExtensionStores.create(typeExtensions));
+  public static InstantiatorFactory create(Collection<InjectionTargetExtension<?>> extensions) {
+    return new DefaultInstantiatorFactory(InjectionTargetExtensionStores.create(extensions));
   }
 }
