@@ -25,6 +25,13 @@ public interface ProxyStrategy {
    * @param <T> the wrapped type
    */
   interface InstanceSupplier<T> {
+
+    /**
+     * Returns an underlying instance for the proxy of type {@code T}.
+     *
+     * @return an underlying instance of type {@code T}, never {@code null}
+     * @throws Exception when creation of the underlying instance fails
+     */
     T get() throws Exception;
   }
 }

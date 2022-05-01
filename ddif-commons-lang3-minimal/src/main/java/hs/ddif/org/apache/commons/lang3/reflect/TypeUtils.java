@@ -139,6 +139,11 @@ public class TypeUtils {
         private WildcardTypeBuilder() {
         }
 
+        /**
+         * Builds the type.
+         *
+         * @return a {@link WildcardType}, never {@code null}
+         */
         public WildcardType build() {
             return new WildcardTypeImpl(upperBounds, lowerBounds);
         }
