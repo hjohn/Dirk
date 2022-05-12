@@ -82,7 +82,9 @@ class InjectableStoreCandidateRegistry implements CandidateRegistry {
         throw e;
       }
 
-      throw new AutoDiscoveryException("Unable to register " + types + discoverer.getProblems().stream().collect(Collectors.joining("\n    -> ", "\n    -> ", "")), e);
+      List<String> discoveredTypes = discoverer.discover().stream().filter(i -> !types.contains(i.getType())).map(Object::toString).sorted().collect(Collectors.toList());
+
+      throw new AutoDiscoveryException("Unable to register " + types + (discoveredTypes.isEmpty() ? "" : " and the discovered types " + discoveredTypes) + discoverer.getProblems().stream().collect(Collectors.joining("\n    -> ", "\n    -> ", "")), e);
     }
   }
 

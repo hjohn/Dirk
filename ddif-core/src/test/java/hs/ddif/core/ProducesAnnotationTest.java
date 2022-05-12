@@ -224,12 +224,16 @@ public class ProducesAnnotationTest {
 
   @Test
   public void shouldAutoDiscoverProducesAnnotations() throws Exception {
+    autoDiscoveryInjector.register(AnotherFactory.class);
+
     assertNotNull(autoDiscoveryInjector.getInstance(AnotherFactory.class));
     assertNotNull(autoDiscoveryInjector.getInstance(Truck.class));
   }
 
   @Test
   public void shouldAutoDiscoverNestedProducesAnnotations() throws Exception {
+    autoDiscoveryInjector.register(Thing.class);
+
     Thing instance = autoDiscoveryInjector.getInstance(Thing.class);
 
     assertNotNull(instance.anotherFactory);
@@ -239,6 +243,8 @@ public class ProducesAnnotationTest {
 
   @Test
   public void shouldAutoDiscoverComplicatedNestedProducesAnnotations() throws Exception {
+    autoDiscoveryInjector.register(ComplicatedThing.class);
+
     ComplicatedThing instance = autoDiscoveryInjector.getInstance(ComplicatedThing.class);
 
     assertNotNull(instance.part2.part3);
@@ -271,16 +277,18 @@ public class ProducesAnnotationTest {
 
   @Test
   public void requiredDependencySuppliedIndirectlyByStaticFieldShouldNotCauseCycle() throws Exception {
-    autoDiscoveryInjector.getInstance(StaticFieldBasedPhoneProducer.class);
+    autoDiscoveryInjector.register(StaticFieldBasedPhoneProducer.class);
   }
 
   @Test
   public void requiredDependencySuppliedIndirectlyByStaticMethodShouldNotCauseCycle() throws Exception {
-    autoDiscoveryInjector.getInstance(StaticMethodBasedPhoneProducer.class);
+    autoDiscoveryInjector.register(StaticMethodBasedPhoneProducer.class);
   }
 
   @Test
   public void shouldDiscoverClassWhichProducesInstances() throws Exception {
+    autoDiscoveryInjector.register(Thing4.class);
+
     assertNotNull(autoDiscoveryInjector.getInstance(Thing4.class));
 
     Phone phone = autoDiscoveryInjector.getInstance(Phone.class);

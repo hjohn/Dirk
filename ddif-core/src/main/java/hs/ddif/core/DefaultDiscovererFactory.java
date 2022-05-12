@@ -38,17 +38,6 @@ import java.util.stream.Collectors;
  * through bindings when gathering injectables for a {@link Type}.
  */
 class DefaultDiscovererFactory implements DiscovererFactory {
-  private static final Discoverer EMPTY = new Discoverer() {
-    @Override
-    public Set<Injectable<?>> discover() {
-      return Set.of();
-    }
-
-    @Override
-    public List<String> getProblems() {
-      return List.of();
-    }
-  };
 
   /**
    * Contains a cache of injectables derived with the given {@link TypeRegistrationExtension}s.
@@ -93,15 +82,6 @@ class DefaultDiscovererFactory implements DiscovererFactory {
     return new SimpleDiscoverer(resolver, injectable);
   }
 
-  @Override
-  public Discoverer create(Resolver<Injectable<?>> resolver, Key key) {  // used during instantiation
-    if(!autoDiscovery || !resolver.resolve(key).isEmpty()) {
-      return EMPTY;
-    }
-
-    return new SimpleDiscoverer(resolver, key);
-  }
-
   private class SimpleDiscoverer implements Discoverer {
     private final QualifiedTypeStore<Injectable<?>> tempStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), i -> i.getTypes());
 
@@ -128,6 +108,8 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
     private final IncludingResolver includingResolver;
 
+    private boolean discoveryCompleted;
+
     SimpleDiscoverer(Resolver<Injectable<?>> resolver, Collection<Type> types) {
       this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
 
@@ -135,13 +117,6 @@ class DefaultDiscovererFactory implements DiscovererFactory {
         visitTypes.add(key.getType());
         requiredKeys.add(key);
       }
-    }
-
-    SimpleDiscoverer(Resolver<Injectable<?>> resolver, Key key) {
-      this.includingResolver = new IncludingResolver(resolver::resolve, tempStore);
-
-      visitTypes.add(key.getType());
-      requiredKeys.add(key);
     }
 
     SimpleDiscoverer(Resolver<Injectable<?>> resolver, Injectable<?> injectable) {
@@ -158,6 +133,10 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
     @Override
     public List<String> getProblems() {
+      if(!discoveryCompleted) {
+        throw new IllegalStateException("Call discover first");
+      }
+
       return encounteredProblems;
     }
 
@@ -196,7 +175,11 @@ class DefaultDiscovererFactory implements DiscovererFactory {
        * without it being rejected for containing duplicates.
        */
 
-      while(discoverViaExtensions() || discoverInputTypes() || discoverBindings()) {}
+      if(!discoveryCompleted) {
+        discoveryCompleted = true;
+
+        while(discoverViaExtensions() || discoverInputTypes() || discoverBindings()) {}
+      }
 
       return tempStore.toSet();
     }

@@ -1,7 +1,7 @@
 package hs.ddif.plugins;
 
 import hs.ddif.api.Injector;
-import hs.ddif.api.definition.AutoDiscoveryException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.jsr330.Injectors;
 import hs.ddif.test.plugin.Database;
 
@@ -40,7 +40,7 @@ public class PluginSingletonTest {
 
       pluginManager.unload(plugin);
 
-      assertThrows(AutoDiscoveryException.class, () -> injector.getInstance(Database.class));
+      assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(Database.class));
 
       waitForPluginUnload(plugin);
 

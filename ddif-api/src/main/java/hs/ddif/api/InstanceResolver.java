@@ -1,6 +1,5 @@
 package hs.ddif.api;
 
-import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
@@ -42,10 +41,6 @@ import java.util.function.Predicate;
  *
  * would return all {@code Vehicle}s instances annotated with the {@code @Red} qualifier annotation.
  *
- * <pre>getInstance(String.class, Annotations.named("config.url")</pre>
- *
- * or
- *
  * <pre>getInstance(String.class, Annotations.of(Named.class, Map.of("value", "config.url"))</pre>
  *
  * would return a {@code String} instance which was registered with a {@code Named} annotation with
@@ -65,9 +60,8 @@ public interface InstanceResolver {
    * @throws UnsatisfiedResolutionException when no matching instance was available or could be created
    * @throws AmbiguousResolutionException when multiple matching instances were available
    * @throws CreationException when an error occurred during creation of a matching instance
-   * @throws AutoDiscoveryException when the injector is configured for auto discovery, the type requested was not registered yet and discovery of the type and its dependencies failed
    */
-  <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, AutoDiscoveryException;
+  <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException;
 
   /**
    * Returns an instance of the given class matching the given criteria (if any) in
@@ -81,9 +75,8 @@ public interface InstanceResolver {
    * @throws UnsatisfiedResolutionException when no matching instance was available or could be created
    * @throws AmbiguousResolutionException when multiple matching instances were available
    * @throws CreationException when an error occurred during creation of a matching instance
-   * @throws AutoDiscoveryException when the injector is configured for auto discovery, the type requested was not registered yet and discovery of the type and its dependencies failed
    */
-  <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, AutoDiscoveryException;  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
+  <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException;  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
 
   /**
    * Returns all instances of the given {@link Type} matching the given criteria (if any) in

@@ -2,7 +2,6 @@ package hs.ddif.core.discovery;
 
 import hs.ddif.core.definition.Injectable;
 import hs.ddif.core.store.Resolver;
-import hs.ddif.spi.instantiation.Key;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -44,20 +43,4 @@ public interface DiscovererFactory {
    */
   Discoverer create(Resolver<Injectable<?>> resolver, Collection<Type> types);
 
-  /**
-   * Given a {@link Key}, returns a {@link Discoverer} which will produce an injectable for
-   * the given key and all injectables that could be derived or discovered using the given
-   * key as starting point.
-   *
-   * <p>Note that if the given {@link Key} has qualifiers that the resulting injectable
-   * must be a match for these qualifiers, if not an exception is thrown.
-   *
-   * <p>If the given {@link Key} is already resolvable or discovery is not allowed then
-   * the {@link Discoverer} will return the empty set.
-   *
-   * @param resolver a {@link Resolver}, cannot be {@code null}
-   * @param key a {@link Key}, cannot be {@code null}
-   * @return a {@link Discoverer}, never {@code null}
-   */
-  Discoverer create(Resolver<Injectable<?>> resolver, Key key);
 }

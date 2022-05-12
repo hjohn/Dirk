@@ -3,7 +3,7 @@ package hs.ddif.plugins;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.AmbiguousDependencyException;
 import hs.ddif.api.definition.AmbiguousRequiredDependencyException;
-import hs.ddif.api.definition.AutoDiscoveryException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.jsr330.Injectors;
 import hs.ddif.test.plugin.Database;
 import hs.ddif.test.plugin.TextProvider;
@@ -99,7 +99,7 @@ public class PluginManagerTest {
 
   @Test
   public void shouldLoadPluginAgainAfterUnload() throws Exception {
-    assertThrows(AutoDiscoveryException.class, () -> injector.getInstance(Database.class));
+    assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(Database.class));
 
     injector.register(TextStyler.class);  // not part of plugin, so needs to be registered separate -- don't want it part of plugin either as then plugin would be unable to unload itself
 
@@ -109,7 +109,7 @@ public class PluginManagerTest {
 
     pluginManager.unload(plugin);
 
-    assertThrows(AutoDiscoveryException.class, () -> injector.getInstance(Database.class));
+    assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(Database.class));
 
     plugin = pluginManager.loadPlugin(PLUGIN_URL);
 
@@ -117,7 +117,7 @@ public class PluginManagerTest {
 
     pluginManager.unload(plugin);
 
-    assertThrows(AutoDiscoveryException.class, () -> injector.getInstance(Database.class));
+    assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(Database.class));
 
     assertNotNull(db1);
     assertNotNull(db2);
