@@ -1,7 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.api.Injector;
-import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.ScopeConflictException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.test.scope.Dependent;
@@ -60,6 +59,8 @@ public class ProxiedScopeTest {
 
   @Test
   void getInstanceShouldNotReturnProxies() throws Exception {
+    injector.register(B.class);
+
     // No scope active, creation fails:
     assertThatThrownBy(() -> injector.getInstance(B.class))
       .isExactlyInstanceOf(CreationException.class);
@@ -75,6 +76,8 @@ public class ProxiedScopeTest {
 
   @Test
   void shouldCreateProxy() throws Exception {
+    injector.register(A.class);
+
     A a = injector.getInstance(A.class);
 
     assertThat(a).isNotNull();
@@ -97,6 +100,8 @@ public class ProxiedScopeTest {
 
   @Test
   void providerShouldNeverReturnProxies() throws Exception {
+    injector.register(C.class);
+
     C c = injector.getInstance(C.class);
 
     assertThatThrownBy(() -> c.b.get())
@@ -119,6 +124,8 @@ public class ProxiedScopeTest {
   void shouldNotProxyNestedObjectWithSameScope() throws Exception {
     currentScope = "A";
 
+    injector.register(D.class);
+
     D d = injector.getInstance(D.class);
 
     assertThat(d.getClass().getName()).endsWith("ProxiedScopeTest$D");  // Not a proxy
@@ -128,6 +135,8 @@ public class ProxiedScopeTest {
   @Test
   void shouldProxyNestedObjectWithinSingletonParent() throws Exception {
     currentScope = "A";
+
+    injector.register(E.class);
 
     E e = injector.getInstance(E.class);
 
@@ -139,6 +148,8 @@ public class ProxiedScopeTest {
   void shouldProxyNestedObjectWithinUnscopedParent() throws Exception {
     currentScope = "A";
 
+    injector.register(F.class);
+
     F f = injector.getInstance(F.class);
 
     assertThat(f.getClass().getName()).endsWith("ProxiedScopeTest$F");  // Not a proxy
@@ -147,10 +158,7 @@ public class ProxiedScopeTest {
 
   @Test
   void shouldRejectProxyingFinalClass() {
-    assertThatThrownBy(() -> injector.getInstance(G.class))
-      .isExactlyInstanceOf(AutoDiscoveryException.class)
-      .hasMessage("[hs.ddif.core.ProxiedScopeTest$G] and the discovered types [Class [hs.ddif.core.ProxiedScopeTest$G], Class [hs.ddif.core.ProxiedScopeTest$H]] could not be registered")
-      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+    assertThatThrownBy(() -> injector.register(G.class))
       .isExactlyInstanceOf(ScopeConflictException.class)
       .hasMessage("Type [class hs.ddif.core.ProxiedScopeTest$G] with scope [interface hs.ddif.core.test.scope.Dependent] is dependent on [class hs.ddif.core.ProxiedScopeTest$H] with normal scope [interface hs.ddif.core.test.scope.TestScope]; this requires the use of a provider or proxy")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
@@ -163,7 +171,9 @@ public class ProxiedScopeTest {
   }
 
   @Test
-  void exceptionsThrownByProxiedObjectShouldWorkNormally() {
+  void exceptionsThrownByProxiedObjectShouldWorkNormally() throws Exception {
+    injector.register(A.class);
+
     A a = injector.getInstance(A.class);
 
     currentScope = "A";

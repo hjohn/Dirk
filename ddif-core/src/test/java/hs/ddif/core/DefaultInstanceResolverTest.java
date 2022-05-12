@@ -2,15 +2,12 @@ package hs.ddif.core;
 
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.InstanceResolver;
-import hs.ddif.api.definition.AutoDiscoveryException;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.DependencyException;
-import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.core.definition.ClassInjectableFactory;
-import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.store.InjectableStore;
@@ -66,15 +63,13 @@ public class DefaultInstanceResolverTest {
   private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
   private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
-  private final FieldInjectableFactory fieldInjectableFactory = injectableFactories.forField();
   private final InstanceInjectableFactory instanceInjectableFactory = injectableFactories.forInstance();
 
   private String currentScope;
 
   @Nested
   class WhenStoreIsEmpty {
-    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
+    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(instantiationContext, instantiatorFactory);
 
     @Test
     void shouldThrowExceptionWhenGettingSingleInstance() {
@@ -91,8 +86,7 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreNotEmpty {
-    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(false, List.of(), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
+    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(instantiationContext, instantiatorFactory);
 
     @BeforeEach
     void beforeEach() throws DependencyException {
@@ -200,64 +194,6 @@ public class DefaultInstanceResolverTest {
         .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
         .isExactlyInstanceOf(RuntimeException.class)
         .hasMessage("can't create H")
-        .hasNoCause();
-    }
-  }
-
-  @Nested
-  class WhenStoreEmptyAndAutoDiscoveryIsActive {
-    private final DefaultDiscovererFactory discovererFactory = new DefaultDiscovererFactory(true, List.of(), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, discovererFactory, instantiationContext, instantiatorFactory);
-
-    @Test
-    void getInstancesShouldNeverDiscoverTypes() throws CreationException {
-      assertThat(instanceResolver.getInstances(A.class)).isEmpty();
-      assertThat(instanceResolver.getInstances(B.class)).isEmpty();
-      assertThat(instanceResolver.getInstances(C.class)).isEmpty();
-    }
-
-    @Test
-    void getInstanceShouldDiscoverNewTypes() throws Exception {
-      assertNotNull(instanceResolver.getInstance(A.class));
-    }
-
-    @Test
-    void getInstanceShouldNotDiscoverTypesWithQualifiers() {
-      assertThatThrownBy(() -> instanceResolver.getInstance(A.class, Red.class))
-        .isExactlyInstanceOf(AutoDiscoveryException.class)
-        .hasMessage("Unable to instantiate [@hs.ddif.core.test.qualifiers.Red() hs.ddif.core.DefaultInstanceResolverTest$A]")
-        .hasNoSuppressedExceptions()
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(DefinitionException.class)
-        .hasMessage("[class hs.ddif.core.DefaultInstanceResolverTest$A] is missing the required qualifiers: [@hs.ddif.core.test.qualifiers.Red()]")
-        .hasNoSuppressedExceptions()
-        .hasNoCause();
-    }
-
-    @Test
-    void getInstanceShouldNotRegisterUnresolvableDependencies() {
-      assertThatThrownBy(() -> instanceResolver.getInstance(L.class))
-        .isExactlyInstanceOf(AutoDiscoveryException.class)
-        .hasMessage("[hs.ddif.core.DefaultInstanceResolverTest$L] and the discovered types [Class [hs.ddif.core.DefaultInstanceResolverTest$K], Class [hs.ddif.core.DefaultInstanceResolverTest$L]] could not be registered\n"
-          + "    -> [hs.ddif.core.DefaultInstanceResolverTest$M] required by [hs.ddif.core.DefaultInstanceResolverTest$L], via Field [hs.ddif.core.DefaultInstanceResolverTest$M hs.ddif.core.DefaultInstanceResolverTest$L.m], is not registered and cannot be discovered (reason: [class hs.ddif.core.DefaultInstanceResolverTest$M] should have at least one suitable constructor; annotate a constructor or provide an empty public constructor)")
-        .hasNoSuppressedExceptions()
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
-        .hasMessage("Missing dependency [hs.ddif.core.DefaultInstanceResolverTest$M] required for Field [hs.ddif.core.DefaultInstanceResolverTest$M hs.ddif.core.DefaultInstanceResolverTest$L.m]")
-        .hasNoSuppressedExceptions()
-        .hasNoCause();
-    }
-
-    @Test
-    void getInstanceShouldThrowExceptionWhenDiscoveryFails() {
-      assertThatThrownBy(() -> instanceResolver.getInstance(J.class))
-        .isExactlyInstanceOf(AutoDiscoveryException.class)
-        .hasMessage("Unable to instantiate [hs.ddif.core.DefaultInstanceResolverTest$J]")
-        .hasNoSuppressedExceptions()
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(DefinitionException.class)
-        .hasMessage("[class hs.ddif.core.DefaultInstanceResolverTest$J] cannot be abstract")
-        .hasNoSuppressedExceptions()
         .hasNoCause();
     }
   }

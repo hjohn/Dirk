@@ -1,8 +1,6 @@
 package hs.ddif.core;
 
 import hs.ddif.api.Injector;
-import hs.ddif.api.definition.DefinitionException;
-import hs.ddif.api.definition.DependencyException;
 import hs.ddif.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -20,7 +18,7 @@ public class InjectorManyNamedTest {
 
   @Test
   @Disabled
-  void shouldPerformWell() throws DefinitionException, DependencyException {
+  void shouldPerformWell() throws Exception {
     List<Annotation> annotations = new ArrayList<>();
     int testSize = 20;
     int rounds = 7;

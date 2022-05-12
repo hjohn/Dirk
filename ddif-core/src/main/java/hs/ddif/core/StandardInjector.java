@@ -20,8 +20,8 @@ import hs.ddif.core.store.InjectableStore;
 import hs.ddif.core.store.InstantiatorBindingMap;
 import hs.ddif.spi.config.InjectorStrategy;
 import hs.ddif.spi.discovery.TypeRegistrationExtension;
-import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.InjectionTargetExtension;
+import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
@@ -76,7 +76,7 @@ public class StandardInjector implements Injector {
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, strategy.getScopeStrategy().getSingletonAnnotationClass());
 
     this.registry = new InjectableStoreCandidateRegistry(store, discovererFactory, instanceInjectableFactory);
-    this.instanceResolver = new DefaultInstanceResolver(store, discovererFactory, new DefaultInstantiationContext(store, instantiatorBindingMap, strategy.getProxyStrategy()), instantiatorFactory);
+    this.instanceResolver = new DefaultInstanceResolver(new DefaultInstantiationContext(store, instantiatorBindingMap, strategy.getProxyStrategy()), instantiatorFactory);
   }
 
   @Override
@@ -90,12 +90,12 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, AutoDiscoveryException {
+  public <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException {
     return instanceResolver.getInstance(type, qualifiers);
   }
 
   @Override
-  public <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, AutoDiscoveryException {
+  public <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException {
     return instanceResolver.getInstance(cls, qualifiers);
   }
 

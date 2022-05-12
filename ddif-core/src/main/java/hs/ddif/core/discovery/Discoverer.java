@@ -13,7 +13,8 @@ import java.util.Set;
 public interface Discoverer {
 
   /**
-   * Discovers additional {@link Injectable}s.
+   * Discovers additional {@link Injectable}s. If completed successfully, subsequent
+   * calls will return the original result, otherwise undefined.
    *
    * @return a set of {@link Injectable} that were discovered, never {@code null} or contains {@code null} but can be empty
    * @throws DefinitionException when a definition problem was encountered
@@ -26,6 +27,7 @@ public interface Discoverer {
    * list of problems in their final exception message.
    *
    * @return a list of problems, never {@code null} or contains {@code null} but can be empty
+   * @throws IllegalStateException when called before calling {@link #discover()}
    */
   List<String> getProblems();
 }
