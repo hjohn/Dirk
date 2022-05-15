@@ -1,5 +1,7 @@
 package hs.ddif.spi.scope;
 
+import hs.ddif.api.scope.ScopeNotActiveException;
+
 import java.lang.annotation.Annotation;
 
 /**
@@ -30,10 +32,10 @@ public interface ScopeResolver {
    * @param key an object suitable as a key for use in a map, cannot be {@code null}
    * @param creationalContext an {@link CreationalContext}, cannot be {@code null}
    * @return an instance of the given type, never {@code null}
-   * @throws OutOfScopeException when there is no scope active
+   * @throws ScopeNotActiveException when there is no scope active
    * @throws Exception when the object factory throws an exception
    */
-  <T> T get(Object key, CreationalContext<T> creationalContext) throws OutOfScopeException, Exception;
+  <T> T get(Object key, CreationalContext<T> creationalContext) throws ScopeNotActiveException, Exception;
 
   /**
    * Removes the given key from this scope resolver.

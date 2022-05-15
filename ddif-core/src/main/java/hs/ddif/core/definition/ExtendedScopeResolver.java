@@ -1,7 +1,7 @@
 package hs.ddif.core.definition;
 
+import hs.ddif.api.scope.ScopeNotActiveException;
 import hs.ddif.spi.scope.CreationalContext;
-import hs.ddif.spi.scope.OutOfScopeException;
 import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
@@ -58,7 +58,7 @@ public class ExtendedScopeResolver implements ScopeResolver {
   }
 
   @Override
-  public <T> T get(Object key, CreationalContext<T> creationalContext) throws OutOfScopeException, Exception {
+  public <T> T get(Object key, CreationalContext<T> creationalContext) throws ScopeNotActiveException, Exception {
     return delegate.get(key, creationalContext);
   }
 

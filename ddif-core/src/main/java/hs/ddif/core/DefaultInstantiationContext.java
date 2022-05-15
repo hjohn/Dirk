@@ -3,6 +3,8 @@ package hs.ddif.core;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
+import hs.ddif.api.scope.ScopeNotActiveException;
+import hs.ddif.api.scope.ScopeException;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
@@ -14,7 +16,6 @@ import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.scope.CreationalContext;
-import hs.ddif.spi.scope.OutOfScopeException;
 import hs.ddif.spi.scope.ScopeResolver;
 import hs.ddif.util.Types;
 
@@ -61,7 +62,7 @@ class DefaultInstantiationContext implements InstantiationContext {
   }
 
   @Override
-  public synchronized <T> T create(Key key) throws CreationException, AmbiguousResolutionException {
+  public synchronized <T> T create(Key key) throws CreationException, AmbiguousResolutionException, ScopeNotActiveException {
     @SuppressWarnings("unchecked")
     Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
 
@@ -94,61 +95,49 @@ class DefaultInstantiationContext implements InstantiationContext {
     return instances;
   }
 
-  private <T> T createInstance(Injectable<T> injectable) throws CreationException {
-    return createInstance(injectable, false);
-  }
-
   private <T> T createInstanceInScope(Injectable<T> injectable) throws CreationException {
-    return createInstance(injectable, true);
-  }
-
-  private <T> T createInstance(Injectable<T> injectable, boolean allowOutOfScope) throws CreationException {
-    ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
-
     try {
-      if(!allowOutOfScope || scopeResolver.isActive()) {
-        LazyCreationalContext<?> parentCreationalContext = stack.isEmpty() ? null : stack.getLast();
-        LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(parentCreationalContext, injectable);
-
-        stack.addLast(creationalContext);
-
-        try {
-          Class<? extends Annotation> parentScopeAnnotation = parentCreationalContext == null ? null : parentCreationalContext.injectable.getScopeResolver().getAnnotationClass();
-          boolean needsProxy = !scopeResolver.isPseudoScope() && parentScopeAnnotation != null && scopeResolver.getAnnotationClass() != parentScopeAnnotation;
-
-          T instance = needsProxy
-            ? proxyStrategy.<T>createProxy(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, creationalContext))
-            : scopeResolver.get(injectable, creationalContext);
-
-          creationalContext.add(injectable, instance);
-
-          return instance;
-        }
-        finally {
-          stack.removeLast();
-        }
-      }
-
-      return null;
+      return injectable.getScopeResolver().isActive() ? createInstance(injectable) : null;
     }
-    catch(OutOfScopeException e) {
-      if(!allowOutOfScope) {
-        throw new CreationException("[" + injectable.getType() + "] could not be created", e);
-      }
+    catch(ScopeNotActiveException e) {
 
       /*
        * Scope was checked to be active (to avoid exception cost), but it still occurred...
        */
 
-      LOGGER.warning("Scope " + scopeResolver.getAnnotationClass() + " should have been active: " + e.getMessage());
+      LOGGER.warning("Scope " + injectable.getScopeResolver().getAnnotationClass() + " should have been active: " + e.getMessage());
 
       return null;  // same as if scope hadn't been active in the first place
     }
-    catch(CreationException e) {
+  }
+
+  private <T> T createInstance(Injectable<T> injectable) throws CreationException, ScopeNotActiveException {
+    ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
+    LazyCreationalContext<?> parentCreationalContext = stack.isEmpty() ? null : stack.getLast();
+    LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(parentCreationalContext, injectable);
+
+    stack.addLast(creationalContext);
+
+    try {
+      Class<? extends Annotation> parentScopeAnnotation = parentCreationalContext == null ? null : parentCreationalContext.injectable.getScopeResolver().getAnnotationClass();
+      boolean needsProxy = !scopeResolver.isPseudoScope() && parentScopeAnnotation != null && scopeResolver.getAnnotationClass() != parentScopeAnnotation;
+
+      T instance = needsProxy
+        ? proxyStrategy.<T>createProxy(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, creationalContext))
+        : scopeResolver.get(injectable, creationalContext);
+
+      creationalContext.add(injectable, instance);
+
+      return instance;
+    }
+    catch(ScopeNotActiveException | CreationException e) {
       throw e;
     }
-    catch(Exception e) {
+    catch(Exception e) {  // as extensions are called, a general catch all is used here to wrap unexpected exceptions with some useful diagnostics
       throw new CreationException("[" + injectable.getType() + "] could not be created", e);
+    }
+    finally {
+      stack.removeLast();
     }
   }
 
@@ -216,19 +205,24 @@ class DefaultInstantiationContext implements InstantiationContext {
     }
 
     private List<Injection> getInjections() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
-      if(injections == null) {
-        List<Injection> injections = new ArrayList<>();
+      try {
+        if(injections == null) {
+          List<Injection> injections = new ArrayList<>();
 
-        for(Binding binding : injectable.getBindings()) {
-          Instantiator<?> instantiator = boundInstantiatorProvider.getInstantiator(binding);
+          for(Binding binding : injectable.getBindings()) {
+            Instantiator<?> instantiator = boundInstantiatorProvider.getInstantiator(binding);
 
-          injections.add(new Injection(binding.getAccessibleObject(), instantiator.getInstance(DefaultInstantiationContext.this)));
+            injections.add(new Injection(binding.getAccessibleObject(), instantiator.getInstance(DefaultInstantiationContext.this)));
+          }
+
+          this.injections = injections;
         }
 
-        this.injections = injections;
+        return injections;
       }
-
-      return injections;
+      catch(ScopeException e) {
+        throw new AssertionError("Unexpected scope problem", e);  // should not occur as consistency checks during registration enforce the use of a provider or proxy
+      }
     }
 
     /**

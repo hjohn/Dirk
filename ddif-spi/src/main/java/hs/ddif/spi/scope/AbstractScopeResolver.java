@@ -1,5 +1,6 @@
 package hs.ddif.spi.scope;
 
+import hs.ddif.api.scope.ScopeNotActiveException;
 import hs.ddif.spi.scope.CreationalContext.Reference;
 
 import java.util.HashMap;
@@ -23,7 +24,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
-      throw new OutOfScopeException(key, getAnnotationClass());
+      throw new ScopeNotActiveException("Scope not active: " + getAnnotationClass() + " for: " + key);
     }
 
     Map<Object, Reference<?>> instances = instancesByScope.computeIfAbsent(currentScope, k -> new HashMap<>());

@@ -4,15 +4,13 @@ import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.ScopeConflictException;
-import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
+import hs.ddif.api.scope.ScopeNotActiveException;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.spi.scope.AbstractScopeResolver;
-import hs.ddif.spi.scope.OutOfScopeException;
 
 import java.lang.annotation.Annotation;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +31,7 @@ public class InjectorScopeTest {
   class Classes {
 
     @Test
-    public void shouldThrowOutOfScopeExceptionWhenNoScopeActive() throws Exception {
+    public void shouldThrowScopeNotActiveExceptionWhenNoScopeActive() throws Exception {
       TestScopeResolver scopeResolver = new TestScopeResolver();
 
       scopeResolver.currentScope = null;
@@ -43,10 +41,7 @@ public class InjectorScopeTest {
       injector.register(TestScopedBean.class);
 
       assertThatThrownBy(() -> injector.getInstance(TestScopedBean.class))
-        .isExactlyInstanceOf(CreationException.class)
-        .hasMessage("[class hs.ddif.core.InjectorScopeTest$TestScopedBean] could not be created")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(OutOfScopeException.class)
+        .isExactlyInstanceOf(ScopeNotActiveException.class)
         .hasMessage("Scope not active: interface hs.ddif.core.test.scope.TestScope for: Class [hs.ddif.core.InjectorScopeTest$TestScopedBean]")
         .hasNoCause();
     }

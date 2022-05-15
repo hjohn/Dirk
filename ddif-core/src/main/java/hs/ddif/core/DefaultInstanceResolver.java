@@ -4,6 +4,7 @@ import hs.ddif.api.InstanceResolver;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
+import hs.ddif.api.scope.ScopeNotActiveException;
 import hs.ddif.spi.instantiation.InjectionTarget;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
@@ -31,7 +32,7 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException {
+  public synchronized <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
     Key key = KeyFactory.of(type, qualifiers);
     T instance = getInstance(key);
 
@@ -43,7 +44,7 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException {
+  public synchronized <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
     return getInstance((Type)cls, qualifiers);
   }
 
@@ -57,7 +58,7 @@ class DefaultInstanceResolver implements InstanceResolver {
     return getInstances((Type)cls, qualifiers);
   }
 
-  private <T> T getInstance(Key key) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException {
+  private <T> T getInstance(Key key) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
     return instantiatorFactory.<T>getInstantiator(new InternalInjectionTarget(key)).getInstance(instantiationContext);
   }
 
