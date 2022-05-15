@@ -85,11 +85,11 @@ public class Annotations {
    * Recursively finds annotations <b>directly</b> annotated by a given meta annotation, starting
    * from the given {@link AnnotatedElement}. The annotations returned are not necessarily direct
    * annotations on the given element, but can be meta annotations which are annotated with the
-   * given meta annotations.
+   * given meta annotation.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
    * @param metaAnnotation an {@link Annotation}, cannot be {@code null}
-   * @return a set of {@link Annotation}s directly annotated with the given meta annotation, never {@code null} and never contains {@code null}s
+   * @return a mutable set of {@link Annotation}s directly annotated with the given meta annotation, never {@code null} and never contains {@code null}s
    */
   public static Set<Annotation> findDirectlyMetaAnnotatedAnnotations(AnnotatedElement element, Annotation metaAnnotation) {
     Set<Annotation> matchingAnnotations = new HashSet<>();
@@ -119,11 +119,11 @@ public class Annotations {
    * Recursively finds annotations <b>directly</b> annotated by a given meta annotation class, starting
    * from the given {@link AnnotatedElement}. The annotations returned are not necessarily direct
    * annotations on the given element, but can be meta annotations which are annotated with the
-   * given meta annotations.
+   * given meta annotation.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
    * @param metaAnnotation an {@link Annotation}, cannot be {@code null}
-   * @return a set of {@link Annotation}s directly annotated with the given meta annotation, never {@code null} and never contains {@code null}s
+   * @return a mutable set of {@link Annotation}s directly annotated with the given meta annotation, never {@code null} and never contains {@code null}s
    */
   public static Set<Annotation> findDirectlyMetaAnnotatedAnnotations(AnnotatedElement element, Class<? extends Annotation> metaAnnotation) {
     Set<Annotation> matchingAnnotations = new HashSet<>();
@@ -160,20 +160,20 @@ public class Annotations {
    */
   public static List<Annotation> findMetaAnnotatedAnnotations(AnnotatedElement element, Annotation metaAnnotation) {
     return Stream.of(element.getAnnotations())
-      .filter(annotation -> isMetaAnnotated(annotation, metaAnnotation))
+      .filter(annotation -> isMetaAnnotated(annotation.annotationType(), metaAnnotation))
       .collect(Collectors.toList());
   }
 
   /**
-   * Returns {@code true} if the given {@link Annotation} is directly or indirectly meta
+   * Returns {@code true} if the given annotation {@link Class} is directly or indirectly meta
    * annotated with the given meta annotation.
    *
-   * @param annotation an {@link Annotation} to check, cannot be {@code null}
+   * @param annotationType a {@link Class} which extends {@link Annotation} to check, cannot be {@code null}
    * @param metaAnnotation a meta {@link Annotation} to search for, cannot be {@code null}
    * @return {@code true} if the given {@link Annotation} is directly or indirectly meta
    *   annotated with the given meta annotation, otherwise {@code false}
    */
-  public static boolean isMetaAnnotated(Annotation annotation, Annotation metaAnnotation) {
-    return findAnnotations(annotation.annotationType(), metaAnnotation.annotationType()).contains(metaAnnotation);
+  public static boolean isMetaAnnotated(Class<? extends Annotation> annotationType, Annotation metaAnnotation) {
+    return findAnnotations(annotationType, metaAnnotation.annotationType()).contains(metaAnnotation);
   }
 }
