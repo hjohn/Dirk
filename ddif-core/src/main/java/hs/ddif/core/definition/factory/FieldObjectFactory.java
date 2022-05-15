@@ -1,6 +1,5 @@
 package hs.ddif.core.definition.factory;
 
-import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
 
@@ -27,7 +26,7 @@ public class FieldObjectFactory<T> implements Constructable<T> {
   }
 
   @Override
-  public T create(List<Injection> injections) throws CreationException {
+  public T create(List<Injection> injections) {
     try {
       @SuppressWarnings("unchecked")
       T instance = (T)field.get(injections.isEmpty() ? null : injections.get(0).getValue());
