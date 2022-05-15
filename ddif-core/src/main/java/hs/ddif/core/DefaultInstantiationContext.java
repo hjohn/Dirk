@@ -133,7 +133,7 @@ class DefaultInstantiationContext implements InstantiationContext {
     }
     catch(OutOfScopeException e) {
       if(!allowOutOfScope) {
-        throw new CreationException(injectable.getType(), "could not be created", e);
+        throw new CreationException("[" + injectable.getType() + "] could not be created", e);
       }
 
       /*
@@ -148,7 +148,7 @@ class DefaultInstantiationContext implements InstantiationContext {
       throw e;
     }
     catch(Exception e) {
-      throw new CreationException(injectable.getType(), "could not be created", e);
+      throw new CreationException("[" + injectable.getType() + "] could not be created", e);
     }
   }
 

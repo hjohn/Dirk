@@ -3,6 +3,7 @@ package hs.ddif.core.definition.factory;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
+import hs.ddif.core.util.Description;
 import hs.ddif.spi.config.LifeCycleCallbacks;
 
 import java.lang.reflect.AccessibleObject;
@@ -44,7 +45,7 @@ public class ClassObjectFactory<T> implements Constructable<T> {
   @Override
   public T create(List<Injection> injections) throws CreationException {
     if(UNDER_CONSTRUCTION.contains(this)) {
-      throw new CreationException(constructor.getDeclaringClass(), "already under construction (dependency creation loop in setter, initializer or post-construct method?)");
+      throw new CreationException("[" + constructor.getDeclaringClass() + "] already under construction (dependency creation loop in setter, initializer or post-construct method?)");
     }
 
     try {
@@ -58,7 +59,7 @@ public class ClassObjectFactory<T> implements Constructable<T> {
         lifeCycleCallbacks.postConstruct(instance);
       }
       catch(InvocationTargetException e) {
-        throw new CreationException(constructor.getDeclaringClass(), "threw exception during post construction", e.getCause());
+        throw new CreationException("[" + constructor.getDeclaringClass() + "] threw exception during post construction", e.getCause());
       }
 
       return instance;
@@ -87,7 +88,7 @@ public class ClassObjectFactory<T> implements Constructable<T> {
       return constructor.newInstance(values);
     }
     catch(InvocationTargetException e) {
-      throw new CreationException(constructor, "call failed", e.getCause());
+      throw new CreationException("[" + constructor + "] call failed", e.getCause());
     }
     catch(IllegalAccessException | InstantiationException e) {
       throw new IllegalStateException(constructor + " call failed", e);
@@ -129,7 +130,7 @@ public class ClassObjectFactory<T> implements Constructable<T> {
             method.invoke(instance, values);
           }
           catch(InvocationTargetException e) {
-            throw new CreationException(method, "inject failed", e.getCause());
+            throw new CreationException(Description.of(method) + " inject failed", e.getCause());
           }
           catch(Exception e) {
             throw new IllegalStateException(method + " inject failed", e);
