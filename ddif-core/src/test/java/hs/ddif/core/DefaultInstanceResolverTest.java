@@ -7,6 +7,7 @@ import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
+import hs.ddif.api.scope.ScopeNotActiveException;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
@@ -16,7 +17,6 @@ import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.scope.AbstractScopeResolver;
-import hs.ddif.spi.scope.OutOfScopeException;
 import hs.ddif.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -129,12 +129,9 @@ public class DefaultInstanceResolverTest {
     }
 
     @Test
-    void shouldThrowOutOfScopeExceptionWhenScopeNotActive() {
+    void shouldThrowScopeNotActiveExceptionWhenScopeNotActive() {
       assertThatThrownBy(() -> instanceResolver.getInstance(D.class))
-        .isExactlyInstanceOf(CreationException.class)
-        .hasMessage("[class hs.ddif.core.DefaultInstanceResolverTest$D] could not be created")
-        .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
-        .isExactlyInstanceOf(OutOfScopeException.class)
+        .isExactlyInstanceOf(ScopeNotActiveException.class)
         .hasMessage("Scope not active: interface hs.ddif.core.DefaultInstanceResolverTest$TestScoped for: Class [hs.ddif.core.DefaultInstanceResolverTest$D]")
         .hasNoCause();
     }

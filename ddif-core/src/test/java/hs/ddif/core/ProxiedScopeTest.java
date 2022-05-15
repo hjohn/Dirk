@@ -2,7 +2,7 @@ package hs.ddif.core;
 
 import hs.ddif.api.Injector;
 import hs.ddif.api.definition.ScopeConflictException;
-import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.scope.ScopeNotActiveException;
 import hs.ddif.core.test.scope.Dependent;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.extensions.proxy.ByteBuddyProxyStrategy;
@@ -10,7 +10,6 @@ import hs.ddif.library.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.library.DefaultInjectorStrategy;
 import hs.ddif.library.SimpleScopeStrategy;
 import hs.ddif.spi.scope.AbstractScopeResolver;
-import hs.ddif.spi.scope.OutOfScopeException;
 import hs.ddif.spi.scope.ScopeResolver;
 
 import java.io.IOException;
@@ -63,7 +62,7 @@ public class ProxiedScopeTest {
 
     // No scope active, creation fails:
     assertThatThrownBy(() -> injector.getInstance(B.class))
-      .isExactlyInstanceOf(CreationException.class);
+      .isExactlyInstanceOf(ScopeNotActiveException.class);
 
     currentScope = "A";
 
@@ -83,7 +82,7 @@ public class ProxiedScopeTest {
     assertThat(a).isNotNull();
 
     assertThatThrownBy(() -> a.b.hello())
-      .isExactlyInstanceOf(OutOfScopeException.class);
+      .isExactlyInstanceOf(ScopeNotActiveException.class);
 
     currentScope = "A";
 
@@ -105,7 +104,7 @@ public class ProxiedScopeTest {
     C c = injector.getInstance(C.class);
 
     assertThatThrownBy(() -> c.b.get())
-      .isExactlyInstanceOf(CreationException.class);  // TODO perhaps OutOfScopeException be nicer here?
+      .isExactlyInstanceOf(ScopeNotActiveException.class);
 
     currentScope = "A";
 

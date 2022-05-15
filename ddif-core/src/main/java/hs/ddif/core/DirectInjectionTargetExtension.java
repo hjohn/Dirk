@@ -3,12 +3,13 @@ package hs.ddif.core;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
+import hs.ddif.api.scope.ScopeNotActiveException;
 import hs.ddif.spi.instantiation.InjectionTarget;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.Instantiator;
 import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.instantiation.Key;
-import hs.ddif.spi.instantiation.InjectionTargetExtension;
 import hs.ddif.spi.instantiation.TypeTrait;
 
 import java.util.Collections;
@@ -42,7 +43,7 @@ class DirectInjectionTargetExtension<T> implements InjectionTargetExtension<T> {
       }
 
       @Override
-      public T getInstance(InstantiationContext context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+      public T getInstance(InstantiationContext context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException, ScopeNotActiveException {
         T instance = context.create(injectionTarget.getKey());
 
         if(instance == null) {

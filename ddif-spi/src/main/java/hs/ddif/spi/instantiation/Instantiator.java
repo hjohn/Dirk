@@ -3,6 +3,7 @@ package hs.ddif.spi.instantiation;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
 import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
+import hs.ddif.api.scope.ScopeNotActiveException;
 
 import java.util.Set;
 
@@ -49,8 +50,9 @@ public interface Instantiator<T> {
    * @throws CreationException when the instance could not be created
    * @throws AmbiguousResolutionException when multiple instances matched but the instantiator required at most one
    * @throws UnsatisfiedResolutionException when no instance matched but the instantiator required at least one
+   * @throws ScopeNotActiveException when the scope for the produced type is not active
    */
-  T getInstance(InstantiationContext context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException;
+  T getInstance(InstantiationContext context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException, ScopeNotActiveException;
 
   /**
    * Returns the {@link TypeTrait}s of this {@link Instantiator}.

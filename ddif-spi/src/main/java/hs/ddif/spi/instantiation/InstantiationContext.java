@@ -1,7 +1,8 @@
 package hs.ddif.spi.instantiation;
 
-import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.scope.ScopeNotActiveException;
 
 import java.util.List;
 
@@ -20,8 +21,9 @@ public interface InstantiationContext {
    * @return an instance or {@code null} if there were no matches
    * @throws CreationException when the creation of the instance failed
    * @throws AmbiguousResolutionException when the key matched multiple potential instances
+   * @throws ScopeNotActiveException when the scope for the given type is not active
    */
-  <T> T create(Key key) throws CreationException, AmbiguousResolutionException;
+  <T> T create(Key key) throws CreationException, AmbiguousResolutionException, ScopeNotActiveException;
 
   /**
    * Creates all instances for all known types associated with the given {@link Key}.
