@@ -7,7 +7,6 @@ import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.core.InjectorBuilder;
-import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.util.Annotations;
@@ -37,7 +36,11 @@ public class AssistedInjectionTest {
 
   private Injector injector = InjectorBuilder.builder()
     .manual()
-    .typeRegistrationExtensions(context -> List.of(new AssistedTypeRegistrationExtension(new BindingProvider(context.injectorStrategy.getAnnotationStrategy()), context.injectorStrategy.getLifeCycleCallbacksFactory(), ASSISTED_ANNOTATION_STRATEGY)))
+    .typeRegistrationExtensions(context -> List.of(new AssistedTypeRegistrationExtension(
+      context.injectorStrategy.getAnnotationStrategy(),
+      context.injectorStrategy.getLifeCycleCallbacksFactory(),
+      ASSISTED_ANNOTATION_STRATEGY
+    )))
     .build();
 
   private static String extractArgumentName(AnnotatedElement element) {

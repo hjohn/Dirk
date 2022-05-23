@@ -10,8 +10,8 @@ import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.Key;
 import hs.ddif.spi.config.ProxyStrategy;
-import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.TypeTrait;
 import hs.ddif.util.Types;
 
@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
  * only injectables that can be fully resolved.
  */
 public class InjectableStore implements Resolver<Injectable<?>> {
-  private final BindingManager bindingManager;
 
   /**
    * Structure keeping track of {@link Key}s used in bindings that must be available
@@ -59,11 +58,9 @@ public class InjectableStore implements Resolver<Injectable<?>> {
   /**
    * Constructs a new instance.
    *
-   * @param bindingManager an {@link BindingManager}, cannot be {@code null}
    * @param proxyStrategy a {@link ProxyStrategy}, cannot be {@code null}
    */
-  public InjectableStore(BindingManager bindingManager, ProxyStrategy proxyStrategy) {
-    this.bindingManager = Objects.requireNonNull(bindingManager, "bindingManager");
+  public InjectableStore(ProxyStrategy proxyStrategy) {
     this.proxyStrategy = Objects.requireNonNull(proxyStrategy, "proxyStrategy");
     this.qualifiedTypeStore = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), i -> i.getTypes());
   }
@@ -105,27 +102,18 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     qualifiedTypeStore.putAll(injectables);
 
     try {
-      addBindings(injectables);  // modifies structure but must be done before checking for required bindings
+      ensureNoCyclicDependencies(injectables);
 
-      try {
-        ensureNoCyclicDependencies(injectables);
-
-        // Check if the new injectables can have all their required dependencies resolved:
-        for(Injectable<?> injectable : injectables) {
-          ensureRequiredBindingsAreAvailable(injectable);
-        }
-
-        RegistrationViolation violation = addInjectables(injectables);
-
-        if(violation != null) {
-          removeInjectables(injectables);
-          violation.doThrow();
-        }
+      // Check if the new injectables can have all their required dependencies resolved:
+      for(Injectable<?> injectable : injectables) {
+        ensureRequiredBindingsAreAvailable(injectable);
       }
-      catch(Exception e) {
-        removeBindings(injectables);
 
-        throw e;
+      RegistrationViolation violation = addInjectables(injectables);
+
+      if(violation != null) {
+        removeInjectables(injectables);
+        violation.doThrow();
       }
     }
     catch(Exception e) {
@@ -153,29 +141,12 @@ public class InjectableStore implements Resolver<Injectable<?>> {
         violation.doThrow();
       }
 
-      removeBindings(injectables);
       removeScopedInstances(injectables);
     }
     catch(Exception e) {
       qualifiedTypeStore.putAll(injectables);
 
       throw e;
-    }
-  }
-
-  private void addBindings(Collection<Injectable<?>> injectables) {
-    for(Injectable<?> injectable : injectables) {
-      for(Binding binding : injectable.getBindings()) {
-        bindingManager.addBinding(binding);
-      }
-    }
-  }
-
-  private void removeBindings(Collection<Injectable<?>> injectables) {
-    for(Injectable<?> injectable : injectables) {
-      for(Binding binding : injectable.getBindings()) {
-        bindingManager.removeBinding(binding);
-      }
     }
   }
 
@@ -188,10 +159,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
   private RegistrationViolation addInjectables(Collection<Injectable<?>> injectables) {
     for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
-        Key key = bindingManager.getSearchKey(binding);
-
-        addTarget(key, typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE), typeTraits.contains(TypeTrait.REQUIRES_AT_MOST_ONE), injectables);
+        addTarget(binding.getElementKey(), !binding.isOptional() && binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_LEAST_ONE), binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_MOST_ONE), injectables);
       }
     }
 
@@ -201,10 +169,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
   private RemoveViolation removeInjectables(Collection<Injectable<?>> injectables) {
     for(Injectable<?> injectable : injectables) {
       for(Binding binding : injectable.getBindings()) {
-        Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
-        Key key = bindingManager.getSearchKey(binding);
-
-        removeTarget(key, typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE), typeTraits.contains(TypeTrait.REQUIRES_AT_MOST_ONE));
+        removeTarget(binding.getElementKey(), !binding.isOptional() && binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_LEAST_ONE), binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_MOST_ONE));
       }
     }
 
@@ -218,22 +183,20 @@ public class InjectableStore implements Resolver<Injectable<?>> {
      */
 
     for(Binding binding : injectable.getBindings()) {
-      Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
-
-      if(typeTraits.contains(TypeTrait.REQUIRES_AT_MOST_ONE)) {
-        Key key = bindingManager.getSearchKey(binding);
-        Set<Injectable<?>> injectables = qualifiedTypeStore.resolve(key);
+      if(binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_MOST_ONE)) {
+        Key elementKey = binding.getElementKey();
+        Set<Injectable<?>> injectables = qualifiedTypeStore.resolve(elementKey);
 
         // The binding is a single binding, if there are more than one matches it is ambiguous, and if there is no match then it must be optional
         if(injectables.size() > 1) {
-          throw new AmbiguousDependencyException("Multiple candidates for dependency [" + key + "] required for " + binding + ": " + injectables);
+          throw new AmbiguousDependencyException("Multiple candidates for dependency [" + elementKey + "] required for " + binding + ": " + injectables);
         }
-        if(typeTraits.contains(TypeTrait.REQUIRES_AT_LEAST_ONE) && injectables.size() < 1) {
-          throw new UnsatisfiedDependencyException("Missing dependency [" + key + "] required for " + binding);
+        if(!binding.isOptional() && binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_LEAST_ONE) && injectables.size() < 1) {
+          throw new UnsatisfiedDependencyException("Missing dependency [" + elementKey + "] required for " + binding);
         }
 
         // Check scope only for non lazy bindings. Lazy ones that inject a Provider can be used anywhere.
-        if(!typeTraits.contains(TypeTrait.LAZY) && !injectables.isEmpty()) {
+        if(!binding.getTypeTraits().contains(TypeTrait.LAZY) && !injectables.isEmpty()) {
           Injectable<?> dependency = injectables.iterator().next();  // Previous check ensures there is only a single element in the set
 
           ensureBindingScopeIsValid(injectable, dependency);
@@ -297,12 +260,8 @@ public class InjectableStore implements Resolver<Injectable<?>> {
         visiting.add(injectable);
 
         for(Binding binding : injectable.getBindings()) {
-          Set<TypeTrait> typeTraits = bindingManager.getTypeTraits(binding);
-
-          if(!typeTraits.contains(TypeTrait.LAZY)) {
-            Key key = binding.getKey();
-
-            for(Injectable<?> boundInjectable : qualifiedTypeStore.resolve(key)) {
+          if(!binding.getTypeTraits().contains(TypeTrait.LAZY)) {
+            for(Injectable<?> boundInjectable : qualifiedTypeStore.resolve(binding.getElementKey())) {
               if(visiting.contains(boundInjectable)) {
                 return true;
               }
@@ -475,7 +434,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     }
 
     void doThrow() throws AmbiguousRequiredDependencyException {
-      Set<Binding> bindings = bindingManager.findBindings(source.getType(), source.getQualifiers());  // expensive, but only for throwing exception
+      Set<Binding> bindings = findBindings(source.getType(), source.getQualifiers());  // expensive, but only for throwing exception
       String satisfiedBy = qualifiedTypeStore.resolve(key).stream().filter(i -> !i.equals(source)).map(Object::toString).collect(Collectors.joining(", ", "[", "]"));
 
       throw new AmbiguousRequiredDependencyException("Registering [" + source + "] would make existing required bindings ambiguous: " + bindings + "; already satisfied by " + satisfiedBy);
@@ -490,10 +449,21 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     }
 
     void doThrow() throws UnsatisfiedRequiredDependencyException {
-      Set<Binding> bindings = bindingManager.findBindings(source.getType(), source.getQualifiers());  // expensive, but only for throwing exception
+      Set<Binding> bindings = findBindings(source.getType(), source.getQualifiers());  // expensive, but only for throwing exception
 
       throw new UnsatisfiedRequiredDependencyException("Removing [" + source + "] would make existing required bindings unsatisfiable: " + bindings);
     }
+  }
+
+  /*
+   * This call is very expensive, but worth it in the exceptional case to provide good error messages
+   */
+  private Set<Binding> findBindings(Type type, Set<Annotation> qualifiers) {
+    return qualifiedTypeStore.toSet(s ->
+      s.flatMap(i -> i.getBindings().stream())
+        .filter(b -> Types.isAssignable(type, b.getType()) && qualifiers.containsAll(b.getQualifiers()))
+        .collect(Collectors.toSet())
+    );
   }
 
   private static class Node {

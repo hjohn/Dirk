@@ -4,6 +4,7 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
+import hs.ddif.core.definition.InjectionTargetExtensionStore;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.instantiation.InjectionTargetExtensions;
@@ -35,17 +36,17 @@ public class InjectableFactories {
   public static final ProxyStrategy PROXY_STRATEGY = new NoProxyStrategy();
   public static final ScopeStrategy SCOPE_STRATEGY = new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class);
   public static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
-  public static final BindingProvider BINDING_PROVIDER = new BindingProvider(ANNOTATION_STRATEGY);
 
   private final ScopeResolverManager scopeResolverManager;
   private final DefaultInjectableFactory factory;
   private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
-  private final List<InjectionTargetExtension<?>> injectionTargetExtensions = InjectionTargetExtensions.create();
-  private final InjectionTargetExtensionStore injectionTargetExtensionStore = new InjectionTargetExtensionStore(new DirectInjectionTargetExtension<>(), injectionTargetExtensions);
+  private final List<InjectionTargetExtension<?, ?>> injectionTargetExtensions = InjectionTargetExtensions.create();
+  private final InjectionTargetExtensionStore injectionTargetExtensionStore = new InjectionTargetExtensionStore(injectionTargetExtensions);
+  private final BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY, injectionTargetExtensionStore);
 
   public InjectableFactories(ScopeResolverManager scopeResolverManager) {
     this.scopeResolverManager = scopeResolverManager;
-    this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, SCOPE_STRATEGY, injectionTargetExtensions.stream().map(InjectionTargetExtension::getInstantiatorType).collect(Collectors.toSet()));
+    this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, SCOPE_STRATEGY, injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet()));
     this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
   }
 
@@ -66,15 +67,15 @@ public class InjectableFactories {
   }
 
   public ClassInjectableFactory forClass() {
-    return new ClassInjectableFactory(BINDING_PROVIDER, factory, lifeCycleCallbacksFactory);
+    return new ClassInjectableFactory(bindingProvider, factory, lifeCycleCallbacksFactory);
   }
 
   public FieldInjectableFactory forField() {
-    return new FieldInjectableFactory(BINDING_PROVIDER, factory);
+    return new FieldInjectableFactory(bindingProvider, factory);
   }
 
   public MethodInjectableFactory forMethod() {
-    return new MethodInjectableFactory(BINDING_PROVIDER, factory);
+    return new MethodInjectableFactory(bindingProvider, factory);
   }
 
   public InstanceInjectableFactory forInstance() {

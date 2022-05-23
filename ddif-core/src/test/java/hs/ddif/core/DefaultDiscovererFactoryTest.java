@@ -6,14 +6,12 @@ import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.Key;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.discovery.Discoverer;
-import hs.ddif.core.instantiation.InjectionTargetExtensions;
 import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.library.ProducesTypeRegistrationExtension;
-import hs.ddif.spi.instantiation.InstantiatorFactory;
-import hs.ddif.spi.instantiation.Key;
 import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 
 import java.util.List;
@@ -31,7 +29,6 @@ import jakarta.inject.Provider;
 
 @DisplayNameGeneration(ReplaceCamelCaseDisplayNameGenerator.class)
 public class DefaultDiscovererFactoryTest {
-  private final InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(InjectionTargetExtensions.create());
   private final QualifiedTypeStore<Injectable<?>> store = new QualifiedTypeStore<>(i -> new Key(i.getType(), i.getQualifiers()), Injectable::getTypes);
   private final InjectableFactories injectableFactories = new InjectableFactories();
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
@@ -47,7 +44,7 @@ public class DefaultDiscovererFactoryTest {
 
   @Nested
   class When_autoDiscovery_isDisabled {
-    private final DefaultDiscovererFactory factory = new DefaultDiscovererFactory(false, List.of(new ProducesTypeRegistrationExtension(Produces.class)), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    private final DefaultDiscovererFactory factory = new DefaultDiscovererFactory(false, List.of(new ProducesTypeRegistrationExtension(Produces.class)), classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
 
     @Nested
     class And_gather_With_Injectable_IsCalled {
@@ -79,7 +76,7 @@ public class DefaultDiscovererFactoryTest {
 
   @Nested
   class When_autoDiscovery_isEnabled {
-    private final DefaultDiscovererFactory factory = new DefaultDiscovererFactory(true, List.of(new ProducesTypeRegistrationExtension(Produces.class)), instantiatorFactory, classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
+    private final DefaultDiscovererFactory factory = new DefaultDiscovererFactory(true, List.of(new ProducesTypeRegistrationExtension(Produces.class)), classInjectableFactory, methodInjectableFactory, fieldInjectableFactory);
 
     @Nested
     class And_gather_With_Injectable_IsCalled {

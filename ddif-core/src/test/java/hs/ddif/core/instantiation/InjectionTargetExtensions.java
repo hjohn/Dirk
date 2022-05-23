@@ -11,7 +11,7 @@ import jakarta.inject.Provider;
 
 public class InjectionTargetExtensions {
 
-  public static List<InjectionTargetExtension<?>> create() {
+  public static List<InjectionTargetExtension<?, ?>> create() {
     return List.of(
       new ListInjectionTargetExtension<>(),
       new SetInjectionTargetExtension<>(),

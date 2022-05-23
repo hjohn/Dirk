@@ -10,8 +10,8 @@ import hs.ddif.library.DefaultInjectorStrategy;
 import hs.ddif.library.ListInjectionTargetExtension;
 import hs.ddif.library.NoProxyStrategy;
 import hs.ddif.library.ProducesTypeRegistrationExtension;
-import hs.ddif.library.ProviderTypeRegistrationExtension;
 import hs.ddif.library.ProviderInjectionTargetExtension;
+import hs.ddif.library.ProviderTypeRegistrationExtension;
 import hs.ddif.library.SetInjectionTargetExtension;
 import hs.ddif.library.SimpleScopeStrategy;
 import hs.ddif.library.SingletonScopeResolver;
@@ -83,10 +83,10 @@ public class InjectorBuilder {
   }
 
   public static class Context2 extends Context1 {
-    public final List<InjectionTargetExtension<?>> injectionTargetExtensions;
+    public final List<InjectionTargetExtension<?, ?>> injectionTargetExtensions;
     public final List<ScopeResolver> scopeResolvers;
 
-    Context2(Context1 context, List<ScopeResolver> scopeResolvers, Collection<InjectionTargetExtension<?>> injectionTargetExtensions) {
+    Context2(Context1 context, List<ScopeResolver> scopeResolvers, Collection<InjectionTargetExtension<?, ?>> injectionTargetExtensions) {
       super(context.injectorStrategy);
 
       this.scopeResolvers = scopeResolvers;
@@ -134,7 +134,7 @@ public class InjectorBuilder {
     private final Context2 context;
 
     Builder2(Context1 context, List<ScopeResolver> scopeResolvers) {
-      List<InjectionTargetExtension<?>> extensions = List.of(
+      List<InjectionTargetExtension<?, ?>> extensions = List.of(
         new ListInjectionTargetExtension<>(),
         new SetInjectionTargetExtension<>(),
         new ProviderInjectionTargetExtension<>(Provider.class, s -> s::get)

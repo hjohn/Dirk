@@ -4,15 +4,14 @@ import hs.ddif.annotations.Opt;
 import hs.ddif.annotations.Produces;
 import hs.ddif.api.Injector;
 import hs.ddif.core.StandardInjector;
-import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.library.AnnotationBasedLifeCycleCallbacksFactory;
 import hs.ddif.library.ConfigurableAnnotationStrategy;
 import hs.ddif.library.DefaultInjectorStrategy;
 import hs.ddif.library.ListInjectionTargetExtension;
 import hs.ddif.library.NoProxyStrategy;
 import hs.ddif.library.ProducesTypeRegistrationExtension;
-import hs.ddif.library.ProviderTypeRegistrationExtension;
 import hs.ddif.library.ProviderInjectionTargetExtension;
+import hs.ddif.library.ProviderTypeRegistrationExtension;
 import hs.ddif.library.SetInjectionTargetExtension;
 import hs.ddif.library.SimpleScopeStrategy;
 import hs.ddif.library.SingletonScopeResolver;
@@ -98,7 +97,7 @@ public class Injectors {
     );
   }
 
-  private static List<InjectionTargetExtension<?>> createInjectionTargetExtensions() {
+  private static List<InjectionTargetExtension<?, ?>> createInjectionTargetExtensions() {
     return List.of(
       new ListInjectionTargetExtension<>(),
       new SetInjectionTargetExtension<>(),
@@ -115,7 +114,7 @@ public class Injectors {
     if(Classes.isAvailable("hs.ddif.extensions.assisted.AssistedTypeRegistrationExtension")) {
       LOGGER.info("Using AssistedTypeRegistrationExtension found on classpath");
 
-      extensions.add(AssistedTypeRegistrationExtensionSupport.create(new BindingProvider(ANNOTATION_STRATEGY), lifeCycleCallbacksFactory));
+      extensions.add(AssistedTypeRegistrationExtensionSupport.create(ANNOTATION_STRATEGY, lifeCycleCallbacksFactory));
     }
 
     return extensions;

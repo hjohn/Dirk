@@ -2,11 +2,11 @@ package hs.ddif.core.definition;
 
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.definition.DefinitionException;
+import hs.ddif.core.InjectionTargetExtensionStores;
 import hs.ddif.core.test.qualifiers.Big;
 import hs.ddif.core.test.qualifiers.Green;
 import hs.ddif.core.test.qualifiers.Red;
 import hs.ddif.library.ConfigurableAnnotationStrategy;
-import hs.ddif.spi.instantiation.Key;
 import hs.ddif.util.Annotations;
 import hs.ddif.util.Types;
 
@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.assertj.core.groups.Tuple;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,15 +30,15 @@ public class BindingProviderTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation GREEN = Annotations.of(Green.class);
 
-  private BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, null));
+  private BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, null), InjectionTargetExtensionStores.create());
 
   @Test
   public void ofMembersShouldBindToGenericFieldInSubclass() throws Exception {
     List<Binding> bindings = bindingProvider.ofMembers(Subclass.class);
 
-    assertThat(bindings).extracting(Binding::getAccessibleObject, Binding::getKey).containsExactlyInAnyOrder(
-      Tuple.tuple(ClassWithGenericFields.class.getDeclaredField("fieldA"), new Key(String.class)),
-      Tuple.tuple(ClassWithGenericFields.class.getDeclaredMethod("setterB", Object.class), new Key(Integer.class))
+    assertThat(bindings).extracting(Binding::getAccessibleObject, Binding::getType).containsExactlyInAnyOrder(
+      Tuple.tuple(ClassWithGenericFields.class.getDeclaredField("fieldA"), String.class),
+      Tuple.tuple(ClassWithGenericFields.class.getDeclaredMethod("setterB", Object.class), Integer.class)
     );
   }
 
@@ -46,44 +47,44 @@ public class BindingProviderTest {
     List<Binding> bindings = bindingProvider.ofMethod(Subclass.class.getDeclaredMethod("create", Integer.class, Double.class), Subclass.class);
 
     assertEquals(3, bindings.size());
-    assertEquals(Integer.class, bindings.get(0).getKey().getType());
-    assertEquals(Double.class, bindings.get(1).getKey().getType());
-    assertEquals(Subclass.class, bindings.get(2).getKey().getType());
-    assertEquals(Set.of(Annotations.of(Big.class)), bindings.get(0).getKey().getQualifiers());
-    assertEquals(Set.of(), bindings.get(1).getKey().getQualifiers());
-    assertEquals(Set.of(), bindings.get(2).getKey().getQualifiers());
+    assertEquals(Integer.class, bindings.get(0).getType());
+    assertEquals(Double.class, bindings.get(1).getType());
+    assertEquals(Subclass.class, bindings.get(2).getType());
+    assertEquals(Set.of(Annotations.of(Big.class)), bindings.get(0).getQualifiers());
+    assertEquals(Set.of(), bindings.get(1).getQualifiers());
+    assertEquals(Set.of(), bindings.get(2).getQualifiers());
   }
 
   @Test
   public void ofMethodShouldTakeNonStaticIntoAccount() throws Exception {
     assertThat(bindingProvider.ofMethod(MethodHolder.class.getDeclaredMethod("create", Double.class), MethodHolder.class))
-      .extracting(Binding::getKey)
+      .extracting(Binding::getType)
       .containsExactly(
-        new Key(Double.class),
-        new Key(MethodHolder.class)  // dependency on the declaring class as "create" is an instance method
+        Double.class,
+        MethodHolder.class  // dependency on the declaring class as "create" is an instance method
       );
   }
 
   @Test
   public void ofMethodShouldTakeStaticIntoAccount() throws Exception {
     assertThat(bindingProvider.ofMethod(MethodHolder.class.getDeclaredMethod("createStatic", Double.class), MethodHolder.class))
-      .extracting(Binding::getKey)
+      .extracting(Binding::getType)
       .containsExactly(
-        new Key(Double.class)
+        Double.class
       );
   }
 
   @Test
   public void ofFieldShouldTakeNonStaticIntoAccount() throws Exception {
     assertThat(bindingProvider.ofField(FieldHolder.class.getDeclaredField("b"), FieldHolder.class))
-      .extracting(Binding::getKey)
+      .extracting(Binding::getType)
       .containsExactly(
-        new Key(FieldHolder.class)
+        FieldHolder.class
       );
   }
 
   @Test
-  public void ofFieldShouldTakeStaticIntoAccount() throws NoSuchFieldException, SecurityException {
+  public void ofFieldShouldTakeStaticIntoAccount() throws Exception {
     assertThat(bindingProvider.ofField(FieldHolder.class.getDeclaredField("a"), FieldHolder.class))
       .isEmpty();
   }
@@ -129,21 +130,37 @@ public class BindingProviderTest {
     List<Binding> bindings = bindingProvider.ofConstructorAndMembers(ClassA.class.getDeclaredConstructor(ClassB.class), ClassA.class);
 
     assertThat(bindings)
-      .extracting(Binding::getKey)
+      .extracting(Binding::getType, Binding::getQualifiers)
       .containsExactly(
-        new Key(ClassB.class),
-        new Key(String.class),
-        new Key(Types.parameterize(Provider.class, Integer.class)),
-        new Key(Types.parameterize(List.class, Double.class)),
-        new Key(Types.parameterize(Set.class, String.class)),
-        new Key(Types.parameterize(List.class, Double.class), List.of(RED)),
-        new Key(Types.parameterize(Set.class, String.class), List.of(RED)),
-        new Key(Types.parameterize(List.class, Double.class), List.of(GREEN)),
-        new Key(Types.parameterize(Set.class, String.class), List.of(GREEN)),
-        new Key(Long.class),
-        new Key(Types.parameterize(Provider.class, Short.class)),
-        new Key(Types.parameterize(Provider.class, Short.class))
+        Tuple.tuple(ClassB.class, Set.of()),
+        Tuple.tuple(String.class, Set.of()),
+        Tuple.tuple(Types.parameterize(Provider.class, Integer.class), Set.of()),
+        Tuple.tuple(Types.parameterize(List.class, Double.class), Set.of()),
+        Tuple.tuple(Types.parameterize(Set.class, String.class), Set.of()),
+        Tuple.tuple(Types.parameterize(List.class, Double.class), Set.of(RED)),
+        Tuple.tuple(Types.parameterize(Set.class, String.class), Set.of(RED)),
+        Tuple.tuple(Types.parameterize(List.class, Double.class), Set.of(GREEN)),
+        Tuple.tuple(Types.parameterize(Set.class, String.class), Set.of(GREEN)),
+        Tuple.tuple(Long.class, Set.of()),
+        Tuple.tuple(Types.parameterize(Provider.class, Short.class), Set.of()),
+        Tuple.tuple(Types.parameterize(Provider.class, Short.class), Set.of())
       );
+  }
+
+  @Test
+  @Disabled
+  public void shouldNotCreateBindingForOverridenParentMethod() throws Exception {
+    List<Binding> bindings = bindingProvider.ofMembers(SpecializedChild.class);
+
+    assertThat(bindings).hasSize(2);
+  }
+
+  @Test
+  public void bindingsOfChildShouldNotMatchBindingsOfParent() throws Exception {
+    List<Binding> parentBindings = bindingProvider.ofMembers(Parent.class);
+    List<Binding> childBindings = bindingProvider.ofMembers(Child.class);
+
+    assertThat(childBindings).doesNotContainAnyElementsOf(parentBindings);
   }
 
   @SuppressWarnings("unused")
@@ -231,4 +248,32 @@ public class BindingProviderTest {
   public static class ClassF {
     @Inject final String x = "";
   }
+
+  public static class Parent {
+    @Inject String y;
+    String x;
+    String d;
+
+    @Inject
+    public void setText(String x) {
+      this.x = x;
+    }
+
+    @Inject
+    public void setDescription(String d) {
+      this.d = d;
+    }
+  }
+
+  public static class Child extends Parent {
+  }
+
+  public static class SpecializedChild extends Parent {
+    @Override
+    @Inject
+    public void setDescription(String x) {
+      super.setDescription(x);
+    }
+  }
+
 }

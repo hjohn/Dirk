@@ -2,38 +2,59 @@ package hs.ddif.core.definition;
 
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.spi.config.AnnotationStrategy;
-import hs.ddif.spi.instantiation.Key;
+import hs.ddif.spi.instantiation.InjectionTargetExtension;
+import hs.ddif.spi.instantiation.TypeTrait;
+import hs.ddif.util.Primitives;
 import hs.ddif.util.Types;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
  * Provides {@link Binding}s for constructors, methods and fields.
  */
 public class BindingProvider {
-  private final AnnotationStrategy annotationStrategy;
+  private static final EnumSet<TypeTrait> REQUIRES_EXACTLY_ONE = EnumSet.of(TypeTrait.REQUIRES_AT_LEAST_ONE, TypeTrait.REQUIRES_AT_MOST_ONE);
+
+  private final InjectionTargetExtensionStore injectionTargetExtensionStore;
+  private final GenericBindingProvider<Binding> delegate;
 
   /**
    * Constructs a new instance.
    *
    * @param annotationStrategy an {@link AnnotationStrategy}, cannot be {@code null}
+   * @param injectionTargetExtensionStore an {@link InjectionTargetExtensionStore}, cannot be {@code null}
    */
-  public BindingProvider(AnnotationStrategy annotationStrategy) {
-    this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy cannot be null");
+  public BindingProvider(AnnotationStrategy annotationStrategy, InjectionTargetExtensionStore injectionTargetExtensionStore) {
+    this.injectionTargetExtensionStore = injectionTargetExtensionStore;
+
+    this.delegate = new GenericBindingProvider<>(annotationStrategy, (type, annotatedElement) -> {
+      Parameter parameter = annotatedElement instanceof Parameter ? (Parameter)annotatedElement : null;
+
+      return new DefaultBinding(
+        type,
+        annotatedElement == null ? Set.of() : annotationStrategy.getQualifiers(annotatedElement),
+        annotatedElement == null ? false : annotationStrategy.isOptional(annotatedElement),
+        parameter == null ? (AccessibleObject)annotatedElement : parameter.getDeclaringExecutable(),
+        parameter
+      );
+    });
   }
 
   /**
@@ -46,11 +67,7 @@ public class BindingProvider {
    * @throws DefinitionException when a definition problem is encountered
    */
   public List<Binding> ofConstructorAndMembers(Constructor<?> constructor, Class<?> cls) throws DefinitionException {
-    List<Binding> bindings = ofConstructor(constructor);
-
-    bindings.addAll(ofMembers(cls));
-
-    return bindings;
+    return delegate.ofConstructorAndMembers(constructor, cls);
   }
 
   /**
@@ -58,9 +75,10 @@ public class BindingProvider {
    *
    * @param constructor a {@link Constructor} to examine for bindings, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
+   * @throws DefinitionException when a definition problem is encountered
    */
-  public List<Binding> ofConstructor(Constructor<?> constructor) {
-    return ofExecutable(constructor, constructor.getDeclaringClass());
+  public List<Binding> ofConstructor(Constructor<?> constructor) throws DefinitionException {
+    return delegate.ofConstructor(constructor);
   }
 
   /**
@@ -71,50 +89,8 @@ public class BindingProvider {
    * @return a list of bindings, never {@code null} and never contains {@code null}, but can be empty
    * @throws DefinitionException when a definition problem is encountered
    */
-  public List<Binding> ofMembers(Class<?> cls) throws  DefinitionException {
-    List<Binding> bindings = new ArrayList<>();
-    Class<?> currentInjectableClass = cls;
-    Map<TypeVariable<?>, Type> typeArguments = null;
-
-    while(currentInjectableClass != null) {
-      for(Field field : currentInjectableClass.getDeclaredFields()) {
-        if(!annotationStrategy.getInjectAnnotations(field).isEmpty()) {
-          if(Modifier.isFinal(field.getModifiers())) {
-            throw new DefinitionException(field, "of [" + cls + "] cannot be final");
-          }
-
-          if(typeArguments == null) {
-            typeArguments = Types.getTypeArguments(cls, Object.class);  // pretty sure that you can re-use these even for when are examining fields of a super class later
-
-            if(typeArguments == null) {
-              throw new IllegalArgumentException("ownerType must be assignable to field's declaring class: " + cls + "; declaring class: " + currentInjectableClass);
-            }
-          }
-
-          Type type = Types.resolveVariables(typeArguments, field.getGenericType());
-
-          bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(field)), annotationStrategy.isOptional(field), field, null));
-        }
-      }
-
-      for(Method method : currentInjectableClass.getDeclaredMethods()) {
-        if(!annotationStrategy.getInjectAnnotations(method).isEmpty()) {
-          if(method.getParameterCount() == 0) {
-            throw new DefinitionException(method, "of [" + cls + "] must have parameters");
-          }
-
-          bindings.addAll(ofExecutable(method, cls));
-        }
-      }
-
-      currentInjectableClass = currentInjectableClass.getSuperclass();
-    }
-
-    for(Binding binding : bindings) {
-      binding.getAccessibleObject().setAccessible(true);
-    }
-
-    return bindings;
+  public List<Binding> ofMembers(Class<?> cls) throws DefinitionException {
+    return delegate.ofMembers(cls);
   }
 
   /**
@@ -123,16 +99,10 @@ public class BindingProvider {
    * @param method a {@link Method} to examine for bindings, cannot be {@code null}
    * @param ownerType a {@link Type} in which this method is declared, cannot be {@code null}
    * @return a list of bindings, never {@code null} and never contains {@code null}s, but can be empty
+   * @throws DefinitionException when a definition problem is encountered
    */
-  public List<Binding> ofMethod(Method method, Type ownerType) {
-    List<Binding> bindings = ofExecutable(method, ownerType);
-
-    if(!Modifier.isStatic(method.getModifiers())) {
-      // For a non-static method, the class itself is also a required binding:
-      bindings.add(ownerBinding(ownerType));
-    }
-
-    return bindings;
+  public List<Binding> ofMethod(Method method, Type ownerType) throws DefinitionException {
+    return delegate.ofMethod(method, ownerType);
   }
 
   /**
@@ -141,15 +111,10 @@ public class BindingProvider {
    * @param field a {@link Field} to examine for bindings, cannot be {@code null}
    * @param ownerType a {@link Type} in which this executable is declared, cannot be {@code null}
    * @return an immutable list of bindings, never {@code null} and never contains {@code null}s, but can be empty
+   * @throws DefinitionException when a definition problem is encountered
    */
-  public List<Binding> ofField(Field field, Type ownerType) {
-
-    /*
-     * Fields don't have any bindings, unless it is a non-static field in which case the
-     * declaring class is required before the field can be accessed.
-     */
-
-    return Modifier.isStatic(field.getModifiers()) ? List.of() : List.of(ownerBinding(ownerType));
+  public List<Binding> ofField(Field field, Type ownerType) throws DefinitionException {
+    return delegate.ofField(field, ownerType);
   }
 
   /**
@@ -160,7 +125,7 @@ public class BindingProvider {
    * @throws DefinitionException when a definition problem is encountered
    */
   public Constructor<?> getAnnotatedConstructor(Class<?> cls) throws DefinitionException {
-    return getConstructor(cls, true);
+    return delegate.getAnnotatedConstructor(cls);
   }
 
   /**
@@ -173,76 +138,34 @@ public class BindingProvider {
    * @throws DefinitionException when a definition problem is encountered
    */
   public <T> Constructor<T> getConstructor(Class<T> cls) throws DefinitionException {
-    return getConstructor(cls, false);
+    return delegate.getConstructor(cls);
   }
 
-  private <T> Constructor<T> getConstructor(Class<T> cls, boolean annotatedOnly) throws DefinitionException {
-    Constructor<T> suitableConstructor = null;
-    Constructor<T> defaultConstructor = null;
-
-    @SuppressWarnings("unchecked")
-    Constructor<T>[] declaredConstructors = (Constructor<T>[])cls.getDeclaredConstructors();
-
-    for(Constructor<T> constructor : declaredConstructors) {
-      if(!annotationStrategy.getInjectAnnotations(constructor).isEmpty()) {
-        if(suitableConstructor != null) {
-          throw new DefinitionException(cls, "cannot have multiple Inject annotated constructors");
-        }
-
-        suitableConstructor = constructor;
-      }
-      else if(!annotatedOnly && constructor.getParameterCount() == 0 && Modifier.isPublic(constructor.getModifiers())) {
-        defaultConstructor = constructor;
-      }
-    }
-
-    if(suitableConstructor == null && defaultConstructor == null) {
-      throw new DefinitionException(cls, "should have at least one suitable constructor; annotate a constructor" + (annotatedOnly ? "" : " or provide an empty public constructor"));
-    }
-
-    return suitableConstructor == null ? defaultConstructor : suitableConstructor;
-  }
-
-  private List<Binding> ofExecutable(Executable executable, Type ownerType) {
-    Type[] params = executable.getGenericParameterTypes();
-    Parameter[] parameters = executable.getParameters();
-    List<Binding> bindings = new ArrayList<>();
-    Map<TypeVariable<?>, Type> typeArguments = Types.getTypeArguments(ownerType, executable.getDeclaringClass());
-
-    if(typeArguments == null) {
-      throw new IllegalArgumentException("ownerType must be assignable to declaring class: " + ownerType + "; declaring class: " + executable.getDeclaringClass());
-    }
-
-    for(int i = 0; i < parameters.length; i++) {
-      Type type = Types.resolveVariables(typeArguments, params[i]);
-
-      bindings.add(new DefaultBinding(new Key(type, annotationStrategy.getQualifiers(parameters[i])), annotationStrategy.isOptional(parameters[i]), executable, parameters[i]));
-    }
-
-    return bindings;
-  }
-
-  private static Binding ownerBinding(Type ownerType) {
-    return new DefaultBinding(new Key(ownerType), false, null, null);
-  }
-
-  private static class DefaultBinding implements Binding {
-    private final Key key;
+  private class DefaultBinding implements Binding {
+    private final Type type;
+    private final Set<Annotation> qualifiers;
+    private final Key elementKey;
     private final boolean optional;
+    private final Set<TypeTrait> typeTraits;
     private final AccessibleObject accessibleObject;
     private final Parameter parameter;
+    private final Map<String, Object> data = new HashMap<>();
 
     /**
      * Constructs a new instance.
      *
-     * @param key a {@link Key}, cannot be {@code null}
+     * @param type a {@link Type}, cannot be {@code null}
+     * @param qualifiers a set of qualifier annotations, cannot be {@code null}
      * @param optional {@code true} when the binding is optional, otherwise {@code false}
      * @param accessibleObject an {@link AccessibleObject}, can be {@code null}
      * @param parameter a {@link Parameter}, cannot be {@code null} for {@link java.lang.reflect.Executable}s and must be {@code null} otherwise
      */
-    public DefaultBinding(Key key, boolean optional, AccessibleObject accessibleObject, Parameter parameter) {
-      if(key == null) {
-        throw new IllegalArgumentException("key cannot be null");
+    public DefaultBinding(Type type, Set<Annotation> qualifiers, boolean optional, AccessibleObject accessibleObject, Parameter parameter) {
+      if(type == null) {
+        throw new IllegalArgumentException("type cannot be null");
+      }
+      if(qualifiers == null) {
+        throw new IllegalArgumentException("qualifiers cannot be null");
       }
       if(accessibleObject instanceof Executable && parameter == null) {
         throw new IllegalArgumentException("parameter cannot be null when accessibleObject is an instance of Executable");
@@ -251,20 +174,44 @@ public class BindingProvider {
         throw new IllegalArgumentException("parameter must be null when accessibleObject is not an instance of Executable");
       }
 
-      this.key = key;
+      InjectionType injectionType = constructData(type);
+
+      this.type = Primitives.toBoxed(type);
+      this.qualifiers = Collections.unmodifiableSet(qualifiers);
+      this.elementKey = new Key(injectionType == null ? type : injectionType.getElementType(), qualifiers);
       this.optional = optional;
+      this.typeTraits = injectionType == null ? REQUIRES_EXACTLY_ONE : Collections.unmodifiableSet(injectionType.getTypeTraits());
       this.accessibleObject = accessibleObject;
       this.parameter = parameter;
+
+      if(accessibleObject != null) {
+        accessibleObject.setAccessible(true);
+      }
     }
 
     @Override
-    public Key getKey() {
-      return key;
+    public Type getType() {
+      return type;
+    }
+
+    @Override
+    public Set<Annotation> getQualifiers() {
+      return qualifiers;
+    }
+
+    @Override
+    public Key getElementKey() {
+      return elementKey;
     }
 
     @Override
     public boolean isOptional() {
       return optional;
+    }
+
+    @Override
+    public Set<TypeTrait> getTypeTraits() {
+      return typeTraits;
     }
 
     @Override
@@ -277,25 +224,10 @@ public class BindingProvider {
       return parameter;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public int hashCode() {
-      return Objects.hash(accessibleObject, key, parameter);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if(this == obj) {
-        return true;
-      }
-      if(obj == null || getClass() != obj.getClass()) {
-        return false;
-      }
-
-      DefaultBinding other = (DefaultBinding)obj;
-
-      return Objects.equals(key, other.key)
-        && Objects.equals(accessibleObject, other.accessibleObject)
-        && Objects.equals(parameter, other.parameter);
+    public <T> T associateIfAbsent(String key, Supplier<T> valueSupplier) {
+      return (T)data.computeIfAbsent(key, k -> valueSupplier.get());
     }
 
     @Override
@@ -303,13 +235,65 @@ public class BindingProvider {
       if(accessibleObject instanceof Executable) {
         int index = Arrays.asList(((Executable)accessibleObject).getParameters()).indexOf(parameter);
 
-        return "Parameter " + index + " [" + key.getType() + "] of [" + accessibleObject + "]";
+        return "Parameter " + index + " [" + type + "] of [" + accessibleObject + "]";
       }
       else if(accessibleObject != null) {
-        return "Field [" + (getKey().getQualifiers().isEmpty() ? "" : getKey().getQualifiers().stream().map(Object::toString).collect(Collectors.joining(" ")) + " ") + ((Field)accessibleObject).toGenericString() + "]";
+        return "Field [" + (getQualifiers().isEmpty() ? "" : getQualifiers().stream().map(Object::toString).collect(Collectors.joining(" ")) + " ") + ((Field)accessibleObject).toGenericString() + "]";
       }
 
-      return "Owner Type [" + key.getType() + "]";
+      return "Owner Type [" + type + "]";
+    }
+  }
+
+  private InjectionType constructData(Type inputType) {
+    Type type = inputType;
+    Set<TypeTrait> typeTraits = null;
+    boolean mergeTraits = true;
+
+    for(;;) {
+      InjectionTargetExtension<?, ?> extension = injectionTargetExtensionStore.getExtension(Types.raw(type));
+
+      if(typeTraits == null) {
+        if(extension == null) {
+          return null;
+        }
+
+        typeTraits = new HashSet<>();
+      }
+
+      if(mergeTraits) {
+        Set<TypeTrait> traits = extension == null ? REQUIRES_EXACTLY_ONE : extension.getTypeTraits();
+
+        typeTraits.addAll(traits);
+
+        if(!traits.contains(TypeTrait.LAZY)) {
+          mergeTraits = false;
+        }
+      }
+
+      if(extension == null) {
+        return new InjectionType(type, typeTraits);
+      }
+
+      type = extension.getElementType(type);  // returning the same type is disallowed (makes no sense either)
+    }
+  }
+
+  public static class InjectionType {
+    final Type elementType;
+    final Set<TypeTrait> typeTraits;
+
+    public InjectionType(Type elementType, Set<TypeTrait> typeTraits) {
+      this.elementType = elementType;
+      this.typeTraits = typeTraits;
+    }
+
+    public Type getElementType() {
+      return elementType;
+    }
+
+    public Set<TypeTrait> getTypeTraits() {
+      return typeTraits;
     }
   }
 }
