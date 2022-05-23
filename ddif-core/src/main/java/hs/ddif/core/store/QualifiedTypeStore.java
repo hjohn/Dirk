@@ -2,7 +2,7 @@ package hs.ddif.core.store;
 
 import hs.ddif.api.definition.DuplicateDependencyException;
 import hs.ddif.api.definition.MissingDependencyException;
-import hs.ddif.spi.instantiation.Key;
+import hs.ddif.core.definition.Key;
 import hs.ddif.util.Types;
 
 import java.lang.annotation.Annotation;
@@ -23,6 +23,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Store which keeps track of types {@code T} for which a {@link Key} can be extracted.
@@ -267,12 +268,35 @@ public class QualifiedTypeStore<T> implements Resolver<T> {
    */
   public synchronized Set<T> toSet() {
     return qualifiedTypesByQualifierByType.entrySet().stream()
-      .filter(e -> e.getKey().isInterface() || e.getKey() == Object.class)  // although everything could be scanned, duplicates can be eliminated early here
+      .filter(e -> e.getKey().getSuperclass() == null)  // although everything could be scanned, duplicates can be eliminated early here
       .map(Map.Entry::getValue)
       .map(Map::values)
       .flatMap(Collection::stream)
       .flatMap(Collection::stream)
       .collect(Collectors.toSet());
+  }
+
+  /**
+   * Applies a function over all type {@code T}s that are part of this store.
+   *
+   * <p>Note: this call is expensive as the stream contains all types in the store.
+   * Furthermore, the function provided must call a terminating operation on the stream
+   * to avoid unsynchronized access to the stores internal structures.
+   *
+   * <p>Useful for debugging purposes and providing helpful exception messages.
+   *
+   * @param <U> the function result type
+   * @param function a {@link Function} to apply, cannot be {@code null}
+   * @return the result of applying the given function, can be {@code null}
+   */
+  public synchronized <U> U toSet(Function<Stream<T>, U> function) {
+    return function.apply(qualifiedTypesByQualifierByType.entrySet().stream()
+      .filter(e -> e.getKey().getSuperclass() == null)  // although everything could be scanned, duplicates can be eliminated early here
+      .map(Map.Entry::getValue)
+      .map(Map::values)
+      .flatMap(Collection::stream)
+      .flatMap(Collection::stream)
+    );
   }
 
   private void putInternal(T qualifiedType) {

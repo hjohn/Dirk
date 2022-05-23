@@ -1,6 +1,6 @@
 package hs.ddif.core.store;
 
-import hs.ddif.spi.instantiation.Key;
+import hs.ddif.core.definition.Key;
 
 import java.util.Set;
 

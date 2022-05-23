@@ -155,6 +155,14 @@ public class ProducesAnnotationTest {
   }
 
   @Test
+  void shouldSupportDirectlyRegisteredGenericProducerMethod() throws Exception {
+    injector.register(Types.parameterize(GenericFactory1.class, Long.class));
+
+    assertThat((Object)injector.getInstance(ArrayList.class)).isNotNull();
+    assertThat(injector.<ArrayList<Long>>getInstance(Types.parameterize(ArrayList.class, Long.class))).isNotNull();
+  }
+
+  @Test
   void shouldSupportGenericProducerField() throws Exception {
     StringFactory stringFactory = new StringFactory("hi");
     IntegerFactory integerFactory = new IntegerFactory(123);
@@ -177,6 +185,30 @@ public class ProducesAnnotationTest {
     injector.removeInstance(integerFactory);
 
     assertFalse(injector.contains(Object.class));
+  }
+
+  @Test
+  void shouldSupportDirectlyRegisteredGenericProducerField() throws Exception {
+
+    /*
+     * This test is a bit of a stretch, having a field of type T that is a
+     * producer, which (if the owner is a singleton) can be controlled by
+     * setting the field directly... it however demonstrates that producer
+     * fields with a type variable are resolved to the type set from a
+     * generic owner type.
+     */
+
+    injector.register(Types.parameterize(GenericFactory3.class, Long.class));
+
+    GenericFactory3<Long> gf3 = injector.getInstance(Types.parameterize(GenericFactory3.class, Long.class));
+
+    gf3.obj = 5L;
+
+    assertThat(injector.getInstance(Long.class)).isEqualTo(5L);  // Long can be found :)
+
+    gf3.obj = 6L;
+
+    assertThat(injector.getInstance(Object.class, Red.class)).isEqualTo(6L);
   }
 
   @Test
@@ -621,6 +653,11 @@ public class ProducesAnnotationTest {
     public GenericFactory2(T obj) {
       this.obj = obj;
     }
+  }
+
+  @Singleton
+  public static class GenericFactory3<T> {
+    @Produces @Red T obj;
   }
 
   interface Vehicle {

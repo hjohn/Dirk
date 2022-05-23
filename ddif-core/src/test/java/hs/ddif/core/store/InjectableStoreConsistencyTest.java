@@ -9,13 +9,10 @@ import hs.ddif.api.definition.DependencyException;
 import hs.ddif.api.definition.UnsatisfiedDependencyException;
 import hs.ddif.api.definition.UnsatisfiedRequiredDependencyException;
 import hs.ddif.core.InjectableFactories;
-import hs.ddif.core.InstantiatorFactories;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.Injectable;
-import hs.ddif.core.instantiation.InjectionTargetExtensions;
 import hs.ddif.core.test.scope.TestScope;
 import hs.ddif.core.util.Nullable;
-import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.scope.UnknownScopeException;
 import hs.ddif.test.util.ReplaceCamelCaseDisplayNameGenerator;
 
@@ -52,9 +49,7 @@ public class InjectableStoreConsistencyTest {
   private Injectable<N> n;
   private Injectable<O> o;
 
-  private InstantiatorFactory instantiatorFactory = InstantiatorFactories.create(InjectionTargetExtensions.create());
-  private InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-  private InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
+  private InjectableStore store = new InjectableStore(InjectableFactories.PROXY_STRATEGY);
 
   @BeforeEach
   void beforeEach() throws DefinitionException {

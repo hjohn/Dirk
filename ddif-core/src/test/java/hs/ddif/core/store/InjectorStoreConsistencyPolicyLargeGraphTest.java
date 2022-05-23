@@ -3,16 +3,15 @@ package hs.ddif.core.store;
 import hs.ddif.annotations.Opt;
 import hs.ddif.api.definition.DependencyException;
 import hs.ddif.core.InjectableFactories;
-import hs.ddif.core.InstantiatorFactories;
 import hs.ddif.core.definition.BadQualifiedTypeException;
 import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ExtendedScopeResolver;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.Key;
 import hs.ddif.core.definition.QualifiedType;
 import hs.ddif.core.definition.injection.Injection;
 import hs.ddif.core.util.Nullable;
-import hs.ddif.spi.instantiation.InstantiatorFactory;
-import hs.ddif.spi.instantiation.Key;
+import hs.ddif.spi.instantiation.TypeTrait;
 import hs.ddif.util.Annotations;
 
 import java.lang.annotation.Annotation;
@@ -24,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
 
@@ -38,9 +38,8 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
   @Test
   void largeGraphTest() throws BadQualifiedTypeException, DependencyException {
-    InstantiatorFactory instantiatorFactory = InstantiatorFactories.create();
-    InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-    InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
+    InjectableStore store = new InjectableStore(InjectableFactories.PROXY_STRATEGY);
+
     List<Injectable<?>> knownInjectables = new ArrayList<>();
     List<Class<?>> classes = List.of(String.class, Integer.class, A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class);
 
@@ -110,8 +109,8 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
     }
 
     @Override
-    public Key getKey() {
-      return key;
+    public Type getType() {
+      return key.getType();
     }
 
     @Override
@@ -126,6 +125,21 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
     @Override
     public Parameter getParameter() {
+      return null;
+    }
+
+    @Override
+    public Key getElementKey() {
+      return key;
+    }
+
+    @Override
+    public Set<TypeTrait> getTypeTraits() {
+      return Set.of();
+    }
+
+    @Override
+    public <T> T associateIfAbsent(String key, Supplier<T> valueSupplier) {
       return null;
     }
   }

@@ -13,9 +13,10 @@ import java.util.Set;
  * annotations used to control injection.
  */
 public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
-  private final Class<? extends Annotation> injectAnnotation;
-  private final Class<? extends Annotation> qualifierAnnotation;
-  private final Class<? extends Annotation> optionalAnnotation;
+  private final Class<? extends Annotation> injectClass;
+  private final Class<? extends Annotation> qualifierClass;
+  private final Class<? extends Annotation> optionalClass;
+  private final Annotation qualifierAnnotation;
 
   /**
    * Constructs a new instance.
@@ -25,9 +26,10 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
    * @param optional an optional annotation {@link Class} to use, can be {@code null}
    */
   public ConfigurableAnnotationStrategy(Class<? extends Annotation> inject, Class<? extends Annotation> qualifier, Class<? extends Annotation> optional) {
-    this.injectAnnotation = Objects.requireNonNull(inject, "inject");
-    this.qualifierAnnotation = Objects.requireNonNull(qualifier, "qualifier");
-    this.optionalAnnotation = optional;
+    this.injectClass = Objects.requireNonNull(inject, "inject");
+    this.qualifierClass = Objects.requireNonNull(qualifier, "qualifier");
+    this.optionalClass = optional;
+    this.qualifierAnnotation = Annotations.of(qualifierClass);
   }
 
   @Override
@@ -37,7 +39,7 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
         Class<? extends Annotation> annotationType = annotation.annotationType();
         String simpleName = annotationType.getName();
 
-        if(simpleName.endsWith(".Nullable") || optionalAnnotation == annotationType) {
+        if(simpleName.endsWith(".Nullable") || optionalClass == annotationType) {
           return true;
         }
       }
@@ -48,11 +50,16 @@ public class ConfigurableAnnotationStrategy implements AnnotationStrategy {
 
   @Override
   public Set<Annotation> getInjectAnnotations(AnnotatedElement element) {
-    return Annotations.findAnnotations(element, injectAnnotation);
+    return Annotations.findAnnotations(element, injectClass);
   }
 
   @Override
   public Set<Annotation> getQualifiers(AnnotatedElement element) {
-    return Annotations.findDirectlyMetaAnnotatedAnnotations(element, qualifierAnnotation);
+    return Annotations.findDirectlyMetaAnnotatedAnnotations(element, qualifierClass);
+  }
+
+  @Override
+  public boolean isQualifier(Annotation annotation) {
+    return Annotations.isMetaAnnotated(annotation.annotationType(), qualifierAnnotation);
   }
 }

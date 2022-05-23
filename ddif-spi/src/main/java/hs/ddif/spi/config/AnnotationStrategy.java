@@ -46,4 +46,11 @@ public interface AnnotationStrategy {
    */
   Set<Annotation> getQualifiers(AnnotatedElement element) throws DefinitionException;
 
+  /**
+   * Checks if the given {@link Annotation} is a qualifier annotation.
+   *
+   * @param annotation an {@link Annotation}, cannot be {@code null}
+   * @return {@code true} if the given annotation is a qualifier annotation, otherwise {@code false}
+   */
+  boolean isQualifier(Annotation annotation);
 }

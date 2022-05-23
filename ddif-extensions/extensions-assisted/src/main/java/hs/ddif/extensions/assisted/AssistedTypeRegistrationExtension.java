@@ -2,11 +2,11 @@ package hs.ddif.extensions.assisted;
 
 import hs.ddif.api.definition.DefinitionException;
 import hs.ddif.api.instantiation.CreationException;
-import hs.ddif.core.definition.Binding;
-import hs.ddif.core.definition.BindingProvider;
+import hs.ddif.core.definition.GenericBindingProvider;
 import hs.ddif.core.definition.factory.ClassObjectFactory;
 import hs.ddif.core.definition.injection.Constructable;
 import hs.ddif.core.definition.injection.Injection;
+import hs.ddif.spi.config.AnnotationStrategy;
 import hs.ddif.spi.config.LifeCycleCallbacksFactory;
 import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.util.Primitives;
@@ -15,6 +15,7 @@ import hs.ddif.util.Types;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
@@ -51,19 +52,19 @@ import net.bytebuddy.matcher.ElementMatchers;
  */
 public class AssistedTypeRegistrationExtension implements TypeRegistrationExtension {
   private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
-  private final BindingProvider bindingProvider;
+  private final GenericBindingProvider<Binding> bindingProvider;
   private final AssistedAnnotationStrategy<?> strategy;
 
   /**
    * Constructs a new instance.
    *
-   * @param bindingProvider a {@link BindingProvider}, cannot be {@code null}
+   * @param annotationStrategy an {@link AnnotationStrategy}, cannot be {@code null}
    * @param lifeCycleCallbacksFactory a {@link LifeCycleCallbacksFactory}, cannot be {@code null}
    * @param strategy an {@link AssistedAnnotationStrategy}, cannot be {@code null}
    */
-  public AssistedTypeRegistrationExtension(BindingProvider bindingProvider, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, AssistedAnnotationStrategy<?> strategy) {
+  public AssistedTypeRegistrationExtension(AnnotationStrategy annotationStrategy, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, AssistedAnnotationStrategy<?> strategy) {
     this.lifeCycleCallbacksFactory = lifeCycleCallbacksFactory;
-    this.bindingProvider = bindingProvider;
+    this.bindingProvider = new GenericBindingProvider<>(annotationStrategy, Binding::new);
     this.strategy = strategy;
   }
 
@@ -177,7 +178,7 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
 
           providerFieldNames.add(fieldName);
           builder = builder
-            .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getKey().getType()), Visibility.PRIVATE)
+            .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getType()), Visibility.PRIVATE)
             .annotateField(annotations);
         }
       }
@@ -220,7 +221,7 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
       List<String> names = new ArrayList<>();
 
       if(factoryMethod.getParameterCount() != argumentBindings.size()) {
-        throw new DefinitionException(factoryMethod, "should have " + argumentBindings.size() + " argument(s) of types: " + argumentBindings.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getKey().getType())));
+        throw new DefinitionException(factoryMethod, "should have " + argumentBindings.size() + " argument(s) of types: " + argumentBindings.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getType())));
       }
 
       Type[] genericParameterTypes = factoryMethod.getGenericParameterTypes();
@@ -246,8 +247,8 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
 
             Type factoryArgumentType = Types.resolveVariables(factoryTypeArguments, Primitives.toBoxed(genericParameterTypes[i]));
 
-            if(!argumentBindings.get(name).getKey().getType().equals(factoryArgumentType)) {
-              throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getKey().getType() + "] but was: " + factoryArgumentType);
+            if(!argumentBindings.get(name).getType().equals(factoryArgumentType)) {
+              throw new DefinitionException(factoryMethod, "has argument [" + parameters[i] + "] with name '" + name + "' that should be of type [" + argumentBindings.get(name).getType() + "] but was: " + factoryArgumentType);
             }
 
             if(!encounteredNames.add(name)) {
@@ -285,7 +286,7 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
 
       for(int i = 0; i < parameters.length; i++) {
         Type factoryArgumentType = Primitives.toBoxed(Types.resolveVariables(factoryTypeArguments, genericParameterTypes[i]));
-        List<String> matches = argumentBindings.entrySet().stream().filter(e -> e.getValue().getKey().getType().equals(factoryArgumentType)).map(Map.Entry::getKey).collect(Collectors.toList());
+        List<String> matches = argumentBindings.entrySet().stream().filter(e -> e.getValue().getType().equals(factoryArgumentType)).map(Map.Entry::getKey).collect(Collectors.toList());
 
         if(matches.size() == 1) {
           names.add(matches.get(0));
@@ -434,5 +435,37 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
     }
 
     return factoryMethod;
+  }
+
+  private static class Binding {
+    final Type type;
+    final AnnotatedElement annotatedElement;
+    final Parameter parameter;
+
+    Binding(Type type, AnnotatedElement annotatedElement) {
+      this.type = Primitives.toBoxed(type);
+      this.annotatedElement = annotatedElement;
+      this.parameter = annotatedElement instanceof Parameter ? (Parameter)annotatedElement : null;
+
+      if(getAccessibleObject() != null) {
+        getAccessibleObject().setAccessible(true);
+      }
+    }
+
+    public Type getType() {
+      return type;
+    }
+
+    public AnnotatedElement getAnnotatedElement() {
+      return annotatedElement;
+    }
+
+    public AccessibleObject getAccessibleObject() {
+      return parameter == null ? (AccessibleObject)annotatedElement : parameter.getDeclaringExecutable();
+    }
+
+    public Parameter getParameter() {
+      return parameter;
+    }
   }
 }

@@ -14,15 +14,14 @@ import hs.ddif.core.definition.BindingProvider;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.InjectableFactory;
+import hs.ddif.core.definition.InjectionTargetExtensionStore;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.discovery.DiscovererFactory;
 import hs.ddif.core.store.InjectableStore;
-import hs.ddif.core.store.InstantiatorBindingMap;
 import hs.ddif.spi.config.InjectorStrategy;
 import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.spi.instantiation.InjectionTargetExtension;
-import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.scope.ScopeResolver;
 
 import java.lang.annotation.Annotation;
@@ -48,7 +47,7 @@ public class StandardInjector implements Injector {
    * @param strategy an {@link InjectorStrategy}, cannot be {@code null}
    * @param autoDiscovery {@code true} if the injector should automatically register (auto discover) types encountered during instantiation that have not been explicitly registered, or {code false} to allow manual registration only
    */
-  public StandardInjector(Collection<InjectionTargetExtension<?>> injectionTargetExtensions, Collection<TypeRegistrationExtension> typeRegistrationExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, boolean autoDiscovery) {
+  public StandardInjector(Collection<InjectionTargetExtension<?, ?>> injectionTargetExtensions, Collection<TypeRegistrationExtension> typeRegistrationExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, boolean autoDiscovery) {
     Objects.requireNonNull(injectionTargetExtensions, "injectionTargetExtensions cannot be null");
     Objects.requireNonNull(typeRegistrationExtensions, "typeRegistrationExtensions cannot be null");
     Objects.requireNonNull(scopeResolvers, "scopeResolvers cannot be null");
@@ -58,26 +57,25 @@ public class StandardInjector implements Injector {
       new ScopeResolverManager(scopeResolvers, strategy.getScopeStrategy().getDependentAnnotationClass()),
       strategy.getAnnotationStrategy(),
       strategy.getScopeStrategy(),
-      injectionTargetExtensions.stream().map(InjectionTargetExtension::getInstantiatorType).collect(Collectors.toSet())
+      injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet())
     );
 
-    InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(new InjectionTargetExtensionStore(new DirectInjectionTargetExtension<>(), injectionTargetExtensions));
-    BindingProvider bindingProvider = new BindingProvider(strategy.getAnnotationStrategy());
+    InjectionTargetExtensionStore injectionTargetExtensionStore = new InjectionTargetExtensionStore(injectionTargetExtensions);
+    BindingProvider bindingProvider = new BindingProvider(strategy.getAnnotationStrategy(), injectionTargetExtensionStore);
     DiscovererFactory discovererFactory = new DefaultDiscovererFactory(
       autoDiscovery,
       typeRegistrationExtensions,
-      instantiatorFactory,
       new ClassInjectableFactory(bindingProvider, injectableFactory, strategy.getLifeCycleCallbacksFactory()),
       new MethodInjectableFactory(bindingProvider, injectableFactory),
       new FieldInjectableFactory(bindingProvider, injectableFactory)
     );
 
-    InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-    InjectableStore store = new InjectableStore(instantiatorBindingMap, strategy.getProxyStrategy());
+    InjectableStore store = new InjectableStore(strategy.getProxyStrategy());
+    InstantiationContextFactory instantiationContextFactory = new InstantiationContextFactory(store, strategy.getAnnotationStrategy(), strategy.getProxyStrategy(), injectionTargetExtensionStore);
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, strategy.getScopeStrategy().getSingletonAnnotationClass());
 
     this.registry = new InjectableStoreCandidateRegistry(store, discovererFactory, instanceInjectableFactory);
-    this.instanceResolver = new DefaultInstanceResolver(new DefaultInstantiationContext(store, instantiatorBindingMap, strategy.getProxyStrategy()), instantiatorFactory);
+    this.instanceResolver = new DefaultInstanceResolver(instantiationContextFactory);
   }
 
   @Override

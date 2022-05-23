@@ -1014,4 +1014,26 @@ public class InjectorTest {
 
     public NullProducers() {}
   }
+
+  @Test
+  void shouldRegisterParentAndSubclassWithSetterMethod() throws Exception {
+    injector.registerInstance("A");
+    injector.registerInstance(5);
+    injector.register(Parent.class);
+    injector.register(Child.class);
+  }
+
+  public static class Parent {
+    String x;
+    Integer y;
+
+    @Inject
+    public void stuff(String x, Integer y) {
+      this.x = x;
+      this.y = y;
+    }
+  }
+
+  public static class Child extends Parent {
+  }
 }

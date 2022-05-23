@@ -30,21 +30,21 @@ public class ProviderTypeRegistrationExtensionTest {
   }
 
   @Test
-  void shouldNotFindProviderWhenNotImplemented() {
+  void shouldNotFindProviderWhenNotImplemented() throws Exception {
     extension.deriveTypes(registry, Bad_A.class);
 
     verifyNoInteractions(registry);
   }
 
   @Test
-  void shouldNotFindProviderWhenProviderInterfaceExtended() {
+  void shouldNotFindProviderWhenProviderInterfaceExtended() throws Exception {
     extension.deriveTypes(registry, Bad_B.class);
 
     verifyNoInteractions(registry);
   }
 
   @Test
-  void shouldNotFindProviderForWildcardType() {
+  void shouldNotFindProviderForWildcardType() throws Exception {
     extension.deriveTypes(registry, Types.wildcardExtends(String.class));
 
     verifyNoInteractions(registry);

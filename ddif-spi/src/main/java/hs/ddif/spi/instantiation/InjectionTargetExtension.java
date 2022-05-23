@@ -1,32 +1,61 @@
 package hs.ddif.spi.instantiation;
 
+import hs.ddif.api.instantiation.AmbiguousResolutionException;
+import hs.ddif.api.instantiation.CreationException;
+import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
+import hs.ddif.api.scope.ScopeNotActiveException;
+
+import java.lang.reflect.Type;
+import java.util.Set;
+
 /**
- * An interface to allow for custom handling of {@link InjectionTarget}s of type
- * {@code T} using a custom {@link Instantiator}.
+ * An interface to allow for custom handling of injection targets of type
+ * {@code T}. The target class must be an interface with at least one type variable.
  *
- * <p>Whenever an {@link InjectionTarget} of type {@code T} needs injection this
- * extension will be called to provide the {@link Instantiator} which can provide
- * the value for this type of target.
+ * <p>Whenever an injection target of type {@code T} needs injection this
+ * extension will be called to provide the actual value.
  *
  * @param <T> the type handled
+ * @param <E> the element type required
  */
-public interface InjectionTargetExtension<T> {
+public interface InjectionTargetExtension<T, E> {
 
   /**
-   * Returns the type of the {@link Instantiator}s produced by this extension.
+   * Returns the target class extended by this extension.
    *
    * @return a {@link Class}, never {@code null}
    */
-  Class<?> getInstantiatorType();
+  Class<?> getTargetClass();
 
   /**
-   * Creates a new {@link Instantiator} which will produce a type matching
-   * suitable for injection into the given {@link InjectionTarget}.
+   * Returns the element type of the given type by unwrapping the given type. Returning
+   * {@code null} or the same type is not allowed.
    *
-   * @param instantiatorFactory an {@link InstantiatorFactory} to get delegate {@link Instantiator}s, cannot be {@code null}
-   * @param injectionTarget an {@link InjectionTarget}, cannot be {@code null}
-   * @return an {@link Instantiator}, never {@code null}
+   * @param type a {@link Type} to unwrap, cannot be {@code null}
+   * @return the element type of the given type by unwrapping the given type, never {@code null}
    */
-  Instantiator<T> create(InstantiatorFactory instantiatorFactory, InjectionTarget injectionTarget);
+  Type getElementType(Type type);
 
+  /**
+   * Returns the {@link TypeTrait}s of this extension.
+   *
+   * @return a set of {@link TypeTrait}, never {@code null} or contains {@code null}, but can be empty
+   */
+  Set<TypeTrait> getTypeTraits();
+
+  /**
+   * Creates an instance of type {@code T} using the given {@link InstantiationContext}.
+   * Returning {@code null} is allowed to indicate the absence of a value. Depending on the
+   * destination where the value is used this can mean {@code null} is injected (methods and
+   * constructors), that the value is not injected (fields) or that an {@link UnsatisfiedResolutionException}
+   * is thrown (direct instance resolver call).
+   *
+   * @param context an {@link InstantiationContext}, cannot be {@code null}
+   * @return an instance of type {@code T}, can be {@code null}
+   * @throws CreationException when the instance could not be created
+   * @throws AmbiguousResolutionException when multiple instances matched but at most one was required
+   * @throws UnsatisfiedResolutionException when no instance matched but at least one was required
+   * @throws ScopeNotActiveException when the scope for the produced type is not active
+   */
+  T getInstance(InstantiationContext<E> context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException, ScopeNotActiveException;
 }

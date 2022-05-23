@@ -6,6 +6,7 @@ import hs.ddif.core.definition.Binding;
 import hs.ddif.core.definition.ClassInjectableFactory;
 import hs.ddif.core.definition.FieldInjectableFactory;
 import hs.ddif.core.definition.Injectable;
+import hs.ddif.core.definition.Key;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.discovery.Discoverer;
 import hs.ddif.core.discovery.DiscovererFactory;
@@ -13,10 +14,9 @@ import hs.ddif.core.store.QualifiedTypeStore;
 import hs.ddif.core.store.Resolver;
 import hs.ddif.spi.discovery.TypeRegistrationExtension;
 import hs.ddif.spi.discovery.TypeRegistrationExtension.Registry;
-import hs.ddif.spi.instantiation.InstantiatorFactory;
-import hs.ddif.spi.instantiation.Key;
 import hs.ddif.util.Types;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -44,11 +44,10 @@ class DefaultDiscovererFactory implements DiscovererFactory {
    * This must not be static as then it would be shared among multiple injectors which
    * may have a different set of extensions configured.
    */
-  private final Map<Type, List<Injectable<?>>> derivedInjectables = new WeakHashMap<>();
+  private final Map<Type, List<WeakReference<Injectable<?>>>> derivedInjectables = new WeakHashMap<>();
 
   private final boolean autoDiscovery;
   private final Collection<TypeRegistrationExtension> extensions;
-  private final InstantiatorFactory instantiatorFactory;
   private final ClassInjectableFactory classInjectableFactory;
   private final MethodInjectableFactory methodInjectableFactory;
   private final FieldInjectableFactory fieldInjectableFactory;
@@ -58,15 +57,13 @@ class DefaultDiscovererFactory implements DiscovererFactory {
    *
    * @param extensions a collection of {@link TypeRegistrationExtension}s, cannot be {@code null} or contain {@code null}s but can be empty
    * @param autoDiscovery {@code true} when auto discovery should be used, otherwise {@code false}
-   * @param instantiatorFactory an {@link InstantiatorFactory}, cannot be {@code null}
    * @param classInjectableFactory a {@link ClassInjectableFactory}, cannot be {@code null}
    * @param methodInjectableFactory a {@link MethodInjectableFactory}, cannot be {@code null}
    * @param fieldInjectableFactory a {@link FieldInjectableFactory}, cannot be {@code null}
    */
-  public DefaultDiscovererFactory(boolean autoDiscovery, Collection<TypeRegistrationExtension> extensions, InstantiatorFactory instantiatorFactory, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
+  public DefaultDiscovererFactory(boolean autoDiscovery, Collection<TypeRegistrationExtension> extensions, ClassInjectableFactory classInjectableFactory, MethodInjectableFactory methodInjectableFactory, FieldInjectableFactory fieldInjectableFactory) {
     this.autoDiscovery = autoDiscovery;
     this.extensions = extensions;
-    this.instantiatorFactory = instantiatorFactory;
     this.classInjectableFactory = classInjectableFactory;
     this.methodInjectableFactory = methodInjectableFactory;
     this.fieldInjectableFactory = fieldInjectableFactory;
@@ -87,9 +84,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
     /**
      * When auto discovery is on, keeps track of unresolved bindings. The map contains
-     * the key which is already processed through an Instantiator (and so refers to the
-     * actual Injectable that may need to be created, and not to a wrapper like Provider) and
-     * the binding from which it was derived.
+     * the element key of the binding and the binding from which it was derived.
      *
      * <p>A linked hash map is used to get deterministic behavior for the exception messages.
      */
@@ -202,14 +197,14 @@ class DefaultDiscovererFactory implements DiscovererFactory {
         visitTypes.add(injectable.getType());
 
         for(Binding binding : injectable.getBindings()) {
-          Key key = instantiatorFactory.getInstantiator(binding).getKey();
+          Key elementKey = binding.getElementKey();
 
-          if(includingResolver.resolve(key).isEmpty()) {
-            via.put(key, injectableKey);
-            visitTypes.add(key.getType());
+          if(includingResolver.resolve(elementKey).isEmpty()) {
+            via.put(elementKey, injectableKey);
+            visitTypes.add(elementKey.getType());
 
             if(autoDiscovery) {
-              unresolvedBindings.put(key, binding);
+              unresolvedBindings.put(elementKey, binding);
             }
           }
         }
@@ -223,7 +218,9 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
       for(Type type : visitTypes) {
         if(visitedTypes.add(type)) {
-          if(!derivedInjectables.containsKey(type)) {
+          List<Injectable<?>> injectables = getFromCache(type);
+
+          if(injectables == null) {
             DerivedRegistry registry = new DerivedRegistry();
 
             for(TypeRegistrationExtension extension : extensions) {
@@ -231,10 +228,11 @@ class DefaultDiscovererFactory implements DiscovererFactory {
               extension.deriveTypes(registry, type);
             }
 
-            derivedInjectables.put(type, registry.derivedInjectables);
+            injectables = registry.derivedInjectables;
+            putInCache(type, injectables);
           }
 
-          extensionDiscoveries.addAll(derivedInjectables.get(type));
+          extensionDiscoveries.addAll(injectables);
         }
       }
 
@@ -311,6 +309,38 @@ class DefaultDiscovererFactory implements DiscovererFactory {
       }
 
       return "[" + key + "]";
+    }
+
+    private List<Injectable<?>> getFromCache(Type type) {
+      List<WeakReference<Injectable<?>>> list = derivedInjectables.get(type);
+
+      if(list == null) {
+        return null;
+      }
+
+      List<Injectable<?>> hardReferences = new ArrayList<>();
+
+      for(WeakReference<Injectable<?>> weakRef : list) {
+        Injectable<?> injectable = weakRef.get();
+
+        if(injectable == null) {
+          return null;
+        }
+
+        hardReferences.add(injectable);
+      }
+
+      return hardReferences;
+    }
+
+    private void putInCache(Type type, List<Injectable<?>> injectables) {
+      List<WeakReference<Injectable<?>>> list = new ArrayList<>();
+
+      for(Injectable<?> injectable : injectables) {
+        list.add(new WeakReference<>(injectable));
+      }
+
+      derivedInjectables.put(type, list);
     }
   }
 

@@ -1,32 +1,31 @@
 package hs.ddif.library;
 
-import hs.ddif.spi.instantiation.InjectionTarget;
-import hs.ddif.spi.instantiation.InstantiationContext;
-import hs.ddif.spi.instantiation.Instantiator;
-import hs.ddif.spi.instantiation.InstantiatorFactory;
-import hs.ddif.spi.instantiation.Key;
 import hs.ddif.spi.instantiation.InjectionTargetExtension;
+import hs.ddif.spi.instantiation.InstantiationContext;
 import hs.ddif.spi.instantiation.TypeTrait;
 import hs.ddif.util.Types;
 
+import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Configurable provider {@link InjectionTargetExtension} which allows selecting the type of provider
  * it should handle.
  *
  * @param <P> the type of the provider
- * @param <T> the type the provider provides
+ * @param <E> the type the provider provides
  */
-public class ProviderInjectionTargetExtension<P, T> implements InjectionTargetExtension<P> {
+public class ProviderInjectionTargetExtension<P, E> implements InjectionTargetExtension<P, E> {
+  private static final Set<TypeTrait> LAZY = Collections.unmodifiableSet(EnumSet.of(TypeTrait.LAZY));
+
   private final Class<P> providerClass;
-  private final Function<Supplier<T>, P> providerFactory;
+  private final Function<Supplier<E>, P> providerFactory;
   private final TypeVariable<?> typeVariable;
 
   /**
@@ -35,49 +34,29 @@ public class ProviderInjectionTargetExtension<P, T> implements InjectionTargetEx
    * @param providerClass a {@link Class} representing the provider type, cannot be {@code null}
    * @param providerFactory a function to create the provider instance given a supplier, cannot be {@code null}
    */
-  public ProviderInjectionTargetExtension(Class<P> providerClass, Function<Supplier<T>, P> providerFactory) {
+  public ProviderInjectionTargetExtension(Class<P> providerClass, Function<Supplier<E>, P> providerFactory) {
     this.providerClass = Objects.requireNonNull(providerClass, "providerClass cannot be null");
     this.providerFactory = Objects.requireNonNull(providerFactory, "providerFactory cannot be null");
     this.typeVariable = providerClass.getTypeParameters()[0];
   }
 
   @Override
-  public Class<?> getInstantiatorType() {
+  public Class<?> getTargetClass() {
     return providerClass;
   }
 
   @Override
-  public Instantiator<P> create(InstantiatorFactory instantiatorFactory, InjectionTarget injectionTarget) {
-    Key key = injectionTarget.getKey();
-    Key elementKey = new Key(Types.getTypeParameter(key.getType(), providerClass, typeVariable), key.getQualifiers());
-    Instantiator<T> instantiator = instantiatorFactory.getInstantiator(new InjectionTarget() {
-      @Override
-      public Key getKey() {
-        return elementKey;
-      }
+  public Type getElementType(Type type) {
+    return Types.getTypeParameter(type, providerClass, typeVariable);
+  }
 
-      @Override
-      public boolean isOptional() {
-        return injectionTarget.isOptional();
-      }
-    });
-    Set<TypeTrait> typeTraits = Stream.concat(instantiator.getTypeTraits().stream(), Stream.of(TypeTrait.LAZY)).collect(Collectors.toUnmodifiableSet());
+  @Override
+  public Set<TypeTrait> getTypeTraits() {
+    return LAZY;
+  }
 
-    return new Instantiator<>() {
-      @Override
-      public Key getKey() {
-        return instantiator.getKey();
-      }
-
-      @Override
-      public P getInstance(InstantiationContext context) {
-        return providerFactory.apply(() -> instantiator.getInstance(context));
-      }
-
-      @Override
-      public Set<TypeTrait> getTypeTraits() {
-        return typeTraits;
-      }
-    };
+  @Override
+  public P getInstance(InstantiationContext<E> context) {
+    return providerFactory.apply(context::create);
   }
 }

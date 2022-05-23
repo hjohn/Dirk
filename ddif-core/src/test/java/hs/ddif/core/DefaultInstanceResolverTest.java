@@ -9,13 +9,11 @@ import hs.ddif.api.instantiation.CreationException;
 import hs.ddif.api.instantiation.UnsatisfiedResolutionException;
 import hs.ddif.api.scope.ScopeNotActiveException;
 import hs.ddif.core.definition.ClassInjectableFactory;
+import hs.ddif.core.definition.InjectionTargetExtensionStore;
 import hs.ddif.core.definition.InstanceInjectableFactory;
 import hs.ddif.core.definition.MethodInjectableFactory;
 import hs.ddif.core.store.InjectableStore;
-import hs.ddif.core.store.InstantiatorBindingMap;
 import hs.ddif.core.test.qualifiers.Red;
-import hs.ddif.spi.instantiation.InstantiationContext;
-import hs.ddif.spi.instantiation.InstantiatorFactory;
 import hs.ddif.spi.scope.AbstractScopeResolver;
 import hs.ddif.util.Annotations;
 
@@ -57,10 +55,8 @@ public class DefaultInstanceResolverTest {
   private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);
   private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager);
   private final InjectionTargetExtensionStore injectionTargetExtensionStore = injectableFactories.getInjectionTargetExtensionStore();
-  private final InstantiatorFactory instantiatorFactory = new DefaultInstantiatorFactory(injectionTargetExtensionStore);
-  private final InstantiatorBindingMap instantiatorBindingMap = new InstantiatorBindingMap(instantiatorFactory);
-  private final InjectableStore store = new InjectableStore(instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
-  private final InstantiationContext instantiationContext = new DefaultInstantiationContext(store, instantiatorBindingMap, InjectableFactories.PROXY_STRATEGY);
+  private final InjectableStore store = new InjectableStore(InjectableFactories.PROXY_STRATEGY);
+  private final InstantiationContextFactory instantiationContextFactory = new InstantiationContextFactory(store, InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
   private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
   private final InstanceInjectableFactory instanceInjectableFactory = injectableFactories.forInstance();
@@ -69,7 +65,7 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreIsEmpty {
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(instantiationContext, instantiatorFactory);
+    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(instantiationContextFactory);
 
     @Test
     void shouldThrowExceptionWhenGettingSingleInstance() {
@@ -86,7 +82,7 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreNotEmpty {
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(instantiationContext, instantiatorFactory);
+    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(instantiationContextFactory);
 
     @BeforeEach
     void beforeEach() throws DependencyException {

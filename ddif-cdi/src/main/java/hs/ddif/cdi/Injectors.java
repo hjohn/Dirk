@@ -148,7 +148,7 @@ public class Injectors {
     );
   }
 
-  private static List<InjectionTargetExtension<?>> createInjectionTargetExtensions() {
+  private static List<InjectionTargetExtension<?, ?>> createInjectionTargetExtensions() {
     return List.of(
       new ProviderInjectionTargetExtension<>(Provider.class, s -> s::get),
       new InstanceInjectionTargetExtension<>()
