@@ -2,12 +2,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.github.hjohn.ddif</groupId>
+  <groupId>org.int4.dirk</groupId>
   <artifactId>parent</artifactId>
   <version>${revision}</version>
   <packaging>pom</packaging>
 
-  <name>Dynamic Dependency Injection Framework</name>
+  <name>Dirk: Dynamic Dependency Injection Framework</name>
   <description>
     A light-weight framework that allows using inject annotations (such as JSR-330 or Jakarta Annotations)
     to create instances of objects, even when they're dynamically loaded at runtime. This framework will
@@ -17,22 +17,22 @@
   <url>https://github.com/hjohn/hs.ddif</url>
 
   <modules>
-    <module>ddif-annotations</module>
-    <module>ddif-api</module>
-    <module>ddif-cdi</module>
-    <module>ddif-commons-lang3-minimal</module>
-    <module>ddif-core</module>
-    <module>ddif-extensions</module>
-    <module>ddif-jakarta</module>
-    <module>ddif-jsr330</module>
-    <module>ddif-library</module>
-    <module>ddif-plugins</module>
-    <module>ddif-spi</module>
-    <module>ddif-test-api</module>
-    <module>ddif-test-plugin</module>
-    <module>ddif-test-plugin-singleton</module>
-    <module>ddif-test-util</module>
-    <module>ddif-util</module>
+    <module>dirk-annotations</module>
+    <module>dirk-api</module>
+    <module>dirk-cdi</module>
+    <module>dirk-commons-lang3-minimal</module>
+    <module>dirk-core</module>
+    <module>dirk-extensions</module>
+    <module>dirk-jakarta</module>
+    <module>dirk-jsr330</module>
+    <module>dirk-library</module>
+    <module>dirk-plugins</module>
+    <module>dirk-spi</module>
+    <module>dirk-test-api</module>
+    <module>dirk-test-plugin</module>
+    <module>dirk-test-plugin-singleton</module>
+    <module>dirk-test-util</module>
+    <module>dirk-util</module>
   </modules>
 
   <properties>
