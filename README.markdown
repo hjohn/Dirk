@@ -1,5 +1,5 @@
-Dynamic Dependency Injection Framework
-======================================
+Dirk: Dynamic Dependency Injection Framework
+============================================
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.hjohn.ddif/ddif-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.hjohn.ddif/ddif-core)
 [![Build Status](https://github.com/hjohn/hs.ddif/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/hjohn/hs.ddif/actions)
