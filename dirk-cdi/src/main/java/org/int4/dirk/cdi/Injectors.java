@@ -205,8 +205,8 @@ public class Injectors {
     }
 
     @Override
-    public boolean isPseudoScope(ScopeResolver scopeResolver) {
-      return Annotations.isMetaAnnotated(scopeResolver.getAnnotation().annotationType(), SCOPE);
+    public boolean isPseudoScope(Annotation annotation) {
+      return Annotations.isMetaAnnotated(annotation.annotationType(), SCOPE);
     }
 
     @Override

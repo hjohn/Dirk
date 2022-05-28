@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import org.int4.dirk.api.definition.DefinitionException;
 import org.int4.dirk.spi.config.ScopeStrategy;
-import org.int4.dirk.spi.scope.ScopeResolver;
 import org.int4.dirk.util.Annotations;
 
 /**
@@ -37,8 +36,8 @@ public class SimpleScopeStrategy implements ScopeStrategy {
   }
 
   @Override
-  public boolean isPseudoScope(ScopeResolver scopeResolver) {
-    return scopeResolver.getAnnotation().equals(singletonAnnotation) || scopeResolver.getAnnotation().equals(dependentAnnotation);
+  public boolean isPseudoScope(Annotation annotation) {
+    return annotation.equals(singletonAnnotation) || annotation.equals(dependentAnnotation);
   }
 
   @Override

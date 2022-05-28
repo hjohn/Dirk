@@ -4,7 +4,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 
 import org.int4.dirk.api.definition.DefinitionException;
-import org.int4.dirk.spi.scope.ScopeResolver;
 
 /**
  * Defines the strategy for scope handling.
@@ -45,10 +44,11 @@ public interface ScopeStrategy {
   Annotation getScope(AnnotatedElement element) throws DefinitionException;
 
   /**
-   * Returns whether the given {@link ScopeResolver} is handling a pseudo-scope.
+   * Returns whether the given annotation is a pseudo-scope.
    *
-   * @param scopeResolver a {@link ScopeResolver}, cannot be {@code null}
-   * @return {@code true} if the given {@link ScopeResolver} is handling a pseudo-scope, otherwise {@code false}
+   * @param annotation an {@link Annotation}, cannot be {@code null}
+   * @return {@code true} if the given {@link Annotation} is a pseudo-scope, otherwise {@code false}
+   * @throws IllegalArgumentException if the given annotation is not a scope annotation
    */
-  boolean isPseudoScope(ScopeResolver scopeResolver);
+  boolean isPseudoScope(Annotation annotation);
 }
