@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatchers;
  */
 public class ByteBuddyProxyStrategy implements ProxyStrategy {
   private static final String FIELD_NAME = "__instanceSupplier__";
-  private static final TypeCache<Class<?>> TYPE_CACHE = new TypeCache<>(Sort.WEAK);
+  private static final TypeCache<Class<?>> TYPE_CACHE = new TypeCache.WithInlineExpunction<>(Sort.WEAK);
 
   @Override
   public <T> Function<InstanceSupplier<T>, T> createProxyFactory(Class<T> cls) throws Exception {
