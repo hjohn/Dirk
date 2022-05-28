@@ -29,6 +29,7 @@ import org.int4.dirk.spi.config.InjectorStrategy;
 import org.int4.dirk.spi.discovery.TypeRegistrationExtension;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.scope.ScopeResolver;
+import org.int4.dirk.util.Annotations;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -63,7 +64,7 @@ public class InjectorBuilder {
     public Builder1 defaultInjectorStrategy() {
       return new Builder1(new DefaultInjectorStrategy(
         new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class),
-        new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class),
+        new SimpleScopeStrategy(Scope.class, Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
         new NoProxyStrategy(),
         new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class)
       ));
@@ -182,9 +183,9 @@ public class InjectorBuilder {
     }
 
     public Injector build() {
-      Class<? extends Annotation> singletonAnnotationClass = context.injectorStrategy.getScopeStrategy().getSingletonAnnotationClass();
-      List<ScopeResolver> scopeResolvers = context.scopeResolvers.stream().anyMatch(sr -> sr.getAnnotationClass() == singletonAnnotationClass) ? context.scopeResolvers
-        : Stream.concat(context.scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(singletonAnnotationClass))).collect(Collectors.toList());
+      Annotation singletonAnnotation = context.injectorStrategy.getScopeStrategy().getSingletonAnnotation();
+      List<ScopeResolver> scopeResolvers = context.scopeResolvers.stream().anyMatch(sr -> sr.getAnnotation().equals(singletonAnnotation)) ? context.scopeResolvers
+        : Stream.concat(context.scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(singletonAnnotation))).collect(Collectors.toList());
 
       return new StandardInjector(context.injectionTargetExtensions, context.typeRegistrationExtensions, scopeResolvers, context.injectorStrategy, context.autoDiscovery);
     }

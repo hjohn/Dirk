@@ -28,6 +28,7 @@ import org.int4.dirk.spi.config.LifeCycleCallbacksFactory;
 import org.int4.dirk.spi.discovery.TypeRegistrationExtension;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.scope.ScopeResolver;
+import org.int4.dirk.util.Annotations;
 import org.int4.dirk.util.Classes;
 
 import jakarta.annotation.PostConstruct;
@@ -43,6 +44,8 @@ import jakarta.inject.Singleton;
  */
 public class Injectors {
   private static final Logger LOGGER = Logger.getLogger(Injectors.class.getName());
+  private static final Singleton SINGLETON = Annotations.of(Singleton.class);
+  private static final Dependent DEPENDENT = Annotations.of(Dependent.class);
   private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
   private static final Method PROVIDER_METHOD;
 
@@ -80,8 +83,8 @@ public class Injectors {
   private static Injector createInjector(boolean autoDiscovering, ScopeResolver... scopeResolvers) {
     LifeCycleCallbacksFactory lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
 
-    List<ScopeResolver> finalScopeResolvers = Arrays.stream(scopeResolvers).anyMatch(sr -> sr.getAnnotationClass() == Singleton.class) ? Arrays.asList(scopeResolvers)
-      : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(Singleton.class))).collect(Collectors.toList());
+    List<ScopeResolver> finalScopeResolvers = Arrays.stream(scopeResolvers).anyMatch(sr -> sr.getAnnotation().equals(SINGLETON)) ? Arrays.asList(scopeResolvers)
+      : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(SINGLETON))).collect(Collectors.toList());
 
     return new StandardInjector(
       createInjectionTargetExtensions(),
@@ -89,7 +92,7 @@ public class Injectors {
       finalScopeResolvers,
       new DefaultInjectorStrategy(
         ANNOTATION_STRATEGY,
-        new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class),
+        new SimpleScopeStrategy(Scope.class, SINGLETON, DEPENDENT),
         new NoProxyStrategy(),
         lifeCycleCallbacksFactory
       ),

@@ -85,8 +85,10 @@ public class Injectors {
   private static final Default DEFAULT = Annotations.of(Default.class);
   private static final Any ANY = Annotations.of(Any.class);
   private static final Scope SCOPE = Annotations.of(Scope.class);
+  private static final Singleton SINGLETON = Annotations.of(Singleton.class);
+  private static final Dependent DEPENDENT = Annotations.of(Dependent.class);
   private static final AnnotationStrategy ANNOTATION_STRATEGY = new CdiAnnotationStrategy(Inject.class, Qualifier.class, null);
-  private static final ScopeStrategy SCOPE_STRATEGY = new CdiScopeStrategy(Scope.class, NormalScope.class, Singleton.class, Dependent.class);
+  private static final ScopeStrategy SCOPE_STRATEGY = new CdiScopeStrategy(Scope.class, NormalScope.class, SINGLETON, DEPENDENT);
   private static final Method PROVIDER_METHOD;
 
   static {
@@ -123,8 +125,8 @@ public class Injectors {
   private static Injector createInjector(boolean autoDiscovering, ScopeResolver... scopeResolvers) {
     LifeCycleCallbacksFactory lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
 
-    List<ScopeResolver> finalScopeResolvers = Arrays.stream(scopeResolvers).anyMatch(sr -> sr.getAnnotationClass() == Singleton.class) ? Arrays.asList(scopeResolvers)
-      : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(Singleton.class))).collect(Collectors.toList());
+    List<ScopeResolver> finalScopeResolvers = Arrays.stream(scopeResolvers).anyMatch(sr -> sr.getAnnotation().equals(SINGLETON)) ? Arrays.asList(scopeResolvers)
+      : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(SINGLETON))).collect(Collectors.toList());
 
     ProxyStrategy proxyStrategy = new NoProxyStrategy();
 
@@ -192,33 +194,33 @@ public class Injectors {
   static class CdiScopeStrategy implements ScopeStrategy {
     private final Class<? extends Annotation> scopeAnnotationClass;
     private final Class<? extends Annotation> normalScopeAnnotationClass;
-    private final Class<? extends Annotation> singletonAnnotationClass;
-    private final Class<? extends Annotation> dependentAnnotationClass;
+    private final Annotation singletonAnnotation;
+    private final Annotation dependentAnnotation;
 
-    CdiScopeStrategy(Class<? extends Annotation> scopeAnnotationClass, Class<? extends Annotation> normalScopeAnnotationClass, Class<? extends Annotation> singletonAnnotationClass, Class<? extends Annotation> dependentAnnotationClass) {
+    CdiScopeStrategy(Class<? extends Annotation> scopeAnnotationClass, Class<? extends Annotation> normalScopeAnnotationClass, Annotation singletonAnnotation, Annotation dependentAnnotation) {
       this.scopeAnnotationClass = Objects.requireNonNull(scopeAnnotationClass, "scopeAnnotationClass");
       this.normalScopeAnnotationClass = Objects.requireNonNull(normalScopeAnnotationClass, "normalScopeAnnotationClass");
-      this.singletonAnnotationClass = Objects.requireNonNull(singletonAnnotationClass, "singletonAnnotationClass");
-      this.dependentAnnotationClass = Objects.requireNonNull(dependentAnnotationClass, "dependentAnnotationClass");
+      this.singletonAnnotation = Objects.requireNonNull(singletonAnnotation, "singletonAnnotation");
+      this.dependentAnnotation = Objects.requireNonNull(dependentAnnotation, "dependentAnnotation");
     }
 
     @Override
     public boolean isPseudoScope(ScopeResolver scopeResolver) {
-      return Annotations.isMetaAnnotated(scopeResolver.getAnnotationClass(), SCOPE);
+      return Annotations.isMetaAnnotated(scopeResolver.getAnnotation().annotationType(), SCOPE);
     }
 
     @Override
-    public Class<? extends Annotation> getDependentAnnotationClass() {
-      return dependentAnnotationClass;
+    public Annotation getDependentAnnotation() {
+      return dependentAnnotation;
     }
 
     @Override
-    public Class<? extends Annotation> getSingletonAnnotationClass() {
-      return singletonAnnotationClass;
+    public Annotation getSingletonAnnotation() {
+      return singletonAnnotation;
     }
 
     @Override
-    public Class<? extends Annotation> getScope(AnnotatedElement element) throws DefinitionException {
+    public Annotation getScope(AnnotatedElement element) throws DefinitionException {
       Set<Annotation> scopes = Annotations.findDirectlyMetaAnnotatedAnnotations(element, scopeAnnotationClass);
 
       scopes.addAll(Annotations.findDirectlyMetaAnnotatedAnnotations(element, normalScopeAnnotationClass));
@@ -231,7 +233,7 @@ public class Injectors {
         return null;
       }
 
-      return scopes.iterator().next().annotationType();
+      return scopes.iterator().next();
     }
   }
 }

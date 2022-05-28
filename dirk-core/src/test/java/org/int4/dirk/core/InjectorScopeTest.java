@@ -10,6 +10,7 @@ import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 import org.int4.dirk.core.test.scope.TestScope;
 import org.int4.dirk.spi.scope.AbstractScopeResolver;
+import org.int4.dirk.util.Annotations;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,7 @@ public class InjectorScopeTest {
 
       assertThatThrownBy(() -> injector.getInstance(TestScopedBean.class))
         .isExactlyInstanceOf(ScopeNotActiveException.class)
-        .hasMessage("Scope not active: interface org.int4.dirk.core.test.scope.TestScope for: Class [org.int4.dirk.core.InjectorScopeTest$TestScopedBean]")
+        .hasMessage("Scope not active: @org.int4.dirk.core.test.scope.TestScope() for: Class [org.int4.dirk.core.InjectorScopeTest$TestScopedBean]")
         .hasNoCause();
     }
 
@@ -298,8 +299,8 @@ public class InjectorScopeTest {
     public String currentScope = "default";
 
     @Override
-    public Class<? extends Annotation> getAnnotationClass() {
-      return TestScope.class;
+    public Annotation getAnnotation() {
+      return Annotations.of(TestScope.class);
     }
 
     @Override

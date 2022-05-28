@@ -15,25 +15,25 @@ public interface ScopeStrategy {
    * Returns the annotation for the dependent pseudo-scope. Objects without
    * a scope annotation will get this scope as their scope.
    *
-   * @return an annotation class, can be {@code null}
+   * @return an annotation, can be {@code null}
    */
-  Class<? extends Annotation> getDependentAnnotationClass();
+  Annotation getDependentAnnotation();
 
   /**
    * Returns the annotation that marks the singleton pseudo-scope.
    *
-   * @return an annotation class, never {@code null}
+   * @return an annotation, never {@code null}
    */
-  Class<? extends Annotation> getSingletonAnnotationClass();
+  Annotation getSingletonAnnotation();
 
   /**
    * Returns the scope annotation on the given {@link AnnotatedElement}, if any.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
-   * @return an annotation {@link Class}, or {@code null} if the element was not annotated with a scope annotation
+   * @return an annotation, or {@code null} if the element was not annotated with a scope annotation
    * @throws DefinitionException when the strategy detects an annotation problem
    */
-  Class<? extends Annotation> getScope(AnnotatedElement element) throws DefinitionException;
+  Annotation getScope(AnnotatedElement element) throws DefinitionException;
 
   /**
    * Returns whether the given {@link ScopeResolver} is handling a pseudo-scope.

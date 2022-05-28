@@ -17,39 +17,39 @@ import org.int4.dirk.util.Annotations;
  */
 public class SimpleScopeStrategy implements ScopeStrategy {
   private final Class<? extends Annotation> scopeAnnotationClass;
-  private final Class<? extends Annotation> singletonAnnotationClass;
-  private final Class<? extends Annotation> dependentAnnotationClass;
+  private final Annotation singletonAnnotation;
+  private final Annotation dependentAnnotation;
 
   /**
    * Constructs a new instance.
    *
    * @param scopeAnnotationClass an annotation {@link Class} to use for identifying scope annotations, cannot be {@code null}
-   * @param singletonAnnotationClass an annotation {@link Class} which indicates singletons, cannot be {@code null}
-   * @param dependentAnnotationClass an annotation {@link Class} which indicates dependent scoped objects, cannot be {@code null}
+   * @param singletonAnnotation an annotation which indicates singletons, cannot be {@code null}
+   * @param dependentAnnotation an annotation which indicates dependent scoped objects, cannot be {@code null}
    */
-  public SimpleScopeStrategy(Class<? extends Annotation> scopeAnnotationClass, Class<? extends Annotation> singletonAnnotationClass, Class<? extends Annotation> dependentAnnotationClass) {
+  public SimpleScopeStrategy(Class<? extends Annotation> scopeAnnotationClass, Annotation singletonAnnotation, Annotation dependentAnnotation) {
     this.scopeAnnotationClass = Objects.requireNonNull(scopeAnnotationClass, "scopeAnnotationClass");
-    this.singletonAnnotationClass = Objects.requireNonNull(singletonAnnotationClass, "singletonAnnotationClass");
-    this.dependentAnnotationClass = Objects.requireNonNull(dependentAnnotationClass, "dependentAnnotationClass");
+    this.singletonAnnotation = Objects.requireNonNull(singletonAnnotation, "singletonAnnotation");
+    this.dependentAnnotation = Objects.requireNonNull(dependentAnnotation, "dependentAnnotation");
   }
 
   @Override
   public boolean isPseudoScope(ScopeResolver scopeResolver) {
-    return scopeResolver.getAnnotationClass() == singletonAnnotationClass || scopeResolver.getAnnotationClass() == dependentAnnotationClass;
+    return scopeResolver.getAnnotation().equals(singletonAnnotation) || scopeResolver.getAnnotation().equals(dependentAnnotation);
   }
 
   @Override
-  public Class<? extends Annotation> getDependentAnnotationClass() {
-    return dependentAnnotationClass;
+  public Annotation getDependentAnnotation() {
+    return dependentAnnotation;
   }
 
   @Override
-  public Class<? extends Annotation> getSingletonAnnotationClass() {
-    return singletonAnnotationClass;
+  public Annotation getSingletonAnnotation() {
+    return singletonAnnotation;
   }
 
   @Override
-  public Class<? extends Annotation> getScope(AnnotatedElement element) throws DefinitionException {
+  public Annotation getScope(AnnotatedElement element) throws DefinitionException {
     Set<Annotation> scopes = Annotations.findDirectlyMetaAnnotatedAnnotations(element, scopeAnnotationClass);
 
     if(scopes.size() > 1) {
@@ -60,6 +60,6 @@ public class SimpleScopeStrategy implements ScopeStrategy {
       return null;
     }
 
-    return scopes.iterator().next().annotationType();
+    return scopes.iterator().next();
   }
 }

@@ -17,6 +17,7 @@ import org.int4.dirk.library.DefaultInjectorStrategy;
 import org.int4.dirk.library.SimpleScopeStrategy;
 import org.int4.dirk.spi.scope.AbstractScopeResolver;
 import org.int4.dirk.spi.scope.ScopeResolver;
+import org.int4.dirk.util.Annotations;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,8 +34,8 @@ public class ProxiedScopeTest {
   private String currentScope;
   private ScopeResolver scopeResolver = new AbstractScopeResolver<>() {
     @Override
-    public Class<? extends Annotation> getAnnotationClass() {
-      return TestScope.class;
+    public Annotation getAnnotation() {
+      return Annotations.of(TestScope.class);
     }
 
     @Override
@@ -46,7 +47,7 @@ public class ProxiedScopeTest {
   private Injector injector = InjectorBuilder.builder()
     .injectorStrategy(new DefaultInjectorStrategy(
       InjectableFactories.ANNOTATION_STRATEGY,
-      new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class),
+      new SimpleScopeStrategy(Scope.class, Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
       new ByteBuddyProxyStrategy(),
       new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class)
     ))
@@ -158,7 +159,7 @@ public class ProxiedScopeTest {
   void shouldRejectProxyingFinalClass() {
     assertThatThrownBy(() -> injector.register(G.class))
       .isExactlyInstanceOf(ScopeConflictException.class)
-      .hasMessage("Type [class org.int4.dirk.core.ProxiedScopeTest$G] with scope [interface org.int4.dirk.core.test.scope.Dependent] is dependent on [class org.int4.dirk.core.ProxiedScopeTest$H] with normal scope [interface org.int4.dirk.core.test.scope.TestScope]; this requires the use of a provider or proxy")
+      .hasMessage("Type [class org.int4.dirk.core.ProxiedScopeTest$G] with scope [@org.int4.dirk.core.test.scope.Dependent()] is dependent on [class org.int4.dirk.core.ProxiedScopeTest$H] with normal scope [@org.int4.dirk.core.test.scope.TestScope()]; this requires the use of a provider or proxy")
       .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
       .isExactlyInstanceOf(IllegalArgumentException.class)
       .hasMessage("Could not create type")

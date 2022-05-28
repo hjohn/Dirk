@@ -41,8 +41,8 @@ import jakarta.inject.Singleton;
 public class DefaultInstanceResolverTest {
   private final AbstractScopeResolver<String> scopeResolver = new AbstractScopeResolver<>() {
     @Override
-    public Class<? extends Annotation> getAnnotationClass() {
-      return TestScoped.class;
+    public Annotation getAnnotation() {
+      return Annotations.of(TestScoped.class);
     }
 
     @Override
@@ -127,7 +127,7 @@ public class DefaultInstanceResolverTest {
     void shouldThrowScopeNotActiveExceptionWhenScopeNotActive() {
       assertThatThrownBy(() -> instanceResolver.getInstance(D.class))
         .isExactlyInstanceOf(ScopeNotActiveException.class)
-        .hasMessage("Scope not active: interface org.int4.dirk.core.DefaultInstanceResolverTest$TestScoped for: Class [org.int4.dirk.core.DefaultInstanceResolverTest$D]")
+        .hasMessage("Scope not active: @org.int4.dirk.core.DefaultInstanceResolverTest$TestScoped() for: Class [org.int4.dirk.core.DefaultInstanceResolverTest$D]")
         .hasNoCause();
     }
 

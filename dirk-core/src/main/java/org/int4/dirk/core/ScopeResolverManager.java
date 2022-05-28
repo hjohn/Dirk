@@ -18,28 +18,28 @@ class ScopeResolverManager {
   /**
    * Map containing {@link ScopeResolver}s.
    */
-  private final Map<Class<? extends Annotation>, ScopeResolver> scopeResolversByAnnotation = new HashMap<>();
+  private final Map<Annotation, ScopeResolver> scopeResolversByAnnotation = new HashMap<>();
 
   /**
    * Constructs a new instance.
    *
    * @param scopeResolvers a list of {@link ScopeResolver}, cannot be {@code null} but can be empty
-   * @param dependentAnnotationClass a dependent scope annotation {@link Class}, cannot be {@code null}
+   * @param dependentAnnotation a dependent scope annotation, cannot be {@code null}
    */
-  public ScopeResolverManager(List<ScopeResolver> scopeResolvers, Class<? extends Annotation> dependentAnnotationClass) {
+  public ScopeResolverManager(List<ScopeResolver> scopeResolvers, Annotation dependentAnnotation) {
     for(ScopeResolver scopeResolver : scopeResolvers) {
-      if(scopeResolver.getAnnotationClass() == null) {
-        throw new IllegalArgumentException("scopeResolvers cannot have a null annotation class: " + scopeResolver);
+      if(scopeResolver.getAnnotation() == null) {
+        throw new IllegalArgumentException("scopeResolvers cannot have a null annotation: " + scopeResolver);
       }
 
-      ScopeResolver resolver = scopeResolversByAnnotation.put(scopeResolver.getAnnotationClass(), scopeResolver);
+      ScopeResolver resolver = scopeResolversByAnnotation.put(scopeResolver.getAnnotation(), scopeResolver);
 
       if(resolver != null) {
-        throw new IllegalArgumentException("scopeResolvers should not contain multiple resolvers with the same annotation class: " + resolver.getAnnotationClass());
+        throw new IllegalArgumentException("scopeResolvers should not contain multiple resolvers with the same annotation: " + resolver.getAnnotation());
       }
     }
 
-    scopeResolversByAnnotation.put(Objects.requireNonNull(dependentAnnotationClass, "dependentAnnotationClass"), new DependentScopeResolver(dependentAnnotationClass));
+    scopeResolversByAnnotation.put(Objects.requireNonNull(dependentAnnotation, "dependentAnnotationClass"), new DependentScopeResolver(dependentAnnotation));
   }
 
   /**
@@ -49,7 +49,7 @@ class ScopeResolverManager {
    * @param scope a scope {@link Annotation}, can be {@code null}
    * @return a {@link ScopeResolver}, never {@code null}
    */
-  public ScopeResolver getScopeResolver(Class<? extends Annotation> scope) {
+  public ScopeResolver getScopeResolver(Annotation scope) {
     ScopeResolver scopeResolver = scopeResolversByAnnotation.get(scope);
 
     if(scopeResolver == null) {
@@ -60,15 +60,15 @@ class ScopeResolverManager {
   }
 
   private static class DependentScopeResolver implements ScopeResolver {
-    private final Class<? extends Annotation> dependentAnnotationClass;
+    private final Annotation dependentAnnotation;
 
-    DependentScopeResolver(Class<? extends Annotation> dependentAnnotationClass) {
-      this.dependentAnnotationClass = dependentAnnotationClass;
+    DependentScopeResolver(Annotation dependentAnnotation) {
+      this.dependentAnnotation = dependentAnnotation;
     }
 
     @Override
-    public Class<? extends Annotation> getAnnotationClass() {
-      return dependentAnnotationClass;
+    public Annotation getAnnotation() {
+      return dependentAnnotation;
     }
 
     @Override

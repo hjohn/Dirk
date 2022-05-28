@@ -15,7 +15,7 @@ public interface ScopeResolver {
    *
    * @return the annotation this resolver handles, never {@code null}
    */
-  Class<? extends Annotation> getAnnotationClass();
+  Annotation getAnnotation();
 
   /**
    * Returns {@code true} when this scope is currently active, otherwise {@code false}.

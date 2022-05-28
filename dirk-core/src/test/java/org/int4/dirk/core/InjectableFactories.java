@@ -24,6 +24,7 @@ import org.int4.dirk.spi.config.ProxyStrategy;
 import org.int4.dirk.spi.config.ScopeStrategy;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.scope.ScopeResolver;
+import org.int4.dirk.util.Annotations;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -34,7 +35,7 @@ import jakarta.inject.Singleton;
 
 public class InjectableFactories {
   public static final ProxyStrategy PROXY_STRATEGY = new NoProxyStrategy();
-  public static final ScopeStrategy SCOPE_STRATEGY = new SimpleScopeStrategy(Scope.class, Singleton.class, Dependent.class);
+  public static final ScopeStrategy SCOPE_STRATEGY = new SimpleScopeStrategy(Scope.class, Annotations.of(Singleton.class), Annotations.of(Dependent.class));
   public static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
 
   private final ScopeResolverManager scopeResolverManager;
@@ -51,7 +52,7 @@ public class InjectableFactories {
   }
 
   public InjectableFactories() {
-    this(new ScopeResolverManager(List.of(new SingletonScopeResolver(Singleton.class)), Dependent.class));
+    this(new ScopeResolverManager(List.of(new SingletonScopeResolver(Annotations.of(Singleton.class))), Annotations.of(Dependent.class)));
   }
 
   public InjectionTargetExtensionStore getInjectionTargetExtensionStore() {
@@ -62,7 +63,7 @@ public class InjectableFactories {
     return scopeResolverManager;
   }
 
-  public ScopeResolver getScopeResolver(Class<? extends Annotation> annotation) {
+  public ScopeResolver getScopeResolver(Annotation annotation) {
     return scopeResolverManager.getScopeResolver(annotation);
   }
 
@@ -79,6 +80,6 @@ public class InjectableFactories {
   }
 
   public InstanceInjectableFactory forInstance() {
-    return new InstanceInjectableFactory(factory, Singleton.class);
+    return new InstanceInjectableFactory(factory, Annotations.of(Singleton.class));
   }
 }
