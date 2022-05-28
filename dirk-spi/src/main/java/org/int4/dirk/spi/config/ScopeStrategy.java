@@ -12,10 +12,17 @@ import org.int4.dirk.spi.scope.ScopeResolver;
 public interface ScopeStrategy {
 
   /**
-   * Returns the annotation for the dependent pseudo-scope. Objects without
+   * Returns the annotation that marks the default scope. Objects without
    * a scope annotation will get this scope as their scope.
    *
-   * @return an annotation, can be {@code null}
+   * @return an annotation, never {@code null}
+   */
+  Annotation getDefaultAnnotation();
+
+  /**
+   * Returns the annotation that marks the dependent pseudo-scope.
+   *
+   * @return an annotation, never {@code null}
    */
   Annotation getDependentAnnotation();
 
@@ -27,7 +34,9 @@ public interface ScopeStrategy {
   Annotation getSingletonAnnotation();
 
   /**
-   * Returns the scope annotation on the given {@link AnnotatedElement}, if any.
+   * Returns the scope annotation on the given {@link AnnotatedElement}, if any. It
+   * is recommended to return {@code null} instead of a default scope annotation if
+   * no scope is found on the given element.
    *
    * @param element an {@link AnnotatedElement}, cannot be {@code null}
    * @return an annotation, or {@code null} if the element was not annotated with a scope annotation

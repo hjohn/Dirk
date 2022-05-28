@@ -92,7 +92,7 @@ public class Injectors {
       finalScopeResolvers,
       new DefaultInjectorStrategy(
         ANNOTATION_STRATEGY,
-        new SimpleScopeStrategy(Scope.class, SINGLETON, DEPENDENT),
+        new SimpleScopeStrategy(Scope.class, DEPENDENT, SINGLETON, DEPENDENT),
         new NoProxyStrategy(),
         lifeCycleCallbacksFactory
       ),

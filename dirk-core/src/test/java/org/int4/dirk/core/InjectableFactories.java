@@ -35,7 +35,7 @@ import jakarta.inject.Singleton;
 
 public class InjectableFactories {
   public static final ProxyStrategy PROXY_STRATEGY = new NoProxyStrategy();
-  public static final ScopeStrategy SCOPE_STRATEGY = new SimpleScopeStrategy(Scope.class, Annotations.of(Singleton.class), Annotations.of(Dependent.class));
+  public static final ScopeStrategy SCOPE_STRATEGY = new SimpleScopeStrategy(Scope.class, Annotations.of(Dependent.class), Annotations.of(Singleton.class), Annotations.of(Dependent.class));
   public static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
 
   private final ScopeResolverManager scopeResolverManager;

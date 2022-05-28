@@ -17,6 +17,7 @@ import org.int4.dirk.util.Annotations;
  */
 public class SimpleScopeStrategy implements ScopeStrategy {
   private final Class<? extends Annotation> scopeAnnotationClass;
+  private final Annotation defaultAnnotation;
   private final Annotation singletonAnnotation;
   private final Annotation dependentAnnotation;
 
@@ -24,11 +25,13 @@ public class SimpleScopeStrategy implements ScopeStrategy {
    * Constructs a new instance.
    *
    * @param scopeAnnotationClass an annotation {@link Class} to use for identifying scope annotations, cannot be {@code null}
+   * @param defaultAnnotation an annotation which indicates the default scope, cannot be {@code null}
    * @param singletonAnnotation an annotation which indicates singletons, cannot be {@code null}
    * @param dependentAnnotation an annotation which indicates dependent scoped objects, cannot be {@code null}
    */
-  public SimpleScopeStrategy(Class<? extends Annotation> scopeAnnotationClass, Annotation singletonAnnotation, Annotation dependentAnnotation) {
+  public SimpleScopeStrategy(Class<? extends Annotation> scopeAnnotationClass, Annotation defaultAnnotation, Annotation singletonAnnotation, Annotation dependentAnnotation) {
     this.scopeAnnotationClass = Objects.requireNonNull(scopeAnnotationClass, "scopeAnnotationClass");
+    this.defaultAnnotation = Objects.requireNonNull(defaultAnnotation, "defaultAnnotation");
     this.singletonAnnotation = Objects.requireNonNull(singletonAnnotation, "singletonAnnotation");
     this.dependentAnnotation = Objects.requireNonNull(dependentAnnotation, "dependentAnnotation");
   }
@@ -36,6 +39,11 @@ public class SimpleScopeStrategy implements ScopeStrategy {
   @Override
   public boolean isPseudoScope(ScopeResolver scopeResolver) {
     return scopeResolver.getAnnotation().equals(singletonAnnotation) || scopeResolver.getAnnotation().equals(dependentAnnotation);
+  }
+
+  @Override
+  public Annotation getDefaultAnnotation() {
+    return defaultAnnotation;
   }
 
   @Override

@@ -88,7 +88,7 @@ class DefaultInjectableFactory implements InjectableFactory {
       }
 
       Annotation scope = scopeStrategy.getScope(element);
-      ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(scope == null ? scopeStrategy.getDependentAnnotation() : scope);
+      ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(scope == null ? scopeStrategy.getDefaultAnnotation() : scope);
       boolean isPseudoScope = scopeStrategy.isPseudoScope(scopeResolver);
 
       ExtendedScopeResolver extendedScopeResolver = new ExtendedScopeResolver(scopeResolver, isPseudoScope, scopeResolver.getAnnotation().equals(scopeStrategy.getDependentAnnotation()));

@@ -64,7 +64,7 @@ public class InjectorBuilder {
     public Builder1 defaultInjectorStrategy() {
       return new Builder1(new DefaultInjectorStrategy(
         new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class),
-        new SimpleScopeStrategy(Scope.class, Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
+        new SimpleScopeStrategy(Scope.class, Annotations.of(Dependent.class), Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
         new NoProxyStrategy(),
         new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class)
       ));

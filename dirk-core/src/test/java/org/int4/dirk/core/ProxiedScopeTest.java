@@ -47,7 +47,7 @@ public class ProxiedScopeTest {
   private Injector injector = InjectorBuilder.builder()
     .injectorStrategy(new DefaultInjectorStrategy(
       InjectableFactories.ANNOTATION_STRATEGY,
-      new SimpleScopeStrategy(Scope.class, Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
+      new SimpleScopeStrategy(Scope.class, Annotations.of(Dependent.class), Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
       new ByteBuddyProxyStrategy(),
       new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class)
     ))
