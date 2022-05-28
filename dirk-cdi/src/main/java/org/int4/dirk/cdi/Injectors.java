@@ -210,6 +210,11 @@ public class Injectors {
     }
 
     @Override
+    public Annotation getDefaultAnnotation() {
+      return dependentAnnotation;
+    }
+
+    @Override
     public Annotation getDependentAnnotation() {
       return dependentAnnotation;
     }
