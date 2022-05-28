@@ -228,14 +228,14 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     ExtendedScopeResolver dependentScopeResolver = dependentInjectable.getScopeResolver();
     ExtendedScopeResolver injectableScopeResolver = injectable.getScopeResolver();
 
-    boolean needsProxy = !dependentScopeResolver.isPseudoScope() && dependentScopeResolver.getAnnotationClass() != injectableScopeResolver.getAnnotationClass();
+    boolean needsProxy = !dependentScopeResolver.isPseudoScope() && !dependentScopeResolver.getAnnotation().equals(injectableScopeResolver.getAnnotation());
 
     if(needsProxy) {
       try {
         proxyStrategy.createProxy(Types.raw(dependentInjectable.getType()));
       }
       catch(Exception e) {
-        throw new ScopeConflictException("Type [" + injectable.getType() + "] with scope [" + injectableScopeResolver.getAnnotationClass() + "] is dependent on [" + dependentInjectable.getType() + "] with normal scope [" + dependentScopeResolver.getAnnotationClass() + "]; this requires the use of a provider or proxy", e);
+        throw new ScopeConflictException("Type [" + injectable.getType() + "] with scope [" + injectableScopeResolver.getAnnotation() + "] is dependent on [" + dependentInjectable.getType() + "] with normal scope [" + dependentScopeResolver.getAnnotation() + "]; this requires the use of a provider or proxy", e);
       }
     }
   }

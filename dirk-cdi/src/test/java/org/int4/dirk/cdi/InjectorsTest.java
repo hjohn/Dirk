@@ -198,8 +198,8 @@ public class InjectorsTest {
 
     private final Injector injector = Injectors.manual(new AbstractScopeResolver<String>() {
       @Override
-      public Class<? extends Annotation> getAnnotationClass() {
-        return RequestScoped.class;
+      public Annotation getAnnotation() {
+        return Annotations.of(RequestScoped.class);
       }
 
       @Override

@@ -87,11 +87,11 @@ class DefaultInjectableFactory implements InjectableFactory {
         throw new DefinitionException(element, "cannot be registered as it conflicts with an InjectionTargetExtension for type: " + Types.raw(type));
       }
 
-      Class<? extends Annotation> scope = scopeStrategy.getScope(element);
-      ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(scope == null ? scopeStrategy.getDependentAnnotationClass() : scope);
+      Annotation scope = scopeStrategy.getScope(element);
+      ScopeResolver scopeResolver = scopeResolverManager.getScopeResolver(scope == null ? scopeStrategy.getDependentAnnotation() : scope);
       boolean isPseudoScope = scopeStrategy.isPseudoScope(scopeResolver);
 
-      ExtendedScopeResolver extendedScopeResolver = new ExtendedScopeResolver(scopeResolver, isPseudoScope, scopeResolver.getAnnotationClass() == scopeStrategy.getDependentAnnotationClass());
+      ExtendedScopeResolver extendedScopeResolver = new ExtendedScopeResolver(scopeResolver, isPseudoScope, scopeResolver.getAnnotation().equals(scopeStrategy.getDependentAnnotation()));
 
       return new DefaultInjectable<>(
         ownerType,

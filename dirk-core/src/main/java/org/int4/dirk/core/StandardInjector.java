@@ -54,7 +54,7 @@ public class StandardInjector implements Injector {
     Objects.requireNonNull(strategy, "strategy cannot be null");
 
     InjectableFactory injectableFactory = new DefaultInjectableFactory(
-      new ScopeResolverManager(scopeResolvers, strategy.getScopeStrategy().getDependentAnnotationClass()),
+      new ScopeResolverManager(scopeResolvers, strategy.getScopeStrategy().getDependentAnnotation()),
       strategy.getAnnotationStrategy(),
       strategy.getScopeStrategy(),
       injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet())
@@ -72,7 +72,7 @@ public class StandardInjector implements Injector {
 
     InjectableStore store = new InjectableStore(strategy.getProxyStrategy());
     InstantiationContextFactory instantiationContextFactory = new InstantiationContextFactory(store, strategy.getAnnotationStrategy(), strategy.getProxyStrategy(), injectionTargetExtensionStore);
-    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, strategy.getScopeStrategy().getSingletonAnnotationClass());
+    InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, strategy.getScopeStrategy().getSingletonAnnotation());
 
     this.registry = new InjectableStoreCandidateRegistry(store, discovererFactory, instanceInjectableFactory);
     this.instanceResolver = new DefaultInstanceResolver(instantiationContextFactory);

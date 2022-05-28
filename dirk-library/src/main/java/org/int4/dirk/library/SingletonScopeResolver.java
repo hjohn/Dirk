@@ -9,19 +9,19 @@ import org.int4.dirk.spi.scope.AbstractScopeResolver;
  * Scope resolver for singleton scope.
  */
 public class SingletonScopeResolver extends AbstractScopeResolver<String> {
-  private final Class<? extends Annotation> singletonAnnotation;
+  private final Annotation singletonAnnotation;
 
   /**
    * Constructs a new instance.
    *
-   * @param singleton a singleton annotation {@link Class} to use, cannot be {@code null}
+   * @param singleton a singleton annotation to use, cannot be {@code null}
    */
-  public SingletonScopeResolver(Class<? extends Annotation> singleton) {
-    this.singletonAnnotation = Objects.requireNonNull(singleton, "singleton cannot be null");
+  public SingletonScopeResolver(Annotation singleton) {
+    this.singletonAnnotation = Objects.requireNonNull(singleton, "singleton");
   }
 
   @Override
-  public Class<? extends Annotation> getAnnotationClass() {
+  public Annotation getAnnotation() {
     return singletonAnnotation;
   }
 

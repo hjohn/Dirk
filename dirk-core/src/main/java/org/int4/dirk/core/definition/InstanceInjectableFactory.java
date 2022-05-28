@@ -9,7 +9,6 @@ import java.util.Objects;
 import org.int4.dirk.api.definition.DefinitionException;
 import org.int4.dirk.core.definition.injection.Constructable;
 import org.int4.dirk.core.definition.injection.Injection;
-import org.int4.dirk.util.Annotations;
 
 /**
  * Constructs {@link Injectable}s for a given object instance.
@@ -22,11 +21,11 @@ public class InstanceInjectableFactory {
    * Constructs a new instance.
    *
    * @param factory a {@link InjectableFactory}, cannot be {@code null}
-   * @param singleton a singleton annotation {@link Class} to use, cannot be {@code null}
+   * @param singleton a singleton annotation to use, cannot be {@code null}
    */
-  public InstanceInjectableFactory(InjectableFactory factory, Class<? extends Annotation> singleton) {
-    this.factory = Objects.requireNonNull(factory, "factory cannot be null");
-    this.singleton = Annotations.of(Objects.requireNonNull(singleton, "singleton cannot be null"));
+  public InstanceInjectableFactory(InjectableFactory factory, Annotation singleton) {
+    this.factory = Objects.requireNonNull(factory, "factory");
+    this.singleton = Objects.requireNonNull(singleton, "singleton");
   }
 
   /**

@@ -24,7 +24,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
-      throw new ScopeNotActiveException("Scope not active: " + getAnnotationClass() + " for: " + key);
+      throw new ScopeNotActiveException("Scope not active: " + getAnnotation() + " for: " + key);
     }
 
     Map<Object, Reference<?>> instances = instancesByScope.computeIfAbsent(currentScope, k -> new HashMap<>());

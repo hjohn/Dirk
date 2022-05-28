@@ -10,6 +10,7 @@ import org.int4.dirk.core.test.qualifiers.Red;
 import org.int4.dirk.core.test.scope.Dependent;
 import org.int4.dirk.core.test.scope.TestScope;
 import org.int4.dirk.core.util.Nullable;
+import org.int4.dirk.util.Annotations;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,14 +31,14 @@ public class ClassInjectableFactoryTest {
 
     assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
-    assertEquals(Singleton.class, injectable.getScopeResolver().getAnnotationClass());
+    assertEquals(Annotations.of(Singleton.class), injectable.getScopeResolver().getAnnotation());
     assertThat(injectable.getBindings()).hasSize(0);
 
     Injectable<ClassWithDependencies> injectable2 = factory.create(ClassWithDependencies.class);
 
     assertEquals(ClassWithDependencies.class, injectable2.getType());
     assertEquals(Collections.singleton(ClassWithDependencies.class.getAnnotation(Red.class)), injectable2.getQualifiers());
-    assertEquals(Dependent.class, injectable2.getScopeResolver().getAnnotationClass());
+    assertEquals(Annotations.of(Dependent.class), injectable2.getScopeResolver().getAnnotation());
     assertThat(injectable2.getBindings()).hasSize(4);
 
     ClassWithDependencies instance = injectable2.create(Bindings.resolve(injectable2.getBindings(), 2, 4L, null, "a string"));

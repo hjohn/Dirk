@@ -48,8 +48,8 @@ public class ExtendedScopeResolver implements ScopeResolver {
   }
 
   @Override
-  public Class<? extends Annotation> getAnnotationClass() {
-    return delegate.getAnnotationClass();
+  public Annotation getAnnotation() {
+    return delegate.getAnnotation();
   }
 
   @Override

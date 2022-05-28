@@ -206,7 +206,7 @@ class InstantiationContextFactory {
          * Scope was checked to be active (to avoid exception cost), but it still occurred...
          */
 
-        LOGGER.warning("Scope " + injectable.getScopeResolver().getAnnotationClass() + " should have been active: " + e.getMessage());
+        LOGGER.warning("Scope " + injectable.getScopeResolver().getAnnotation() + " should have been active: " + e.getMessage());
 
         return null;  // same as if scope hadn't been active in the first place
       }
@@ -220,8 +220,8 @@ class InstantiationContextFactory {
       stack.addLast(creationalContext);
 
       try {
-        Class<? extends Annotation> parentScopeAnnotation = parentCreationalContext == null ? null : parentCreationalContext.injectable.getScopeResolver().getAnnotationClass();
-        boolean needsProxy = !scopeResolver.isPseudoScope() && parentScopeAnnotation != null && scopeResolver.getAnnotationClass() != parentScopeAnnotation;
+        Annotation parentScopeAnnotation = parentCreationalContext == null ? null : parentCreationalContext.injectable.getScopeResolver().getAnnotation();
+        boolean needsProxy = !scopeResolver.isPseudoScope() && parentScopeAnnotation != null && !scopeResolver.getAnnotation().equals(parentScopeAnnotation);
 
         T instance = needsProxy
           ? proxyStrategy.<T>createProxy(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, creationalContext))

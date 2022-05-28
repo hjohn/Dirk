@@ -3,6 +3,7 @@ package org.int4.dirk.core.definition;
 import java.util.List;
 
 import org.int4.dirk.core.InjectableFactories;
+import org.int4.dirk.util.Annotations;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,7 +29,7 @@ public class InstanceInjectableFactoryTest {
 
     assertThat(injectable.getType()).isEqualTo(String.class);
     assertThat(injectable.getBindings()).isEmpty();
-    assertThat(injectable.getScopeResolver().getAnnotationClass()).isEqualTo(Singleton.class);
+    assertThat(injectable.getScopeResolver().getAnnotation()).isEqualTo(Annotations.of(Singleton.class));
     assertThat(injectable.create(List.of())).isEqualTo("Hello World");
   }
 }
