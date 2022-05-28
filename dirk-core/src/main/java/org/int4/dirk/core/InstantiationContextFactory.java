@@ -224,7 +224,7 @@ class InstantiationContextFactory {
         boolean needsProxy = !scopeResolver.isPseudoScope() && parentScopeAnnotation != null && !scopeResolver.getAnnotation().equals(parentScopeAnnotation);
 
         T instance = needsProxy
-          ? proxyStrategy.<T>createProxy(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, creationalContext))
+          ? proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, creationalContext))
           : scopeResolver.get(injectable, creationalContext);
 
         creationalContext.add(injectable, instance);

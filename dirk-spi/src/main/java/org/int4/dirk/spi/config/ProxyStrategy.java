@@ -8,16 +8,16 @@ import java.util.function.Function;
 public interface ProxyStrategy {
 
   /**
-   * Creates a proxy template for the given {@link Class} and returns a function
+   * Creates a proxy factory for the given {@link Class} and returns a function
    * which can be used to create a new proxy.
    *
    * @param <T> the class type to proxy
    * @param cls a {@link Class} to proxy, cannot be {@code null}
    * @return a function which can be used to create a new proxy, never {@code null}
-   * @throws Exception when unable to create a proxy, including when the functionality
-   *   is disabled, the given class is unsuitable or an error occurred during proxy creation
+   * @throws Exception when unable to create a proxy factory, including when the functionality
+   *   is disabled, the given class is unsuitable or an error occurred during proxy factory creation
    */
-  <T> Function<InstanceSupplier<T>, T> createProxy(Class<T> cls) throws Exception;
+  <T> Function<InstanceSupplier<T>, T> createProxyFactory(Class<T> cls) throws Exception;
 
   /**
    * Supplies instances that are wrapped by a proxy.
