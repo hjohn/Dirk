@@ -28,7 +28,7 @@ public class ByteBuddyProxyStrategy implements ProxyStrategy {
   private static final TypeCache<Class<?>> TYPE_CACHE = new TypeCache<>(Sort.WEAK);
 
   @Override
-  public <T> Function<InstanceSupplier<T>, T> createProxy(Class<T> cls) throws Exception {
+  public <T> Function<InstanceSupplier<T>, T> createProxyFactory(Class<T> cls) throws Exception {
     @SuppressWarnings("unchecked")
     Class<T> proxy = (Class<T>)TYPE_CACHE.findOrInsert(cls.getClassLoader(), cls, () -> {
       return new ByteBuddy()

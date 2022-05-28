@@ -232,7 +232,7 @@ public class InjectableStore implements Resolver<Injectable<?>> {
 
     if(needsProxy) {
       try {
-        proxyStrategy.createProxy(Types.raw(dependentInjectable.getType()));
+        proxyStrategy.createProxyFactory(Types.raw(dependentInjectable.getType()));
       }
       catch(Exception e) {
         throw new ScopeConflictException("Type [" + injectable.getType() + "] with scope [" + injectableScopeResolver.getAnnotation() + "] is dependent on [" + dependentInjectable.getType() + "] with normal scope [" + dependentScopeResolver.getAnnotation() + "]; this requires the use of a provider or proxy", e);

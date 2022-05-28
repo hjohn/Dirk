@@ -11,7 +11,7 @@ import org.int4.dirk.spi.config.ProxyStrategy;
 public class NoProxyStrategy implements ProxyStrategy {
 
   @Override
-  public <T> Function<InstanceSupplier<T>, T> createProxy(Class<T> cls) {
+  public <T> Function<InstanceSupplier<T>, T> createProxyFactory(Class<T> cls) {
     throw new UnsupportedOperationException("Proxies are unavailable");
   }
 }
