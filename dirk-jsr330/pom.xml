@@ -33,6 +33,12 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>org.int4.dirk.extensions</groupId>
+      <artifactId>extensions-proxy</artifactId>
+      <version>${revision}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>javax.annotation</groupId>
       <artifactId>javax.annotation-api</artifactId>
     </dependency>
