@@ -1,10 +1,10 @@
 # Dirk DI
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.hjohn.ddif/ddif-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.hjohn.ddif/ddif-core)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.int4.dirk/dirk-di/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.int4.dirk/dirk-di)
 [![Build Status](https://github.com/hjohn/hs.ddif/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/hjohn/hs.ddif/actions)
 [![Coverage](https://codecov.io/gh/hjohn/hs.ddif/branch/master/graph/badge.svg?token=QCNNRFYF98)](https://codecov.io/gh/hjohn/hs.ddif)
 [![License](https://img.shields.io/badge/License-BSD_2--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
-[![javadoc](https://javadoc.io/badge2/com.github.hjohn.ddif/ddif-core/javadoc.svg)](https://javadoc.io/doc/com.github.hjohn.ddif/ddif-core)
+[![javadoc](https://javadoc.io/badge2/org.int4.dirk/parent/javadoc.svg)](https://javadoc.io/doc/org.int4.dirk/parent)
 
 Dirk is a small, highly customizable, dynamic dependency injection framework.
 
@@ -14,7 +14,7 @@ Add a dependency to Dirk in your POM:
 
     <groupId>org.int4.dirk</groupId>
     <artifactId>dirk-di<artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-alpha2</version>
 
 Assume there is a small class which depends on a `String` which Dirk should provide:
 
