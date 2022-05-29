@@ -26,6 +26,7 @@
       <groupId>org.int4.dirk</groupId>
       <artifactId>dirk-annotations</artifactId>
       <version>${revision}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.int4.dirk</groupId>
