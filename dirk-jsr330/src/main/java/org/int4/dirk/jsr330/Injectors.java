@@ -33,6 +33,7 @@ import org.int4.dirk.library.SimpleScopeStrategy;
 import org.int4.dirk.library.SingletonScopeResolver;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.LifeCycleCallbacksFactory;
+import org.int4.dirk.spi.config.ProxyStrategy;
 import org.int4.dirk.spi.discovery.TypeRegistrationExtension;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.scope.ScopeResolver;
@@ -86,6 +87,14 @@ public class Injectors {
     List<ScopeResolver> finalScopeResolvers = Arrays.stream(scopeResolvers).anyMatch(sr -> sr.getAnnotation().equals(SINGLETON)) ? Arrays.asList(scopeResolvers)
       : Stream.concat(Arrays.stream(scopeResolvers), Stream.of(new SingletonScopeResolver(SINGLETON))).collect(Collectors.toList());
 
+    ProxyStrategy proxyStrategy = new NoProxyStrategy();
+
+    if(Classes.isAvailable("org.int4.dirk.extensions.proxy.ByteBuddyProxyStrategy")) {
+      LOGGER.info("Using ByteBuddyProxyStrategy found on classpath");
+
+      proxyStrategy = ByteBuddyProxyStrategySupport.create();
+    }
+
     return new StandardInjector(
       createInjectionTargetExtensions(),
       createDiscoveryExtensions(lifeCycleCallbacksFactory),
@@ -93,7 +102,7 @@ public class Injectors {
       new DefaultInjectorStrategy(
         ANNOTATION_STRATEGY,
         new SimpleScopeStrategy(Scope.class, DEPENDENT, SINGLETON, DEPENDENT),
-        new NoProxyStrategy(),
+        proxyStrategy,
         lifeCycleCallbacksFactory
       ),
       autoDiscovering
