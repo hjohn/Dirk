@@ -42,7 +42,6 @@ public interface AssistedAnnotationStrategy<P> {
    * <p>Returning {@code null}, although allowed, is considered a fatal problem and
    * will result in an exception indicating the argument name must be provided somehow.
    *
-   * @param annotation an argument annotation, can be {@code null} when not present
    * @param accessibleObject an {@link AccessibleObject}, cannot be {@code null}
    * @return an argument name, never {@code null}
    * @throws MissingArgumentException when argument name could not be determined
@@ -55,7 +54,6 @@ public interface AssistedAnnotationStrategy<P> {
    * <p>Returning {@code null}, although allowed, is considered a fatal problem and
    * will result in an exception indicating the argument name must be provided somehow.
    *
-   * @param annotation an argument annotation, can be {@code null} when not present
    * @param parameter a {@link Parameter}, cannot be {@code null}
    * @return an argument name, never {@code null}
    * @throws MissingArgumentException when argument name could not be determined
