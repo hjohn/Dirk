@@ -22,6 +22,7 @@
     <module>dirk-cdi</module>
     <module>dirk-commons-lang3-minimal</module>
     <module>dirk-core</module>
+    <module>dirk-di</module>
     <module>dirk-extensions</module>
     <module>dirk-jakarta</module>
     <module>dirk-jsr330</module>
