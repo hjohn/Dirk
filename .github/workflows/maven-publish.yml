@@ -23,7 +23,7 @@ jobs:
       - name: Publish package
         run: |
           mvn -B versions:set -DnewVersion=${GITHUB_REF##*/}
-          mvn -B -Prelease-sign-artifacts -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} deploy
+          mvn -B -Prelease-sign-artifacts -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} package javadoc:aggregate-jar deploy
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USER }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASS }}
