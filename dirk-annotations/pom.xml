@@ -9,4 +9,11 @@
   </parent>
 
   <artifactId>dirk-annotations</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>jakarta.inject</groupId>
+      <artifactId>jakarta.inject-api</artifactId>
+    </dependency>
+  </dependencies>
 </project>

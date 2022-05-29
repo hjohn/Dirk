@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.int4.dirk.annotations.Dependent;
 import org.int4.dirk.annotations.Opt;
 import org.int4.dirk.annotations.Produces;
 import org.int4.dirk.api.Injector;
