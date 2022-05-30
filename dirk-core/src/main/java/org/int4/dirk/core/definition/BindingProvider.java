@@ -279,20 +279,20 @@ public class BindingProvider {
     }
   }
 
-  public static class InjectionType {
+  private static class InjectionType {
     final Type elementType;
     final Set<TypeTrait> typeTraits;
 
-    public InjectionType(Type elementType, Set<TypeTrait> typeTraits) {
+    InjectionType(Type elementType, Set<TypeTrait> typeTraits) {
       this.elementType = elementType;
       this.typeTraits = typeTraits;
     }
 
-    public Type getElementType() {
+    Type getElementType() {
       return elementType;
     }
 
-    public Set<TypeTrait> getTypeTraits() {
+    Set<TypeTrait> getTypeTraits() {
       return typeTraits;
     }
   }
