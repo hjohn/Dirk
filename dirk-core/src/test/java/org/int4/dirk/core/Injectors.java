@@ -22,7 +22,7 @@ import org.int4.dirk.library.SimpleScopeStrategy;
 import org.int4.dirk.library.SingletonScopeResolver;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.LifeCycleCallbacksFactory;
-import org.int4.dirk.spi.discovery.TypeRegistrationExtension;
+import org.int4.dirk.spi.definition.TypeRegistrationExtension;
 import org.int4.dirk.spi.scope.ScopeResolver;
 import org.int4.dirk.util.Annotations;
 

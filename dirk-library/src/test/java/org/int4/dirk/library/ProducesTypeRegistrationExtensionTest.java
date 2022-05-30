@@ -1,7 +1,7 @@
 package org.int4.dirk.library;
 
 import org.int4.dirk.annotations.Produces;
-import org.int4.dirk.spi.discovery.TypeRegistrationExtension.Registry;
+import org.int4.dirk.spi.definition.TypeRegistrationExtension.Registry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;

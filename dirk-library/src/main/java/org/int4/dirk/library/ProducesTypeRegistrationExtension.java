@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 import org.int4.dirk.api.definition.DefinitionException;
-import org.int4.dirk.spi.discovery.TypeRegistrationExtension;
+import org.int4.dirk.spi.definition.TypeRegistrationExtension;
 import org.int4.dirk.util.Fields;
 import org.int4.dirk.util.Methods;
 import org.int4.dirk.util.Types;

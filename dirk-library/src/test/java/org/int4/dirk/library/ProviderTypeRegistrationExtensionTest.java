@@ -1,7 +1,7 @@
 package org.int4.dirk.library;
 
 import org.int4.dirk.api.definition.DefinitionException;
-import org.int4.dirk.spi.discovery.TypeRegistrationExtension.Registry;
+import org.int4.dirk.spi.definition.TypeRegistrationExtension.Registry;
 import org.int4.dirk.util.Types;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

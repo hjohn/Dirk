@@ -34,7 +34,7 @@ import org.int4.dirk.library.SingletonScopeResolver;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.LifeCycleCallbacksFactory;
 import org.int4.dirk.spi.config.ProxyStrategy;
-import org.int4.dirk.spi.discovery.TypeRegistrationExtension;
+import org.int4.dirk.spi.definition.TypeRegistrationExtension;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.scope.ScopeResolver;
 import org.int4.dirk.util.Annotations;

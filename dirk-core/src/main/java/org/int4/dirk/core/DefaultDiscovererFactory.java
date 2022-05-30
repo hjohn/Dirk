@@ -29,8 +29,8 @@ import org.int4.dirk.core.discovery.Discoverer;
 import org.int4.dirk.core.discovery.DiscovererFactory;
 import org.int4.dirk.core.store.QualifiedTypeStore;
 import org.int4.dirk.core.store.Resolver;
-import org.int4.dirk.spi.discovery.TypeRegistrationExtension;
-import org.int4.dirk.spi.discovery.TypeRegistrationExtension.Registry;
+import org.int4.dirk.spi.definition.TypeRegistrationExtension;
+import org.int4.dirk.spi.definition.TypeRegistrationExtension.Registry;
 import org.int4.dirk.util.Types;
 
 /**

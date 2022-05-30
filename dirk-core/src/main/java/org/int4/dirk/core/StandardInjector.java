@@ -27,7 +27,7 @@ import org.int4.dirk.core.definition.MethodInjectableFactory;
 import org.int4.dirk.core.discovery.DiscovererFactory;
 import org.int4.dirk.core.store.InjectableStore;
 import org.int4.dirk.spi.config.InjectorStrategy;
-import org.int4.dirk.spi.discovery.TypeRegistrationExtension;
+import org.int4.dirk.spi.definition.TypeRegistrationExtension;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.scope.ScopeResolver;
 

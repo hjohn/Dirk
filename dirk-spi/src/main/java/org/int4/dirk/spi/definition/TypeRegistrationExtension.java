@@ -1,4 +1,4 @@
-package org.int4.dirk.spi.discovery;
+package org.int4.dirk.spi.definition;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
