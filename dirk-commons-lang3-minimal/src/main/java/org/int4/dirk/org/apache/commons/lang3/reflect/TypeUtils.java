@@ -18,6 +18,7 @@
 /*
  * Source was modified:
  * - Reduced dependencies to a minimum
+ * - Fixed some issues detected by ErrorProne
  *
  * Original: org.apache.commons:commons-lang3:3.12.0
  */
@@ -1375,7 +1376,7 @@ public class TypeUtils {
             useOwner = owner;
         }
         if(typeArguments == null || Arrays.stream(typeArguments).anyMatch(e -> e == null)) {
-            throw new IllegalArgumentException("typeArguments cannot be null or contain nulls: " + typeArguments);
+            throw new IllegalArgumentException("typeArguments cannot be null or contain nulls: " + Arrays.toString(typeArguments));
         }
         if(rawClass.getTypeParameters().length != typeArguments.length) {
             throw new IllegalArgumentException("invalid number of type parameters specified: expected " + rawClass.getTypeParameters().length + ", got " + typeArguments.length);

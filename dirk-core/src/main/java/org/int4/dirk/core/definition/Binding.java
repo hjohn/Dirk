@@ -74,7 +74,7 @@ public interface Binding {
 
   /**
    * Returns the {@link Parameter} when the {@link AccessibleObject} is a
-   * constructor or a method. Returns @{code null} for fields.
+   * constructor or a method. Returns {@code null} for fields.
    *
    * @return a {@link Parameter}, can be {@code null}
    */

@@ -178,7 +178,7 @@ class InstantiationContextFactory {
 
     @Override
     public <U extends T> InstantiationContext<U> select(Class<U> subtype, Annotation... qualifiers) {
-      return select(subtype, qualifiers);
+      return select((Type)subtype, qualifiers);
     }
 
     @Override
@@ -347,7 +347,7 @@ class InstantiationContextFactory {
     }
   }
 
-  private class LazyReference<T> implements CreationalContext.Reference<T> {
+  private static class LazyReference<T> implements CreationalContext.Reference<T> {
     private final T instance;
     private final LazyCreationalContext<T> creationalContext;
 

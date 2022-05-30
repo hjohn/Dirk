@@ -64,7 +64,7 @@ public class InstanceInjectableFactory {
     );
   }
 
-  private static class FakeAnnotatedElement implements AnnotatedElement {
+  private static final class FakeAnnotatedElement implements AnnotatedElement {
     private final Object instance;
     private final Annotation[] qualifiers;
 

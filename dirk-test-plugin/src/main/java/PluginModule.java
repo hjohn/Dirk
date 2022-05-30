@@ -1,5 +1,4 @@
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.int4.dirk.plugins.Module;
@@ -12,12 +11,12 @@ public class PluginModule implements Module {
 
   @Override
   public List<Type> getTypes() {
-    return new ArrayList<>() {{
-      add(TextUppercaser.class);
-      add(FancyTextProvider.class);
-      add(UppercaseTextProvider.class);
-      add(TextDatabase.class);
-    }};
+    return List.of(
+      TextUppercaser.class,
+      FancyTextProvider.class,
+      UppercaseTextProvider.class,
+      TextDatabase.class
+    );
   }
 
 }
