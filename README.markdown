@@ -14,7 +14,7 @@ Add a dependency to Dirk in your POM:
 
     <groupId>org.int4.dirk</groupId>
     <artifactId>dirk-di<artifactId>
-    <version>1.0.0-alpha2</version>
+    <version>1.0.0-alpha3</version>
 
 Assume there is a small class which depends on a `String` which Dirk should provide:
 
@@ -575,7 +575,7 @@ Used for:
 
 ### Apache Commons Lang
 
-License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0)  
 https://commons.apache.org/proper/commons-lang/   
 
 Linking: Embedded (minimal required code directly included)
