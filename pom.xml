@@ -14,7 +14,7 @@
     allow you to package your classes in seperate JAR's, load them at runtime, and have them injected with
     dependencies or serve as dependencies for other classes.
   </description>
-  <url>https://github.com/hjohn/hs.ddif</url>
+  <url>https://github.com/hjohn/Dirk</url>
 
   <modules>
     <module>dirk-annotations</module>
@@ -50,8 +50,8 @@
   </licenses>
 
   <scm>
-    <url>https://github.com/hjohn/hs.ddif.git</url>
-    <connection>scm:git:https://github.com/hjohn/hs.ddif.git</connection>
+    <url>https://github.com/hjohn/Dirk.git</url>
+    <connection>scm:git:https://github.com/hjohn/Dirk.git</connection>
   </scm>
 
   <developers>
