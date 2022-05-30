@@ -336,9 +336,11 @@ public class InjectableStore implements Resolver<Injectable<?>> {
         Map<Key, Node> nodesByKeys = nodes.get(cls);
 
         if(nodesByKeys != null) {
-          for(Key key : nodesByKeys.keySet()) {
+          for(Map.Entry<Key, Node> entry : nodesByKeys.entrySet()) {
+            Key key = entry.getKey();
+
             if(Types.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
-              Node node = nodesByKeys.get(key);
+              Node node = entry.getValue();
 
               node.increaseSources(source);
 
@@ -377,9 +379,11 @@ public class InjectableStore implements Resolver<Injectable<?>> {
         Map<Key, Node> nodesByKeys = nodes.get(cls);
 
         if(nodesByKeys != null) {
-          for(Key key : nodesByKeys.keySet()) {
+          for(Map.Entry<Key, Node> entry : nodesByKeys.entrySet()) {
+            Key key = entry.getKey();
+
             if(Types.isAssignable(type, key.getType()) && qualifiers.containsAll(key.getQualifiers())) {
-              Node node = nodesByKeys.get(key);
+              Node node = entry.getValue();
 
               node.decreaseSources(source);
 

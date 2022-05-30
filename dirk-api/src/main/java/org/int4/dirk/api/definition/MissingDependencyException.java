@@ -13,7 +13,7 @@ public class MissingDependencyException extends DependencyException {
    * @param message a message, cannot be {@code null}
    */
   public MissingDependencyException(String message) {
-    super(Objects.requireNonNull("message"));
+    super(Objects.requireNonNull(message, "message"));
   }
 
 }

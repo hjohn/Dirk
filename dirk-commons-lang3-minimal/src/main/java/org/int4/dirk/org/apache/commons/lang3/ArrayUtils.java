@@ -18,6 +18,7 @@
 /*
  * Source was modified:
  * - Removed all code not required by TypeUtils
+ * - Renamed general remove/removeAll to removeInternal/removeAllInternal
  *
  * Original: org.apache.commons:commons-lang3:3.12.0
  */
@@ -299,8 +300,45 @@ public class ArrayUtils {
      * (index &lt; 0 || index &gt;= array.length), or if the array is {@code null}.
      * @since 2.1
      */
+    @SuppressWarnings("unchecked")
     public static <T> T[] remove(final T[] array, final int index) {
-        return remove(array, index);
+        return (T[]) removeInternal(array, index);
+    }
+
+    /**
+     * <p>Removes the element at the specified position from the specified array.
+     * All subsequent elements are shifted to the left (subtracts one from
+     * their indices).
+     *
+     * <p>This method returns a new array with the same elements of the input
+     * array except the element on the specified position. The component
+     * type of the returned array is always the same as that of the input
+     * array.
+     *
+     * <p>If the input array is {@code null}, an IndexOutOfBoundsException
+     * will be thrown, because in that case no valid index can be specified.
+     *
+     * @param array  the array to remove the element from, may not be {@code null}
+     * @param index  the position of the element to be removed
+     * @return A new array containing the existing elements except the element
+     *         at the specified position.
+     * @throws IndexOutOfBoundsException if the index is out of range
+     * (index &lt; 0 || index &gt;= array.length), or if the array is {@code null}.
+     * @since 2.1
+     */
+    private static Object removeInternal(final Object array, final int index) {
+        final int length = getLength(array);
+        if (index < 0 || index >= length) {
+            throw new IndexOutOfBoundsException("Index: " + index + ", Length: " + length);
+        }
+
+        final Object result = Array.newInstance(array.getClass().getComponentType(), length - 1);
+        System.arraycopy(array, 0, result, 0, index);
+        if (index < length - 1) {
+            System.arraycopy(array, index + 1, result, index, length - index - 1);
+        }
+
+        return result;
     }
 
     /**
@@ -310,8 +348,7 @@ public class ArrayUtils {
      * @return new array of same type minus elements specified by unique values of {@code indices}
      * @since 3.0.1
      */
-    // package protected for access by unit tests
-    static Object removeAll(final Object array, final int... indices) {
+    private static Object removeAllInternal(final Object array, final int... indices) {
         final int length = getLength(array);
         int diff = 0; // number of distinct indexes, i.e. number of entries that will be removed
         final int[] clonedIndices = clone(indices);
@@ -382,7 +419,8 @@ public class ArrayUtils {
      * (index &lt; 0 || index &gt;= array.length), or if the array is {@code null}.
      * @since 3.0.1
      */
+    @SuppressWarnings("unchecked")
     public static <T> T[] removeAll(final T[] array, final int... indices) {
-        return removeAll(array, indices);
+        return (T[]) removeAllInternal(array, indices);
     }
 }

@@ -32,7 +32,7 @@ public class ReplaceCamelCaseDisplayNameGenerator implements DisplayNameGenerato
 
   private static String toName(String text) {
     StringBuilder sb = new StringBuilder();
-    String[] split = text.split("_");
+    String[] split = text.split("_", -1);
 
     for(int i = 0; i < split.length; i++) {
       String part = split[i];

@@ -71,7 +71,7 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
     }
   }
 
-  private class DefaultLifeCycleCallbacks implements LifeCycleCallbacks {
+  private static class DefaultLifeCycleCallbacks implements LifeCycleCallbacks {
     private final List<Method> postConstructMethods;
     private final List<Method> preDestroyMethods;
 
