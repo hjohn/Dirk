@@ -80,7 +80,7 @@ are extensions to support:
 |Optional Injection|`@Opt`|-|`@Opt`|`@Opt`|
 |Producer Support|`@Produces`|`@Produces`|`@Produces`|`@Produces`|
 |Assisted Injection|`@Assisted` & `@Argument`<sup>1</sup>|-|`@Assisted` & `@Argument`<sup>1</sup>|`@Assisted` & `@Argument`<sup>1</sup>|
-|Indirection Injection|`Provider`|`Provider` & `Instance`|`Provider`|`Provider`|
+|Indirect Injection|`Provider`|`Provider` & `Instance`|`Provider`|`Provider`|
 |Collection Injection|`List` & `Set`|-|`List` & `Set`|`List` & `Set`|
 |Proxy Support|Yes<sup>2</sup>|Yes<sup>2</sup>|Yes<sup>2</sup>|Yes<sup>2</sup>|
 
@@ -98,7 +98,7 @@ are extensions to support:
 
 ## Dependency Injection
 
-Dependencies are other classes or types that are required for the correct functioning of another class. A
+Dependencies are other classes or types that are required for the correct functioning of a class. A
 dependency can be a class, an interface, a generic type or a primitive type. Dependency injection supplies 
 these required values automatically. Dependencies can be supplied through constructor or method parameters or
 by setting fields directly. 
@@ -491,7 +491,7 @@ Below an example of a class that implements the `Provider` interface and provide
         public Connection get() { ... }
     }
 
-### `AssistedTypeRegistationExtension`
+### `AssistedTypeRegistrationExtension`
 
 Allows a type which has a single abstract method (a SAM type) with a non-void return type to act as a factory for the 
 returned type; any dependencies the produced type may have are injected by the injector, including the arguments 
@@ -529,6 +529,14 @@ produced type. The following two examples would also allow constructing the `Gre
 
     abstract class GreeterFactory {
         Greeter createGreeter(LocalTime timeOfDay);
+    }
+
+Important note: in order for Dirk to match up the argument names, classes should be compiled with parameter name
+information (use the `-parameters` flag for `javac`). Alternatively, the names can be explicitly specified with the 
+`@Argument` annotation:
+
+    abstract class GreeterFactory {
+        Greeter createGreeter(@Argument("timeOfDay") LocalTime timeOfDay);
     }
 
 # BSD License
