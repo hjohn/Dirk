@@ -1,7 +1,7 @@
 package org.int4.dirk.spi.scope;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 import org.int4.dirk.spi.scope.CreationalContext.Reference;
@@ -12,7 +12,7 @@ import org.int4.dirk.spi.scope.CreationalContext.Reference;
  * @param <S> the type of the scope discriminator object
  */
 public abstract class AbstractScopeResolver<S> implements ScopeResolver {
-  private final Map<S, Map<Object, Reference<?>>> instancesByScope = new HashMap<>();
+  private final Map<S, Map<Object, Reference<?>>> instancesByScope = new ConcurrentHashMap<>();
 
   @Override
   public final boolean isActive() {
@@ -27,7 +27,7 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
       throw new ScopeNotActiveException("Scope not active: " + getAnnotation() + " for: " + key);
     }
 
-    Map<Object, Reference<?>> instances = instancesByScope.computeIfAbsent(currentScope, k -> new HashMap<>());
+    Map<Object, Reference<?>> instances = instancesByScope.computeIfAbsent(currentScope, k -> new ConcurrentHashMap<>());
 
     @SuppressWarnings("unchecked")
     Reference<T> reference = (Reference<T>)instances.get(key);

@@ -5,10 +5,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.core.definition.injection.Constructable;
@@ -24,7 +24,7 @@ import org.int4.dirk.spi.config.LifeCycleCallbacks;
  * @param <T> the type of the instances produced
  */
 public class ClassObjectFactory<T> implements Constructable<T> {
-  private static final Set<Object> UNDER_CONSTRUCTION = ConcurrentHashMap.newKeySet();
+  private static final ThreadLocal<Set<Object>> UNDER_CONSTRUCTION_THREAD_LOCAL = ThreadLocal.withInitial(() -> new HashSet<>());
 
   private final Constructor<T> constructor;
   private final LifeCycleCallbacks lifeCycleCallbacks;
@@ -44,12 +44,12 @@ public class ClassObjectFactory<T> implements Constructable<T> {
 
   @Override
   public T create(List<Injection> injections) throws CreationException {
-    if(UNDER_CONSTRUCTION.contains(this)) {
+    if(UNDER_CONSTRUCTION_THREAD_LOCAL.get().contains(this)) {
       throw new CreationException("[" + constructor.getDeclaringClass() + "] already under construction (dependency creation loop in setter, initializer or post-construct method?)");
     }
 
     try {
-      UNDER_CONSTRUCTION.add(this);
+      UNDER_CONSTRUCTION_THREAD_LOCAL.get().add(this);
 
       T instance = constructInstance(injections);
 
@@ -65,7 +65,7 @@ public class ClassObjectFactory<T> implements Constructable<T> {
       return instance;
     }
     finally {
-      UNDER_CONSTRUCTION.remove(this);
+      UNDER_CONSTRUCTION_THREAD_LOCAL.get().remove(this);
     }
   }
 

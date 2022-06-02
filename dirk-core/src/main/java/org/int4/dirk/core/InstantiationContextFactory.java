@@ -48,7 +48,7 @@ class InstantiationContextFactory {
    *
    * <p>Note that only a single thread should make use of this class at the same time.
    */
-  private final Deque<LazyCreationalContext<?>> stack = new ArrayDeque<>();
+  private final ThreadLocal<Deque<LazyCreationalContext<?>>> threadLocalStack = ThreadLocal.withInitial(() -> new ArrayDeque<>());
 
   private final Resolver<Injectable<?>> resolver;
   private final AnnotationStrategy annotationStrategy;
@@ -109,7 +109,7 @@ class InstantiationContextFactory {
     }
 
     @Override
-    public synchronized T create() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
+    public T create() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
       if(subcontext == null) {
         @SuppressWarnings("unchecked")
         Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
@@ -131,7 +131,7 @@ class InstantiationContextFactory {
     }
 
     @Override
-    public synchronized List<T> createAll() throws CreationException {
+    public List<T> createAll() throws CreationException {
       if(subcontext == null) {
         List<T> instances = new ArrayList<>();
 
@@ -214,6 +214,7 @@ class InstantiationContextFactory {
 
     private T createInstance(Injectable<T> injectable) throws CreationException, ScopeNotActiveException {
       ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
+      Deque<LazyCreationalContext<?>> stack = threadLocalStack.get();
       LazyCreationalContext<?> parentCreationalContext = stack.isEmpty() ? null : stack.getLast();
       LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(parentCreationalContext, injectable);
 
@@ -239,6 +240,10 @@ class InstantiationContextFactory {
       }
       finally {
         stack.removeLast();
+
+        if(stack.isEmpty()) {
+          threadLocalStack.remove();
+        }
       }
     }
   }

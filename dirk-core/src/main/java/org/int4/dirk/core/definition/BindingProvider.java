@@ -11,11 +11,11 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -149,7 +149,7 @@ public class BindingProvider {
     private final Set<TypeTrait> typeTraits;
     private final AccessibleObject accessibleObject;
     private final Parameter parameter;
-    private final Map<String, Object> data = new HashMap<>();
+    private final Map<String, Object> data = new ConcurrentHashMap<>();
 
     /**
      * Constructs a new instance.
