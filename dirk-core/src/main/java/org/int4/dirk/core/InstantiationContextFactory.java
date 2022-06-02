@@ -184,7 +184,7 @@ class InstantiationContextFactory {
     @Override
     public <U extends T> InstantiationContext<U> select(Type subtype, Annotation... qualifiers) {
       if(!TypeUtils.isAssignable(subtype, key.getType())) {
-        throw new IllegalArgumentException("subtype must be a subtype of: " + key.getType());
+        throw new IllegalArgumentException("[" + subtype + "] must be a subtype of: " + key.getType());
       }
 
       Arrays.stream(qualifiers).filter(annotation -> !annotationStrategy.isQualifier(annotation)).findFirst().ifPresent(annotation -> {
