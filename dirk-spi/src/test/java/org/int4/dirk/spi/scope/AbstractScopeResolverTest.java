@@ -35,21 +35,16 @@ public class AbstractScopeResolverTest {
   private int releaseCalls;
 
   private CreationalContext<I> creationalContext = new CreationalContext<>() {
+    private final I i = new I();
+
     @Override
-    public Reference<I> create() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
-      return new Reference<>() {
-        private final I i = new I();
+    public I get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+      return i;
+    }
 
-        @Override
-        public I get() {
-          return i;
-        }
-
-        @Override
-        public void release() {
-          releaseCalls++;
-        }
-      };
+    @Override
+    public void release() {
+      releaseCalls++;
     }
   };
 

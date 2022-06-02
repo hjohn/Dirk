@@ -12,36 +12,22 @@ import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 public interface CreationalContext<T> {
 
   /**
-   * Creates a new instance of type {@code T} wrapped in a {@link Reference}.
+   * Gets an instance of type {@code T}. A new instance is created during the first call,
+   * and the same instance is returned for subsequent calls.
    *
-   * @return a {@link Reference}, never {@code null}
+   * <p>Throws {@link IllegalStateException} when the context was released.
+   *
+   * @return an instance of type {@code T}, can be {@code null}
    * @throws CreationException when an instance could not be created
    * @throws AmbiguousResolutionException when multiple instances could be created but at most one was required
    * @throws UnsatisfiedResolutionException when no instance could be created but at least one was required
+   * @throws IllegalStateException when the context was released
    */
-  Reference<T> create() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException;
+  T get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException;
 
   /**
-   * A reference to an instance created by the {@link CreationalContext} with
-   * which the created instance can be released.
-   *
-   * @param <T> the type of instance this reference holds
+   * Releases this context. Any dependent objects associated with it
+   * will be destroyed. This method is idempotent.
    */
-  interface Reference<T> {
-
-    /**
-     * Gets the instance held by this reference. If the reference has already
-     * been released this will throw {@link IllegalStateException}.
-     *
-     * @return the instance held by this reference, can be {@code null}
-     * @throws IllegalStateException when the reference was released
-     */
-    T get();
-
-    /**
-     * Releases this reference. Any dependent objects associated with it
-     * will be destroyed. This method is idempotent.
-     */
-    void release();
-  }
+  void release();
 }

@@ -78,7 +78,7 @@ class ScopeResolverManager {
 
     @Override
     public <T> T get(Object key, CreationalContext<T> creationalContext) throws Exception {
-      return creationalContext.create().get();
+      return creationalContext.get();
     }
 
     @Override

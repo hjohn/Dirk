@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.int4.dirk.api.scope.ScopeNotActiveException;
-import org.int4.dirk.spi.scope.CreationalContext.Reference;
 
 /**
  * Abstract base implementation of a {@link ScopeResolver} which manages a map of instances per scope.
@@ -12,7 +11,7 @@ import org.int4.dirk.spi.scope.CreationalContext.Reference;
  * @param <S> the type of the scope discriminator object
  */
 public abstract class AbstractScopeResolver<S> implements ScopeResolver {
-  private final Map<S, Map<Object, Reference<?>>> instancesByScope = new ConcurrentHashMap<>();
+  private final Map<S, Map<Object, CreationalContext<?>>> instancesByScope = new ConcurrentHashMap<>();
 
   @Override
   public final boolean isActive() {
@@ -27,27 +26,21 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
       throw new ScopeNotActiveException("Scope not active: " + getAnnotation() + " for: " + key);
     }
 
-    Map<Object, Reference<?>> instances = instancesByScope.computeIfAbsent(currentScope, k -> new ConcurrentHashMap<>());
+    Map<Object, CreationalContext<?>> instances = instancesByScope.computeIfAbsent(currentScope, k -> new ConcurrentHashMap<>());
 
     @SuppressWarnings("unchecked")
-    Reference<T> reference = (Reference<T>)instances.get(key);
+    CreationalContext<T> existingContext = (CreationalContext<T>)instances.computeIfAbsent(key, k -> creationalContext);
 
-    if(reference == null) {
-      reference = creationalContext.create();
-
-      instances.put(key, reference);
-    }
-
-    return reference.get();
+    return existingContext.get();
   }
 
   @Override
   public final void remove(Object key) {
-    for(Map<Object, Reference<?>> map : instancesByScope.values()) {
-      Reference<?> reference = map.remove(key);
+    for(Map<Object, CreationalContext<?>> map : instancesByScope.values()) {
+      CreationalContext<?> existingContext = map.remove(key);
 
-      if(reference != null) {
-        reference.release();
+      if(existingContext != null) {
+        existingContext.release();
       }
     }
   }
@@ -67,11 +60,11 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
    * @param scope a scope, cannot be {@code null}
    */
   protected final void destroyScope(S scope) {
-    Map<Object, Reference<?>> instances = instancesByScope.remove(scope);
+    Map<Object, CreationalContext<?>> instances = instancesByScope.remove(scope);
 
     if(instances != null) {
-      for(Reference<?> reference : instances.values()) {
-        reference.release();
+      for(CreationalContext<?> existingContext : instances.values()) {
+        existingContext.release();
       }
     }
   }

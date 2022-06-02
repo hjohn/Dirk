@@ -71,7 +71,7 @@ class InstantiationContextFactory {
   }
 
   public <T> InstantiationContext<T> createContext(Binding binding) {
-    return binding.associateIfAbsent("instantiationContext", () -> new SimpleInstantationContext<>(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional()));
+    return binding.associateIfAbsent("instantiationContext", () -> createContext(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional()));
   }
 
   /**
@@ -213,34 +213,43 @@ class InstantiationContextFactory {
     }
 
     private T createInstance(Injectable<T> injectable) throws CreationException, ScopeNotActiveException {
-      ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
       Deque<LazyCreationalContext<?>> stack = threadLocalStack.get();
-      LazyCreationalContext<?> parentCreationalContext = stack.isEmpty() ? null : stack.getLast();
-      LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(parentCreationalContext, injectable);
-
-      stack.addLast(creationalContext);
 
       try {
-        Annotation parentScopeAnnotation = parentCreationalContext == null ? null : parentCreationalContext.injectable.getScopeResolver().getAnnotation();
-        boolean needsProxy = !scopeResolver.isPseudoScope() && parentScopeAnnotation != null && !scopeResolver.getAnnotation().equals(parentScopeAnnotation);
+        ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
+        LazyCreationalContext<?> parentCreationalContext = stack.isEmpty() ? null : stack.getLast();
 
-        T instance = needsProxy
-          ? proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, creationalContext))
-          : scopeResolver.get(injectable, creationalContext);
+        // Needs proxy? Warning here about potential NPE if extracted to variable...
+        if(parentCreationalContext != null && !scopeResolver.isPseudoScope() && !scopeResolver.getAnnotation().equals(parentCreationalContext.injectable.getScopeResolver().getAnnotation())) {
+          T instance = proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, new LazyCreationalContext<>(null, injectable)));
 
-        creationalContext.add(injectable, instance);
+          parentCreationalContext.add(injectable, instance);  // there is always a parent CreationalContext when a proxy is needed; here the proxy itself is added to the parent, not an instance
 
-        return instance;
+          return instance;
+        }
+
+        LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(parentCreationalContext, injectable);
+
+        stack.addLast(creationalContext);
+
+        try {
+          T instance = scopeResolver.get(injectable, creationalContext);
+
+          creationalContext.add(injectable, instance);
+
+          return instance;
+        }
+        finally {
+          stack.removeLast();
+        }
       }
-      catch(ScopeNotActiveException | CreationException e) {
+      catch(ScopeNotActiveException | CreationException e) {  // Avoid wrapping these exceptions in another layer
         throw e;
       }
       catch(Exception e) {  // as extensions are called, a general catch all is used here to wrap unexpected exceptions with some useful diagnostics
         throw new CreationException("[" + injectable.getType() + "] could not be created", e);
       }
       finally {
-        stack.removeLast();
-
         if(stack.isEmpty()) {
           threadLocalStack.remove();
         }
@@ -299,7 +308,8 @@ class InstantiationContextFactory {
     private final LazyCreationalContext<?> parent;
 
     private Deque<Runnable> dependents = new ArrayDeque<>();
-    private List<Injection> injections;
+    private T instance;
+    private boolean initialized;
 
     LazyCreationalContext(LazyCreationalContext<?> parent, Injectable<T> injectable) {
       this.parent = injectable.getScopeResolver().isDependentScope() ? parent : null;
@@ -307,20 +317,34 @@ class InstantiationContextFactory {
     }
 
     @Override
-    public Reference<T> create() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
-      return new LazyReference<>(this, injectable.create(getInjections()));
+    public synchronized T get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+      if(dependents == null) {
+        throw new IllegalStateException("context was already released");
+      }
+
+      if(!initialized) {
+        instance = injectable.create(getInjections());
+        initialized = true;
+      }
+
+      return instance;
+    }
+
+    @Override
+    public void release() {
+      if(dependents != null) {
+        dependents.forEach(Runnable::run);
+        dependents = null;
+        instance = null;
+      }
     }
 
     private List<Injection> getInjections() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
       try {
-        if(injections == null) {
-          List<Injection> injections = new ArrayList<>();
+        List<Injection> injections = new ArrayList<>();
 
-          for(Binding binding : injectable.getBindings()) {
-            injections.add(new Injection(binding.getAccessibleObject(), createContext(binding).create()));
-          }
-
-          this.injections = injections;
+        for(Binding binding : injectable.getBindings()) {
+          injections.add(new Injection(binding.getAccessibleObject(), createContext(binding).create()));
         }
 
         return injections;
@@ -348,33 +372,6 @@ class InstantiationContextFactory {
       }
       else {
         parent.add(injectable, instance);
-      }
-    }
-  }
-
-  private static class LazyReference<T> implements CreationalContext.Reference<T> {
-    private final T instance;
-    private final LazyCreationalContext<T> creationalContext;
-
-    LazyReference(LazyCreationalContext<T> creationalContext, T instance) {
-      this.instance = instance;
-      this.creationalContext = creationalContext;
-    }
-
-    @Override
-    public T get() {
-      if(creationalContext.dependents == null) {
-        throw new IllegalStateException("context was already released");
-      }
-
-      return instance;
-    }
-
-    @Override
-    public void release() {
-      if(creationalContext.dependents != null) {
-        creationalContext.dependents.forEach(Runnable::run);
-        creationalContext.dependents = null;
       }
     }
   }
