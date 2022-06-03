@@ -1,9 +1,9 @@
 package org.int4.dirk.spi.instantiation;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.List;
 
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
@@ -51,7 +51,7 @@ public interface InstantiationContext<T> {
    *
    * @param qualifiers an array of additional qualifier {@link Annotation}s, cannot be {@code null}
    * @return an {@link InstantiationContext}, never {@code null}
-   * @throws IllegalArgumentException if any of the given annotation is not a qualifier
+   * @throws IllegalArgumentException if any of the given annotations is not a qualifier
    */
   InstantiationContext<T> select(Annotation... qualifiers);
 
@@ -64,7 +64,7 @@ public interface InstantiationContext<T> {
    * @param subtype a subtype of type {@code T}, cannot be {@code null}
    * @param qualifiers an array of additional qualifier {@link Annotation}s, cannot be {@code null}
    * @return an {@link InstantiationContext}, never {@code null}
-   * @throws IllegalArgumentException if any of the given annotation is not a qualifier
+   * @throws IllegalArgumentException if any of the given annotations is not a qualifier
    */
   <U extends T> InstantiationContext<U> select(Class<U> subtype, Annotation... qualifiers);
 
@@ -74,12 +74,11 @@ public interface InstantiationContext<T> {
    * additional qualifiers.
    *
    * @param <U> a subtype of type {@code T}
-   * @param subtype a subtype of type {@code T}, cannot be {@code null}
+   * @param subtype specifies a subtype of type {@code T}, cannot be {@code null}
    * @param qualifiers an array of additional qualifier {@link Annotation}s, cannot be {@code null}
    * @return an {@link InstantiationContext}, never {@code null}
-   * @throws IllegalArgumentException if any of the given annotation is not a qualifier
-   * @throws IllegalArgumentException if the given type is not a subtype of {@code T}
+   * @throws IllegalArgumentException if any of the given annotations is not a qualifier
    */
-  <U extends T> InstantiationContext<U> select(Type subtype, Annotation... qualifiers);
+  <U extends T> InstantiationContext<U> select(TypeLiteral<U> subtype, Annotation... qualifiers);
 
 }

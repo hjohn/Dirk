@@ -11,6 +11,7 @@ import java.util.Set;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.int4.dirk.annotations.Produces;
 import org.int4.dirk.api.Injector;
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.definition.AmbiguousDependencyException;
 import org.int4.dirk.api.definition.AmbiguousRequiredDependencyException;
 import org.int4.dirk.api.definition.AutoDiscoveryException;
@@ -63,7 +64,6 @@ import org.int4.dirk.core.test.injectables.UnavailableBean;
 import org.int4.dirk.core.test.injectables.UnregisteredParentBean;
 import org.int4.dirk.core.util.Nullable;
 import org.int4.dirk.util.Annotations;
-import org.int4.dirk.util.Types;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -984,11 +984,11 @@ public class InjectorTest {
     injector.registerInstance("B");
     injector.registerInstance("C");
 
-    List<String> list = injector.getInstance(Types.parameterize(List.class, String.class));
+    List<String> list = injector.getInstance(new TypeLiteral<List<String>>() {});
 
     assertThat(list).containsExactlyInAnyOrder("A", "B", "C");
 
-    Set<String> set = injector.getInstance(Types.parameterize(Set.class, String.class));
+    Set<String> set = injector.getInstance(new TypeLiteral<Set<String>>() {});
 
     assertThat(set).containsExactlyInAnyOrder("A", "B", "C");
   }
@@ -997,11 +997,11 @@ public class InjectorTest {
   public void shouldSkipNullsInCollections() throws Exception {
     injector.register(NullProducers.class);
 
-    List<String> list = injector.getInstance(Types.parameterize(List.class, String.class));
+    List<String> list = injector.getInstance(new TypeLiteral<List<String>>() {});
 
     assertThat(list).containsExactlyInAnyOrder("B", "C");
 
-    Set<String> set = injector.getInstance(Types.parameterize(Set.class, String.class));
+    Set<String> set = injector.getInstance(new TypeLiteral<Set<String>>() {});
 
     assertThat(set).containsExactlyInAnyOrder("B", "C");
   }

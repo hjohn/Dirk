@@ -2,7 +2,6 @@ package org.int4.dirk.api;
 
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.function.Predicate;
 
 import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
@@ -10,19 +9,14 @@ import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 
 /**
- * Provides methods to resolve {@link Type}s to instances.
+ * Provides methods to resolve types and classes to injected instances.
  *
  * <p>All methods support filtering by qualifier annotation, by providing either an {@link java.lang.annotation.Annotation}
- * instance (obtainable via {@code Annotations#of(Class)}) or by providing a
- * {@link Class} instance of &lt;? extends Annotation&gt;. Annotations should be qualifier annotations or
- * no matches will be found.
+ * instance (obtainable via {@code Annotations#of(Class)}) or by providing an annotation
+ * {@link Class} directly (for marker annotations only). Annotations should be qualifier annotations
+ * or no matches will be found.
  *
- * <p>Methods that can return multiple instances also support a {@link Predicate} of {@link Type} to allow
- * custom filtering.
- *
- * <p>Filtering by generic type is possible by providing {@link java.lang.reflect.ParameterizedType} or a {@link java.lang.reflect.WildcardType}.
- * There are various ways to construct such types, see for example {@code org.int4.dirk.util.Types} and
- * {@code org.int4.dirk.util.TypeReference}.
+ * <p>Filtering by generic type is possible by creating a corresponding {@link TypeLiteral}.
  *
  * <p>Examples:<br>
  *
@@ -30,9 +24,9 @@ import org.int4.dirk.api.scope.ScopeNotActiveException;
  *
  * would return a {@code Database} instance.
  *
- * <pre>getInstance(Types.wildcardExtends(Database.class, Queryable.class))</pre>
+ * <pre>getInstance(<b>new TypeLiteral&lt;Provider&lt;Database>>() {}</b>)</pre>
  *
- * would return an object which implements or extends both {@code Database} and {@code Queryable}.
+ * would return a {@code Provider} for a {@code Database} instance.
  *
  * <pre>getInstances(Vehicle.class, Red.class)</pre>
  *
@@ -50,12 +44,12 @@ import org.int4.dirk.api.scope.ScopeNotActiveException;
 public interface InstanceResolver {
 
   /**
-   * Returns an instance of the given {@link Type} matching the given criteria (if any) in
-   * which all dependencies are injected. The instance returned can either
+   * Returns an instance of the type specified by the given {@link TypeLiteral} matching the given
+   * criteria (if any) in which all dependencies are injected. The instance returned can either
    * be an existing instance or newly created depending on its scope.
    *
    * @param <T> the type of the instance
-   * @param type the type of the instance required, cannot be {@code null}
+   * @param typeLiteral specifies the type of the instance required, cannot be {@code null}
    * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return an instance of the given class matching the given criteria, never {@code null}
    * @throws UnsatisfiedResolutionException when no matching instance was available or could be created
@@ -63,7 +57,7 @@ public interface InstanceResolver {
    * @throws CreationException when an error occurred during creation of a matching instance
    * @throws ScopeNotActiveException when the scope for the produced type is not active
    */
-  <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException;
+  <T> T getInstance(TypeLiteral<T> typeLiteral, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException;
 
   /**
    * Returns an instance of the given class matching the given criteria (if any) in
@@ -79,21 +73,21 @@ public interface InstanceResolver {
    * @throws CreationException when an error occurred during creation of a matching instance
    * @throws ScopeNotActiveException when the scope for the produced type is not active
    */
-  <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException;  // The signature of this method closely matches the other getInstance method as Class implements Type, however, this method will auto-cast the result thanks to the type parameter
+  <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException;
 
   /**
-   * Returns all instances of the given {@link Type} matching the given criteria (if any) in
-   * which all dependencies are injected.  When there are no matches, an empty set is
-   * returned. The instances returned can either be existing instances or newly created
+   * Returns all instances of the type specified by the given {@link TypeLiteral} matching the given
+   * criteria (if any) in which all dependencies are injected.  When there are no matches, an empty
+   * set is returned. The instances returned can either be existing instances or newly created
    * depending on their scope or a mix thereof.
    *
    * @param <T> the type of the instances
-   * @param type the {@link Type} of the instances required, cannot be {@code null}
+   * @param typeLiteral specifies the type of the instances required, cannot be {@code null}
    * @param qualifiers optional list of qualifier annotations, either {@link java.lang.annotation.Annotation} or {@link Class}&lt;? extends Annotation&gt;
    * @return all instances of the given {@link Type} matching the given criteria (if any), never {@code null}, can be empty
    * @throws CreationException when an error occurred during creation of a matching instance
    */
-  <T> List<T> getInstances(Type type, Object... qualifiers) throws CreationException;
+  <T> List<T> getInstances(TypeLiteral<T> typeLiteral, Object... qualifiers) throws CreationException;
 
   /**
    * Returns all instances of the given class matching the given criteria (if any) in

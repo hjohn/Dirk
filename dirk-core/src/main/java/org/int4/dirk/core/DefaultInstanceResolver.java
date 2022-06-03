@@ -1,9 +1,9 @@
 package org.int4.dirk.core;
 
-import java.lang.reflect.Type;
 import java.util.List;
 
 import org.int4.dirk.api.InstanceResolver;
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
@@ -26,23 +26,23 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
-    return getInstance(KeyFactory.of(type, qualifiers));
+  public synchronized <T> T getInstance(TypeLiteral<T> typeLiteral, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
+    return getInstance(KeyFactory.of(typeLiteral.getType(), qualifiers));
   }
 
   @Override
   public synchronized <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
-    return getInstance((Type)cls, qualifiers);
+    return getInstance(KeyFactory.of(cls, qualifiers));
   }
 
   @Override
-  public synchronized <T> List<T> getInstances(Type type, Object... qualifiers) throws CreationException {
-    return getInstances(KeyFactory.of(type, qualifiers));
+  public synchronized <T> List<T> getInstances(TypeLiteral<T> typeLiteral, Object... qualifiers) throws CreationException {
+    return getInstances(KeyFactory.of(typeLiteral.getType(), qualifiers));
   }
 
   @Override
   public synchronized <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws CreationException {
-    return getInstances((Type)cls, qualifiers);
+    return getInstances(KeyFactory.of(cls, qualifiers));
   }
 
   private <T> T getInstance(Key key) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {

@@ -6,6 +6,7 @@ import java.util.List;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.int4.dirk.annotations.Produces;
 import org.int4.dirk.api.Injector;
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.definition.CyclicDependencyException;
 import org.int4.dirk.api.definition.DefinitionException;
 import org.int4.dirk.api.definition.DuplicateDependencyException;
@@ -19,7 +20,6 @@ import org.int4.dirk.core.test.qualifiers.Green;
 import org.int4.dirk.core.test.qualifiers.Red;
 import org.int4.dirk.core.test.qualifiers.Small;
 import org.int4.dirk.test.util.ReplaceCamelCaseDisplayNameGenerator;
-import org.int4.dirk.util.TypeReference;
 import org.int4.dirk.util.Types;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -136,10 +136,10 @@ public class ProducesAnnotationTest {
 
     assertThrows(DuplicateDependencyException.class, () -> injector.register(Types.parameterize(GenericFactory1.class, Long.class)));
 
-    List<String> x1 = injector.getInstance(new TypeReference<ArrayList<String>>() {}.getType());
-    List<Long> y1 = injector.getInstance(new TypeReference<ArrayList<Long>>() {}.getType());
-    List<String> x2 = injector.getInstance(new TypeReference<ArrayList<String>>() {}.getType());
-    List<Long> y2 = injector.getInstance(new TypeReference<ArrayList<Long>>() {}.getType());
+    List<String> x1 = injector.getInstance(new TypeLiteral<ArrayList<String>>() {});
+    List<Long> y1 = injector.getInstance(new TypeLiteral<ArrayList<Long>>() {});
+    List<String> x2 = injector.getInstance(new TypeLiteral<ArrayList<String>>() {});
+    List<Long> y2 = injector.getInstance(new TypeLiteral<ArrayList<Long>>() {});
 
     assertTrue(x1 == x2);
     assertTrue(y1 == y2);
@@ -158,7 +158,7 @@ public class ProducesAnnotationTest {
     injector.register(Types.parameterize(GenericFactory1.class, Long.class));
 
     assertThat((Object)injector.getInstance(ArrayList.class)).isNotNull();
-    assertThat(injector.<ArrayList<Long>>getInstance(Types.parameterize(ArrayList.class, Long.class))).isNotNull();
+    assertThat(injector.<ArrayList<Long>>getInstance(new TypeLiteral<ArrayList<Long>>() {})).isNotNull();
   }
 
   @Test
@@ -172,9 +172,9 @@ public class ProducesAnnotationTest {
     assertEquals("hi", injector.getInstance(String.class));
     assertEquals(123, injector.getInstance(Integer.class));
 
-    assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(new TypeReference<GenericFactory2<Long>>() {}.getType()));
+    assertThrows(UnsatisfiedResolutionException.class, () -> injector.getInstance(new TypeLiteral<GenericFactory2<Long>>() {}));
 
-    GenericFactory2<String> x1 = injector.getInstance(new TypeReference<GenericFactory2<String>>() {}.getType());
+    GenericFactory2<String> x1 = injector.getInstance(new TypeLiteral<GenericFactory2<String>>() {});
     GenericFactory2<String> x2 = injector.getInstance(StringFactory.class);
 
     assertTrue(x1 == x2);
@@ -199,7 +199,7 @@ public class ProducesAnnotationTest {
 
     injector.register(Types.parameterize(GenericFactory3.class, Long.class));
 
-    GenericFactory3<Long> gf3 = injector.getInstance(Types.parameterize(GenericFactory3.class, Long.class));
+    GenericFactory3<Long> gf3 = injector.getInstance(new TypeLiteral<GenericFactory3<Long>>() {});
 
     gf3.obj = 5L;
 
@@ -417,14 +417,14 @@ public class ProducesAnnotationTest {
 
     @Test
     void injectorShouldReturnGenericTypes() throws Exception {
-      injector.getInstance(new TypeReference<Garage<Bus>>() {}.getType());
+      injector.getInstance(new TypeLiteral<Garage<Bus>>() {});
 
-      Garage<Bus> busGarage1 = injector.getInstance(new TypeReference<Garage<Bus>>() {}.getType());
-      Garage<Bus> busGarage2 = injector.getInstance(new TypeReference<Garage<Bus>>() {}.getType());
-      Garage<Car> carGarage1 = injector.getInstance(new TypeReference<Garage<Car>>() {}.getType());
-      Garage<Car> carGarage2 = injector.getInstance(new TypeReference<Garage<Car>>() {}.getType());
-      Garage<Truck> truckGarage1 = injector.getInstance(new TypeReference<Garage<Truck>>() {}.getType());
-      Garage<Truck> truckGarage2 = injector.getInstance(new TypeReference<Garage<Truck>>() {}.getType());
+      Garage<Bus> busGarage1 = injector.getInstance(new TypeLiteral<Garage<Bus>>() {});
+      Garage<Bus> busGarage2 = injector.getInstance(new TypeLiteral<Garage<Bus>>() {});
+      Garage<Car> carGarage1 = injector.getInstance(new TypeLiteral<Garage<Car>>() {});
+      Garage<Car> carGarage2 = injector.getInstance(new TypeLiteral<Garage<Car>>() {});
+      Garage<Truck> truckGarage1 = injector.getInstance(new TypeLiteral<Garage<Truck>>() {});
+      Garage<Truck> truckGarage2 = injector.getInstance(new TypeLiteral<Garage<Truck>>() {});
 
       assertEquals(carGarage1, carGarage2);  // singleton
       assertNotEquals(busGarage1, busGarage2);  // not singleton

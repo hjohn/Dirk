@@ -4,8 +4,8 @@ import java.util.Set;
 
 import org.int4.dirk.annotations.Opt;
 import org.int4.dirk.api.Injector;
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
-import org.int4.dirk.util.Types;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,16 +21,16 @@ public class InjectionTargetExtensionTest {
   void shouldGetInstancesForNestedTypes() throws Exception {
     injector.registerInstance("A");
 
-    assertThat(injector.<Provider<String>>getInstance(Types.parameterize(Provider.class, String.class)).get()).isEqualTo("A");
-    assertThat(injector.<Provider<Provider<String>>>getInstance(Types.parameterize(Provider.class, Types.parameterize(Provider.class, String.class))).get().get()).isEqualTo("A");
+    assertThat(injector.<Provider<String>>getInstance(new TypeLiteral<Provider<String>>() {}).get()).isEqualTo("A");
+    assertThat(injector.<Provider<Provider<String>>>getInstance(new TypeLiteral<Provider<Provider<String>>>() {}).get().get()).isEqualTo("A");
 
-    Provider<Integer> integerProvider = injector.getInstance(Types.parameterize(Provider.class, Integer.class));
+    Provider<Integer> integerProvider = injector.getInstance(new TypeLiteral<Provider<Integer>>() {});
 
     assertThat(integerProvider).isInstanceOf(Provider.class);
     assertThatThrownBy(() -> integerProvider.get())
       .isExactlyInstanceOf(UnsatisfiedResolutionException.class);
 
-    Provider<Provider<Integer>> integerProviderProvider = injector.getInstance(Types.parameterize(Provider.class, Types.parameterize(Provider.class, Integer.class)));
+    Provider<Provider<Integer>> integerProviderProvider = injector.getInstance(new TypeLiteral<Provider<Provider<Integer>>>() {});
 
     assertThat(integerProviderProvider).isInstanceOf(Provider.class);
     assertThat(integerProviderProvider.get()).isInstanceOf(Provider.class);

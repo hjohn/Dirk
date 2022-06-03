@@ -10,10 +10,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.int4.dirk.api.Injector;
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.core.test.scope.TestScope;
 import org.int4.dirk.spi.scope.AbstractScopeResolver;
 import org.int4.dirk.util.Annotations;
-import org.int4.dirk.util.Types;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -77,9 +77,10 @@ public class InjectorThreadingTest {
   void shouldSurviveThreadStressTest2() throws InterruptedException, ExecutionException {
     ExecutorService executor = Executors.newFixedThreadPool(20);
     List<Future<Long>> futures = new ArrayList<>();
+    TypeLiteral<Provider<A>> typeLiteral = new TypeLiteral<>() {};
 
     for(int i = 0; i < 1000; i++) {
-      Provider<A> root = injector.getInstance(Types.parameterize(Provider.class, A.class));
+      Provider<A> root = injector.getInstance(typeLiteral);
       long req = i;
 
       futures.add(executor.submit(() -> {

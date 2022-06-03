@@ -1,7 +1,6 @@
 package org.int4.dirk.extensions.assisted;
 
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -9,6 +8,7 @@ import java.util.function.BiFunction;
 import org.int4.dirk.annotations.Argument;
 import org.int4.dirk.annotations.Assisted;
 import org.int4.dirk.api.Injector;
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.definition.DefinitionException;
 import org.int4.dirk.api.definition.UnsatisfiedDependencyException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
@@ -16,7 +16,6 @@ import org.int4.dirk.core.InjectorBuilder;
 import org.int4.dirk.core.test.qualifiers.Green;
 import org.int4.dirk.core.test.qualifiers.Red;
 import org.int4.dirk.util.Annotations;
-import org.int4.dirk.util.Types;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -440,11 +439,11 @@ public class AssistedInjectionTest {
   public void shouldBePossibleToUseBiFunction() throws Exception {
     injector.register(TestService.class);
 
-    ParameterizedType factoryType = Types.parameterize(BiFunction.class, Integer.class, Double.class, TestAssistedAbstractSample.class);
+    TypeLiteral<BiFunction<Integer, Double, TestAssistedAbstractSample>> typeLiteral = new TypeLiteral<>() {};
 
-    injector.register(factoryType);
+    injector.register(typeLiteral.getType());
 
-    BiFunction<Integer, Double, TestAssistedAbstractSample> instance = injector.getInstance(factoryType);
+    BiFunction<Integer, Double, TestAssistedAbstractSample> instance = injector.getInstance(typeLiteral);
 
     TestAssistedAbstractSample sample = instance.apply(5, 4.5);
 

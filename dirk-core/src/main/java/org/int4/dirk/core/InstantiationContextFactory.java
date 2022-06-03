@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
@@ -25,7 +26,6 @@ import org.int4.dirk.core.definition.InjectionTargetExtensionStore;
 import org.int4.dirk.core.definition.Key;
 import org.int4.dirk.core.definition.injection.Injection;
 import org.int4.dirk.core.store.Resolver;
-import org.int4.dirk.org.apache.commons.lang3.reflect.TypeUtils;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.ProxyStrategy;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
@@ -173,27 +173,25 @@ class InstantiationContextFactory {
 
     @Override
     public InstantiationContext<T> select(Annotation... qualifiers) {
-      return select(key.getType(), qualifiers);
+      return createContext(new Key(key.getType(), mergeQualifiers(key, qualifiers)), optional);
     }
 
     @Override
     public <U extends T> InstantiationContext<U> select(Class<U> subtype, Annotation... qualifiers) {
-      return select((Type)subtype, qualifiers);
+      return createContext(new Key(subtype, mergeQualifiers(key, qualifiers)), optional);
     }
 
     @Override
-    public <U extends T> InstantiationContext<U> select(Type subtype, Annotation... qualifiers) {
-      if(!TypeUtils.isAssignable(subtype, key.getType())) {
-        throw new IllegalArgumentException("[" + subtype + "] must be a subtype of: " + key.getType());
-      }
+    public <U extends T> InstantiationContext<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+      return createContext(new Key(subtype.getType(), mergeQualifiers(key, qualifiers)), optional);
+    }
 
+    private Set<Annotation> mergeQualifiers(Key key, Annotation... qualifiers) {
       Arrays.stream(qualifiers).filter(annotation -> !annotationStrategy.isQualifier(annotation)).findFirst().ifPresent(annotation -> {
         throw new IllegalArgumentException(annotation + " is not a qualifier annotation");
       });
 
-      Key subkey = new Key(subtype, Stream.concat(key.getQualifiers().stream(), Arrays.stream(qualifiers)).collect(Collectors.toSet()));
-
-      return createContext(subkey, optional);
+      return Stream.concat(key.getQualifiers().stream(), Arrays.stream(qualifiers)).collect(Collectors.toSet());
     }
 
     private T createInstanceInScope(Injectable<T> injectable) throws CreationException {

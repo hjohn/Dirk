@@ -72,16 +72,12 @@ public class InstanceInjectionTargetExtension<T> implements InjectionTargetExten
 
     @Override
     public <U extends T> Instance<U> select(Class<U> subtype, Annotation... qualifiers) {
-      return selectByType(subtype, qualifiers);
+      return new DefaultInstance<>(context.select(subtype, qualifiers));
     }
 
     @Override
     public <U extends T> Instance<U> select(TypeLiteral<U> literal, Annotation... qualifiers) {
-      return selectByType(literal.getType(), qualifiers);
-    }
-
-    private <U extends T> Instance<U> selectByType(Type subtype, Annotation... qualifiers) {
-      return new DefaultInstance<>(context.select(subtype, qualifiers));
+      return new DefaultInstance<>(context.select(literal.getRawType(), qualifiers));
     }
 
     @Override

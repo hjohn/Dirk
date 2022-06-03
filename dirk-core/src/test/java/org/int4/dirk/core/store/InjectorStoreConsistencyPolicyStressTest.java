@@ -31,7 +31,7 @@ public class InjectorStoreConsistencyPolicyStressTest {
     Injector injector = Injectors.manual();
 
     List<Type> actual = new ArrayList<>();
-    List<Type> classes = new ArrayList<>(List.of(A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class, K.class));
+    List<Class<?>> classes = new ArrayList<>(List.of(A.class, B.class, C.class, D.class, E.class, F.class, G.class, H.class, I.class, J.class, K.class));
     Set<Type> classesNeverRegistered = new HashSet<>(classes);
     int total = 20000;
     int cyclics = 0;
@@ -98,17 +98,17 @@ public class InjectorStoreConsistencyPolicyStressTest {
         // ignore
       }
 
-      for(Type type : classes) {
-        boolean contains = injector.contains(type);
+      for(Class<?> cls : classes) {
+        boolean contains = injector.contains(cls);
         if(contains) {
-          contains = injector.getInstances(type).stream().map(Object::getClass).anyMatch(type::equals);
+          contains = injector.getInstances(cls).stream().map(Object::getClass).anyMatch(cls::equals);
         }
 
-        if(actual.contains(type)) {
-          assertTrue(contains, "Expected " + type);
+        if(actual.contains(cls)) {
+          assertTrue(contains, "Expected " + cls);
         }
         else {
-          assertFalse(contains, "Did not expect " + type);
+          assertFalse(contains, "Did not expect " + cls);
         }
       }
     }

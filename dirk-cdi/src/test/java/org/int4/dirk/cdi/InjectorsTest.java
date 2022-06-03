@@ -6,12 +6,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Map;
 
 import org.int4.dirk.api.Injector;
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 import org.int4.dirk.spi.scope.AbstractScopeResolver;
 import org.int4.dirk.util.Annotations;
-import org.int4.dirk.util.Types;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +23,6 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
-import jakarta.enterprise.util.TypeLiteral;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Qualifier;
@@ -251,7 +250,7 @@ public class InjectorsTest {
 
     @Test
     void shouldSupportInstanceProvider() throws Exception {
-      Instance<Number> numbers = injector.getInstance(Types.parameterize(Instance.class, Number.class));
+      Instance<Number> numbers = injector.getInstance(new TypeLiteral<Instance<Number>>() {});
 
       // check unsupported methods:
       assertThatThrownBy(() -> numbers.destroy(null)).isExactlyInstanceOf(UnsupportedOperationException.class);
@@ -286,7 +285,7 @@ public class InjectorsTest {
 
     @Test
     void shouldSupportSelectWithInstanceProvider() throws Exception {
-      Instance<Number> numbers = injector.getInstance(Types.parameterize(Instance.class, Number.class));
+      Instance<Number> numbers = injector.getInstance(new TypeLiteral<Instance<Number>>() {});
 
       injector.registerInstance(1);
       injector.registerInstance(2, Annotations.of(Red.class));
@@ -311,7 +310,7 @@ public class InjectorsTest {
       assertThat(redIntegers.get()).isEqualTo(2);
       assertThat(redIntegers.iterator()).toIterable().containsExactlyInAnyOrder(2);
 
-      Instance<Double> doubles = numbers.select(new TypeLiteral<Double>() {});
+      Instance<Double> doubles = numbers.select(new jakarta.enterprise.util.TypeLiteral<Double>() {});
 
       assertThat(doubles.isAmbiguous()).isTrue();
       assertThat(doubles.isResolvable()).isFalse();
@@ -330,7 +329,7 @@ public class InjectorsTest {
 
     @Test
     void shouldRejectIllegalSelects() throws Exception {
-      Instance<Number> numbers = injector.getInstance(Types.parameterize(Instance.class, Number.class));
+      Instance<Number> numbers = injector.getInstance(new TypeLiteral<Instance<Number>>() {});
 
       assertThatThrownBy(() -> numbers.select(Annotations.of(Singleton.class)))
         .isExactlyInstanceOf(IllegalArgumentException.class)

@@ -103,13 +103,6 @@ public class InstantiationContextFactoryTest {
         }
 
         @Test
-        void selectShouldRejectNonSubTypes() {
-          assertThatThrownBy(() -> context.select(String.class))
-            .isExactlyInstanceOf(IllegalArgumentException.class)
-            .hasMessage("[class java.lang.String] must be a subtype of: class org.int4.dirk.core.InstantiationContextFactoryTest$A");
-        }
-
-        @Test
         void selectShouldRejectNonQualifiedAnnotations() {
           assertThatThrownBy(() -> context.select(B.class, Annotations.of(Singleton.class)))
             .isExactlyInstanceOf(IllegalArgumentException.class)
@@ -226,13 +219,6 @@ public class InstantiationContextFactoryTest {
 
           assertThat(reds.create()).flatExtracting(Object::getClass).containsExactlyInAnyOrder(D.class);
           assertThat(reds.createAll()).isEmpty();
-        }
-
-        @Test
-        void selectShouldRejectNonSubTypes() {
-          assertThatThrownBy(() -> context.select(String.class))
-            .isExactlyInstanceOf(IllegalArgumentException.class)
-            .hasMessage("[class java.lang.String] must be a subtype of: java.util.List<org.int4.dirk.core.InstantiationContextFactoryTest.B>");
         }
       }
     }

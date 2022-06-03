@@ -9,6 +9,7 @@ import java.util.RandomAccess;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.definition.DefinitionException;
 import org.int4.dirk.api.definition.DuplicateDependencyException;
 import org.int4.dirk.api.definition.MissingDependencyException;
@@ -25,7 +26,6 @@ import org.int4.dirk.core.test.qualifiers.Big;
 import org.int4.dirk.core.test.qualifiers.Red;
 import org.int4.dirk.core.test.qualifiers.Small;
 import org.int4.dirk.util.Annotations;
-import org.int4.dirk.util.TypeReference;
 import org.int4.dirk.util.Types;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -176,25 +176,25 @@ public class QualifiedTypeStoreTest {
     assertEquals(9, store.resolve(new Key(Comparable.class)).size());
 
     // All Comparable<Long>
-    assertEquals(2, store.resolve(new Key(new TypeReference<Comparable<Long>>() {}.getType())).size());
+    assertEquals(2, store.resolve(new Key(new TypeLiteral<Comparable<Long>>() {}.getType())).size());
 
     // All Comparable<String> Serializables
-    assertEquals(3, store.resolve(new Key(Types.wildcardExtends(Serializable.class, new TypeReference<Comparable<String>>() {}.getType()))).size());
+    assertEquals(3, store.resolve(new Key(Types.wildcardExtends(Serializable.class, new TypeLiteral<Comparable<String>>() {}.getType()))).size());
 
     // All Red Comparable<String> Serializables
-    assertEquals(1, store.resolve(new Key(Types.wildcardExtends(Serializable.class, new TypeReference<Comparable<String>>() {}.getType()), Set.of(RED))).size());
+    assertEquals(1, store.resolve(new Key(Types.wildcardExtends(Serializable.class, new TypeLiteral<Comparable<String>>() {}.getType()), Set.of(RED))).size());
 
     // All Comparable<String>
-    assertEquals(5, store.resolve(new Key(new TypeReference<Comparable<String>>() {}.getType())).size());
+    assertEquals(5, store.resolve(new Key(new TypeLiteral<Comparable<String>>() {}.getType())).size());
 
     // All Red Comparable<String>
-    assertEquals(2, store.resolve(new Key(new TypeReference<Comparable<String>>() {}.getType(), Set.of(RED))).size());
+    assertEquals(2, store.resolve(new Key(new TypeLiteral<Comparable<String>>() {}.getType(), Set.of(RED))).size());
 
     // All RandomAccess Serializables
     assertEquals(0, store.resolve(new Key(Types.wildcardExtends(Serializable.class, RandomAccess.class))).size());
 
     // All Comparable<Integer>
-    assertEquals(2, store.resolve(new Key(Types.wildcardExtends(new TypeReference<Comparable<Integer>>() {}.getType()))).size());
+    assertEquals(2, store.resolve(new Key(Types.wildcardExtends(new TypeLiteral<Comparable<Integer>>() {}.getType()))).size());
 
     // All CharSequence & Number (0)
     assertEquals(0, store.resolve(new Key(Types.wildcardExtends(CharSequence.class, Number.class))).size());
@@ -276,8 +276,8 @@ public class QualifiedTypeStoreTest {
 
     // Ensure lookup by a filtered type is not possible (store doesn't do this, injectable factory filters the types already):
     assertFalse(store.contains(new Key(Types.parameterize(Provider.class, String.class))));
-    assertFalse(store.contains(new Key(new TypeReference<Provider<String>>() {}.getType())));
-    assertFalse(store.contains(new Key(new TypeReference<Provider<Long>>() {}.getType())));
+    assertFalse(store.contains(new Key(new TypeLiteral<Provider<String>>() {}.getType())));
+    assertFalse(store.contains(new Key(new TypeLiteral<Provider<Long>>() {}.getType())));
   }
 
   @Test

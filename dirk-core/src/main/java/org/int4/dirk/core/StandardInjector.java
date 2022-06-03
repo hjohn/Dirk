@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.int4.dirk.api.CandidateRegistry;
 import org.int4.dirk.api.Injector;
 import org.int4.dirk.api.InstanceResolver;
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.definition.AutoDiscoveryException;
 import org.int4.dirk.api.definition.DefinitionException;
 import org.int4.dirk.api.definition.DependencyException;
@@ -89,8 +90,8 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public <T> T getInstance(Type type, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
-    return instanceResolver.getInstance(type, qualifiers);
+  public <T> T getInstance(TypeLiteral<T> typeLiteral, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
+    return instanceResolver.getInstance(typeLiteral, qualifiers);
   }
 
   @Override
@@ -99,8 +100,8 @@ public class StandardInjector implements Injector {
   }
 
   @Override
-  public <T> List<T> getInstances(Type type, Object... qualifiers) throws CreationException {
-    return instanceResolver.getInstances(type, qualifiers);
+  public <T> List<T> getInstances(TypeLiteral<T> typeLiteral, Object... qualifiers) throws CreationException {
+    return instanceResolver.getInstances(typeLiteral, qualifiers);
   }
 
   @Override
