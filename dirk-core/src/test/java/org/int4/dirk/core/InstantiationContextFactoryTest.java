@@ -1,18 +1,29 @@
 package org.int4.dirk.core;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.int4.dirk.annotations.Opt;
+import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
+import org.int4.dirk.api.instantiation.CreationException;
+import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 import org.int4.dirk.core.DefaultInstanceResolverTest.TestScoped;
 import org.int4.dirk.core.definition.InjectionTargetExtensionStore;
 import org.int4.dirk.core.definition.Key;
+import org.int4.dirk.core.instantiation.InjectionTargetExtensions;
 import org.int4.dirk.core.store.InjectableStore;
 import org.int4.dirk.core.test.qualifiers.Green;
 import org.int4.dirk.core.test.qualifiers.Red;
+import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.instantiation.InstantiationContext;
+import org.int4.dirk.spi.instantiation.TypeTrait;
 import org.int4.dirk.spi.scope.AbstractScopeResolver;
 import org.int4.dirk.util.Annotations;
 import org.int4.dirk.util.Types;
@@ -39,8 +50,65 @@ public class InstantiationContextFactoryTest {
     }
   };
 
+  interface BadSupplierA<T> {
+    T get();
+  }
+
+  interface BadSupplierB<T> {
+    T get();
+  }
+
+  static class BadSupplierAInjectionTargetExtension<T> implements InjectionTargetExtension<BadSupplierA<T>, T> {
+    @Override
+    public Class<?> getTargetClass() {
+      return BadSupplierA.class;
+    }
+
+    @Override
+    public Type getElementType(Type type) {
+      return Types.getTypeParameter(type, BadSupplierA.class, BadSupplierA.class.getTypeParameters()[0]);
+    }
+
+    @Override
+    public Set<TypeTrait> getTypeTraits() {
+      return EnumSet.of(TypeTrait.LAZY);
+    }
+
+    @Override
+    public BadSupplierA<T> getInstance(InstantiationContext<T> context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException, ScopeNotActiveException {
+      T t = context.create();  // Not LAZY, this is an incorrect implementation that should be detected at runtime!
+
+      return () -> t;
+    }
+  }
+
+  static class BadSupplierBInjectionTargetExtension<T> implements InjectionTargetExtension<BadSupplierB<T>, T> {
+    @Override
+    public Class<?> getTargetClass() {
+      return BadSupplierB.class;
+    }
+
+    @Override
+    public Type getElementType(Type type) {
+      return Types.getTypeParameter(type, BadSupplierB.class, BadSupplierB.class.getTypeParameters()[0]);
+    }
+
+    @Override
+    public Set<TypeTrait> getTypeTraits() {
+      return EnumSet.of(TypeTrait.LAZY);
+    }
+
+    @Override
+    public BadSupplierB<T> getInstance(InstantiationContext<T> context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException, ScopeNotActiveException {
+      List<T> t = context.createAll();  // Not LAZY, this is an incorrect implementation that should be detected at runtime!
+
+      return () -> t.get(0);
+    }
+  }
+
   private final ScopeResolverManager scopeResolverManager = ScopeResolverManagers.create(scopeResolver);
-  private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager);
+  private final List<InjectionTargetExtension<?, ?>> extensions = Stream.concat(InjectionTargetExtensions.create().stream(), Stream.of(new BadSupplierAInjectionTargetExtension<>(), new BadSupplierBInjectionTargetExtension<>())).collect(Collectors.toList());
+  private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager, extensions);
   private final InjectionTargetExtensionStore injectionTargetExtensionStore = injectableFactories.getInjectionTargetExtensionStore();
   private final InjectableStore store = new InjectableStore(InjectableFactories.PROXY_STRATEGY);
   private final InstantiationContextFactory factory = new InstantiationContextFactory(store, InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
@@ -58,7 +126,7 @@ public class InstantiationContextFactoryTest {
         injectableFactories.forClass().create(D.class),
         injectableFactories.forClass().create(E.class),
         injectableFactories.forClass().create(F.class), // not in scope
-        injectableFactories.forClass().create(X.class)  // not in scope
+        injectableFactories.forClass().create(X.class)
       ));
     }
 
@@ -86,7 +154,7 @@ public class InstantiationContextFactoryTest {
           assertThatThrownBy(() -> bs.create()).isExactlyInstanceOf(AmbiguousResolutionException.class);
           assertThat(bs.createAll()).hasSize(2);
 
-          InstantiationContext<C> cs = context.select(C.class);
+          InstantiationContext<C> cs = context.select(new TypeLiteral<C>() {});
 
           assertThat(cs.create()).isInstanceOf(C.class);
           assertThat(cs.createAll()).hasSize(1);
@@ -219,6 +287,39 @@ public class InstantiationContextFactoryTest {
 
           assertThat(reds.create()).flatExtracting(Object::getClass).containsExactlyInAnyOrder(D.class);
           assertThat(reds.createAll()).isEmpty();
+        }
+      }
+    }
+
+    @Nested
+    class AndCreatingContextsForBadSupplierInjectionTargetExtensions {
+      private InstantiationContext<BadSupplierA<X>> contextA = factory.createContext(new Key(Types.parameterize(BadSupplierA.class, X.class)), false);
+      private InstantiationContext<BadSupplierB<X>> contextB = factory.createContext(new Key(Types.parameterize(BadSupplierB.class, X.class)), false);
+
+      @Nested
+      class ThenContext {
+        @Test
+        void createShouldDiscoverBadInjectionTargetExtensionCallingCreate() {
+          assertThatThrownBy(() -> contextA.create())
+            .isExactlyInstanceOf(IllegalStateException.class)
+            .hasMessageStartingWith("Create was called immediately by a lazy extension; lazy extensions should only use the context indirectly: org.int4.dirk.core.InstantiationContextFactoryTest$BadSupplierAInjectionTargetExtension@");
+        }
+
+        @Test
+        void createShouldDiscoverBadInjectionTargetExtensionCallingCreateAll() {
+          assertThatThrownBy(() -> contextB.create())
+            .isExactlyInstanceOf(IllegalStateException.class)
+            .hasMessageStartingWith("Create was called immediately by a lazy extension; lazy extensions should only use the context indirectly: org.int4.dirk.core.InstantiationContextFactoryTest$BadSupplierBInjectionTargetExtension@");
+        }
+
+        @Test
+        void createAllShouldDiscoverBadInjectionTargetExtensionCallingCreate() {
+          assertThat(contextB.createAll()).isEmpty();
+        }
+
+        @Test
+        void createAllShouldNotDiscoverBadInjectionTargetExtensionAsExtensionsAreNotSupported() {
+          assertThat(contextB.createAll()).isEmpty();
         }
       }
     }

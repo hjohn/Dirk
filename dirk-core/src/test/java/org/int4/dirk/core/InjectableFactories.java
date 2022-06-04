@@ -1,6 +1,7 @@
 package org.int4.dirk.core;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,14 +42,21 @@ public class InjectableFactories {
   private final ScopeResolverManager scopeResolverManager;
   private final DefaultInjectableFactory factory;
   private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
-  private final List<InjectionTargetExtension<?, ?>> injectionTargetExtensions = InjectionTargetExtensions.create();
-  private final InjectionTargetExtensionStore injectionTargetExtensionStore = new InjectionTargetExtensionStore(injectionTargetExtensions);
-  private final BindingProvider bindingProvider = new BindingProvider(ANNOTATION_STRATEGY, injectionTargetExtensionStore);
+  private final Collection<InjectionTargetExtension<?, ?>> injectionTargetExtensions;
+  private final InjectionTargetExtensionStore injectionTargetExtensionStore;
+  private final BindingProvider bindingProvider;
 
-  public InjectableFactories(ScopeResolverManager scopeResolverManager) {
+  public InjectableFactories(ScopeResolverManager scopeResolverManager, Collection<InjectionTargetExtension<?, ?>> extensions) {
+    this.injectionTargetExtensions = extensions;
     this.scopeResolverManager = scopeResolverManager;
+    this.injectionTargetExtensionStore = new InjectionTargetExtensionStore(injectionTargetExtensions);
+    this.bindingProvider = new BindingProvider(ANNOTATION_STRATEGY, injectionTargetExtensionStore);
     this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, SCOPE_STRATEGY, injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet()));
     this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
+  }
+
+  public InjectableFactories(ScopeResolverManager scopeResolverManager) {
+    this(scopeResolverManager, InjectionTargetExtensions.create());
   }
 
   public InjectableFactories() {

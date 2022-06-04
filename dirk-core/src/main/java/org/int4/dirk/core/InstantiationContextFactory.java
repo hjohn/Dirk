@@ -30,6 +30,7 @@ import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.ProxyStrategy;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.instantiation.InstantiationContext;
+import org.int4.dirk.spi.instantiation.TypeTrait;
 import org.int4.dirk.spi.scope.CreationalContext;
 import org.int4.dirk.spi.scope.ScopeResolver;
 import org.int4.dirk.util.Types;
@@ -49,6 +50,14 @@ class InstantiationContextFactory {
    * <p>Note that only a single thread should make use of this class at the same time.
    */
   private final ThreadLocal<Deque<LazyCreationalContext<?>>> threadLocalStack = ThreadLocal.withInitial(() -> new ArrayDeque<>());
+
+  /**
+   * Thread Local to detect bad {@link InjectionTargetExtension}s which claim they are
+   * lazy but in reality are immediately accessing the context. This works by detecting
+   * if any calls were done to a context after calling {@link InjectionTargetExtension#getInstance(InstantiationContext)}
+   * for lazy extensions.
+   */
+  private final ThreadLocal<Integer> threadLocalCalls = ThreadLocal.withInitial(() -> 0);
 
   private final Resolver<Injectable<?>> resolver;
   private final AnnotationStrategy annotationStrategy;
@@ -110,65 +119,93 @@ class InstantiationContextFactory {
 
     @Override
     public T create() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
-      if(subcontext == null) {
-        @SuppressWarnings("unchecked")
-        Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
+      int calls = threadLocalCalls.get();
 
-        if(injectables.size() > 1) {
-          throw new AmbiguousResolutionException("Multiple matching instances: [" + key + "]: " + injectables);
+      threadLocalCalls.set(calls + 1);
+
+      try {
+        if(subcontext == null) {
+          @SuppressWarnings("unchecked")
+          Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
+
+          if(injectables.size() > 1) {
+            throw new AmbiguousResolutionException("Multiple matching instances: [" + key + "]: " + injectables);
+          }
+
+          T instance = injectables.size() == 0 ? null : createInstance(injectables.iterator().next());
+
+          if(instance == null && !optional) {
+            throw new UnsatisfiedResolutionException("No such instance: [" + key + "]");
+          }
+
+          return instance;
         }
 
-        T instance = injectables.size() == 0 ? null : createInstance(injectables.iterator().next());
+        T instance = injectionTargetExtension.getInstance(subcontext);  // this can recurse into create/createAll which is not allowed for lazy extensions
 
-        if(instance == null && !optional) {
-          throw new UnsatisfiedResolutionException("No such instance: [" + key + "]");
+        if(injectionTargetExtension.getTypeTraits().contains(TypeTrait.LAZY) && threadLocalCalls.get() != calls + 1) {
+          throw new IllegalStateException("Create was called immediately by a lazy extension; lazy extensions should only use the context indirectly: " + injectionTargetExtension);
         }
 
         return instance;
       }
-
-      return injectionTargetExtension.getInstance(subcontext);
+      finally {
+        if(calls == 0) {
+          threadLocalCalls.remove();
+        }
+      }
     }
 
     @Override
     public List<T> createAll() throws CreationException {
-      if(subcontext == null) {
-        List<T> instances = new ArrayList<>();
+      int calls = threadLocalCalls.get();
 
-        @SuppressWarnings("unchecked")
-        Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
+      threadLocalCalls.set(calls + 1);
 
-        for(Injectable<T> injectable : injectables) {
-          T instance = createInstanceInScope(injectable);
+      try {
+        if(subcontext == null) {
+          List<T> instances = new ArrayList<>();
 
-          if(instance != null) {
-            instances.add(instance);
+          @SuppressWarnings("unchecked")
+          Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
+
+          for(Injectable<T> injectable : injectables) {
+            T instance = createInstanceInScope(injectable);
+
+            if(instance != null) {
+              instances.add(instance);
+            }
           }
+
+          if(instances.isEmpty() && optional) {
+            return null;
+          }
+
+          return instances;
         }
 
-        if(instances.isEmpty() && optional) {
-          return null;
-        }
+        /*
+         * Obtaining all instances of an extended type is not supported; we could throw an
+         * exception but that sort of breaks the contract of this method (and has its effect
+         * when calling Injector#getInstances with an extended type like Provider<String>).
+         *
+         * Better is to return the empty list in those cases as getInstances does not normally
+         * fail with an UnstatisfiedDependencyException. This is also more in line with #create
+         * which returns null when nothing is found.
+         *
+         * It is hard to find all instances of an extended type as these are not part of the
+         * store. Basically we'd have to find all the matching injectables, and then wrap them
+         * with the extended type, which does not seem worth it. Better to force the user to
+         * obtain their results differently.
+         */
 
-        return instances;
+        return List.of();
       }
-
-      /*
-       * Obtaining all instances of an extended type is not supported; we could throw an
-       * exception but that sort of breaks the contract of this method (and has its effect
-       * when calling Injector#getInstances with an extended type like Provider<String>).
-       *
-       * Better is to return the empty list in those cases as getInstances does not normally
-       * fail with an UnstatisfiedDependencyException. This is also more in line with #create
-       * which returns null when nothing is found.
-       *
-       * It is hard to find all instances of an extended type as these are not part of the
-       * store. Basically we'd have to find all the matching injectables, and then wrap them
-       * with the extended type, which does not seem worth it. Better to force the user to
-       * obtain their results differently.
-       */
-
-      return List.of();
+      finally {
+        if(calls == 0) {
+          threadLocalCalls.remove();
+        }
+      }
     }
 
     @Override
