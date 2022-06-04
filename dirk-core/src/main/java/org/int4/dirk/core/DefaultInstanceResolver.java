@@ -26,22 +26,22 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   @Override
-  public synchronized <T> T getInstance(TypeLiteral<T> typeLiteral, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
+  public <T> T getInstance(TypeLiteral<T> typeLiteral, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
     return getInstance(KeyFactory.of(typeLiteral.getType(), qualifiers));
   }
 
   @Override
-  public synchronized <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
+  public <T> T getInstance(Class<T> cls, Object... qualifiers) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
     return getInstance(KeyFactory.of(cls, qualifiers));
   }
 
   @Override
-  public synchronized <T> List<T> getInstances(TypeLiteral<T> typeLiteral, Object... qualifiers) throws CreationException {
+  public <T> List<T> getInstances(TypeLiteral<T> typeLiteral, Object... qualifiers) throws CreationException {
     return getInstances(KeyFactory.of(typeLiteral.getType(), qualifiers));
   }
 
   @Override
-  public synchronized <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws CreationException {
+  public <T> List<T> getInstances(Class<T> cls, Object... qualifiers) throws CreationException {
     return getInstances(KeyFactory.of(cls, qualifiers));
   }
 
