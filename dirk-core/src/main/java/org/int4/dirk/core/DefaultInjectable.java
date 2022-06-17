@@ -120,6 +120,11 @@ final class DefaultInjectable<T> implements Injectable<T> {
   }
 
   @Override
+  public boolean needsDestroy() {
+    return constructable.needsDestroy();
+  }
+
+  @Override
   public int hashCode() {
     return hashCode;
   }

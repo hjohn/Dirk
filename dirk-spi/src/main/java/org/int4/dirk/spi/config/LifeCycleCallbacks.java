@@ -23,4 +23,11 @@ public interface LifeCycleCallbacks {
    * @param instance an instance, cannot be {@code null}
    */
   void preDestroy(Object instance);
+
+  /**
+   * Checks whether any calls have been registered for the pre-destroy life cycle phase.
+   *
+   * @return {@code true} if the pre-destroy life cycle phase must be executed, otherwise {@code false}
+   */
+  boolean needsDestroy();
 }

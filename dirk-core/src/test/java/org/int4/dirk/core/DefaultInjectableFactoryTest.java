@@ -46,6 +46,11 @@ public class DefaultInjectableFactoryTest {
     @Override
     public void destroy(BookShop instance) {
     }
+
+    @Override
+    public boolean needsDestroy() {
+      return false;
+    }
   };
 
   @Test
@@ -147,6 +152,11 @@ public class DefaultInjectableFactoryTest {
 
         @Override
         public void destroy(String instance) {
+        }
+
+        @Override
+        public boolean needsDestroy() {
+          return false;
         }
       }
     );

@@ -74,6 +74,11 @@ public class ClassObjectFactory<T> implements Constructable<T> {
     lifeCycleCallbacks.preDestroy(instance);
   }
 
+  @Override
+  public boolean needsDestroy() {
+    return lifeCycleCallbacks.needsDestroy();
+  }
+
   private T constructInstance(List<Injection> injections) throws CreationException {
     try {
       Object[] values = new Object[constructor.getParameterCount()];  // Parameters for constructor

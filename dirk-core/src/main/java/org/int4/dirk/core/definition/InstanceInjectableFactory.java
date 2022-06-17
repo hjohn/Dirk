@@ -60,6 +60,11 @@ public class InstanceInjectableFactory {
         @Override
         public void destroy(T instance) {
         }
+
+        @Override
+        public boolean needsDestroy() {
+          return false;
+        }
       }
     );
   }

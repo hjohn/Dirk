@@ -27,4 +27,13 @@ public interface Constructable<T> {
    * @param instance an instance to destroy, cannot be {@code null}
    */
   void destroy(T instance);
+
+  /**
+   * Checks whether this constructable needs to be destroyed. A constructable does
+   * not need to be tracked if it doesn't need specific actions when it is about to
+   * be destroyed.
+   *
+   * @return {@code true} if the constructable needs to be destroyed, otherwise {@code false}
+   */
+  boolean needsDestroy();
 }

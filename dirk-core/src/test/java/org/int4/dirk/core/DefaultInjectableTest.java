@@ -40,6 +40,11 @@ public class DefaultInjectableTest {
     public String create(List<Injection> injections) {
       return "5";
     }
+
+    @Override
+    public boolean needsDestroy() {
+      return false;
+    }
   };
 
   @Test

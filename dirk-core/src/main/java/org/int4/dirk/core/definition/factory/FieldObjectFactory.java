@@ -42,4 +42,9 @@ public class FieldObjectFactory<T> implements Constructable<T> {
   public void destroy(T instance) {
     // TODO Call a corresponding Disposer method belonging to this Producer
   }
+
+  @Override
+  public boolean needsDestroy() {
+    return false;
+  }
 }

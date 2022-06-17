@@ -40,6 +40,11 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
     @Override
     public void preDestroy(Object instance) {
     }
+
+    @Override
+    public boolean needsDestroy() {
+      return false;
+    }
   };
 
   private final Class<? extends Annotation> postConstruct;
@@ -121,6 +126,11 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
           LOGGER.log(Level.WARNING, "Exception while calling pre-destroy method: " + method, e);
         }
       }
+    }
+
+    @Override
+    public boolean needsDestroy() {
+      return !preDestroyMethods.isEmpty();
     }
   }
 }
