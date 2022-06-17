@@ -32,6 +32,16 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
     return 0;
   };
 
+  private static final LifeCycleCallbacks EMPTY = new LifeCycleCallbacks() {
+    @Override
+    public void postConstruct(Object instance) {
+    }
+
+    @Override
+    public void preDestroy(Object instance) {
+    }
+  };
+
   private final Class<? extends Annotation> postConstruct;
   private final Class<? extends Annotation> preDestroy;
 
@@ -51,15 +61,21 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
     List<Method> postConstructMethods = Methods.findAnnotated(cls, postConstruct);
     List<Method> preDestroyMethods = Methods.findAnnotated(cls, preDestroy);
 
+    if(postConstructMethods.isEmpty() && preDestroyMethods.isEmpty()) {
+      return EMPTY;
+    }
+
     Collections.sort(postConstructMethods, CLASS_HIERARCHY_COMPARATOR);
     Collections.sort(preDestroyMethods, CLASS_HIERARCHY_COMPARATOR.reversed());
 
     for(Method method : postConstructMethods) {
       checkMethod(method);
+      method.setAccessible(true);
     }
 
     for(Method method : preDestroyMethods) {
       checkMethod(method);
+      method.setAccessible(true);
     }
 
     return new DefaultLifeCycleCallbacks(postConstructMethods, preDestroyMethods);
@@ -84,7 +100,6 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
     public void postConstruct(Object instance) throws InvocationTargetException {
       for(Method method : postConstructMethods) {
         try {
-          method.setAccessible(true);
           method.invoke(instance);
         }
         catch(IllegalAccessException | IllegalArgumentException e) {
@@ -97,7 +112,6 @@ public class AnnotationBasedLifeCycleCallbacksFactory implements LifeCycleCallba
     public void preDestroy(Object instance) {
       for(Method method : preDestroyMethods) {
         try {
-          method.setAccessible(true);
           method.invoke(instance);
         }
         catch(InvocationTargetException e) {
