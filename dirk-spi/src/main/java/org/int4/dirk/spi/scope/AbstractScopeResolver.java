@@ -19,6 +19,23 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   }
 
   @Override
+  public CreationalContext<?> find(Object key) {
+    S currentScope = getCurrentScope();
+
+    if(currentScope == null) {
+      return null;
+    }
+
+    Map<Object, CreationalContext<?>> map = instancesByScope.get(currentScope);
+
+    if(map == null) {
+      return null;
+    }
+
+    return map.get(key);
+  }
+
+  @Override
   public final <T> T get(Object key, CreationalContext<T> creationalContext) throws Exception {
     S currentScope = getCurrentScope();
 
