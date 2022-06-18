@@ -1,24 +1,23 @@
 package org.int4.dirk.core;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
+import org.int4.dirk.core.RootInstantiationContextFactory.RootInstantiationContext;
 import org.int4.dirk.core.definition.Binding;
 import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
@@ -40,29 +39,34 @@ import org.int4.dirk.util.Types;
  */
 class InstantiationContextFactory {
   private static final Logger LOGGER = Logger.getLogger(InstantiationContextFactory.class.getName());
+  private static final ExtendedCreationalContext<?> NULL_CONTEXT = new ExtendedCreationalContext<>() {
+    @Override
+    public Object get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+      return null;
+    }
 
-  /**
-   * Stack of {@link CreationalContext}s used during the recursive creation of an
-   * {@link Injectable}. The contexts refer to a parent if the injectable involved
-   * is dependent scoped; any injectables added to a context, in order to be destroyed when
-   * the context gets released, are added to top most ancestor.
-   *
-   * <p>Note that only a single thread should make use of this class at the same time.
-   */
-  private final ThreadLocal<Deque<LazyCreationalContext<?>>> threadLocalStack = ThreadLocal.withInitial(() -> new ArrayDeque<>());
+    @Override
+    public void release() {
+    }
 
-  /**
-   * Thread Local to detect bad {@link InjectionTargetExtension}s which claim they are
-   * lazy but in reality are immediately accessing the context. This works by detecting
-   * if any calls were done to a context after calling {@link InjectionTargetExtension#getInstance(InstantiationContext)}
-   * for lazy extensions.
-   */
-  private final ThreadLocal<Integer> threadLocalCalls = ThreadLocal.withInitial(() -> 0);
+    @Override
+    public boolean needsDestroy() {
+      return false;
+    }
+
+    @Override
+    public void attach(CreationalContext<?> creationalContext) {
+      throw new UnsupportedOperationException();
+    }
+  };
+
+  private static boolean strictOrder;
 
   private final Resolver<Injectable<?>> resolver;
-  private final AnnotationStrategy annotationStrategy;
   private final ProxyStrategy proxyStrategy;
   private final InjectionTargetExtensionStore injectionTargetExtensionStore;
+  private final RootInstantiationContextFactory rootInstantiationContextFactory;
+  private final ThreadLocal<Deque<ExtendedCreationalContext<?>>> stack = ThreadLocal.withInitial(ArrayDeque::new);
 
   /**
    * Constructs a new instance.
@@ -72,168 +76,177 @@ class InstantiationContextFactory {
    * @param proxyStrategy a {@link ProxyStrategy}, cannot be {@code null}
    * @param injectionTargetExtensionStore an {@link InjectionTargetExtensionStore}, cannot be {@code null}
    */
-  public InstantiationContextFactory(Resolver<Injectable<?>> resolver, AnnotationStrategy annotationStrategy, ProxyStrategy proxyStrategy, InjectionTargetExtensionStore injectionTargetExtensionStore) {
+  InstantiationContextFactory(Resolver<Injectable<?>> resolver, AnnotationStrategy annotationStrategy, ProxyStrategy proxyStrategy, InjectionTargetExtensionStore injectionTargetExtensionStore) {
     this.resolver = Objects.requireNonNull(resolver, "resolver");
-    this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy");
     this.proxyStrategy = Objects.requireNonNull(proxyStrategy, "proxyStrategy");
     this.injectionTargetExtensionStore = Objects.requireNonNull(injectionTargetExtensionStore, "injectionTargetExtensionStore");
+    this.rootInstantiationContextFactory = new RootInstantiationContextFactory(annotationStrategy);
   }
 
-  public <T> InstantiationContext<T> createContext(Binding binding) {
-    return binding.associateIfAbsent("instantiationContext", () -> createContext(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional()));
+  public <T> InstantiationContext<T> createContext(Key key, boolean optional) {
+    return rootInstantiationContextFactory.create(createInstantiator(key, optional));
+  }
+
+  private <T, E> Instantiator<T, E> createInstantiator(Binding binding, Injectable<?> parent) {  // careful, no check if parent is indeed the parent of the binding
+    return binding.associateIfAbsent("instantiator", () -> new Instantiator<>(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional(), parent));
+  }
+
+  private <T, E> Instantiator<T, E> createInstantiator(Key key, boolean optional) {
+    return new Instantiator<>(key, optional, null);
   }
 
   /**
-   * Returns an {@link InstantiationContext} for the given {@link Key} and whether it
-   * is optional or not. If an {@link InstantiationContext} is optional, it is allowed
-   * to return {@code null} when no instances could be created, otherwise it will throw
-   * an {@link UnsatisfiedResolutionException}.
-   *
-   * @param <T> the type of instances the context creates
-   * @param key a {@link Key}, cannot be {@code null}
-   * @param optional {@code true} if optional, otherwise {@code false}
-   * @return an {@link InstantiationContext}, never {@code null}
+   * For test purposes, sorts the resolved beans before using them.
    */
-  public <T> InstantiationContext<T> createContext(Key key, boolean optional) {
-    return new SimpleInstantationContext<>(key, optional);
+  static void useStrictOrdering() {
+    strictOrder = true;
   }
 
-  class SimpleInstantationContext<T> implements InstantiationContext<T> {
-    private final InjectionTargetExtension<T, Object> injectionTargetExtension;
-    private final InstantiationContext<Object> subcontext;
+  final class Instantiator<T, E> {
     private final Key key;
     private final boolean optional;
+    private final Injectable<?> parent;
+    private final InjectionTargetExtension<T, E> injectionTargetExtension;
+    private final Key elementKey;
+    private final Instantiator<E, ?> elementInstantiator;
 
-    SimpleInstantationContext(Key key, boolean optional) {
+    Instantiator(Key key, boolean optional, Injectable<?> parent) {
       this.key = key;
       this.optional = optional;
+      this.parent = parent;
 
       Type type = key.getType();
 
       this.injectionTargetExtension = injectionTargetExtensionStore.getExtension(Types.raw(type));
 
-      Type elementType = injectionTargetExtension == null ? null : injectionTargetExtension.getElementType(type);
+      if(injectionTargetExtension == null) {
+        this.elementKey = null;
+        this.elementInstantiator = null;
+      }
+      else {
+        Type elementType = injectionTargetExtension.getElementType(type);
 
-      this.subcontext = elementType == null ? null : createContext(new Key(elementType, key.getQualifiers()), optional);
+        if(elementType == null) {  // this only happens for bad extensions or when querying for an extended type; whether that last one should be rejected earlier is up for debate
+          this.elementKey = null;
+          this.elementInstantiator = null;
+        }
+        else {
+          this.elementKey = new Key(elementType, key.getQualifiers());
+          this.elementInstantiator = new Instantiator<>(elementKey, optional, null);
+        }
+      }
     }
 
-    @Override
-    public T create() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
-      int calls = threadLocalCalls.get();
+    Key getKey() {
+      return key;
+    }
 
-      threadLocalCalls.set(calls + 1);
+    Key getElementkey() {
+      return elementKey;
+    }
+
+    <U extends T> Instantiator<U, ?> deriveSubInstantiator(Key key) {
+      return new Instantiator<>(key, optional, null);
+    }
+
+    ExtendedCreationalContext<T> create() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
+      if(elementKey == null) {
+        @SuppressWarnings("unchecked")
+        Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
+
+        if(injectables.size() > 1) {
+          throw new AmbiguousResolutionException("Multiple matching instances: [" + key + "]: " + injectables);
+        }
+
+        ExtendedCreationalContext<T> creationalContext = injectables.size() == 0 ? null : createContext(injectables.iterator().next());
+
+        // TODO This should probably throw an IllegalProductException in the second null case
+        if((creationalContext == null || creationalContext.get() == null) && !optional) {
+          throw new UnsatisfiedResolutionException("No such instance: [" + key + "]");
+        }
+
+        @SuppressWarnings("unchecked")
+        ExtendedCreationalContext<T> castContext = creationalContext == null ? (ExtendedCreationalContext<T>)NULL_CONTEXT : creationalContext;
+
+        return castContext;
+      }
+
+      boolean lazy = injectionTargetExtension.getTypeTraits().contains(TypeTrait.LAZY);
+      RootInstantiationContext<E, ?> instantiationContext = rootInstantiationContextFactory.create(elementInstantiator);
+      InjectionTargetExtensionCreationalContext<T, E> creationalContext = new InjectionTargetExtensionCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), lazy ? instantiationContext : null);
+
+      open(creationalContext);
 
       try {
-        if(subcontext == null) {
-          @SuppressWarnings("unchecked")
-          Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
+        creationalContext.initialize(injectionTargetExtension.getInstance(instantiationContext), lazy);
 
-          if(injectables.size() > 1) {
-            throw new AmbiguousResolutionException("Multiple matching instances: [" + key + "]: " + injectables);
-          }
-
-          T instance = injectables.size() == 0 ? null : createInstance(injectables.iterator().next());
-
-          if(instance == null && !optional) {
-            throw new UnsatisfiedResolutionException("No such instance: [" + key + "]");
-          }
-
-          return instance;
-        }
-
-        T instance = injectionTargetExtension.getInstance(subcontext);  // this can recurse into create/createAll which is not allowed for lazy extensions
-
-        if(injectionTargetExtension.getTypeTraits().contains(TypeTrait.LAZY) && threadLocalCalls.get() != calls + 1) {
-          throw new IllegalStateException("Create was called immediately by a lazy extension; lazy extensions should only use the context indirectly: " + injectionTargetExtension);
-        }
-
-        return instance;
+        return creationalContext;
       }
       finally {
-        if(calls == 0) {
-          threadLocalCalls.remove();
-        }
+        close();
       }
     }
 
-    @Override
-    public List<T> createAll() throws CreationException {
-      int calls = threadLocalCalls.get();
+    void open(ExtendedCreationalContext<?> creationalContext) {
+      stack.get().addLast(creationalContext);
+    }
 
-      threadLocalCalls.set(calls + 1);
+    void close() {
+      if(stack.get().size() == 1) {
+        stack.remove();
+      }
+      else {
+        stack.get().removeLast();
+      }
+    }
 
-      try {
-        if(subcontext == null) {
-          List<T> instances = new ArrayList<>();
+    List<ExtendedCreationalContext<T>> createAll() throws CreationException {
+      if(elementKey == null) {
+        List<ExtendedCreationalContext<T>> creationalContexts = new ArrayList<>();
 
-          @SuppressWarnings("unchecked")
-          Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
+        @SuppressWarnings("unchecked")
+        Collection<Injectable<T>> injectables = (Collection<Injectable<T>>)(Set<?>)resolver.resolve(key);
 
-          for(Injectable<T> injectable : injectables) {
-            T instance = createInstanceInScope(injectable);
+        if(strictOrder) {
+          injectables = injectables.stream().sorted(Comparator.comparing(Object::toString)).collect(Collectors.toList());
+        }
 
-            if(instance != null) {
-              instances.add(instance);
-            }
+        for(Injectable<T> injectable : injectables) {
+          ExtendedCreationalContext<T> creationalContext = createContextInScope(injectable);
+
+          if(creationalContext != null) {
+            creationalContexts.add(creationalContext);
           }
-
-          if(instances.isEmpty() && optional) {
-            return null;
-          }
-
-          return instances;
         }
 
-        /*
-         * Obtaining all instances of an extended type is not supported; we could throw an
-         * exception but that sort of breaks the contract of this method (and has its effect
-         * when calling Injector#getInstances with an extended type like Provider<String>).
-         *
-         * Better is to return the empty list in those cases as getInstances does not normally
-         * fail with an UnstatisfiedDependencyException. This is also more in line with #create
-         * which returns null when nothing is found.
-         *
-         * It is hard to find all instances of an extended type as these are not part of the
-         * store. Basically we'd have to find all the matching injectables, and then wrap them
-         * with the extended type, which does not seem worth it. Better to force the user to
-         * obtain their results differently.
-         */
-
-        return List.of();
+        return creationalContexts.isEmpty() && optional ? null : creationalContexts;
       }
-      finally {
-        if(calls == 0) {
-          threadLocalCalls.remove();
-        }
-      }
+
+      /*
+       * Obtaining all contexts of an extended type is not supported; we could throw an
+       * exception but that sort of breaks the contract of this method (and has its effect
+       * when calling Injector#getInstances with an extended type like Provider<String>).
+       *
+       * Better is to return the empty list in those cases as getInstances does not normally
+       * fail with an UnstatisfiedDependencyException. This is also more in line with #create
+       * which returns null when nothing is found.
+       *
+       * It is hard to find all contexts of an extended type as these are not part of the
+       * store. Basically we'd have to find all the matching injectables, and then wrap them
+       * with the extended type, which does not seem worth it. Better to force the user to
+       * obtain their results differently.
+       */
+
+      return List.of();
     }
 
-    @Override
-    public InstantiationContext<T> select(Annotation... qualifiers) {
-      return createContext(new Key(key.getType(), mergeQualifiers(key, qualifiers)), optional);
-    }
-
-    @Override
-    public <U extends T> InstantiationContext<U> select(Class<U> subtype, Annotation... qualifiers) {
-      return createContext(new Key(subtype, mergeQualifiers(key, qualifiers)), optional);
-    }
-
-    @Override
-    public <U extends T> InstantiationContext<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-      return createContext(new Key(subtype.getType(), mergeQualifiers(key, qualifiers)), optional);
-    }
-
-    private Set<Annotation> mergeQualifiers(Key key, Annotation... qualifiers) {
-      Arrays.stream(qualifiers).filter(annotation -> !annotationStrategy.isQualifier(annotation)).findFirst().ifPresent(annotation -> {
-        throw new IllegalArgumentException(annotation + " is not a qualifier annotation");
-      });
-
-      return Stream.concat(key.getQualifiers().stream(), Arrays.stream(qualifiers)).collect(Collectors.toSet());
-    }
-
-    private T createInstanceInScope(Injectable<T> injectable) throws CreationException {
+    private ExtendedCreationalContext<T> createContextInScope(Injectable<T> injectable) throws CreationException {
       try {
-        return injectable.getScopeResolver().isActive() ? createInstance(injectable) : null;
+        if(!injectable.getScopeResolver().isDependentScope() && !injectable.getScopeResolver().isActive()) {
+          return null;
+        }
+
+        return createContext(injectable);
       }
       catch(ScopeNotActiveException e) {
 
@@ -247,35 +260,65 @@ class InstantiationContextFactory {
       }
     }
 
-    private T createInstance(Injectable<T> injectable) throws CreationException, ScopeNotActiveException {
-      Deque<LazyCreationalContext<?>> stack = threadLocalStack.get();
-
+    private ExtendedCreationalContext<T> createContext(Injectable<T> injectable) throws CreationException, ScopeNotActiveException {
       try {
         ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
-        LazyCreationalContext<?> parentCreationalContext = stack.isEmpty() ? null : stack.getLast();
 
-        // Needs proxy? Warning here about potential NPE if extracted to variable...
-        if(parentCreationalContext != null && !scopeResolver.isPseudoScope() && !scopeResolver.getAnnotation().equals(parentCreationalContext.injectable.getScopeResolver().getAnnotation())) {
-          T instance = proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, new LazyCreationalContext<>(null, injectable)));
+        @SuppressWarnings("unchecked")
+        ExtendedCreationalContext<T> existingCreationalContext = (ExtendedCreationalContext<T>)scopeResolver.find(injectable);
 
-          parentCreationalContext.add(injectable, instance);  // there is always a parent CreationalContext when a proxy is needed; here the proxy itself is added to the parent, not an instance
-
-          return instance;
+        if(existingCreationalContext != null) {
+          return existingCreationalContext;
         }
 
-        LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(parentCreationalContext, injectable);
+        boolean needsProxy = parent != null && !scopeResolver.isPseudoScope() && !scopeResolver.getAnnotation().equals(parent.getScopeResolver().getAnnotation());
 
-        stack.addLast(creationalContext);
+        if(needsProxy) {
+          return new ExtendedCreationalContext<>() {
+            @Override
+            public T get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+              try {
+                return proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, new LazyCreationalContext<>(null, injectable)));
+              }
+              catch(Exception e) {  // as extensions are called, a general catch all is used here to wrap unexpected exceptions with some useful diagnostics
+                throw new CreationException("[" + injectable.getType() + "] proxy could not be created", e);
+              }
+            }
+
+            @Override
+            public void release() {
+            }
+
+            @Override
+            public boolean needsDestroy() {
+              return false;
+            }
+
+            @Override
+            public void attach(CreationalContext<?> creationalContext) {
+              throw new UnsupportedOperationException();
+            }
+          };
+        }
+
+        /*
+         * Whenever a scope is created, it also must be cleaned up in exactly one location. This
+         * can be either the LazyCreationalContext which cleans itself upon release, or the
+         * returned CreationalContext is stored by the caller, which will clean it when the
+         * associated instance is asked to be destroyed.
+         */
+
+        LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), injectable);  // TODO doesn't need to be lazy anymore as it should always be used now that #find exists
+
+        open(creationalContext);
 
         try {
-          T instance = scopeResolver.get(injectable, creationalContext);
+          scopeResolver.get(injectable, creationalContext);  // call required so objects are created in correct scope
 
-          creationalContext.add(injectable, instance);
-
-          return instance;
+          return creationalContext;
         }
         finally {
-          stack.removeLast();
+          close();
         }
       }
       catch(ScopeNotActiveException | CreationException e) {  // Avoid wrapping these exceptions in another layer
@@ -284,11 +327,77 @@ class InstantiationContextFactory {
       catch(Exception e) {  // as extensions are called, a general catch all is used here to wrap unexpected exceptions with some useful diagnostics
         throw new CreationException("[" + injectable.getType() + "] could not be created", e);
       }
-      finally {
-        if(stack.isEmpty()) {
-          threadLocalStack.remove();
+    }
+
+    void destroy(CreationalContext<T> creationalContext) {
+      creationalContext.release();
+    }
+  }
+
+  interface ExtendedCreationalContext<T> extends CreationalContext<T> {
+    void attach(CreationalContext<?> creationalContext);
+    boolean needsDestroy();
+  }
+
+  private static final class InjectionTargetExtensionCreationalContext<T, E> implements ExtendedCreationalContext<T> {
+    private final ExtendedCreationalContext<?> parent;
+    private final RootInstantiationContext<E, ?> instantiationContext;
+
+    private T instance;
+    private boolean needsDestroy;
+    private boolean initialized;
+    private List<CreationalContext<?>> children;
+
+    InjectionTargetExtensionCreationalContext(ExtendedCreationalContext<?> parent, RootInstantiationContext<E, ?> context) {
+      this.parent = parent;
+      this.instantiationContext = context;
+    }
+
+    void initialize(T instance, boolean needsDestroy) {
+      this.instance = instance;
+      this.needsDestroy = needsDestroy || children != null;  // if children is not null, it is not empty
+
+      initialized = true;
+
+      if(parent != null && needsDestroy()) {
+        parent.attach(this);
+      }
+    }
+
+    @Override
+    public T get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+      if(!initialized) {
+        throw new IllegalStateException();
+      }
+
+      return instance;
+    }
+
+    @Override
+    public final void attach(CreationalContext<?> child) {
+      if(children == null) {
+        children = new ArrayList<>();
+      }
+
+      children.add(child);
+    }
+
+    @Override
+    public void release() {
+      if(instantiationContext != null) {
+        instantiationContext.release();
+      }
+
+      if(children != null) {
+        for(CreationalContext<?> child : children) {
+          child.release();
         }
       }
+    }
+
+    @Override
+    public boolean needsDestroy() {
+      return needsDestroy;
     }
   }
 
@@ -323,54 +432,71 @@ class InstantiationContextFactory {
    *
    * <p>A {@code CreationalContext} is created whenever an {@link Injectable} is obtained from
    * a {@link ScopeResolver}. If the resolver decides to create a new instance, it will
-   * call recursively into a {@link InstantiationContext} (implemented by the outer
-   * class).
-   *
-   * <p>Any injectable created recursively will have its own context which
-   * is linked to a parent context IF the {@link Injectable} is of dependent
-   * scope.
-   *
-   * <p>The current context active for the {@link InstantiationContext} will
-   * get any {@link Injectable}s added to it that were created. If the context has a
-   * parent, the {@link Injectable}s will instead be added to its parent (or its parent
-   * and so on).
-   *
-   * <p>In this way the contexts will keep track of a list of dependents that
-   * should be destroyed when {@link CreationalContext#release()} is called.
+   * call recursively into a {@link InstantiationContext}.
    */
-  private class LazyCreationalContext<T> implements CreationalContext<T> {
+  private class LazyCreationalContext<T> implements ExtendedCreationalContext<T> {
+    private final ExtendedCreationalContext<?> parent;
     private final Injectable<T> injectable;
-    private final LazyCreationalContext<?> parent;
 
-    private Deque<Runnable> dependents = new ArrayDeque<>();
     private T instance;
     private boolean initialized;
+    private boolean released;
+    private List<CreationalContext<?>> children;
 
-    LazyCreationalContext(LazyCreationalContext<?> parent, Injectable<T> injectable) {
-      this.parent = injectable.getScopeResolver().isDependentScope() ? parent : null;
+    LazyCreationalContext(ExtendedCreationalContext<?> parent, Injectable<T> injectable) {
+      this.parent = parent;
       this.injectable = injectable;
     }
 
     @Override
+    public void attach(CreationalContext<?> creationalContext) {
+      if(children == null) {
+        children = new ArrayList<>();
+      }
+
+      children.add(creationalContext);
+    }
+
+    @Override
+    public boolean needsDestroy() {
+      if(!initialized) {
+        throw new IllegalStateException("called too early");
+      }
+
+      return injectable.getScopeResolver().isDependentScope() && (injectable.needsDestroy() || children != null);  // if children is not null, it is not empty
+    }
+
+    @Override
     public synchronized T get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
-      if(dependents == null) {
+      if(released) {
         throw new IllegalStateException("context was already released");
       }
 
       if(!initialized) {
         instance = injectable.create(getInjections());
         initialized = true;
+
+        if(parent != null && needsDestroy()) {
+          parent.attach(this);
+        }
       }
 
       return instance;
     }
 
     @Override
-    public void release() {
-      if(dependents != null) {
-        dependents.forEach(Runnable::run);
-        dependents = null;
+    public synchronized void release() {
+      if(!released) {
+        injectable.destroy(instance);
+
+        released = true;
         instance = null;
+
+        if(children != null) {
+          for(CreationalContext<?> child : children) {
+            child.release();
+          }
+        }
       }
     }
 
@@ -379,34 +505,13 @@ class InstantiationContextFactory {
         List<Injection> injections = new ArrayList<>();
 
         for(Binding binding : injectable.getBindings()) {
-          injections.add(new Injection(binding.getAccessibleObject(), createContext(binding).create()));
+          injections.add(new Injection(binding.getAccessibleObject(), createInstantiator(binding, injectable).create().get()));
         }
 
         return injections;
       }
       catch(ScopeException e) {
         throw new AssertionError("Unexpected scope problem", e);  // should not occur as consistency checks during registration enforce the use of a provider or proxy
-      }
-    }
-
-    /**
-     * Adds the given {@link Injectable} and its associated instance to this context
-     * or its oldest known ancestor if it has a parent.
-     *
-     * @param <U> type of the instance produced by the {@link Injectable}
-     * @param injectable an {@link Injectable}, cannot be {@code null}
-     * @param instance an instance, cannot be {@code null}
-     */
-    <U> void add(Injectable<U> injectable, U instance) {
-      if(dependents == null) {
-        throw new IllegalStateException("context was already released");
-      }
-
-      if(parent == null) {
-        dependents.addFirst(() -> injectable.destroy(instance));
-      }
-      else {
-        parent.add(injectable, instance);
       }
     }
   }

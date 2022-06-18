@@ -1,6 +1,7 @@
 package org.int4.dirk.spi.instantiation;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.List;
 
 import org.int4.dirk.api.TypeLiteral;
@@ -44,6 +45,20 @@ public interface InstantiationContext<T> {
    * @throws CreationException when the creation of an instance failed
    */
   List<T> createAll() throws CreationException;
+
+  /**
+   * Destroys an instance created with this {@link InstantiationContext} or one of its children.
+   *
+   * @param instance an instance to destroy, cannot be {@code null}
+   */
+  void destroy(T instance);
+
+  /**
+   * Destroys a collection of instances created with this {@link InstantiationContext} or one of its children.
+   *
+   * @param instances a collection of instances to destroy, cannot be {@code null}
+   */
+  void destroyAll(Collection<T> instances);
 
   /**
    * Creates an {@link InstantiationContext} based on this context which further

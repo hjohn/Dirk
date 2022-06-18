@@ -34,6 +34,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -126,6 +128,7 @@ public class InstantiationContextFactoryTest {
         injectableFactories.forClass().create(D.class),
         injectableFactories.forClass().create(E.class),
         injectableFactories.forClass().create(F.class), // not in scope
+        injectableFactories.forClass().create(G.class),
         injectableFactories.forClass().create(X.class)
       ));
     }
@@ -203,8 +206,6 @@ public class InstantiationContextFactoryTest {
         @Test
         void createShouldBeSatisfied() {
           assertThat(context.create()).isInstanceOf(F.class);
-
-
         }
 
         @Test
@@ -235,6 +236,63 @@ public class InstantiationContextFactoryTest {
 
         assertThat(e).isNotEqualTo(e2);
         assertThat(e2.test).isEqualTo("set");
+      }
+    }
+
+    @Nested
+    class AndCreatingContextForDependent {
+      private InstantiationContext<E> context = factory.createContext(new Key(E.class), false);
+
+      @Test
+      void createShouldCallLifecycleMethods() {
+        E.postConstructs = 0;
+        G.postConstructs = 0;
+
+        assertThat(context.create()).isInstanceOf(E.class);
+        assertThat(E.postConstructs).isEqualTo(1);
+        assertThat(G.postConstructs).isEqualTo(1);
+      }
+
+      @Test
+      void destroyShouldCallLifecycleMethods() {
+        E.preDestroys = 0;
+        G.preDestroys = 0;
+
+        E instance = context.create();
+
+        context.destroy(instance);
+
+        assertThat(E.preDestroys).isEqualTo(1);
+        assertThat(G.preDestroys).isEqualTo(1);
+      }
+    }
+
+    @Nested
+    class AndCreatingContextForSingleton {
+      private InstantiationContext<X> context = factory.createContext(new Key(X.class), false);
+
+      @Test
+      void createShouldBeSatisfied() {
+        assertThat(context.create()).isInstanceOf(X.class);
+      }
+
+      @Test
+      void createShouldCallLifecycleMethods() {
+        X.postConstructs = 0;
+
+        assertThat(context.create()).isInstanceOf(X.class);
+        assertThat(X.postConstructs).isEqualTo(1);
+      }
+
+      @Test
+      void destroyShouldNotCallLifecycleMethods() {
+        X.preDestroys = 0;
+
+        X instance = context.create();
+
+        context.destroy(instance);
+
+        assertThat(X.preDestroys).isEqualTo(0);  // none expected, it is a singleton
       }
     }
 
@@ -293,33 +351,18 @@ public class InstantiationContextFactoryTest {
 
     @Nested
     class AndCreatingContextsForBadSupplierInjectionTargetExtensions {
-      private InstantiationContext<BadSupplierA<X>> contextA = factory.createContext(new Key(Types.parameterize(BadSupplierA.class, X.class)), false);
-      private InstantiationContext<BadSupplierB<X>> contextB = factory.createContext(new Key(Types.parameterize(BadSupplierB.class, X.class)), false);
+      private InstantiationContext<BadSupplierA<X>> context = factory.createContext(new Key(Types.parameterize(BadSupplierA.class, X.class)), false);
 
       @Nested
       class ThenContext {
         @Test
-        void createShouldDiscoverBadInjectionTargetExtensionCallingCreate() {
-          assertThatThrownBy(() -> contextA.create())
-            .isExactlyInstanceOf(IllegalStateException.class)
-            .hasMessageStartingWith("Create was called immediately by a lazy extension; lazy extensions should only use the context indirectly: org.int4.dirk.core.InstantiationContextFactoryTest$BadSupplierAInjectionTargetExtension@");
-        }
-
-        @Test
-        void createShouldDiscoverBadInjectionTargetExtensionCallingCreateAll() {
-          assertThatThrownBy(() -> contextB.create())
-            .isExactlyInstanceOf(IllegalStateException.class)
-            .hasMessageStartingWith("Create was called immediately by a lazy extension; lazy extensions should only use the context indirectly: org.int4.dirk.core.InstantiationContextFactoryTest$BadSupplierBInjectionTargetExtension@");
-        }
-
-        @Test
         void createAllShouldDiscoverBadInjectionTargetExtensionCallingCreate() {
-          assertThat(contextB.createAll()).isEmpty();
+          assertThat(context.createAll()).isEmpty();
         }
 
         @Test
         void createAllShouldNotDiscoverBadInjectionTargetExtensionAsExtensionsAreNotSupported() {
-          assertThat(contextB.createAll()).isEmpty();
+          assertThat(context.createAll()).isEmpty();
         }
       }
     }
@@ -342,7 +385,21 @@ public class InstantiationContextFactoryTest {
 
   @Green
   public static class E extends A {
+    static int postConstructs;
+    static int preDestroys;
+
     @Inject @Opt String test = "default";
+    @Inject G g;
+
+    @PostConstruct
+    void postConstruct() {
+      postConstructs++;
+    }
+
+    @PreDestroy
+    void preDestroy() {
+      preDestroys++;
+    }
   }
 
   @Green
@@ -350,6 +407,34 @@ public class InstantiationContextFactoryTest {
   public static class F extends B {
   }
 
+  public static class G {
+    static int postConstructs;
+    static int preDestroys;
+
+    @PostConstruct
+    void postConstruct() {
+      postConstructs++;
+    }
+
+    @PreDestroy
+    void preDestroy() {
+      preDestroys++;
+    }
+  }
+
+  @Singleton
   public static class X {
+    static int postConstructs;
+    static int preDestroys;
+
+    @PostConstruct
+    void postConstruct() {
+      postConstructs++;
+    }
+
+    @PreDestroy
+    void preDestroy() {
+      preDestroys++;
+    }
   }
 }

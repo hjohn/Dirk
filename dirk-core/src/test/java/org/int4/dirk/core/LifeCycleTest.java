@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.int4.dirk.api.Injector;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +19,12 @@ public class LifeCycleTest {
   private static final List<Class<?>> PRE_DESTROYS = new ArrayList<>();
 
   private final Injector injector = Injectors.manual();
+
+  @BeforeEach
+  void beforeEach() {
+    POST_CONSTRUCTS.clear();
+    PRE_DESTROYS.clear();
+  }
 
   @Test
   void shouldManageLifeCycleForSingleton() throws Exception {
