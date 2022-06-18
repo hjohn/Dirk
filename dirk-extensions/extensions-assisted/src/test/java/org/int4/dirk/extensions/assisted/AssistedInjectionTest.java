@@ -7,6 +7,7 @@ import java.util.function.BiFunction;
 
 import org.int4.dirk.annotations.Argument;
 import org.int4.dirk.annotations.Assisted;
+import org.int4.dirk.annotations.Opt;
 import org.int4.dirk.api.Injector;
 import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.definition.DefinitionException;
@@ -15,6 +16,14 @@ import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.core.InjectorBuilder;
 import org.int4.dirk.core.test.qualifiers.Green;
 import org.int4.dirk.core.test.qualifiers.Red;
+import org.int4.dirk.core.test.scope.Dependent;
+import org.int4.dirk.library.AnnotationBasedLifeCycleCallbacksFactory;
+import org.int4.dirk.library.ConfigurableAnnotationStrategy;
+import org.int4.dirk.library.DefaultInjectorStrategy;
+import org.int4.dirk.library.NoProxyStrategy;
+import org.int4.dirk.library.SimpleScopeStrategy;
+import org.int4.dirk.spi.config.AnnotationStrategy;
+import org.int4.dirk.spi.config.LifeCycleCallbacksFactory;
 import org.int4.dirk.util.Annotations;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -24,21 +33,34 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
 
 public class AssistedInjectionTest {
   private static final Inject INJECT = Annotations.of(Inject.class);
   private static final AssistedAnnotationStrategy<?> ASSISTED_ANNOTATION_STRATEGY = new ConfigurableAssistedAnnotationStrategy<>(Assisted.class, Argument.class, AssistedInjectionTest::extractArgumentName, INJECT, Provider.class, Provider::get);
+  private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
+  private static final LifeCycleCallbacksFactory LIFE_CYCLE_CALLBACKS_FACTORY = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
 
   private Injector injector = InjectorBuilder.builder()
-    .manual()
-    .typeRegistrationExtensions(context -> List.of(new AssistedTypeRegistrationExtension(
-      context.injectorStrategy.getAnnotationStrategy(),
-      context.injectorStrategy.getLifeCycleCallbacksFactory(),
+    .injectorStrategy(new DefaultInjectorStrategy(
+      ANNOTATION_STRATEGY,
+      new SimpleScopeStrategy(Scope.class, Annotations.of(Dependent.class), Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
+      new NoProxyStrategy(),
+      LIFE_CYCLE_CALLBACKS_FACTORY
+    ))
+    .useDefaultInjectionTargetExtensions()
+    .useDefaultTypeRegistrationExtensions()
+    .add(new AssistedTypeRegistrationExtension(
+      ANNOTATION_STRATEGY,
+      LIFE_CYCLE_CALLBACKS_FACTORY,
       ASSISTED_ANNOTATION_STRATEGY
-    )))
+    ))
     .build();
 
   private static String extractArgumentName(AnnotatedElement element) {

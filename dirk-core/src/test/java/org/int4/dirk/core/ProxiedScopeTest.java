@@ -2,7 +2,6 @@ package org.int4.dirk.core;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -51,9 +50,10 @@ public class ProxiedScopeTest {
       new ByteBuddyProxyStrategy(),
       new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class)
     ))
-    .scopeResolvers(context -> List.of(scopeResolver))
-    .autoDiscovering()
-    .defaultDiscoveryExtensions()
+    .add(scopeResolver)
+    .autoDiscovery()
+    .useDefaultInjectionTargetExtensions()
+    .useDefaultTypeRegistrationExtensions()
     .build();
 
   @Test
