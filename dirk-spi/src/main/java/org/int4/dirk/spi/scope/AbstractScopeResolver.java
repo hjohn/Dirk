@@ -19,41 +19,40 @@ public abstract class AbstractScopeResolver<S> implements ScopeResolver {
   }
 
   @Override
-  public CreationalContext<?> find(Object key) {
-    S currentScope = getCurrentScope();
-
-    if(currentScope == null) {
-      return null;
-    }
-
-    Map<Object, CreationalContext<?>> map = instancesByScope.get(currentScope);
-
-    if(map == null) {
-      return null;
-    }
-
-    return map.get(key);
-  }
-
-  @Override
-  public final <T> T get(Object key, CreationalContext<T> creationalContext) throws Exception {
+  public final CreationalContext<?> find(Object key) {
     S currentScope = getCurrentScope();
 
     if(currentScope == null) {
       throw new ScopeNotActiveException("Scope not active: " + getAnnotation() + " for: " + key);
     }
 
-    Map<Object, CreationalContext<?>> instances = instancesByScope.computeIfAbsent(currentScope, k -> new ConcurrentHashMap<>());
+    Map<Object, CreationalContext<?>> map = instancesByScope.get(currentScope);
 
-    @SuppressWarnings("unchecked")
-    CreationalContext<T> existingContext = (CreationalContext<T>)instances.computeIfAbsent(key, k -> creationalContext);
+    return map == null ? null : map.get(key);
+  }
 
-    return existingContext.get();
+  @Override
+  public final void put(Object key, CreationalContext<?> creationalContext) {
+    S currentScope = getCurrentScope();
+
+    if(currentScope == null) {
+      throw new ScopeNotActiveException("Scope not active: " + getAnnotation() + " for: " + key);
+    }
+
+    instancesByScope.computeIfAbsent(currentScope, k -> new ConcurrentHashMap<>()).put(key, creationalContext);
   }
 
   @Override
   public final void remove(Object key) {
-    for(Map<Object, CreationalContext<?>> map : instancesByScope.values()) {
+    S currentScope = getCurrentScope();
+
+    if(currentScope == null) {
+      throw new ScopeNotActiveException("Scope not active: " + getAnnotation() + " for: " + key);
+    }
+
+    Map<Object, CreationalContext<?>> map = instancesByScope.get(currentScope);
+
+    if(map != null) {
       CreationalContext<?> existingContext = map.remove(key);
 
       if(existingContext != null) {

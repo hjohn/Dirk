@@ -41,7 +41,7 @@ class InstantiationContextFactory {
   private static final Logger LOGGER = Logger.getLogger(InstantiationContextFactory.class.getName());
   private static final ExtendedCreationalContext<?> NULL_CONTEXT = new ExtendedCreationalContext<>() {
     @Override
-    public Object get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+    public Object get() {
       return null;
     }
 
@@ -263,63 +263,39 @@ class InstantiationContextFactory {
     private ExtendedCreationalContext<T> createContext(Injectable<T> injectable) throws CreationException, ScopeNotActiveException {
       try {
         ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
-
-        @SuppressWarnings("unchecked")
-        ExtendedCreationalContext<T> existingCreationalContext = (ExtendedCreationalContext<T>)scopeResolver.find(injectable);
-
-        if(existingCreationalContext != null) {
-          return existingCreationalContext;
-        }
-
         boolean needsProxy = parent != null && !scopeResolver.isPseudoScope() && !scopeResolver.getAnnotation().equals(parent.getScopeResolver().getAnnotation());
 
         if(needsProxy) {
-          return new ExtendedCreationalContext<>() {
-            @Override
-            public T get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
-              try {
-                return proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> scopeResolver.get(injectable, new LazyCreationalContext<>(null, injectable)));
+          try {
+            T instance = proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> createContext(scopeResolver, injectable).get());
+
+            return new ExtendedCreationalContext<>() {
+              @Override
+              public T get() {
+                return instance;
               }
-              catch(Exception e) {  // as extensions are called, a general catch all is used here to wrap unexpected exceptions with some useful diagnostics
-                throw new CreationException("[" + injectable.getType() + "] proxy could not be created", e);
+
+              @Override
+              public void release() {
               }
-            }
 
-            @Override
-            public void release() {
-            }
+              @Override
+              public boolean needsDestroy() {
+                return false;
+              }
 
-            @Override
-            public boolean needsDestroy() {
-              return false;
-            }
-
-            @Override
-            public void attach(CreationalContext<?> creationalContext) {
-              throw new UnsupportedOperationException();
-            }
-          };
+              @Override
+              public void attach(CreationalContext<?> creationalContext) {
+                throw new UnsupportedOperationException();
+              }
+            };
+          }
+          catch(Exception e) {  // as extensions are called, a general catch all is used here to wrap unexpected exceptions with some useful diagnostics
+            throw new CreationException("[" + injectable.getType() + "] proxy could not be created", e);
+          }
         }
 
-        /*
-         * Whenever a scope is created, it also must be cleaned up in exactly one location. This
-         * can be either the LazyCreationalContext which cleans itself upon release, or the
-         * returned CreationalContext is stored by the caller, which will clean it when the
-         * associated instance is asked to be destroyed.
-         */
-
-        LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), injectable);  // TODO doesn't need to be lazy anymore as it should always be used now that #find exists
-
-        open(creationalContext);
-
-        try {
-          scopeResolver.get(injectable, creationalContext);  // call required so objects are created in correct scope
-
-          return creationalContext;
-        }
-        finally {
-          close();
-        }
+        return createContext(scopeResolver, injectable);
       }
       catch(ScopeNotActiveException | CreationException e) {  // Avoid wrapping these exceptions in another layer
         throw e;
@@ -329,8 +305,47 @@ class InstantiationContextFactory {
       }
     }
 
+    private ExtendedCreationalContext<T> createContext(ExtendedScopeResolver scopeResolver, Injectable<T> injectable) throws ScopeNotActiveException, Exception {
+      @SuppressWarnings("unchecked")
+      ExtendedCreationalContext<T> existingCreationalContext = (ExtendedCreationalContext<T>)scopeResolver.find(injectable);
+
+      if(existingCreationalContext != null) {
+        return existingCreationalContext;
+      }
+
+      LazyCreationalContext<T> creationalContext = new LazyCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), injectable);
+
+      open(creationalContext);
+
+      try {
+        creationalContext.initialize(createInstance(injectable));
+
+        scopeResolver.put(injectable, creationalContext);
+
+        return creationalContext;
+      }
+      finally {
+        close();
+      }
+    }
+
     void destroy(CreationalContext<T> creationalContext) {
       creationalContext.release();
+    }
+
+    private T createInstance(Injectable<T> injectable) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+      try {
+        List<Injection> injections = new ArrayList<>();
+
+        for(Binding binding : injectable.getBindings()) {
+          injections.add(new Injection(binding.getAccessibleObject(), createInstantiator(binding, injectable).create().get()));
+        }
+
+        return injectable.create(injections);
+      }
+      catch(ScopeException e) {
+        throw new AssertionError("Unexpected scope problem", e);  // should not occur as consistency checks during registration enforce the use of a provider or proxy
+      }
     }
   }
 
@@ -365,7 +380,7 @@ class InstantiationContextFactory {
     }
 
     @Override
-    public T get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+    public T get() {
       if(!initialized) {
         throw new IllegalStateException();
       }
@@ -448,6 +463,15 @@ class InstantiationContextFactory {
       this.injectable = injectable;
     }
 
+    void initialize(T instance) {
+      this.instance = instance;
+      this.initialized = true;
+
+      if(parent != null && needsDestroy()) {
+        parent.attach(this);
+      }
+    }
+
     @Override
     public void attach(CreationalContext<?> creationalContext) {
       if(children == null) {
@@ -467,18 +491,13 @@ class InstantiationContextFactory {
     }
 
     @Override
-    public synchronized T get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+    public synchronized T get() {
       if(released) {
         throw new IllegalStateException("context was already released");
       }
 
       if(!initialized) {
-        instance = injectable.create(getInjections());
-        initialized = true;
-
-        if(parent != null && needsDestroy()) {
-          parent.attach(this);
-        }
+        throw new IllegalStateException("context was not initialized");
       }
 
       return instance;
@@ -497,21 +516,6 @@ class InstantiationContextFactory {
             child.release();
           }
         }
-      }
-    }
-
-    private List<Injection> getInjections() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
-      try {
-        List<Injection> injections = new ArrayList<>();
-
-        for(Binding binding : injectable.getBindings()) {
-          injections.add(new Injection(binding.getAccessibleObject(), createInstantiator(binding, injectable).create().get()));
-        }
-
-        return injections;
-      }
-      catch(ScopeException e) {
-        throw new AssertionError("Unexpected scope problem", e);  // should not occur as consistency checks during registration enforce the use of a provider or proxy
       }
     }
   }

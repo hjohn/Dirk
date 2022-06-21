@@ -1,5 +1,6 @@
 package org.int4.dirk.core;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,15 +16,19 @@ import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 import org.int4.dirk.core.RootInstantiationContextFactory.RootInstantiationContext;
 import org.int4.dirk.core.test.qualifiers.Red;
+import org.int4.dirk.core.test.scope.TestScope;
+import org.int4.dirk.extensions.proxy.ByteBuddyProxyStrategy;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.instantiation.InstantiationContext;
 import org.int4.dirk.spi.instantiation.TypeTrait;
+import org.int4.dirk.spi.scope.AbstractScopeResolver;
 import org.int4.dirk.util.Annotations;
 import org.int4.dirk.util.Types;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -34,9 +39,13 @@ public class DependentsLifeCycleTest {
   private static final List<String> POST_CONSTRUCTS = new ArrayList<>();
   private static final List<String> PRE_DESTROYS = new ArrayList<>();
 
+  private final TestScopeResolver scopeResolver = new TestScopeResolver();
+
   private final Injector injector = InjectorBuilder.builder()
     .useDefaultTypeRegistrationExtensions()
     .useDefaultInjectionTargetExtensions()
+    .proxyStrategy(new ByteBuddyProxyStrategy())
+    .add(scopeResolver)
     .add(new InjectionTargetExtension<InstantiationContext<Object>, Object>() {
       @Override
       public Class<?> getTargetClass() {
@@ -59,6 +68,8 @@ public class DependentsLifeCycleTest {
       }
     })
     .build();
+
+  private String currentScope;
 
   @BeforeEach
   void beforeEach() {
@@ -457,6 +468,79 @@ public class DependentsLifeCycleTest {
     assertPreDestroys();
   }
 
+  @TestScope
+  public static class TestScoped extends AbstractLifeCycleLogger {
+    @Inject Dependent dependent;
+
+    public Dependent getDependent() {
+      return dependent;
+    }
+  }
+
+  @Test
+  void shouldDestroyDependentsWhenScopedObjectIsDestroyed() {
+    injector.register(List.of(TestScoped.class, Dependent.class, SubDependent.class));
+
+    InstantiationContext<TestScoped> context = injector.getInstance(new TypeLiteral<InstantiationContext<TestScoped>>() {});
+
+    assertThatThrownBy(() -> context.create()).isExactlyInstanceOf(ScopeNotActiveException.class);
+
+    currentScope = "A";
+
+    assertPostConstructs();
+    assertPreDestroys();
+
+    TestScoped testScoped = context.create();
+
+    assertPostConstructs("SubDependent-0", "Dependent-1", "TestScoped-2");
+    assertPreDestroys();
+
+    context.destroy(testScoped);  // expect nothing, scoped objects cannot be destroyed this way
+
+    assertPostConstructs();
+    assertPreDestroys();
+
+    scopeResolver.deleteScope("A");
+
+    assertPostConstructs();
+    assertPreDestroys("TestScoped-2", "Dependent-1", "SubDependent-0");
+  }
+
+  public static class DependentOnTestScoped extends AbstractLifeCycleLogger {
+    @Inject TestScoped testScoped;  // will be a proxy
+  }
+
+  @Test
+  void shouldDestroyDependentsCreatedByProxyWhenScopedIsDestroyed() {
+    injector.register(List.of(DependentOnTestScoped.class, TestScoped.class, Dependent.class, SubDependent.class));
+
+    InstantiationContext<DependentOnTestScoped> context = injector.getInstance(new TypeLiteral<InstantiationContext<DependentOnTestScoped>>() {});
+
+    DependentOnTestScoped root = context.create();
+
+    assertPostConstructs("DependentOnTestScoped-0");
+    assertPreDestroys();
+
+    assertThatThrownBy(() -> root.testScoped.getDependent()).isExactlyInstanceOf(ScopeNotActiveException.class);
+
+    currentScope = "A";
+
+    root.testScoped.getDependent();  // proxy should create a TestScoped instance now
+
+    assertPostConstructs("SubDependent-1", "Dependent-2", "TestScoped-3");
+    assertPreDestroys();
+
+    context.destroy(root);  // expect only root to be destroyed, proxied objects cannot be destroyed this way
+
+    assertPostConstructs();
+    assertPreDestroys("DependentOnTestScoped-0");
+
+    scopeResolver.deleteScope("A");
+
+    assertPostConstructs();
+    assertPreDestroys("TestScoped-3", "Dependent-2", "SubDependent-1");
+  }
+
   private static void assertPostConstructs(String... names) {
     assertThat(POST_CONSTRUCTS).containsExactly(names);
 
@@ -491,6 +575,22 @@ public class DependentsLifeCycleTest {
     @Override
     public String toString() {
       return constructName;
+    }
+  }
+
+  private class TestScopeResolver extends AbstractScopeResolver<String> {
+    @Override
+    public Annotation getAnnotation() {
+      return Annotations.of(TestScope.class);
+    }
+
+    @Override
+    protected String getCurrentScope() {
+      return currentScope;
+    }
+
+    public void deleteScope(String scope) {
+      destroyScope(scope);
     }
   }
 }

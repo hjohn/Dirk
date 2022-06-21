@@ -8,12 +8,8 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.int4.dirk.api.Injector;
 import org.int4.dirk.api.definition.ScopeConflictException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
-import org.int4.dirk.core.test.scope.Dependent;
 import org.int4.dirk.core.test.scope.TestScope;
 import org.int4.dirk.extensions.proxy.ByteBuddyProxyStrategy;
-import org.int4.dirk.library.AnnotationBasedLifeCycleCallbacksFactory;
-import org.int4.dirk.library.DefaultInjectorStrategy;
-import org.int4.dirk.library.SimpleScopeStrategy;
 import org.int4.dirk.spi.scope.AbstractScopeResolver;
 import org.int4.dirk.spi.scope.ScopeResolver;
 import org.int4.dirk.util.Annotations;
@@ -22,11 +18,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
 
 public class ProxiedScopeTest {
@@ -44,12 +37,7 @@ public class ProxiedScopeTest {
   };
 
   private Injector injector = InjectorBuilder.builder()
-    .injectorStrategy(new DefaultInjectorStrategy(
-      InjectableFactories.ANNOTATION_STRATEGY,
-      new SimpleScopeStrategy(Scope.class, Annotations.of(Dependent.class), Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
-      new ByteBuddyProxyStrategy(),
-      new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class)
-    ))
+    .proxyStrategy(new ByteBuddyProxyStrategy())
     .add(scopeResolver)
     .autoDiscovery()
     .useDefaultInjectionTargetExtensions()

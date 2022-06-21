@@ -58,13 +58,13 @@ public class ExtendedScopeResolver implements ScopeResolver {
   }
 
   @Override
-  public CreationalContext<?> find(Object key) {
+  public CreationalContext<?> find(Object key) throws ScopeNotActiveException {
     return delegate.find(key);
   }
 
   @Override
-  public <T> T get(Object key, CreationalContext<T> creationalContext) throws ScopeNotActiveException, Exception {
-    return delegate.get(key, creationalContext);
+  public void put(Object key, CreationalContext<?> creationalContext) throws ScopeNotActiveException {
+    delegate.put(key, creationalContext);
   }
 
   @Override

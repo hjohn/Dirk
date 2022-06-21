@@ -23,7 +23,11 @@ import org.int4.dirk.library.ProviderTypeRegistrationExtension;
 import org.int4.dirk.library.SetInjectionTargetExtension;
 import org.int4.dirk.library.SimpleScopeStrategy;
 import org.int4.dirk.library.SingletonScopeResolver;
+import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.InjectorStrategy;
+import org.int4.dirk.spi.config.LifeCycleCallbacksFactory;
+import org.int4.dirk.spi.config.ProxyStrategy;
+import org.int4.dirk.spi.config.ScopeStrategy;
 import org.int4.dirk.spi.definition.TypeRegistrationExtension;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.scope.ScopeResolver;
@@ -58,11 +62,32 @@ public class InjectorBuilder {
     private final List<TypeRegistrationExtension> typeRegistrationExtensions = new ArrayList<>();
     private final List<ScopeResolver> scopeResolvers = new ArrayList<>();
 
-    private InjectorStrategy injectorStrategy;
+    private AnnotationStrategy annotationStrategy;
+    private ScopeStrategy scopeStrategy;
+    private ProxyStrategy proxyStrategy;
+    private LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
     private boolean autoDiscovery;
 
-    public Builder injectorStrategy(InjectorStrategy injectorStrategy) {
-      this.injectorStrategy = injectorStrategy;
+    public Builder annotationStrategy(AnnotationStrategy annotationStrategy) {
+      this.annotationStrategy = annotationStrategy;
+
+      return this;
+    }
+
+    public Builder scopeStrategy(ScopeStrategy scopeStrategy) {
+      this.scopeStrategy = scopeStrategy;
+
+      return this;
+    }
+
+    public Builder proxyStrategy(ProxyStrategy proxyStrategy) {
+      this.proxyStrategy = proxyStrategy;
+
+      return this;
+    }
+
+    public Builder lifeCycleCallbacksFactory(LifeCycleCallbacksFactory lifeCycleCallbacksFactory) {
+      this.lifeCycleCallbacksFactory = lifeCycleCallbacksFactory;
 
       return this;
     }
@@ -109,18 +134,18 @@ public class InjectorBuilder {
     }
 
     public Injector build() {
-      this.injectorStrategy = injectorStrategy == null ? defaultInjectorStrategy() : injectorStrategy;
+      InjectorStrategy injectorStrategy = createInjectorStrategy();
 
       return new StandardInjector(
         injectionTargetExtensions,
         typeRegistrationExtensions,
-        determineScopeResolvers(),
+        determineScopeResolvers(injectorStrategy),
         injectorStrategy,
         autoDiscovery
       );
     }
 
-    private List<ScopeResolver> determineScopeResolvers() {
+    private List<ScopeResolver> determineScopeResolvers(InjectorStrategy injectorStrategy) {
       Annotation singletonAnnotation = injectorStrategy.getScopeStrategy().getSingletonAnnotation();
       boolean hasSingletonScopeResolver = scopeResolvers.stream().anyMatch(sr -> sr.getAnnotation().equals(singletonAnnotation));
 
@@ -129,12 +154,12 @@ public class InjectorBuilder {
         : Stream.concat(scopeResolvers.stream(), Stream.of(new SingletonScopeResolver(singletonAnnotation))).collect(Collectors.toList());
     }
 
-    private static InjectorStrategy defaultInjectorStrategy() {
+    private InjectorStrategy createInjectorStrategy() {
       return new DefaultInjectorStrategy(
-        new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class),
-        new SimpleScopeStrategy(Scope.class, Annotations.of(Dependent.class), Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
-        new NoProxyStrategy(),
-        new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class)
+        annotationStrategy == null ? new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class) : annotationStrategy,
+        scopeStrategy == null ? new SimpleScopeStrategy(Scope.class, Annotations.of(Dependent.class), Annotations.of(Singleton.class), Annotations.of(Dependent.class)) : scopeStrategy,
+        proxyStrategy == null ? new NoProxyStrategy() : proxyStrategy,
+        lifeCycleCallbacksFactory == null ? new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class) : lifeCycleCallbacksFactory
       );
     }
   }

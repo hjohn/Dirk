@@ -25,27 +25,24 @@ public interface ScopeResolver {
   boolean isActive();
 
   /**
-   * Returns an existing instance associated with the given key, or uses the
-   * given context to create one.
-   *
-   * @param <T> the type of the instances provided by the {@link CreationalContext}
-   * @param key an object suitable as a key for use in a map, cannot be {@code null}
-   * @param creationalContext a {@link CreationalContext}, cannot be {@code null}
-   * @return an instance of the given type, never {@code null}
-   * @throws ScopeNotActiveException when there is no scope active
-   * @throws Exception when the object factory throws an exception
-   */
-  <T> T get(Object key, CreationalContext<T> creationalContext) throws ScopeNotActiveException, Exception;
-
-  /**
    * Find an existing {@link CreationalContext} by key in the current active scope,
-   * or return {@code null} if no scope is active or no context was found with the given
+   * or return {@code null} if no context was found in the given scope with the given
    * key.
    *
    * @param key an object suitable as a key for use in a map, cannot be {@code null}
    * @return a {@link CreationalContext} if found, otherwise {@code null}
+   * @throws ScopeNotActiveException when there is no scope active
    */
-  CreationalContext<?> find(Object key);
+  CreationalContext<?> find(Object key) throws ScopeNotActiveException;
+
+  /**
+   * Adds a {@link CreationalContext} to this scope resolver under the given key.
+   *
+   * @param key an object suitable as a key for use in a map, cannot be {@code null}
+   * @param creationalContext a {@link CreationalContext}, cannot be {@code null}
+   * @throws ScopeNotActiveException when there is no scope active
+   */
+  void put(Object key, CreationalContext<?> creationalContext) throws ScopeNotActiveException;
 
   /**
    * Removes the given key from this scope resolver.

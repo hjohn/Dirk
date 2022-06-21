@@ -16,12 +16,8 @@ import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.core.InjectorBuilder;
 import org.int4.dirk.core.test.qualifiers.Green;
 import org.int4.dirk.core.test.qualifiers.Red;
-import org.int4.dirk.core.test.scope.Dependent;
 import org.int4.dirk.library.AnnotationBasedLifeCycleCallbacksFactory;
 import org.int4.dirk.library.ConfigurableAnnotationStrategy;
-import org.int4.dirk.library.DefaultInjectorStrategy;
-import org.int4.dirk.library.NoProxyStrategy;
-import org.int4.dirk.library.SimpleScopeStrategy;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.LifeCycleCallbacksFactory;
 import org.int4.dirk.util.Annotations;
@@ -38,7 +34,6 @@ import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
-import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
 
 public class AssistedInjectionTest {
@@ -48,12 +43,8 @@ public class AssistedInjectionTest {
   private static final LifeCycleCallbacksFactory LIFE_CYCLE_CALLBACKS_FACTORY = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
 
   private Injector injector = InjectorBuilder.builder()
-    .injectorStrategy(new DefaultInjectorStrategy(
-      ANNOTATION_STRATEGY,
-      new SimpleScopeStrategy(Scope.class, Annotations.of(Dependent.class), Annotations.of(Singleton.class), Annotations.of(Dependent.class)),
-      new NoProxyStrategy(),
-      LIFE_CYCLE_CALLBACKS_FACTORY
-    ))
+    .annotationStrategy(ANNOTATION_STRATEGY)
+    .lifeCycleCallbacksFactory(LIFE_CYCLE_CALLBACKS_FACTORY)
     .useDefaultInjectionTargetExtensions()
     .useDefaultTypeRegistrationExtensions()
     .add(new AssistedTypeRegistrationExtension(

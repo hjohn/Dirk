@@ -35,11 +35,9 @@ public class AbstractScopeResolverTest {
   private int releaseCalls;
 
   private CreationalContext<I> creationalContext = new CreationalContext<>() {
-    private final I i = new I();
-
     @Override
     public I get() throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
-      return i;
+      throw new IllegalStateException("Should not get called");
     }
 
     @Override
@@ -56,14 +54,21 @@ public class AbstractScopeResolverTest {
     }
 
     @Test
-    void getShouldThrowScopeNotActiveExceptionWhenInactive() {
-      assertThatThrownBy(() -> scopeResolver.get("key", creationalContext))
+    void findShouldThrowScopeNotActiveExceptionWhenInactive() {
+      assertThatThrownBy(() -> scopeResolver.find("key"))
         .isExactlyInstanceOf(ScopeNotActiveException.class);
     }
 
     @Test
-    void removeShouldIgnoreMissingEntries() {
-      assertThatCode(() -> scopeResolver.remove("key")).doesNotThrowAnyException();
+    void putShouldThrowScopeNotActiveExceptionWhenInactive() {
+      assertThatThrownBy(() -> scopeResolver.put("key", creationalContext))
+        .isExactlyInstanceOf(ScopeNotActiveException.class);
+    }
+
+    @Test
+    void removeShouldThrowScopeNotActiveExceptionWhenInactive() {
+      assertThatThrownBy(() -> scopeResolver.remove("key"))
+        .isExactlyInstanceOf(ScopeNotActiveException.class);
     }
 
     @Test
@@ -83,10 +88,15 @@ public class AbstractScopeResolverTest {
       }
 
       @Test
-      void getShouldCreateNewInstance() throws Exception {
-        I instance = scopeResolver.get("key", creationalContext);
+      void findShouldReturnNoResult() {
+        assertThat(scopeResolver.find("key")).isNull();
+      }
 
-        assertThat(instance).isInstanceOf(I.class);
+      @Test
+      void putShouldAddNewContext() {
+        scopeResolver.put("key", creationalContext);
+
+        assertThat(scopeResolver.find("key")).isEqualTo(creationalContext);
       }
 
       @Test
@@ -101,11 +111,9 @@ public class AbstractScopeResolverTest {
 
       @Nested
       class AndAnObjectWasCreated {
-        private I i;
-
         @BeforeEach
-        void beforeEach() throws Exception {
-          i = scopeResolver.get("key", creationalContext);
+        void beforeEach() {
+          scopeResolver.put("key", creationalContext);
         }
 
         @Test
@@ -114,11 +122,10 @@ public class AbstractScopeResolverTest {
         }
 
         @Test
-        void getShouldGetCachedInstance() throws Exception {
-          I cachedInstance = scopeResolver.get("key", creationalContext);
+        void findShouldGetCachedInstance() {
+          CreationalContext<?> cachedContext = scopeResolver.find("key");
 
-          assertThat(cachedInstance).isInstanceOf(I.class);
-          assertThat(cachedInstance).isEqualTo(i);
+          assertThat(cachedContext).isEqualTo(creationalContext);
         }
 
         @Test
