@@ -44,11 +44,11 @@ public class StandardInjector implements Injector {
    *
    * @param injectionTargetExtensions a collection of {@link InjectionTargetExtension}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param typeRegistrationExtensions a collection of {@link TypeRegistrationExtension}s, cannot be {@code null} or contain {@code null} but can be empty
-   * @param scopeResolvers a list of {@link ScopeResolver}s, cannot be {@code null} or contain {@code null} but can be empty
+   * @param scopeResolvers a collection of {@link ScopeResolver}s, cannot be {@code null} or contain {@code null} but can be empty
    * @param strategy an {@link InjectorStrategy}, cannot be {@code null}
    * @param autoDiscovery {@code true} if the injector should automatically register (auto discover) types encountered during instantiation that have not been explicitly registered, or {code false} to allow manual registration only
    */
-  public StandardInjector(Collection<InjectionTargetExtension<?, ?>> injectionTargetExtensions, Collection<TypeRegistrationExtension> typeRegistrationExtensions, List<ScopeResolver> scopeResolvers, InjectorStrategy strategy, boolean autoDiscovery) {
+  public StandardInjector(Collection<InjectionTargetExtension<?, ?>> injectionTargetExtensions, Collection<TypeRegistrationExtension> typeRegistrationExtensions, Collection<ScopeResolver> scopeResolvers, InjectorStrategy strategy, boolean autoDiscovery) {
     Objects.requireNonNull(injectionTargetExtensions, "injectionTargetExtensions cannot be null");
     Objects.requireNonNull(typeRegistrationExtensions, "typeRegistrationExtensions cannot be null");
     Objects.requireNonNull(scopeResolvers, "scopeResolvers cannot be null");

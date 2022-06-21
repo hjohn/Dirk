@@ -1,8 +1,8 @@
 package org.int4.dirk.core;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -23,10 +23,10 @@ class ScopeResolverManager {
   /**
    * Constructs a new instance.
    *
-   * @param scopeResolvers a list of {@link ScopeResolver}, cannot be {@code null} but can be empty
+   * @param scopeResolvers a collection of {@link ScopeResolver}, cannot be {@code null} but can be empty
    * @param dependentAnnotation a dependent scope annotation, cannot be {@code null}
    */
-  public ScopeResolverManager(List<ScopeResolver> scopeResolvers, Annotation dependentAnnotation) {
+  public ScopeResolverManager(Collection<ScopeResolver> scopeResolvers, Annotation dependentAnnotation) {
     for(ScopeResolver scopeResolver : scopeResolvers) {
       if(scopeResolver.getAnnotation() == null) {
         throw new IllegalArgumentException("scopeResolvers cannot have a null annotation: " + scopeResolver);
