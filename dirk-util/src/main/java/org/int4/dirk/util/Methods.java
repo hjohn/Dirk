@@ -22,7 +22,7 @@ public class Methods {
 
     for(Class<?> c : Types.getSuperTypes(cls)) {
       for(Method m : c.getDeclaredMethods()) {
-        if(m.isAnnotationPresent(annotation)) {
+        if(!m.isSynthetic() && m.isAnnotationPresent(annotation)) {
           methods.add(m);
         }
       }
