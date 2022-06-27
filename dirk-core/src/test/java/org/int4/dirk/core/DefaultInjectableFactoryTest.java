@@ -35,8 +35,9 @@ import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
 public class DefaultInjectableFactoryTest {
+  private final InjectableFactories injectableFactories = new InjectableFactories();
   private final ScopeResolverManager manager = ScopeResolverManagers.create();
-  private final DefaultInjectableFactory factory = new DefaultInjectableFactory(manager, InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, Set.of(Provider.class, List.class, Set.class));
+  private final DefaultInjectableFactory factory = new DefaultInjectableFactory(manager, injectableFactories.getInstantiationContextFactory(), InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, Set.of(Provider.class, List.class, Set.class));
   private final Constructable<BookShop> constructable = new Constructable<>() {
     @Override
     public BookShop create(List<Injection> injections) {
@@ -55,24 +56,29 @@ public class DefaultInjectableFactoryTest {
 
   @Test
   void constructorShouldRejectInvalidParameters() {
-    assertThatThrownBy(() -> new DefaultInjectableFactory(null, InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, Set.of()))
+    assertThatThrownBy(() -> new DefaultInjectableFactory(null, injectableFactories.getInstantiationContextFactory(), InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, Set.of()))
       .isExactlyInstanceOf(NullPointerException.class)
-      .hasMessage("scopeResolverManager cannot be null")
+      .hasMessage("scopeResolverManager")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectableFactory(manager, null, InjectableFactories.SCOPE_STRATEGY, Set.of()))
+    assertThatThrownBy(() -> new DefaultInjectableFactory(manager, null, InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, Set.of()))
       .isExactlyInstanceOf(NullPointerException.class)
-      .hasMessage("annotationStrategy cannot be null")
+      .hasMessage("instantiationContextFactory")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectableFactory(manager, InjectableFactories.ANNOTATION_STRATEGY, null, Set.of()))
+    assertThatThrownBy(() -> new DefaultInjectableFactory(manager, injectableFactories.getInstantiationContextFactory(), null, InjectableFactories.SCOPE_STRATEGY, Set.of()))
       .isExactlyInstanceOf(NullPointerException.class)
-      .hasMessage("scopeStrategy cannot be null")
+      .hasMessage("annotationStrategy")
       .hasNoCause();
 
-    assertThatThrownBy(() -> new DefaultInjectableFactory(manager,  InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, null))
+    assertThatThrownBy(() -> new DefaultInjectableFactory(manager, injectableFactories.getInstantiationContextFactory(), InjectableFactories.ANNOTATION_STRATEGY, null, Set.of()))
       .isExactlyInstanceOf(NullPointerException.class)
-      .hasMessage("extendedTypes cannot be null")
+      .hasMessage("scopeStrategy")
+      .hasNoCause();
+
+    assertThatThrownBy(() -> new DefaultInjectableFactory(manager, injectableFactories.getInstantiationContextFactory(), InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.SCOPE_STRATEGY, null))
+      .isExactlyInstanceOf(NullPointerException.class)
+      .hasMessage("extendedTypes")
       .hasNoCause();
   }
 

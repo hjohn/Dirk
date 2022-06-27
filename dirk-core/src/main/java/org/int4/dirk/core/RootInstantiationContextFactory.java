@@ -17,9 +17,10 @@ import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
+import org.int4.dirk.core.InstantiationContextFactory.DefaultInstantiator;
 import org.int4.dirk.core.InstantiationContextFactory.ExtendedCreationalContext;
-import org.int4.dirk.core.InstantiationContextFactory.Instantiator;
 import org.int4.dirk.core.definition.Injectable;
+import org.int4.dirk.core.definition.Instantiator;
 import org.int4.dirk.core.util.Key;
 import org.int4.dirk.core.util.Resolver;
 import org.int4.dirk.spi.config.AnnotationStrategy;
@@ -46,18 +47,18 @@ class RootInstantiationContextFactory {
    *
    * @param <T> the type of instances the context creates
    * @param <E> the element type of instances the context creates
-   * @param instantiator an {@link Instantiator}, cannot be {@code null}
+   * @param instantiator a {@link DefaultInstantiator}, cannot be {@code null}
    * @return a {@link RootInstantiationContext}, never {@code null}
    */
-  <T, E> RootInstantiationContext<T, E> create(Resolver<Injectable<?>> resolver, Instantiator<T, E> instantiator) {
+  <T, E> RootInstantiationContext<T, E> create(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator) {
     return new RootInstantiationContext<>(resolver, instantiator);
   }
 
   abstract class AbstractRootInstantiationContext<T, E> implements InstantiationContext<T> {
     protected final Resolver<Injectable<?>> resolver;
-    protected final Instantiator<T, E> instantiator;
+    protected final DefaultInstantiator<T, E> instantiator;
 
-    protected AbstractRootInstantiationContext(Resolver<Injectable<?>> resolver, Instantiator<T, E> instantiator) {
+    protected AbstractRootInstantiationContext(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator) {
       this.resolver = resolver;
       this.instantiator = instantiator;
     }
@@ -137,7 +138,7 @@ class RootInstantiationContextFactory {
   class RootInstantiationContext<T, E> extends AbstractRootInstantiationContext<T, E> {
     private final Map<Identity<T>, CreationalContext<T>> creationalContexts = new LinkedHashMap<>();
 
-    RootInstantiationContext(Resolver<Injectable<?>> resolver, Instantiator<T, E> instantiator) {
+    RootInstantiationContext(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator) {
       super(resolver, instantiator);
     }
 
@@ -146,7 +147,7 @@ class RootInstantiationContextFactory {
       @SuppressWarnings("unchecked")  // safe cast as parent will accept sub types of T
       RootInstantiationContext<U, E> castParent = (RootInstantiationContext<U, E>)this;
       @SuppressWarnings("unchecked")
-      Instantiator<U, E> subInstantiator = (Instantiator<U, E>)instantiator.deriveSubInstantiator(key);
+      DefaultInstantiator<U, E> subInstantiator = (DefaultInstantiator<U, E>)instantiator.deriveSubInstantiator(key);
 
       return new ChildInstantiationContext<>(resolver, subInstantiator, castParent);
     }
@@ -200,7 +201,7 @@ class RootInstantiationContextFactory {
   class ChildInstantiationContext<T, E> extends AbstractRootInstantiationContext<T, E> {
     private final RootInstantiationContext<T, E> parent;
 
-    private ChildInstantiationContext(Resolver<Injectable<?>> resolver, Instantiator<T, E> instantiator, RootInstantiationContext<T, E> parent) {
+    private ChildInstantiationContext(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator, RootInstantiationContext<T, E> parent) {
       super(resolver, instantiator);
 
       this.parent = parent;
@@ -211,7 +212,7 @@ class RootInstantiationContextFactory {
       @SuppressWarnings("unchecked")  // safe cast as parent will accept sub types of T
       RootInstantiationContext<U, E> castParent = (RootInstantiationContext<U, E>)parent;
       @SuppressWarnings("unchecked")
-      Instantiator<U, E> subInstantiator = (Instantiator<U, E>)instantiator.deriveSubInstantiator(key);
+      DefaultInstantiator<U, E> subInstantiator = (DefaultInstantiator<U, E>)instantiator.deriveSubInstantiator(key);
 
       return new ChildInstantiationContext<>(resolver, subInstantiator, castParent);
     }

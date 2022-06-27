@@ -1,5 +1,6 @@
 package org.int4.dirk.core;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
 import org.int4.dirk.core.definition.InjectionTarget;
 import org.int4.dirk.core.definition.InjectionTargetExtensionStore;
+import org.int4.dirk.core.definition.Instantiator;
 import org.int4.dirk.core.definition.injection.Injection;
 import org.int4.dirk.core.util.Key;
 import org.int4.dirk.core.util.Resolver;
@@ -81,16 +83,20 @@ class InstantiationContextFactory {
     this.rootInstantiationContextFactory = new RootInstantiationContextFactory(annotationStrategy);
   }
 
-  public <T> InstantiationContext<T> createContext(Resolver<Injectable<?>> resolver, Key key, boolean optional) {
-    return rootInstantiationContextFactory.create(resolver, createInstantiator(key, optional));
+  <T> InstantiationContext<T> createContext(Resolver<Injectable<?>> resolver, Key key, boolean optional) {
+    return rootInstantiationContextFactory.create(resolver, createInstantiatorInternal(key, optional, null));
   }
 
-  private <T, E> Instantiator<T, E> createInstantiator(Binding binding, Injectable<?> parent) {  // careful, no check if parent is indeed the parent of the binding
-    return binding.associateIfAbsent("instantiator", () -> new Instantiator<>(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional(), parent));
+  <T> Instantiator<T> createInstantiator(Binding binding, Annotation parentScope) {
+    return binding.associateIfAbsent("instantiator", () -> new DefaultInstantiator<>(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional(), parentScope));
   }
 
-  private <T, E> Instantiator<T, E> createInstantiator(Key key, boolean optional) {
-    return new Instantiator<>(key, optional, null);
+  <T> Instantiator<T> createInstantiator(Key key, boolean optional, Annotation parentScope) {
+    return new DefaultInstantiator<>(key, optional, parentScope);
+  }
+
+  private <T, E> DefaultInstantiator<T, E> createInstantiatorInternal(Key key, boolean optional, Annotation parentScope) {
+    return new DefaultInstantiator<>(key, optional, parentScope);
   }
 
   /**
@@ -100,18 +106,18 @@ class InstantiationContextFactory {
     strictOrder = true;
   }
 
-  final class Instantiator<T, E> {
+  final class DefaultInstantiator<T, E> implements Instantiator<T> {
     private final Key key;
     private final boolean optional;
-    private final Injectable<?> parent;
+    private final Annotation parentScope;
     private final InjectionTargetExtension<T, E> injectionTargetExtension;
     private final Key elementKey;
-    private final Instantiator<E, ?> elementInstantiator;
+    private final DefaultInstantiator<E, ?> elementInstantiator;
 
-    Instantiator(Key key, boolean optional, Injectable<?> parent) {
+    DefaultInstantiator(Key key, boolean optional, Annotation parentScope) {
       this.key = key;
       this.optional = optional;
-      this.parent = parent;
+      this.parentScope = parentScope;
 
       Type type = key.getType();
 
@@ -130,7 +136,7 @@ class InstantiationContextFactory {
         }
         else {
           this.elementKey = new Key(elementType, key.getQualifiers());
-          this.elementInstantiator = new Instantiator<>(elementKey, optional, null);
+          this.elementInstantiator = new DefaultInstantiator<>(elementKey, optional, null);
         }
       }
     }
@@ -143,11 +149,12 @@ class InstantiationContextFactory {
       return elementKey;
     }
 
-    <U extends T> Instantiator<U, ?> deriveSubInstantiator(Key key) {
-      return new Instantiator<>(key, optional, null);
+    <U extends T> DefaultInstantiator<U, ?> deriveSubInstantiator(Key key) {
+      return createInstantiatorInternal(key, optional, parentScope);
     }
 
-    ExtendedCreationalContext<T> create(Resolver<Injectable<?>> resolver) throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
+    @Override
+    public ExtendedCreationalContext<T> create(Resolver<Injectable<?>> resolver) throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
       if(elementKey == null) {
         @SuppressWarnings("unchecked")
         Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
@@ -261,7 +268,7 @@ class InstantiationContextFactory {
     private ExtendedCreationalContext<T> createContext(Resolver<Injectable<?>> resolver, Injectable<T> injectable) throws CreationException, ScopeNotActiveException {
       try {
         ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
-        boolean needsProxy = parent != null && !scopeResolver.isPseudoScope() && !scopeResolver.getAnnotation().equals(parent.getScopeResolver().getAnnotation());
+        boolean needsProxy = parentScope != null && !scopeResolver.isPseudoScope() && !scopeResolver.getAnnotation().equals(parentScope);
 
         if(needsProxy) {
           try {
@@ -338,7 +345,7 @@ class InstantiationContextFactory {
         for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
           Binding binding = injectionTarget.getBinding();
 
-          injections.add(new Injection(binding.getAccessibleObject(), createInstantiator(binding, injectable).create(resolver).get()));
+          injections.add(new Injection(binding.getAccessibleObject(), injectionTarget.getInstantiator().create(resolver).get()));
         }
 
         return injectable.create(injections);

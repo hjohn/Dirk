@@ -21,8 +21,10 @@ import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
 import org.int4.dirk.core.definition.InjectableFactory;
 import org.int4.dirk.core.definition.InjectionTarget;
+import org.int4.dirk.core.definition.Instantiator;
 import org.int4.dirk.core.definition.QualifiedType;
 import org.int4.dirk.core.definition.injection.Constructable;
+import org.int4.dirk.core.util.Key;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.ScopeStrategy;
 import org.int4.dirk.spi.scope.ScopeResolver;
@@ -35,6 +37,7 @@ import org.int4.dirk.util.Types;
  */
 class DefaultInjectableFactory implements InjectableFactory {
   private final ScopeResolverManager scopeResolverManager;
+  private final InstantiationContextFactory instantiationContextFactory;
   private final AnnotationStrategy annotationStrategy;
   private final ScopeStrategy scopeStrategy;
   private final Set<Class<?>> extendedTypes;
@@ -43,15 +46,17 @@ class DefaultInjectableFactory implements InjectableFactory {
    * Constructs a new instance.
    *
    * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
+   * @param instantiationContextFactory an {@link InstantiationContextFactory}, cannot be {@code null}
    * @param annotationStrategy a {@link AnnotationStrategy}, cannot be {@code null}
    * @param scopeStrategy a {@link ScopeStrategy}, cannot be {@code null}
    * @param extendedTypes a set of {@link Class} for which injection target extensions are in use, cannot be {@code null} or contain {@code null} but can be empty
    */
-  DefaultInjectableFactory(ScopeResolverManager scopeResolverManager, AnnotationStrategy annotationStrategy, ScopeStrategy scopeStrategy, Set<Class<?>> extendedTypes) {
-    this.scopeResolverManager = Objects.requireNonNull(scopeResolverManager, "scopeResolverManager cannot be null");
-    this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy cannot be null");
-    this.scopeStrategy = Objects.requireNonNull(scopeStrategy, "scopeStrategy cannot be null");
-    this.extendedTypes = Objects.requireNonNull(extendedTypes, "extendedTypes cannot be null");
+  DefaultInjectableFactory(ScopeResolverManager scopeResolverManager, InstantiationContextFactory instantiationContextFactory, AnnotationStrategy annotationStrategy, ScopeStrategy scopeStrategy, Set<Class<?>> extendedTypes) {
+    this.scopeResolverManager = Objects.requireNonNull(scopeResolverManager, "scopeResolverManager");
+    this.instantiationContextFactory = Objects.requireNonNull(instantiationContextFactory, "instantiationContextFactory");
+    this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy");
+    this.scopeStrategy = Objects.requireNonNull(scopeStrategy, "scopeStrategy");
+    this.extendedTypes = Objects.requireNonNull(extendedTypes, "extendedTypes");
   }
 
   @Override
@@ -98,7 +103,7 @@ class DefaultInjectableFactory implements InjectableFactory {
         ownerType,
         Types.getGenericSuperTypes(type).stream().filter(t -> !extendedTypes.contains(Types.raw(t))).collect(Collectors.toSet()),
         new QualifiedType(type, annotationStrategy.getQualifiers(element)),
-        bindings.stream().map(b -> toInjectionTarget(b)).collect(Collectors.toList()),
+        bindings.stream().map(b -> toInjectionTarget(b, scopeResolver)).collect(Collectors.toList()),
         extendedScopeResolver,
         element,
         constructable
@@ -109,11 +114,19 @@ class DefaultInjectableFactory implements InjectableFactory {
     }
   }
 
-  private InjectionTarget toInjectionTarget(Binding binding) {
+  private InjectionTarget toInjectionTarget(Binding binding, ScopeResolver scopeResolver) {
+    Instantiator<?> instantiator = instantiationContextFactory.createInstantiator(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional(), scopeResolver.getAnnotation());
+
     return new InjectionTarget() {
       @Override
       public Binding getBinding() {
         return binding;
+      }
+
+      @SuppressWarnings("unchecked")
+      @Override
+      public <T> Instantiator<T> getInstantiator() {
+        return (Instantiator<T>)instantiator;
       }
 
       @Override

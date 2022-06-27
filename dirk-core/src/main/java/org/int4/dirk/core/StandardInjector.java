@@ -58,6 +58,7 @@ public class StandardInjector implements Injector {
     InstantiationContextFactory instantiationContextFactory = new InstantiationContextFactory(strategy.getAnnotationStrategy(), strategy.getProxyStrategy(), injectionTargetExtensionStore);
     InjectableFactory injectableFactory = new DefaultInjectableFactory(
       new ScopeResolverManager(scopeResolvers, strategy.getScopeStrategy().getDependentAnnotation()),
+      instantiationContextFactory,
       strategy.getAnnotationStrategy(),
       strategy.getScopeStrategy(),
       injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet())

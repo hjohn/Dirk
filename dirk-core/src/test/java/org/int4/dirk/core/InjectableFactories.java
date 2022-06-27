@@ -45,13 +45,15 @@ public class InjectableFactories {
   private final Collection<InjectionTargetExtension<?, ?>> injectionTargetExtensions;
   private final InjectionTargetExtensionStore injectionTargetExtensionStore;
   private final BindingProvider bindingProvider;
+  private final InstantiationContextFactory instantiationContextFactory;
 
   public InjectableFactories(ScopeResolverManager scopeResolverManager, Collection<InjectionTargetExtension<?, ?>> extensions) {
     this.injectionTargetExtensions = extensions;
     this.scopeResolverManager = scopeResolverManager;
     this.injectionTargetExtensionStore = new InjectionTargetExtensionStore(injectionTargetExtensions);
     this.bindingProvider = new BindingProvider(ANNOTATION_STRATEGY, injectionTargetExtensionStore);
-    this.factory = new DefaultInjectableFactory(scopeResolverManager, ANNOTATION_STRATEGY, SCOPE_STRATEGY, injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet()));
+    this.instantiationContextFactory = new InstantiationContextFactory(InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
+    this.factory = new DefaultInjectableFactory(scopeResolverManager, instantiationContextFactory, ANNOTATION_STRATEGY, SCOPE_STRATEGY, injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet()));
     this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
   }
 
@@ -65,6 +67,10 @@ public class InjectableFactories {
 
   public InjectionTargetExtensionStore getInjectionTargetExtensionStore() {
     return injectionTargetExtensionStore;
+  }
+
+  public InstantiationContextFactory getInstantiationContextFactory() {
+    return instantiationContextFactory;
   }
 
   public ScopeResolverManager getScopeResolverManager() {

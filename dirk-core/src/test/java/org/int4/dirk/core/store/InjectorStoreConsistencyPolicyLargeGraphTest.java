@@ -19,6 +19,7 @@ import org.int4.dirk.core.definition.Binding;
 import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
 import org.int4.dirk.core.definition.InjectionTarget;
+import org.int4.dirk.core.definition.Instantiator;
 import org.int4.dirk.core.definition.QualifiedType;
 import org.int4.dirk.core.definition.injection.Injection;
 import org.int4.dirk.core.util.Key;
@@ -28,10 +29,12 @@ import org.int4.dirk.util.Annotations;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 public class InjectorStoreConsistencyPolicyLargeGraphTest {
   private final Random rnd = new Random(4);
@@ -45,6 +48,8 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
     ExtendedScopeResolver scopeResolver = mock(ExtendedScopeResolver.class);
 
+    when(scopeResolver.getAnnotation()).thenReturn(Annotations.of(Singleton.class));
+
     for(int i = 0; i < 10000; i++) {
       store.checkInvariants();
 
@@ -57,6 +62,11 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
           @Override
           public Binding getBinding() {
             return new SimpleBinding(new Key(target.getType(), target.getQualifiers()));
+          }
+
+          @Override
+          public <T> Instantiator<T> getInstantiator() {
+            return null;
           }
         });
       }
