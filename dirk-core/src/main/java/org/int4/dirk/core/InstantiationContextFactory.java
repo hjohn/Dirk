@@ -21,6 +21,7 @@ import org.int4.dirk.core.RootInstantiationContextFactory.RootInstantiationConte
 import org.int4.dirk.core.definition.Binding;
 import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
+import org.int4.dirk.core.definition.InjectionTarget;
 import org.int4.dirk.core.definition.InjectionTargetExtensionStore;
 import org.int4.dirk.core.definition.injection.Injection;
 import org.int4.dirk.core.util.Key;
@@ -337,7 +338,9 @@ class InstantiationContextFactory {
       try {
         List<Injection> injections = new ArrayList<>();
 
-        for(Binding binding : injectable.getBindings()) {
+        for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
+          Binding binding = injectionTarget.getBinding();
+
           injections.add(new Injection(binding.getAccessibleObject(), createInstantiator(binding, injectable).create().get()));
         }
 

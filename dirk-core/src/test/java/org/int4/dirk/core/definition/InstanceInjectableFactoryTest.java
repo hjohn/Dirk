@@ -28,7 +28,7 @@ public class InstanceInjectableFactoryTest {
     Injectable<String> injectable = factory.create("Hello World");
 
     assertThat(injectable.getType()).isEqualTo(String.class);
-    assertThat(injectable.getBindings()).isEmpty();
+    assertThat(injectable.getInjectionTargets()).isEmpty();
     assertThat(injectable.getScopeResolver().getAnnotation()).isEqualTo(Annotations.of(Singleton.class));
     assertThat(injectable.create(List.of())).isEqualTo("Hello World");
   }

@@ -88,7 +88,7 @@ public class DefaultInjectableFactoryTest {
       Types.parameterize(Shop.class, Book.class),
       Object.class
     );
-    assertThat(injectable.getBindings()).isEqualTo(List.of());
+    assertThat(injectable.getInjectionTargets()).isEqualTo(List.of());
     assertThat(injectable.getScopeResolver().getAnnotation()).isEqualTo(Annotations.of(Dependent.class));
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class));
     assertThat(injectable.toString()).isEqualTo("Class [@org.int4.dirk.core.test.qualifiers.Red() org.int4.dirk.core.DefaultInjectableFactoryTest$BookShop]");
@@ -108,7 +108,7 @@ public class DefaultInjectableFactoryTest {
       Types.parameterize(Shop.class, Book.class),
       Object.class
     );
-    assertThat(injectable.getBindings()).isEqualTo(List.of());
+    assertThat(injectable.getInjectionTargets()).isEqualTo(List.of());
     assertThat(injectable.getScopeResolver().getAnnotation()).isEqualTo(Annotations.of(Singleton.class));
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Green.class));
     assertThat(injectable.toString()).isEqualTo("Producer [@org.int4.dirk.core.test.qualifiers.Green() public org.int4.dirk.core.DefaultInjectableFactoryTest$BookShop org.int4.dirk.core.DefaultInjectableFactoryTest$BookShopFactory.createBookShop()]");
@@ -128,7 +128,7 @@ public class DefaultInjectableFactoryTest {
       Types.parameterize(Shop.class, Book.class),
       Object.class
     );
-    assertThat(injectable.getBindings()).isEqualTo(List.of());
+    assertThat(injectable.getInjectionTargets()).isEqualTo(List.of());
     assertThat(injectable.getScopeResolver().getAnnotation()).isEqualTo(Annotations.of(Singleton.class));
     assertThat(injectable.getQualifiers()).isEmpty();
     assertThat(injectable.toString()).isEqualTo("Producer [org.int4.dirk.core.DefaultInjectableFactoryTest$BookShop org.int4.dirk.core.DefaultInjectableFactoryTest$BookShopFactory.bookShop]");
@@ -170,7 +170,7 @@ public class DefaultInjectableFactoryTest {
       String.class,
       Object.class
     );
-    assertThat(injectable.getBindings()).isEqualTo(List.of());
+    assertThat(injectable.getInjectionTargets()).isEqualTo(List.of());
     assertThat(injectable.getScopeResolver().getAnnotation()).isEqualTo(Annotations.of(Singleton.class));
     assertThat(injectable.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class));
     assertThat(injectable.toString()).isEqualTo("Instance of [@org.int4.dirk.core.test.qualifiers.Red() java.lang.String -> Hello]");

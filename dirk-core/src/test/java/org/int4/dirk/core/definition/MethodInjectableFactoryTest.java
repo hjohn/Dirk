@@ -91,11 +91,11 @@ public class MethodInjectableFactoryTest {
     Injectable<String> injectable = factory.create(C.class.getMethod("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
-    assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
+    assertThat(injectable.getInjectionTargets()).extracting(Object::toString).containsExactly(
       "Owner Type [class org.int4.dirk.core.definition.MethodInjectableFactoryTest$C]"
     );
 
-    assertEquals("Bye", injectable.create(Bindings.resolve(injectable.getBindings(), new C())));
+    assertEquals("Bye", injectable.create(InjectionTargets.resolve(injectable.getInjectionTargets(), new C())));
   }
 
   @Test
@@ -103,11 +103,11 @@ public class MethodInjectableFactoryTest {
     Injectable<String> injectable = factory.create(C.class.getMethod("e", D.class), C.class);
 
     assertEquals(String.class, injectable.getType());
-    assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
+    assertThat(injectable.getInjectionTargets()).extracting(Object::toString).containsExactly(
       "Parameter 0 [class org.int4.dirk.core.definition.MethodInjectableFactoryTest$D] of [public static java.lang.String org.int4.dirk.core.definition.MethodInjectableFactoryTest$C.e(org.int4.dirk.core.definition.MethodInjectableFactoryTest$D)]"
     );
 
-    assertEquals("Hello D", injectable.create(Bindings.resolve(injectable.getBindings(), new D())));
+    assertEquals("Hello D", injectable.create(InjectionTargets.resolve(injectable.getInjectionTargets(), new D())));
   }
 
   static class A {

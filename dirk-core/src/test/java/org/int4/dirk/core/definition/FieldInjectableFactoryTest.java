@@ -79,11 +79,11 @@ public class FieldInjectableFactoryTest {
     Injectable<String> injectable = factory.create(C.class.getField("b"), C.class);
 
     assertEquals(String.class, injectable.getType());
-    assertThat(injectable.getBindings()).extracting(Object::toString).containsExactly(
+    assertThat(injectable.getInjectionTargets()).extracting(Object::toString).containsExactly(
       "Owner Type [class org.int4.dirk.core.definition.FieldInjectableFactoryTest$C]"
     );
 
-    assertEquals("Bye", injectable.create(Bindings.resolve(injectable.getBindings(), new C())));
+    assertEquals("Bye", injectable.create(InjectionTargets.resolve(injectable.getInjectionTargets(), new C())));
   }
 
   @Test
@@ -91,9 +91,9 @@ public class FieldInjectableFactoryTest {
     Injectable<String> injectable = factory.create(C.class.getField("e"), C.class);
 
     assertEquals(String.class, injectable.getType());
-    assertThat(injectable.getBindings()).isEmpty();
+    assertThat(injectable.getInjectionTargets()).isEmpty();
 
-    assertEquals("Hello", injectable.create(Bindings.resolve(injectable.getBindings())));
+    assertEquals("Hello", injectable.create(InjectionTargets.resolve(injectable.getInjectionTargets())));
   }
 
   static class A {

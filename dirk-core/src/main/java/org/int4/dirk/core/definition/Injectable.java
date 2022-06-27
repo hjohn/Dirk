@@ -44,11 +44,11 @@ public interface Injectable<T> extends Constructable<T> {
   Set<Annotation> getQualifiers();
 
   /**
-   * Returns the {@link Binding}s detected.
+   * Returns the {@link InjectionTarget}s detected.
    *
-   * @return a list {@link Binding}s, never {@code null}, can be empty if no bindings are detected
+   * @return a list {@link InjectionTarget}s, never {@code null}, can be empty if no targets are detected
    */
-  List<Binding> getBindings();
+  List<InjectionTarget> getInjectionTargets();
 
   /**
    * Returns the {@link ExtendedScopeResolver} of this {@link Injectable}.

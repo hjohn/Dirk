@@ -23,6 +23,7 @@ import org.int4.dirk.core.definition.Binding;
 import org.int4.dirk.core.definition.ClassInjectableFactory;
 import org.int4.dirk.core.definition.FieldInjectableFactory;
 import org.int4.dirk.core.definition.Injectable;
+import org.int4.dirk.core.definition.InjectionTarget;
 import org.int4.dirk.core.definition.MethodInjectableFactory;
 import org.int4.dirk.core.discovery.Discoverer;
 import org.int4.dirk.core.discovery.DiscovererFactory;
@@ -196,7 +197,8 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
         visitTypes.add(injectable.getType());
 
-        for(Binding binding : injectable.getBindings()) {
+        for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
+          Binding binding = injectionTarget.getBinding();
           Key elementKey = binding.getElementKey();
 
           if(includingResolver.resolve(elementKey).isEmpty()) {

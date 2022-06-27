@@ -22,6 +22,7 @@ import org.int4.dirk.api.definition.UnsatisfiedRequiredDependencyException;
 import org.int4.dirk.core.definition.Binding;
 import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
+import org.int4.dirk.core.definition.InjectionTarget;
 import org.int4.dirk.core.util.Key;
 import org.int4.dirk.core.util.Resolver;
 import org.int4.dirk.spi.config.ProxyStrategy;
@@ -159,7 +160,9 @@ public class InjectableStore implements Resolver<Injectable<?>> {
 
   private RegistrationViolation addInjectables(Collection<Injectable<?>> injectables) {
     for(Injectable<?> injectable : injectables) {
-      for(Binding binding : injectable.getBindings()) {
+      for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
+        Binding binding = injectionTarget.getBinding();
+
         addTarget(binding.getElementKey(), !binding.isOptional() && binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_LEAST_ONE), binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_MOST_ONE), injectables);
       }
     }
@@ -169,7 +172,9 @@ public class InjectableStore implements Resolver<Injectable<?>> {
 
   private RemoveViolation removeInjectables(Collection<Injectable<?>> injectables) {
     for(Injectable<?> injectable : injectables) {
-      for(Binding binding : injectable.getBindings()) {
+      for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
+        Binding binding = injectionTarget.getBinding();
+
         removeTarget(binding.getElementKey(), !binding.isOptional() && binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_LEAST_ONE), binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_MOST_ONE));
       }
     }
@@ -183,7 +188,9 @@ public class InjectableStore implements Resolver<Injectable<?>> {
      * Check the created bindings for unresolved or ambiguous dependencies and scope problems:
      */
 
-    for(Binding binding : injectable.getBindings()) {
+    for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
+      Binding binding = injectionTarget.getBinding();
+
       if(binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_MOST_ONE)) {
         Key elementKey = binding.getElementKey();
         Set<Injectable<?>> injectables = qualifiedTypeStore.resolve(elementKey);
@@ -260,7 +267,9 @@ public class InjectableStore implements Resolver<Injectable<?>> {
       boolean hasCycle(Injectable<?> injectable) {
         visiting.add(injectable);
 
-        for(Binding binding : injectable.getBindings()) {
+        for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
+          Binding binding = injectionTarget.getBinding();
+
           if(!binding.getTypeTraits().contains(TypeTrait.LAZY)) {
             for(Injectable<?> boundInjectable : qualifiedTypeStore.resolve(binding.getElementKey())) {
               if(visiting.contains(boundInjectable)) {
@@ -465,7 +474,8 @@ public class InjectableStore implements Resolver<Injectable<?>> {
    */
   private Set<Binding> findBindings(Type type, Set<Annotation> qualifiers) {
     return qualifiedTypeStore.toSet(s ->
-      s.flatMap(i -> i.getBindings().stream())
+      s.flatMap(i -> i.getInjectionTargets().stream())
+        .map(InjectionTarget::getBinding)
         .filter(b -> Types.isAssignable(type, b.getType()) && qualifiers.containsAll(b.getQualifiers()))
         .collect(Collectors.toSet())
     );

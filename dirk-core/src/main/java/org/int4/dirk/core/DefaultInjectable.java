@@ -13,9 +13,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.int4.dirk.api.instantiation.CreationException;
-import org.int4.dirk.core.definition.Binding;
 import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
+import org.int4.dirk.core.definition.InjectionTarget;
 import org.int4.dirk.core.definition.QualifiedType;
 import org.int4.dirk.core.definition.injection.Constructable;
 import org.int4.dirk.core.definition.injection.Injection;
@@ -27,7 +27,7 @@ final class DefaultInjectable<T> implements Injectable<T> {
   private final Type ownerType;
   private final Set<Type> types;
   private final QualifiedType qualifiedType;
-  private final List<Binding> bindings;
+  private final List<InjectionTarget> injectionTargets;
   private final ExtendedScopeResolver scopeResolver;
   private final AnnotatedElement discriminator;
   private final Constructable<T> constructable;
@@ -39,32 +39,32 @@ final class DefaultInjectable<T> implements Injectable<T> {
    * @param ownerType a {@link Type}, cannot be {@code null}
    * @param types a set of {@link Type} of this injectable, cannot be {@code null} or contain {@code null}s
    * @param qualifiedType a {@link QualifiedType}, cannot be {@code null}
-   * @param bindings a list of {@link Binding}s, cannot be {@code null} or contain {@code null}s, but can be empty
+   * @param injectionTargets a list of {@link InjectionTarget}s, cannot be {@code null} or contain {@code null}s, but can be empty
    * @param scopeResolver an {@link ExtendedScopeResolver}, cannot be {@code null}
    * @param discriminator an object to serve as a discriminator for similar injectables, cannot be {@code null}
    * @param constructable a {@link Constructable}, cannot be {@code null}
    */
-  DefaultInjectable(Type ownerType, Set<Type> types, QualifiedType qualifiedType, List<Binding> bindings, ExtendedScopeResolver scopeResolver, AnnotatedElement discriminator, Constructable<T> constructable) {
+  DefaultInjectable(Type ownerType, Set<Type> types, QualifiedType qualifiedType, List<InjectionTarget> injectionTargets, ExtendedScopeResolver scopeResolver, AnnotatedElement discriminator, Constructable<T> constructable) {
     if(ownerType == null) {
-      throw new IllegalArgumentException("ownerType cannot be null");
+      throw new IllegalArgumentException("ownerType");
     }
     if(types == null) {
-      throw new IllegalArgumentException("types cannot be null");
+      throw new IllegalArgumentException("types");
     }
     if(qualifiedType == null) {
-      throw new IllegalArgumentException("qualifiedType cannot be null");
+      throw new IllegalArgumentException("qualifiedType");
     }
-    if(bindings == null) {
-      throw new IllegalArgumentException("bindings cannot be null");
+    if(injectionTargets == null) {
+      throw new IllegalArgumentException("injectionTargets");
     }
     if(scopeResolver == null) {
-      throw new IllegalArgumentException("scopeResolver cannot be null");
+      throw new IllegalArgumentException("scopeResolver");
     }
     if(constructable == null) {
-      throw new IllegalArgumentException("constructable cannot be null");
+      throw new IllegalArgumentException("constructable");
     }
     if(discriminator == null) {
-      throw new IllegalArgumentException("discriminator cannot be null");
+      throw new IllegalArgumentException("discriminator");
     }
     if(!types.contains(qualifiedType.getType())) {
       throw new IllegalArgumentException("types must contain base type: " + qualifiedType.getType());
@@ -73,7 +73,7 @@ final class DefaultInjectable<T> implements Injectable<T> {
     this.ownerType = ownerType;
     this.types = Collections.unmodifiableSet(new HashSet<>(types));
     this.qualifiedType = qualifiedType;
-    this.bindings = Collections.unmodifiableList(new ArrayList<>(bindings));
+    this.injectionTargets = Collections.unmodifiableList(new ArrayList<>(injectionTargets));
     this.scopeResolver = scopeResolver;
     this.discriminator = discriminator;
     this.constructable = constructable;
@@ -100,8 +100,8 @@ final class DefaultInjectable<T> implements Injectable<T> {
   }
 
   @Override
-  public List<Binding> getBindings() {
-    return bindings;
+  public List<InjectionTarget> getInjectionTargets() {
+    return injectionTargets;
   }
 
   @Override

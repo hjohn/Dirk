@@ -20,6 +20,7 @@ import org.int4.dirk.core.definition.Binding;
 import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
 import org.int4.dirk.core.definition.InjectableFactory;
+import org.int4.dirk.core.definition.InjectionTarget;
 import org.int4.dirk.core.definition.QualifiedType;
 import org.int4.dirk.core.definition.injection.Constructable;
 import org.int4.dirk.spi.config.AnnotationStrategy;
@@ -97,7 +98,7 @@ class DefaultInjectableFactory implements InjectableFactory {
         ownerType,
         Types.getGenericSuperTypes(type).stream().filter(t -> !extendedTypes.contains(Types.raw(t))).collect(Collectors.toSet()),
         new QualifiedType(type, annotationStrategy.getQualifiers(element)),
-        bindings,
+        bindings.stream().map(b -> toInjectionTarget(b)).collect(Collectors.toList()),
         extendedScopeResolver,
         element,
         constructable
@@ -106,6 +107,20 @@ class DefaultInjectableFactory implements InjectableFactory {
     catch(BadQualifiedTypeException e) {
       throw new DefinitionException(element, "has unsuitable type", e);
     }
+  }
+
+  private InjectionTarget toInjectionTarget(Binding binding) {
+    return new InjectionTarget() {
+      @Override
+      public Binding getBinding() {
+        return binding;
+      }
+
+      @Override
+      public String toString() {
+        return binding.toString();
+      }
+    };
   }
 
   private static Type extractType(Type ownerType, Member member, AnnotatedElement element) throws DefinitionException {

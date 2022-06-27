@@ -32,23 +32,23 @@ public class ClassInjectableFactoryTest {
     assertEquals(SimpleClass.class, injectable.getType());
     assertEquals(Collections.emptySet(), injectable.getQualifiers());
     assertEquals(Annotations.of(Singleton.class), injectable.getScopeResolver().getAnnotation());
-    assertThat(injectable.getBindings()).hasSize(0);
+    assertThat(injectable.getInjectionTargets()).hasSize(0);
 
     Injectable<ClassWithDependencies> injectable2 = factory.create(ClassWithDependencies.class);
 
     assertEquals(ClassWithDependencies.class, injectable2.getType());
     assertEquals(Collections.singleton(ClassWithDependencies.class.getAnnotation(Red.class)), injectable2.getQualifiers());
     assertEquals(Annotations.of(Dependent.class), injectable2.getScopeResolver().getAnnotation());
-    assertThat(injectable2.getBindings()).hasSize(4);
+    assertThat(injectable2.getInjectionTargets()).hasSize(4);
 
-    ClassWithDependencies instance = injectable2.create(Bindings.resolve(injectable2.getBindings(), 2, 4L, null, "a string"));
+    ClassWithDependencies instance = injectable2.create(InjectionTargets.resolve(injectable2.getInjectionTargets(), 2, 4L, null, "a string"));
 
     assertEquals("a string", instance.s);
     assertEquals(2, instance.a);
     assertEquals(4L, instance.b);
     assertNull(instance.bd);
 
-    instance = injectable2.create(Bindings.resolve(injectable2.getBindings(), 2, 4L, new BigDecimal(5), "a string"));
+    instance = injectable2.create(InjectionTargets.resolve(injectable2.getInjectionTargets(), 2, 4L, new BigDecimal(5), "a string"));
 
     assertEquals(new BigDecimal(5), instance.bd);
   }

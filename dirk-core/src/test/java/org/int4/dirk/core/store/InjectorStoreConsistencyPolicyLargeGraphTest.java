@@ -18,6 +18,7 @@ import org.int4.dirk.core.definition.BadQualifiedTypeException;
 import org.int4.dirk.core.definition.Binding;
 import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
+import org.int4.dirk.core.definition.InjectionTarget;
 import org.int4.dirk.core.definition.QualifiedType;
 import org.int4.dirk.core.definition.injection.Injection;
 import org.int4.dirk.core.util.Key;
@@ -48,12 +49,16 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
       store.checkInvariants();
 
       int randomBindings = Math.min(rnd.nextInt(4), knownInjectables.size());
-      List<Binding> bindings = new ArrayList<>();
+      List<InjectionTarget> injectionTargets = new ArrayList<>();
 
       for(int j = 0; j < randomBindings; j++) {
         Injectable<?> target = knownInjectables.get(rnd.nextInt(knownInjectables.size()));
-
-        bindings.add(new SimpleBinding(new Key(target.getType(), target.getQualifiers())));
+        injectionTargets.add(new InjectionTarget() {
+          @Override
+          public Binding getBinding() {
+            return new SimpleBinding(new Key(target.getType(), target.getQualifiers()));
+          }
+        });
       }
 
       QualifiedType qualifiedType = new QualifiedType(classes.get(rnd.nextInt(classes.size())), Set.of(Annotations.of(Named.class, Map.of("value", "instance-" + i))));
@@ -75,8 +80,8 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
         }
 
         @Override
-        public List<Binding> getBindings() {
-          return bindings;
+        public List<InjectionTarget> getInjectionTargets() {
+          return injectionTargets;
         }
 
         @Override
