@@ -113,7 +113,7 @@ public class InstantiationContextFactoryTest {
   private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager, extensions);
   private final InjectionTargetExtensionStore injectionTargetExtensionStore = injectableFactories.getInjectionTargetExtensionStore();
   private final InjectableStore store = new InjectableStore(InjectableFactories.PROXY_STRATEGY);
-  private final InstantiationContextFactory factory = new InstantiationContextFactory(store, InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
+  private final InstantiationContextFactory factory = new InstantiationContextFactory(InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
 
   private String currentScope;
 
@@ -135,7 +135,7 @@ public class InstantiationContextFactoryTest {
 
     @Nested
     class AndCreatingContextForClassA {
-      private InstantiationContext<A> context = factory.createContext(new Key(A.class), false);
+      private InstantiationContext<A> context = factory.createContext(store, new Key(A.class), false);
 
       @Nested
       class ThenContext {
@@ -184,7 +184,7 @@ public class InstantiationContextFactoryTest {
 
     @Nested
     class AndCreatingContextForScopedClassF {
-      private InstantiationContext<F> context = factory.createContext(new Key(F.class), false);
+      private InstantiationContext<F> context = factory.createContext(store, new Key(F.class), false);
 
       @Test
       void createShouldThrowScopeException() {
@@ -217,7 +217,7 @@ public class InstantiationContextFactoryTest {
 
     @Nested
     class AndCreatingContextForClassE {
-      private InstantiationContext<E> context = factory.createContext(new Key(E.class), false);
+      private InstantiationContext<E> context = factory.createContext(store, new Key(E.class), false);
 
       @Test
       void createShouldBeSatisfied() {
@@ -241,7 +241,7 @@ public class InstantiationContextFactoryTest {
 
     @Nested
     class AndCreatingContextForDependent {
-      private InstantiationContext<E> context = factory.createContext(new Key(E.class), false);
+      private InstantiationContext<E> context = factory.createContext(store, new Key(E.class), false);
 
       @Test
       void createShouldCallLifecycleMethods() {
@@ -269,7 +269,7 @@ public class InstantiationContextFactoryTest {
 
     @Nested
     class AndCreatingContextForSingleton {
-      private InstantiationContext<X> context = factory.createContext(new Key(X.class), false);
+      private InstantiationContext<X> context = factory.createContext(store, new Key(X.class), false);
 
       @Test
       void createShouldBeSatisfied() {
@@ -298,7 +298,7 @@ public class InstantiationContextFactoryTest {
 
     @Nested
     class WithOptionalStringContext {
-      private InstantiationContext<String> context = factory.createContext(new Key(String.class), true);
+      private InstantiationContext<String> context = factory.createContext(store, new Key(String.class), true);
 
       @Test
       void createShouldBeSatisfied() {
@@ -321,7 +321,7 @@ public class InstantiationContextFactoryTest {
 
     @Nested
     class AndCreatingContextForClassListB {
-      private InstantiationContext<List<B>> context = factory.createContext(new Key(Types.parameterize(List.class, B.class)), false);
+      private InstantiationContext<List<B>> context = factory.createContext(store, new Key(Types.parameterize(List.class, B.class)), false);
 
       @Nested
       class ThenContext {
@@ -351,7 +351,7 @@ public class InstantiationContextFactoryTest {
 
     @Nested
     class AndCreatingContextsForBadSupplierInjectionTargetExtensions {
-      private InstantiationContext<BadSupplierA<X>> context = factory.createContext(new Key(Types.parameterize(BadSupplierA.class, X.class)), false);
+      private InstantiationContext<BadSupplierA<X>> context = factory.createContext(store, new Key(Types.parameterize(BadSupplierA.class, X.class)), false);
 
       @Nested
       class ThenContext {

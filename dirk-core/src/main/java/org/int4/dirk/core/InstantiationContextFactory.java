@@ -63,7 +63,6 @@ class InstantiationContextFactory {
 
   private static boolean strictOrder;
 
-  private final Resolver<Injectable<?>> resolver;
   private final ProxyStrategy proxyStrategy;
   private final InjectionTargetExtensionStore injectionTargetExtensionStore;
   private final RootInstantiationContextFactory rootInstantiationContextFactory;
@@ -72,20 +71,18 @@ class InstantiationContextFactory {
   /**
    * Constructs a new instance.
    *
-   * @param resolver a {@link Resolver}, cannot be {@code null}
    * @param annotationStrategy an {@link AnnotationStrategy}, cannot be {@code null}
    * @param proxyStrategy a {@link ProxyStrategy}, cannot be {@code null}
    * @param injectionTargetExtensionStore an {@link InjectionTargetExtensionStore}, cannot be {@code null}
    */
-  InstantiationContextFactory(Resolver<Injectable<?>> resolver, AnnotationStrategy annotationStrategy, ProxyStrategy proxyStrategy, InjectionTargetExtensionStore injectionTargetExtensionStore) {
-    this.resolver = Objects.requireNonNull(resolver, "resolver");
+  InstantiationContextFactory(AnnotationStrategy annotationStrategy, ProxyStrategy proxyStrategy, InjectionTargetExtensionStore injectionTargetExtensionStore) {
     this.proxyStrategy = Objects.requireNonNull(proxyStrategy, "proxyStrategy");
     this.injectionTargetExtensionStore = Objects.requireNonNull(injectionTargetExtensionStore, "injectionTargetExtensionStore");
     this.rootInstantiationContextFactory = new RootInstantiationContextFactory(annotationStrategy);
   }
 
-  public <T> InstantiationContext<T> createContext(Key key, boolean optional) {
-    return rootInstantiationContextFactory.create(createInstantiator(key, optional));
+  public <T> InstantiationContext<T> createContext(Resolver<Injectable<?>> resolver, Key key, boolean optional) {
+    return rootInstantiationContextFactory.create(resolver, createInstantiator(key, optional));
   }
 
   private <T, E> Instantiator<T, E> createInstantiator(Binding binding, Injectable<?> parent) {  // careful, no check if parent is indeed the parent of the binding
@@ -150,7 +147,7 @@ class InstantiationContextFactory {
       return new Instantiator<>(key, optional, null);
     }
 
-    ExtendedCreationalContext<T> create() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
+    ExtendedCreationalContext<T> create(Resolver<Injectable<?>> resolver) throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
       if(elementKey == null) {
         @SuppressWarnings("unchecked")
         Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
@@ -159,7 +156,7 @@ class InstantiationContextFactory {
           throw new AmbiguousResolutionException("Multiple matching instances: [" + key + "]: " + injectables);
         }
 
-        ExtendedCreationalContext<T> creationalContext = injectables.size() == 0 ? null : createContext(injectables.iterator().next());
+        ExtendedCreationalContext<T> creationalContext = injectables.size() == 0 ? null : createContext(resolver, injectables.iterator().next());
 
         // TODO This should probably throw an IllegalProductException in the second null case
         if((creationalContext == null || creationalContext.get() == null) && !optional) {
@@ -173,7 +170,7 @@ class InstantiationContextFactory {
       }
 
       boolean lazy = injectionTargetExtension.getTypeTraits().contains(TypeTrait.LAZY);
-      RootInstantiationContext<E, ?> instantiationContext = rootInstantiationContextFactory.create(elementInstantiator);
+      RootInstantiationContext<E, ?> instantiationContext = rootInstantiationContextFactory.create(resolver, elementInstantiator);
       InjectionTargetExtensionCreationalContext<T, E> creationalContext = new InjectionTargetExtensionCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), lazy ? instantiationContext : null);
 
       open(creationalContext);
@@ -201,7 +198,7 @@ class InstantiationContextFactory {
       }
     }
 
-    List<ExtendedCreationalContext<T>> createAll() throws CreationException {
+    List<ExtendedCreationalContext<T>> createAll(Resolver<Injectable<?>> resolver) throws CreationException {
       if(elementKey == null) {
         List<ExtendedCreationalContext<T>> creationalContexts = new ArrayList<>();
 
@@ -213,7 +210,7 @@ class InstantiationContextFactory {
         }
 
         for(Injectable<T> injectable : injectables) {
-          ExtendedCreationalContext<T> creationalContext = createContextInScope(injectable);
+          ExtendedCreationalContext<T> creationalContext = createContextInScope(resolver, injectable);
 
           if(creationalContext != null) {
             creationalContexts.add(creationalContext);
@@ -241,13 +238,13 @@ class InstantiationContextFactory {
       return List.of();
     }
 
-    private ExtendedCreationalContext<T> createContextInScope(Injectable<T> injectable) throws CreationException {
+    private ExtendedCreationalContext<T> createContextInScope(Resolver<Injectable<?>> resolver, Injectable<T> injectable) throws CreationException {
       try {
         if(!injectable.getScopeResolver().isDependentScope() && !injectable.getScopeResolver().isActive()) {
           return null;
         }
 
-        return createContext(injectable);
+        return createContext(resolver, injectable);
       }
       catch(ScopeNotActiveException e) {
 
@@ -261,14 +258,14 @@ class InstantiationContextFactory {
       }
     }
 
-    private ExtendedCreationalContext<T> createContext(Injectable<T> injectable) throws CreationException, ScopeNotActiveException {
+    private ExtendedCreationalContext<T> createContext(Resolver<Injectable<?>> resolver, Injectable<T> injectable) throws CreationException, ScopeNotActiveException {
       try {
         ExtendedScopeResolver scopeResolver = injectable.getScopeResolver();
         boolean needsProxy = parent != null && !scopeResolver.isPseudoScope() && !scopeResolver.getAnnotation().equals(parent.getScopeResolver().getAnnotation());
 
         if(needsProxy) {
           try {
-            T instance = proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> createContext(scopeResolver, injectable).get());
+            T instance = proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> createContext(resolver, scopeResolver, injectable).get());
 
             return new ExtendedCreationalContext<>() {
               @Override
@@ -296,7 +293,7 @@ class InstantiationContextFactory {
           }
         }
 
-        return createContext(scopeResolver, injectable);
+        return createContext(resolver, scopeResolver, injectable);
       }
       catch(ScopeNotActiveException | CreationException e) {  // Avoid wrapping these exceptions in another layer
         throw e;
@@ -306,7 +303,7 @@ class InstantiationContextFactory {
       }
     }
 
-    private ExtendedCreationalContext<T> createContext(ExtendedScopeResolver scopeResolver, Injectable<T> injectable) throws ScopeNotActiveException, Exception {
+    private ExtendedCreationalContext<T> createContext(Resolver<Injectable<?>> resolver, ExtendedScopeResolver scopeResolver, Injectable<T> injectable) throws ScopeNotActiveException, Exception {
       @SuppressWarnings("unchecked")
       ExtendedCreationalContext<T> existingCreationalContext = (ExtendedCreationalContext<T>)scopeResolver.find(injectable);
 
@@ -319,7 +316,7 @@ class InstantiationContextFactory {
       open(creationalContext);
 
       try {
-        creationalContext.initialize(createInstance(injectable));
+        creationalContext.initialize(createInstance(resolver, injectable));
 
         scopeResolver.put(injectable, creationalContext);
 
@@ -334,14 +331,14 @@ class InstantiationContextFactory {
       creationalContext.release();
     }
 
-    private T createInstance(Injectable<T> injectable) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
+    private T createInstance(Resolver<Injectable<?>> resolver, Injectable<T> injectable) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException {
       try {
         List<Injection> injections = new ArrayList<>();
 
         for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
           Binding binding = injectionTarget.getBinding();
 
-          injections.add(new Injection(binding.getAccessibleObject(), createInstantiator(binding, injectable).create().get()));
+          injections.add(new Injection(binding.getAccessibleObject(), createInstantiator(binding, injectable).create(resolver).get()));
         }
 
         return injectable.create(injections);

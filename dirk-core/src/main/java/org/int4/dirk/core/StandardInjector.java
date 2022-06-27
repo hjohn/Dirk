@@ -54,6 +54,8 @@ public class StandardInjector implements Injector {
     Objects.requireNonNull(scopeResolvers, "scopeResolvers cannot be null");
     Objects.requireNonNull(strategy, "strategy cannot be null");
 
+    InjectionTargetExtensionStore injectionTargetExtensionStore = new InjectionTargetExtensionStore(injectionTargetExtensions);
+    InstantiationContextFactory instantiationContextFactory = new InstantiationContextFactory(strategy.getAnnotationStrategy(), strategy.getProxyStrategy(), injectionTargetExtensionStore);
     InjectableFactory injectableFactory = new DefaultInjectableFactory(
       new ScopeResolverManager(scopeResolvers, strategy.getScopeStrategy().getDependentAnnotation()),
       strategy.getAnnotationStrategy(),
@@ -61,7 +63,6 @@ public class StandardInjector implements Injector {
       injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet())
     );
 
-    InjectionTargetExtensionStore injectionTargetExtensionStore = new InjectionTargetExtensionStore(injectionTargetExtensions);
     BindingProvider bindingProvider = new BindingProvider(strategy.getAnnotationStrategy(), injectionTargetExtensionStore);
     DiscovererFactory discovererFactory = new DefaultDiscovererFactory(
       autoDiscovery,
@@ -72,11 +73,10 @@ public class StandardInjector implements Injector {
     );
 
     InjectableStore store = new InjectableStore(strategy.getProxyStrategy());
-    InstantiationContextFactory instantiationContextFactory = new InstantiationContextFactory(store, strategy.getAnnotationStrategy(), strategy.getProxyStrategy(), injectionTargetExtensionStore);
     InstanceInjectableFactory instanceInjectableFactory = new InstanceInjectableFactory(injectableFactory, strategy.getScopeStrategy().getSingletonAnnotation());
 
     this.registry = new InjectableStoreCandidateRegistry(store, discovererFactory, instanceInjectableFactory);
-    this.instanceResolver = new DefaultInstanceResolver(instantiationContextFactory);
+    this.instanceResolver = new DefaultInstanceResolver(store, instantiationContextFactory);
   }
 
   @Override

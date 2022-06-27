@@ -8,12 +8,15 @@ import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
+import org.int4.dirk.core.definition.Injectable;
 import org.int4.dirk.core.util.Key;
+import org.int4.dirk.core.util.Resolver;
 
 /**
  * Implements the {@link InstanceResolver} interface.
  */
 class DefaultInstanceResolver implements InstanceResolver {
+  private final Resolver<Injectable<?>> resolver;
   private final InstantiationContextFactory instantiationContextFactory;
 
   /**
@@ -21,7 +24,8 @@ class DefaultInstanceResolver implements InstanceResolver {
    *
    * @param instantiationContextFactory an {@link InstantiationContextFactory}, cannot be {@code null}
    */
-  DefaultInstanceResolver(InstantiationContextFactory instantiationContextFactory) {
+  DefaultInstanceResolver(Resolver<Injectable<?>> resolver, InstantiationContextFactory instantiationContextFactory) {
+    this.resolver = resolver;
     this.instantiationContextFactory = instantiationContextFactory;
   }
 
@@ -46,10 +50,10 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   private <T> T getInstance(Key key) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
-    return instantiationContextFactory.<T>createContext(key, false).create();
+    return instantiationContextFactory.<T>createContext(resolver, key, false).create();
   }
 
   private <T> List<T> getInstances(Key key) throws CreationException {
-    return instantiationContextFactory.<T>createContext(key, false).createAll();
+    return instantiationContextFactory.<T>createContext(resolver, key, false).createAll();
   }
 }
