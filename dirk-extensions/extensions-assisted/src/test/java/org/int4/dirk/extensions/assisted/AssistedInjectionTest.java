@@ -38,7 +38,7 @@ import jakarta.inject.Singleton;
 
 public class AssistedInjectionTest {
   private static final Inject INJECT = Annotations.of(Inject.class);
-  private static final AssistedAnnotationStrategy<?> ASSISTED_ANNOTATION_STRATEGY = new ConfigurableAssistedAnnotationStrategy<>(Assisted.class, Argument.class, AssistedInjectionTest::extractArgumentName, INJECT, Provider.class, Provider::get);
+  private static final AssistedAnnotationStrategy ASSISTED_ANNOTATION_STRATEGY = new ConfigurableAssistedAnnotationStrategy<>(Assisted.class, Argument.class, AssistedInjectionTest::extractArgumentName, INJECT);
   private static final AnnotationStrategy ANNOTATION_STRATEGY = new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, Opt.class);
   private static final LifeCycleCallbacksFactory LIFE_CYCLE_CALLBACKS_FACTORY = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
 

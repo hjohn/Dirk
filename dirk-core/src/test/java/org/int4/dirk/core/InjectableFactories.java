@@ -51,7 +51,7 @@ public class InjectableFactories {
     this.injectionTargetExtensions = extensions;
     this.scopeResolverManager = scopeResolverManager;
     this.injectionTargetExtensionStore = new InjectionTargetExtensionStore(injectionTargetExtensions);
-    this.bindingProvider = new BindingProvider(ANNOTATION_STRATEGY, injectionTargetExtensionStore);
+    this.bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
     this.instantiationContextFactory = new InstantiationContextFactory(InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
     this.factory = new DefaultInjectableFactory(scopeResolverManager, instantiationContextFactory, ANNOTATION_STRATEGY, SCOPE_STRATEGY, injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet()));
     this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);

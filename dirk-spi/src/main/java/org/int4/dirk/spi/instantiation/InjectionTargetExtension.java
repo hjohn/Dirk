@@ -1,12 +1,7 @@
 package org.int4.dirk.spi.instantiation;
 
-import java.lang.reflect.Type;
-import java.util.Set;
-
-import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
-import org.int4.dirk.api.instantiation.CreationException;
-import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
-import org.int4.dirk.api.scope.ScopeNotActiveException;
+import java.lang.reflect.TypeVariable;
+import java.util.Objects;
 
 /**
  * An interface to allow for custom handling of injection targets of type
@@ -18,44 +13,61 @@ import org.int4.dirk.api.scope.ScopeNotActiveException;
  * @param <T> the type handled
  * @param <E> the element type required
  */
-public interface InjectionTargetExtension<T, E> {
+public class InjectionTargetExtension<T, E> {
+  private final Resolution resolution;
+  private final InstanceProvider<T, E> instanceProvider;
+  private final TypeVariable<Class<T>> elementTypeVariable;
 
   /**
-   * Returns the target class extended by this extension.
+   * Constructs a new instance.
+   *
+   * @param elementTypeVariable a {@link TypeVariable} which represents the element type {@code E}, cannot be {@code null}
+   * @param resolution a {@link Resolution}, cannot be {@code null}
+   * @param instanceProvider an {@link InstanceProvider}, cannot be {@code null}
+   */
+  public InjectionTargetExtension(TypeVariable<Class<T>> elementTypeVariable, Resolution resolution, InstanceProvider<T, E> instanceProvider) {
+    this.elementTypeVariable = Objects.requireNonNull(elementTypeVariable, "elementTypeVariable");
+    this.resolution = Objects.requireNonNull(resolution, "resolution");
+    this.instanceProvider = Objects.requireNonNull(instanceProvider, "instanceProvider");
+  }
+
+  /**
+   * Returns the target class that is handled by this extension.
    *
    * @return a {@link Class}, never {@code null}
    */
-  Class<?> getTargetClass();
+  public final Class<T> getTargetClass() {
+    return elementTypeVariable.getGenericDeclaration();
+  }
 
   /**
-   * Returns the element type of the given type by unwrapping the given type. Returning
-   * {@code null} or the same type is not allowed.
+   * Returns the {@link InstanceProvider} that can create the type handled by this extension.
    *
-   * @param type a {@link Type} to unwrap, cannot be {@code null}
-   * @return the element type of the given type by unwrapping the given type, never {@code null}
+   * @return an {@link InstanceProvider}, never {@code null}
    */
-  Type getElementType(Type type);
+  public final InstanceProvider<T, E> getInstanceProvider() {
+    return instanceProvider;
+  }
 
   /**
-   * Returns the {@link TypeTrait}s of this extension.
+   * Returns a {@link TypeVariable} which represents the element type {@code E}.
    *
-   * @return a set of {@link TypeTrait}, never {@code null} or contains {@code null}, but can be empty
+   * @return a {@link TypeVariable}, never {@code null}
    */
-  Set<TypeTrait> getTypeTraits();
+  public final TypeVariable<Class<T>> getElementTypeVariable() {
+    return elementTypeVariable;
+  }
 
   /**
-   * Creates an instance of type {@code T} using the given {@link InstantiationContext}.
-   * Returning {@code null} is allowed to indicate the absence of a value. Depending on the
-   * destination where the value is used this can mean {@code null} is injected (methods and
-   * constructors), that the value is not injected (fields) or that an {@link UnsatisfiedResolutionException}
-   * is thrown (direct instance resolver call).
+   * Returns how the injection target should be resolved. This determines what kind of
+   * restrictions are applied when an injection target of this type is added to an injector.
+   * When eager, restrictions are enforced before the injector is modified. When lazy,
+   * use of the {@link InstantiationContext} may result in errors if the required types are
+   * not available.
    *
-   * @param context an {@link InstantiationContext}, cannot be {@code null}
-   * @return an instance of type {@code T}, can be {@code null}
-   * @throws CreationException when the instance could not be created
-   * @throws AmbiguousResolutionException when multiple instances matched but at most one was required
-   * @throws UnsatisfiedResolutionException when no instance matched but at least one was required
-   * @throws ScopeNotActiveException when the scope for the produced type is not active
+   * @return a {@link Resolution}, never {@code null}
    */
-  T getInstance(InstantiationContext<E> context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException, ScopeNotActiveException;
+  public final Resolution getResolution() {
+    return resolution;
+  }
 }

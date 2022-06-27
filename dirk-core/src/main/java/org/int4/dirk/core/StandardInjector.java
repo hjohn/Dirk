@@ -64,7 +64,7 @@ public class StandardInjector implements Injector {
       injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet())
     );
 
-    BindingProvider bindingProvider = new BindingProvider(strategy.getAnnotationStrategy(), injectionTargetExtensionStore);
+    BindingProvider bindingProvider = new BindingProvider(strategy.getAnnotationStrategy());
     DiscovererFactory discovererFactory = new DefaultDiscovererFactory(
       autoDiscovery,
       typeRegistrationExtensions,

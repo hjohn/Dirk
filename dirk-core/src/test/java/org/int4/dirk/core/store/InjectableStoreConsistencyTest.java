@@ -246,8 +246,8 @@ public class InjectableStoreConsistencyTest {
     }
 
     @Test
-    void removeNShouldFailAsRequiredByM() {
-      assertThrows(UnsatisfiedRequiredDependencyException.class, () -> store.removeAll(List.of(n)));
+    void removeNShouldWorkAsOnlyIndirectlyRequiredByM() {
+      store.removeAll(List.of(n));
     }
 
     @Test

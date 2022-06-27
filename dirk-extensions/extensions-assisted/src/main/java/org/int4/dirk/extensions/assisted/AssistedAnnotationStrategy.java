@@ -11,13 +11,10 @@ import java.lang.reflect.Parameter;
  * implementation, which argument annotation can be used to indicate arguments,
  * and how to extract argument names from fields, methods and parameters.
  *
- * <p>The strategy also must supply the inject annotation and provider
- * mechanism configured for the associated injector in order for the extension
+ * <p>The strategy also must supply the inject annotation in order for the extension
  * to create an assisted producer implementation that can be injected.
- *
- * @param <P> the type of the provider class
  */
-public interface AssistedAnnotationStrategy<P> {
+public interface AssistedAnnotationStrategy {
 
   /**
    * Returns the {@link Class} of the marker annotation to indicate a producer
@@ -66,20 +63,4 @@ public interface AssistedAnnotationStrategy<P> {
    * @return an inject annotation supported by the associated injector, never {@code null}
    */
   Annotation injectAnnotation();
-
-  /**
-   * Returns the {@link Class} of the provider type that can be used with the
-   * associated injector.
-   *
-   * @return a provider {@link Class} supported by the associated injector, never {@code null}
-   */
-  Class<P> providerClass();
-
-  /**
-   * Return the result of calling the given provider {@code P}.
-   *
-   * @param provider a provider {@code P}, cannot be {@code null}
-   * @return a result of calling the given provider, can be {@code null}
-   */
-  Object provision(P provider);
 }

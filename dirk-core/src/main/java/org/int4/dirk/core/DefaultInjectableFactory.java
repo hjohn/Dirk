@@ -27,6 +27,7 @@ import org.int4.dirk.core.definition.injection.Constructable;
 import org.int4.dirk.core.util.Key;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.ScopeStrategy;
+import org.int4.dirk.spi.instantiation.Resolution;
 import org.int4.dirk.spi.scope.ScopeResolver;
 import org.int4.dirk.util.Types;
 
@@ -127,6 +128,16 @@ class DefaultInjectableFactory implements InjectableFactory {
       @Override
       public <T> Instantiator<T> getInstantiator() {
         return (Instantiator<T>)instantiator;
+      }
+
+      @Override
+      public Resolution getResolution() {
+        return getInstantiator().getResolution();
+      }
+
+      @Override
+      public Key getElementKey() {
+        return getInstantiator().getElementKey();
       }
 
       @Override

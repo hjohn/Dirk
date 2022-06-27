@@ -19,15 +19,13 @@ import java.util.regex.Pattern;
  * @param <A> the argument annotation type
  * @param <P> the provider type
  */
-public class ConfigurableAssistedAnnotationStrategy<A extends Annotation, P> implements AssistedAnnotationStrategy<P> {
+public class ConfigurableAssistedAnnotationStrategy<A extends Annotation> implements AssistedAnnotationStrategy {
   private static final Pattern GETTER = Pattern.compile("get([A-Z])(.*)");
 
   private final Class<? extends Annotation> assisted;
   private final Class<A> argument;
   private final Function<AnnotatedElement, String> argumentNameGetter;
   private final Annotation inject;
-  private final Class<P> provider;
-  private final Function<P, Object> providerGetter;
 
   /**
    * Constructs a new instance.
@@ -36,16 +34,12 @@ public class ConfigurableAssistedAnnotationStrategy<A extends Annotation, P> imp
    * @param argument an argument annotation {@link Class} to use to mark arguments, cannot be {@code null}
    * @param argumentNameGetter a getter {@link Function} to extract the argument name from an argument annotation, cannot be {@code null}
    * @param inject an inject {@link Annotation} supported by the associated injector to mark producers with, cannot be {@code null}
-   * @param provider a provider class supported by the associated injector to use for producer fields, cannot be {@code null}
-   * @param providerGetter a getter {@link Function} to extract the value from the provider class, cannot be {@code null}
    */
-  public ConfigurableAssistedAnnotationStrategy(Class<? extends Annotation> assisted, Class<A> argument, Function<AnnotatedElement, String> argumentNameGetter, Annotation inject, Class<P> provider, Function<P, Object> providerGetter) {
+  public ConfigurableAssistedAnnotationStrategy(Class<? extends Annotation> assisted, Class<A> argument, Function<AnnotatedElement, String> argumentNameGetter, Annotation inject) {
     this.assisted = Objects.requireNonNull(assisted, "assisted cannot be null");
     this.argument = Objects.requireNonNull(argument, "argument cannot be null");
     this.argumentNameGetter = Objects.requireNonNull(argumentNameGetter, "argumentNameGetter cannot be null");
     this.inject = Objects.requireNonNull(inject, "inject cannot be null");
-    this.provider = Objects.requireNonNull(provider, "provider cannot be null");
-    this.providerGetter = Objects.requireNonNull(providerGetter, "providerGetter cannot be null");
   }
 
   @Override
@@ -81,16 +75,6 @@ public class ConfigurableAssistedAnnotationStrategy<A extends Annotation, P> imp
   @Override
   public Annotation injectAnnotation() {
     return inject;
-  }
-
-  @Override
-  public Class<P> providerClass() {
-    return provider;
-  }
-
-  @Override
-  public Object provision(P provider) {
-    return providerGetter.apply(provider);
   }
 
   private static final String stripMethodName(String name) {

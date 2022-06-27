@@ -4,7 +4,9 @@ import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
+import org.int4.dirk.core.util.Key;
 import org.int4.dirk.core.util.Resolver;
+import org.int4.dirk.spi.instantiation.Resolution;
 import org.int4.dirk.spi.scope.CreationalContext;
 
 /**
@@ -25,4 +27,21 @@ public interface Instantiator<T> {
    * @throws ScopeNotActiveException when the scope for the produced type is not active
    */
   CreationalContext<T> create(Resolver<Injectable<?>> resolver) throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException;
+
+  /**
+   * Returns how the injection target should be resolved.
+   *
+   * @return a {@link Resolution}, never {@code null}
+   */
+  Resolution getResolution();
+
+  /**
+   * Returns the {@link Key} of which individual elements of the injection target consist.
+   * For simple types, this will be the same as the injection target's type. For types
+   * which are provided by an injection target extension, this will be base type that
+   * is looked up for injection.
+   *
+   * @return a {@link Key}, never {@code null}
+   */
+  Key getElementKey();
 }

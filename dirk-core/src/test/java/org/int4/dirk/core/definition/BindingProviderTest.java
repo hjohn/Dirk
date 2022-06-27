@@ -7,7 +7,6 @@ import java.util.Set;
 import org.assertj.core.groups.Tuple;
 import org.int4.dirk.annotations.Opt;
 import org.int4.dirk.api.definition.DefinitionException;
-import org.int4.dirk.core.InjectionTargetExtensionStores;
 import org.int4.dirk.core.test.qualifiers.Big;
 import org.int4.dirk.core.test.qualifiers.Green;
 import org.int4.dirk.core.test.qualifiers.Red;
@@ -29,7 +28,7 @@ public class BindingProviderTest {
   private static final Annotation RED = Annotations.of(Red.class);
   private static final Annotation GREEN = Annotations.of(Green.class);
 
-  private BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, null), InjectionTargetExtensionStores.create());
+  private BindingProvider bindingProvider = new BindingProvider(new ConfigurableAnnotationStrategy(Inject.class, Qualifier.class, null));
 
   @Test
   public void ofMembersShouldBindToGenericFieldInSubclass() throws Exception {

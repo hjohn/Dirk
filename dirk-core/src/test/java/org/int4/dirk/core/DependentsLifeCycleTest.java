@@ -1,18 +1,12 @@
 package org.int4.dirk.core;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 
 import org.int4.dirk.api.Injector;
 import org.int4.dirk.api.TypeLiteral;
-import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
-import org.int4.dirk.api.instantiation.CreationException;
-import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 import org.int4.dirk.core.RootInstantiationContextFactory.RootInstantiationContext;
 import org.int4.dirk.core.test.qualifiers.Red;
@@ -20,10 +14,10 @@ import org.int4.dirk.core.test.scope.TestScope;
 import org.int4.dirk.extensions.proxy.ByteBuddyProxyStrategy;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.instantiation.InstantiationContext;
-import org.int4.dirk.spi.instantiation.TypeTrait;
+import org.int4.dirk.spi.instantiation.Resolution;
 import org.int4.dirk.spi.scope.AbstractScopeResolver;
 import org.int4.dirk.util.Annotations;
-import org.int4.dirk.util.Types;
+import org.int4.dirk.util.TypeVariables;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,27 +40,11 @@ public class DependentsLifeCycleTest {
     .useDefaultInjectionTargetExtensions()
     .proxyStrategy(new ByteBuddyProxyStrategy())
     .add(scopeResolver)
-    .add(new InjectionTargetExtension<InstantiationContext<Object>, Object>() {
-      @Override
-      public Class<?> getTargetClass() {
-        return InstantiationContext.class;
-      }
-
-      @Override
-      public Type getElementType(Type type) {
-        return Types.getTypeParameter(type, InstantiationContext.class, InstantiationContext.class.getTypeParameters()[0]);
-      }
-
-      @Override
-      public Set<TypeTrait> getTypeTraits() {
-        return EnumSet.of(TypeTrait.LAZY);
-      }
-
-      @Override
-      public InstantiationContext<Object> getInstance(InstantiationContext<Object> context) throws CreationException, AmbiguousResolutionException, UnsatisfiedResolutionException, ScopeNotActiveException {
-        return context;
-      }
-    })
+    .add(new InjectionTargetExtension<InstantiationContext<Object>, Object>(
+      TypeVariables.get(InstantiationContext.class, 0),
+      Resolution.LAZY,
+      context -> context
+    ))
     .build();
 
   private String currentScope;

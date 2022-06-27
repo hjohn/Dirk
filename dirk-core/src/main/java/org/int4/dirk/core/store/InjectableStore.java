@@ -26,7 +26,7 @@ import org.int4.dirk.core.definition.InjectionTarget;
 import org.int4.dirk.core.util.Key;
 import org.int4.dirk.core.util.Resolver;
 import org.int4.dirk.spi.config.ProxyStrategy;
-import org.int4.dirk.spi.instantiation.TypeTrait;
+import org.int4.dirk.spi.instantiation.Resolution;
 import org.int4.dirk.util.Types;
 
 /**
@@ -162,8 +162,9 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     for(Injectable<?> injectable : injectables) {
       for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
         Binding binding = injectionTarget.getBinding();
+        boolean exactlyOne = injectionTarget.getResolution() == Resolution.EAGER_ONE;
 
-        addTarget(binding.getElementKey(), !binding.isOptional() && binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_LEAST_ONE), binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_MOST_ONE), injectables);
+        addTarget(injectionTarget.getElementKey(), !binding.isOptional() && exactlyOne, exactlyOne, injectables);
       }
     }
 
@@ -174,8 +175,9 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     for(Injectable<?> injectable : injectables) {
       for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
         Binding binding = injectionTarget.getBinding();
+        boolean exactlyOne = injectionTarget.getResolution() == Resolution.EAGER_ONE;
 
-        removeTarget(binding.getElementKey(), !binding.isOptional() && binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_LEAST_ONE), binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_MOST_ONE));
+        removeTarget(injectionTarget.getElementKey(), !binding.isOptional() && exactlyOne, exactlyOne);
       }
     }
 
@@ -191,20 +193,21 @@ public class InjectableStore implements Resolver<Injectable<?>> {
     for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
       Binding binding = injectionTarget.getBinding();
 
-      if(binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_MOST_ONE)) {
-        Key elementKey = binding.getElementKey();
+      if(injectionTarget.getResolution() == Resolution.EAGER_ONE) {
+        Key elementKey = injectionTarget.getElementKey();
         Set<Injectable<?>> injectables = qualifiedTypeStore.resolve(elementKey);
 
         // The binding is a single binding, if there are more than one matches it is ambiguous, and if there is no match then it must be optional
         if(injectables.size() > 1) {
           throw new AmbiguousDependencyException("Multiple candidates for dependency [" + elementKey + "] required for " + binding + ": " + injectables);
         }
-        if(!binding.isOptional() && binding.getTypeTraits().contains(TypeTrait.REQUIRES_AT_LEAST_ONE) && injectables.size() < 1) {
+        if(!binding.isOptional() && injectables.size() < 1) {
           throw new UnsatisfiedDependencyException("Missing dependency [" + elementKey + "] required for " + binding);
         }
 
-        // Check scope only for non lazy bindings. Lazy ones that inject a Provider can be used anywhere.
-        if(!binding.getTypeTraits().contains(TypeTrait.LAZY) && !injectables.isEmpty()) {
+        // TODO scope is not checked for Resolution.EAGER_ONE, so injecting List<X> where one of the matching X is an incompatible scope for the given injectable would not be rejected...
+        // TODO if an optional binding becomes later available, this check is not repeated
+        if(!injectables.isEmpty()) {
           Injectable<?> dependency = injectables.iterator().next();  // Previous check ensures there is only a single element in the set
 
           ensureBindingScopeIsValid(injectable, dependency);
@@ -268,10 +271,8 @@ public class InjectableStore implements Resolver<Injectable<?>> {
         visiting.add(injectable);
 
         for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
-          Binding binding = injectionTarget.getBinding();
-
-          if(!binding.getTypeTraits().contains(TypeTrait.LAZY)) {
-            for(Injectable<?> boundInjectable : qualifiedTypeStore.resolve(binding.getElementKey())) {
+          if(injectionTarget.getResolution() != Resolution.LAZY) {
+            for(Injectable<?> boundInjectable : qualifiedTypeStore.resolve(injectionTarget.getElementKey())) {
               if(visiting.contains(boundInjectable)) {
                 return true;
               }

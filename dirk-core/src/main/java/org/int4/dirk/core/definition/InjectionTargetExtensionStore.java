@@ -1,10 +1,12 @@
 package org.int4.dirk.core.definition;
 
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
+import org.int4.dirk.util.Types;
 
 /**
  * A store for {@link InjectionTargetExtension}s.
@@ -47,18 +49,24 @@ public class InjectionTargetExtensionStore {
   }
 
   /**
-   * Gets the {@link InjectionTargetExtension} which handles the given {@link Class}. A
-   * default extension is returned for any targets that were not specifically configured.
+   * Gets the {@link InjectionTargetExtension} which handles the given {@link Type}.
+   * Returns {@code null} when no extension was configured for the given type.
    *
    * @param <T> the type handled by the extension
    * @param <E> the element type handled by the extension
-   * @param cls a {@link Class}, cannot be {@code null}
-   * @return an {@link InjectionTargetExtension}, never {@code null}
+   * @param type a {@link Type}, cannot be {@code null}
+   * @return an {@link InjectionTargetExtension}, can be {@code null}
    */
-  public <T, E> InjectionTargetExtension<T, E> getExtension(Class<T> cls) {
-    InjectionTargetExtension<?, ?> extension = extensions.get(cls);
+  public <T, E> InjectionTargetExtension<T, E> getExtension(Type type) {
+    InjectionTargetExtension<?, ?> extension = extensions.get(Types.raw(type));
 
     if(extension == null) {
+      return null;
+    }
+
+    Type elementType = Types.getTypeParameter(type, extension.getElementTypeVariable());
+
+    if(elementType == null) {
       return null;
     }
 

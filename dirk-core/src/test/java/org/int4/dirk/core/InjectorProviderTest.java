@@ -12,7 +12,6 @@ import org.int4.dirk.api.Injector;
 import org.int4.dirk.api.definition.AmbiguousRequiredDependencyException;
 import org.int4.dirk.api.definition.DefinitionException;
 import org.int4.dirk.api.definition.DuplicateDependencyException;
-import org.int4.dirk.api.definition.UnsatisfiedDependencyException;
 import org.int4.dirk.api.definition.UnsatisfiedRequiredDependencyException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.util.Annotations;
@@ -52,16 +51,17 @@ public class InjectorProviderTest {
   }
 
   @Test
-  public void providersShouldBreakCircularDependenciesOnly() throws Exception {  // Required Suppliers cannot be used to delay registration of the provisioned class.
-    assertThatThrownBy(() -> injector.register(BeanWithSupplier.class))
-      .isExactlyInstanceOf(UnsatisfiedDependencyException.class)
-      .hasMessage("Missing dependency [org.int4.dirk.core.InjectorProviderTest$SimpleBean] required for Field [private jakarta.inject.Provider<org.int4.dirk.core.InjectorProviderTest$SimpleBean> org.int4.dirk.core.InjectorProviderTest$BeanWithSupplier.simpleBeanSupplier]")
-      .hasNoCause();
-
-    injector.register(SimpleBean.class);
+  public void providersCanBeSatisfiedLater() throws Exception {
     injector.register(BeanWithSupplier.class);
 
     BeanWithSupplier instance = injector.getInstance(BeanWithSupplier.class);
+
+    assertThatThrownBy(instance::getSimpleBean)
+      .isExactlyInstanceOf(UnsatisfiedResolutionException.class)
+      .hasMessage("No such instance: [org.int4.dirk.core.InjectorProviderTest$SimpleBean]")
+      .hasNoCause();
+
+    injector.register(SimpleBean.class);
 
     assertEquals(SimpleBean.class, instance.getSimpleBean().getClass());
   }

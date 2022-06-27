@@ -20,7 +20,6 @@ import org.int4.dirk.api.scope.ScopeNotActiveException;
 import org.int4.dirk.core.InstantiationContextFactory.DefaultInstantiator;
 import org.int4.dirk.core.InstantiationContextFactory.ExtendedCreationalContext;
 import org.int4.dirk.core.definition.Injectable;
-import org.int4.dirk.core.definition.Instantiator;
 import org.int4.dirk.core.util.Key;
 import org.int4.dirk.core.util.Resolver;
 import org.int4.dirk.spi.config.AnnotationStrategy;
@@ -167,7 +166,7 @@ class RootInstantiationContextFactory {
 
     @Override
     public synchronized void destroyAll(Collection<T> instances) {
-      if(instantiator.getElementkey() != null) {
+      if(instantiator.isExtended()) {
         throw new IllegalStateException("Can only destroy multiple instances of unextended types");
       }
 

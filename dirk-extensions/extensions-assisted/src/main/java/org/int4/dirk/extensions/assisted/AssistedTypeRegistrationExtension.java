@@ -53,7 +53,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 public class AssistedTypeRegistrationExtension implements TypeRegistrationExtension {
   private final LifeCycleCallbacksFactory lifeCycleCallbacksFactory;
   private final GenericBindingProvider<Binding> bindingProvider;
-  private final AssistedAnnotationStrategy<?> strategy;
+  private final AssistedAnnotationStrategy strategy;
 
   /**
    * Constructs a new instance.
@@ -62,7 +62,7 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
    * @param lifeCycleCallbacksFactory a {@link LifeCycleCallbacksFactory}, cannot be {@code null}
    * @param strategy an {@link AssistedAnnotationStrategy}, cannot be {@code null}
    */
-  public AssistedTypeRegistrationExtension(AnnotationStrategy annotationStrategy, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, AssistedAnnotationStrategy<?> strategy) {
+  public AssistedTypeRegistrationExtension(AnnotationStrategy annotationStrategy, LifeCycleCallbacksFactory lifeCycleCallbacksFactory, AssistedAnnotationStrategy strategy) {
     this.lifeCycleCallbacksFactory = lifeCycleCallbacksFactory;
     this.bindingProvider = new GenericBindingProvider<>(annotationStrategy, Binding::new);
     this.strategy = strategy;
@@ -72,7 +72,7 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
   public void deriveTypes(Registry registry, Type factoryType) throws DefinitionException {
     Class<?> factoryClass = Types.raw(factoryType);
 
-    if(factoryClass == null || strategy.providerClass().equals(factoryClass)) {
+    if(factoryClass == null) {
 
       /*
        * Always reject the provider class even if its parameterized type is assist annotated as
@@ -128,7 +128,7 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
       Constructor<?> constructor = bindingProvider.getConstructor(productClass);
       List<Binding> productBindings = bindingProvider.ofConstructorAndMembers(constructor, productClass);
       Constructable<?> constructable = new ClassObjectFactory<>(constructor, lifeCycleCallbacksFactory.create(productClass));
-      Interceptor<?> interceptor = new Interceptor<>(constructable, strategy);
+      Interceptor<?> interceptor = new Interceptor<>(constructable);
 
       /*
        * Construct ByteBuddy builder:
@@ -178,7 +178,7 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
 
           providerFieldNames.add(fieldName);
           builder = builder
-            .defineField(fieldName, Types.parameterize(strategy.providerClass(), binding.getType()), Visibility.PRIVATE)
+            .defineField(fieldName, binding.getType(), Visibility.PRIVATE)
             .annotateField(annotations);
         }
       }
@@ -288,12 +288,11 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
         Type factoryArgumentType = Primitives.toBoxed(Types.resolveVariables(factoryTypeArguments, genericParameterTypes[i]));
         List<String> matches = argumentBindings.entrySet().stream().filter(e -> e.getValue().getType().equals(factoryArgumentType)).map(Map.Entry::getKey).collect(Collectors.toList());
 
-        if(matches.size() == 1) {
-          names.add(matches.get(0));
-        }
-        else {
+        if(matches.size() != 1) {
           throw new DefinitionException(factoryMethod, "parameter " + i + " could not be matched by its type: " + factoryArgumentType);
         }
+
+        names.add(matches.get(0));
       }
 
       return names;
@@ -307,14 +306,12 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
    */
   public static class Interceptor<P> {
     private final Constructable<?> productConstructable;
-    private final AssistedAnnotationStrategy<P> strategy;
     private final List<InjectionTemplate> templates = new ArrayList<>();
 
     private List<String> factoryParameterNames;
 
-    Interceptor(Constructable<?> productConstructable, AssistedAnnotationStrategy<P> strategy) {
+    Interceptor(Constructable<?> productConstructable) {
       this.productConstructable = productConstructable;
-      this.strategy = strategy;
     }
 
     void initialize(Map<String, Binding> productArgumentTypes, List<Binding> bindings, List<Field> fields, List<String> factoryParameterNames) {
@@ -353,8 +350,7 @@ public class AssistedTypeRegistrationExtension implements TypeRegistrationExtens
         List<Injection> injections = new ArrayList<>();
 
         for(InjectionTemplate template : templates) {
-          @SuppressWarnings("unchecked")
-          Object value = template.field == null ? parameters.get(template.parameterName) : strategy.provision((P)template.field.get(factoryInstance));
+          Object value = template.field == null ? parameters.get(template.parameterName) : template.field.get(factoryInstance);
 
           injections.add(new Injection(template.accessibleObject, value));
         }

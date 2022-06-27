@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import org.int4.dirk.annotations.Opt;
 import org.int4.dirk.api.definition.DependencyException;
@@ -24,7 +23,7 @@ import org.int4.dirk.core.definition.QualifiedType;
 import org.int4.dirk.core.definition.injection.Injection;
 import org.int4.dirk.core.util.Key;
 import org.int4.dirk.core.util.Nullable;
-import org.int4.dirk.spi.instantiation.TypeTrait;
+import org.int4.dirk.spi.instantiation.Resolution;
 import org.int4.dirk.util.Annotations;
 import org.junit.jupiter.api.Test;
 
@@ -67,6 +66,16 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
           @Override
           public <T> Instantiator<T> getInstantiator() {
             return null;
+          }
+
+          @Override
+          public Key getElementKey() {
+            return new Key(target.getType(), target.getQualifiers());
+          }
+
+          @Override
+          public Resolution getResolution() {
+            return Resolution.EAGER_ONE;
           }
         });
       }
@@ -133,6 +142,11 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
     }
 
     @Override
+    public Set<Annotation> getQualifiers() {
+      return key.getQualifiers();
+    }
+
+    @Override
     public boolean isOptional() {
       return false;
     }
@@ -144,21 +158,6 @@ public class InjectorStoreConsistencyPolicyLargeGraphTest {
 
     @Override
     public Parameter getParameter() {
-      return null;
-    }
-
-    @Override
-    public Key getElementKey() {
-      return key;
-    }
-
-    @Override
-    public Set<TypeTrait> getTypeTraits() {
-      return Set.of();
-    }
-
-    @Override
-    public <T> T associateIfAbsent(String key, Supplier<T> valueSupplier) {
       return null;
     }
   }

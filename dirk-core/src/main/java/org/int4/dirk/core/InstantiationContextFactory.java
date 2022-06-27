@@ -1,7 +1,6 @@
 package org.int4.dirk.core;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,8 +30,9 @@ import org.int4.dirk.core.util.Resolver;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.ProxyStrategy;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
+import org.int4.dirk.spi.instantiation.InstanceProvider;
 import org.int4.dirk.spi.instantiation.InstantiationContext;
-import org.int4.dirk.spi.instantiation.TypeTrait;
+import org.int4.dirk.spi.instantiation.Resolution;
 import org.int4.dirk.spi.scope.CreationalContext;
 import org.int4.dirk.spi.scope.ScopeResolver;
 import org.int4.dirk.util.Types;
@@ -87,16 +87,21 @@ class InstantiationContextFactory {
     return rootInstantiationContextFactory.create(resolver, createInstantiatorInternal(key, optional, null));
   }
 
-  <T> Instantiator<T> createInstantiator(Binding binding, Annotation parentScope) {
-    return binding.associateIfAbsent("instantiator", () -> new DefaultInstantiator<>(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional(), parentScope));
-  }
-
   <T> Instantiator<T> createInstantiator(Key key, boolean optional, Annotation parentScope) {
-    return new DefaultInstantiator<>(key, optional, parentScope);
+    return createInstantiatorInternal(key, optional, parentScope);
   }
 
   private <T, E> DefaultInstantiator<T, E> createInstantiatorInternal(Key key, boolean optional, Annotation parentScope) {
-    return new DefaultInstantiator<>(key, optional, parentScope);
+    InjectionTargetExtension<T, E> injectionTargetExtension = injectionTargetExtensionStore.getExtension(key.getType());
+
+    return new DefaultInstantiator<>(
+      key,
+      optional,
+      injectionTargetExtension == null ? null : new Key(Types.getTypeParameter(key.getType(), injectionTargetExtension.getElementTypeVariable()), key.getQualifiers()),
+      injectionTargetExtension == null ? null : injectionTargetExtension.getInstanceProvider(),
+      injectionTargetExtension == null ? Resolution.EAGER_ONE : injectionTargetExtension.getResolution(),
+      parentScope
+    );
   }
 
   /**
@@ -110,43 +115,37 @@ class InstantiationContextFactory {
     private final Key key;
     private final boolean optional;
     private final Annotation parentScope;
-    private final InjectionTargetExtension<T, E> injectionTargetExtension;
-    private final Key elementKey;
     private final DefaultInstantiator<E, ?> elementInstantiator;
+    private final InstanceProvider<T, E> instanceProvider;
+    private final Resolution resolution;
+    private final Key elementKey;
 
-    DefaultInstantiator(Key key, boolean optional, Annotation parentScope) {
+    DefaultInstantiator(Key key, boolean optional, Key elementKey, InstanceProvider<T, E> instanceProvider, Resolution resolution, Annotation parentScope) {
       this.key = key;
       this.optional = optional;
+      this.elementKey = elementKey;
+      this.instanceProvider = instanceProvider;
+      this.resolution = resolution;
       this.parentScope = parentScope;
+      this.elementInstantiator = instanceProvider == null ? null : createInstantiatorInternal(elementKey, optional, resolution == Resolution.LAZY ? null : parentScope);
+    }
 
-      Type type = key.getType();
+    @Override
+    public Resolution getResolution() {
+      return resolution;
+    }
 
-      this.injectionTargetExtension = injectionTargetExtensionStore.getExtension(Types.raw(type));
-
-      if(injectionTargetExtension == null) {
-        this.elementKey = null;
-        this.elementInstantiator = null;
-      }
-      else {
-        Type elementType = injectionTargetExtension.getElementType(type);
-
-        if(elementType == null) {  // this only happens for bad extensions or when querying for an extended type; whether that last one should be rejected earlier is up for debate
-          this.elementKey = null;
-          this.elementInstantiator = null;
-        }
-        else {
-          this.elementKey = new Key(elementType, key.getQualifiers());
-          this.elementInstantiator = new DefaultInstantiator<>(elementKey, optional, null);
-        }
-      }
+    @Override
+    public Key getElementKey() {
+      return elementKey == null ? key : elementKey;
     }
 
     Key getKey() {
       return key;
     }
 
-    Key getElementkey() {
-      return elementKey;
+    boolean isExtended() {
+      return elementInstantiator != null;
     }
 
     <U extends T> DefaultInstantiator<U, ?> deriveSubInstantiator(Key key) {
@@ -155,7 +154,7 @@ class InstantiationContextFactory {
 
     @Override
     public ExtendedCreationalContext<T> create(Resolver<Injectable<?>> resolver) throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
-      if(elementKey == null) {
+      if(elementInstantiator == null) {
         @SuppressWarnings("unchecked")
         Set<Injectable<T>> injectables = (Set<Injectable<T>>)(Set<?>)resolver.resolve(key);
 
@@ -176,14 +175,13 @@ class InstantiationContextFactory {
         return castContext;
       }
 
-      boolean lazy = injectionTargetExtension.getTypeTraits().contains(TypeTrait.LAZY);
       RootInstantiationContext<E, ?> instantiationContext = rootInstantiationContextFactory.create(resolver, elementInstantiator);
-      InjectionTargetExtensionCreationalContext<T, E> creationalContext = new InjectionTargetExtensionCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), lazy ? instantiationContext : null);
+      InjectionTargetExtensionCreationalContext<T, E> creationalContext = new InjectionTargetExtensionCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), resolution == Resolution.LAZY ? instantiationContext : null);
 
       open(creationalContext);
 
       try {
-        creationalContext.initialize(injectionTargetExtension.getInstance(instantiationContext), lazy);
+        creationalContext.initialize(instanceProvider.getInstance(instantiationContext), resolution == Resolution.LAZY);
 
         return creationalContext;
       }
@@ -206,7 +204,7 @@ class InstantiationContextFactory {
     }
 
     List<ExtendedCreationalContext<T>> createAll(Resolver<Injectable<?>> resolver) throws CreationException {
-      if(elementKey == null) {
+      if(elementInstantiator == null) {
         List<ExtendedCreationalContext<T>> creationalContexts = new ArrayList<>();
 
         @SuppressWarnings("unchecked")

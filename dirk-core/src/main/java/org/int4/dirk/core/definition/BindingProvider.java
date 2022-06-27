@@ -10,41 +10,26 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.int4.dirk.api.definition.DefinitionException;
-import org.int4.dirk.core.util.Key;
 import org.int4.dirk.spi.config.AnnotationStrategy;
-import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
-import org.int4.dirk.spi.instantiation.TypeTrait;
 import org.int4.dirk.util.Primitives;
-import org.int4.dirk.util.Types;
 
 /**
  * Provides {@link Binding}s for constructors, methods and fields.
  */
 public class BindingProvider {
-  private static final EnumSet<TypeTrait> REQUIRES_EXACTLY_ONE = EnumSet.of(TypeTrait.REQUIRES_AT_LEAST_ONE, TypeTrait.REQUIRES_AT_MOST_ONE);
-
-  private final InjectionTargetExtensionStore injectionTargetExtensionStore;
   private final GenericBindingProvider<Binding> delegate;
 
   /**
    * Constructs a new instance.
    *
    * @param annotationStrategy an {@link AnnotationStrategy}, cannot be {@code null}
-   * @param injectionTargetExtensionStore an {@link InjectionTargetExtensionStore}, cannot be {@code null}
    */
-  public BindingProvider(AnnotationStrategy annotationStrategy, InjectionTargetExtensionStore injectionTargetExtensionStore) {
-    this.injectionTargetExtensionStore = injectionTargetExtensionStore;
-
+  public BindingProvider(AnnotationStrategy annotationStrategy) {
     this.delegate = new GenericBindingProvider<>(annotationStrategy, (type, annotatedElement) -> {
       Parameter parameter = annotatedElement instanceof Parameter ? (Parameter)annotatedElement : null;
 
@@ -145,12 +130,9 @@ public class BindingProvider {
   private class DefaultBinding implements Binding {
     private final Type type;
     private final Set<Annotation> qualifiers;
-    private final Key elementKey;
     private final boolean optional;
-    private final Set<TypeTrait> typeTraits;
     private final AccessibleObject accessibleObject;
     private final Parameter parameter;
-    private final Map<String, Object> data = new ConcurrentHashMap<>();
 
     /**
      * Constructs a new instance.
@@ -175,13 +157,9 @@ public class BindingProvider {
         throw new IllegalArgumentException("parameter must be null when accessibleObject is not an instance of Executable");
       }
 
-      InjectionType injectionType = constructData(type);
-
       this.type = Primitives.toBoxed(type);
       this.qualifiers = Collections.unmodifiableSet(qualifiers);
-      this.elementKey = new Key(injectionType == null ? type : injectionType.getElementType(), qualifiers);
       this.optional = optional;
-      this.typeTraits = injectionType == null ? REQUIRES_EXACTLY_ONE : Collections.unmodifiableSet(injectionType.getTypeTraits());
       this.accessibleObject = accessibleObject;
       this.parameter = parameter;
 
@@ -201,18 +179,8 @@ public class BindingProvider {
     }
 
     @Override
-    public Key getElementKey() {
-      return elementKey;
-    }
-
-    @Override
     public boolean isOptional() {
       return optional;
-    }
-
-    @Override
-    public Set<TypeTrait> getTypeTraits() {
-      return typeTraits;
     }
 
     @Override
@@ -225,12 +193,6 @@ public class BindingProvider {
       return parameter;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T associateIfAbsent(String key, Supplier<T> valueSupplier) {
-      return (T)data.computeIfAbsent(key, k -> valueSupplier.get());
-    }
-
     @Override
     public String toString() {
       if(accessibleObject instanceof Executable) {
@@ -238,63 +200,12 @@ public class BindingProvider {
 
         return "Parameter " + index + " [" + type + "] of [" + accessibleObject + "]";
       }
-      else if(accessibleObject != null) {
+
+      if(accessibleObject != null) {
         return "Field [" + (getQualifiers().isEmpty() ? "" : getQualifiers().stream().map(Object::toString).collect(Collectors.joining(" ")) + " ") + ((Field)accessibleObject).toGenericString() + "]";
       }
 
       return "Owner Type [" + type + "]";
-    }
-  }
-
-  private InjectionType constructData(Type inputType) {
-    Type type = inputType;
-    Set<TypeTrait> typeTraits = null;
-    boolean mergeTraits = true;
-
-    for(;;) {
-      InjectionTargetExtension<?, ?> extension = injectionTargetExtensionStore.getExtension(Types.raw(type));
-
-      if(typeTraits == null) {
-        if(extension == null) {
-          return null;
-        }
-
-        typeTraits = new HashSet<>();
-      }
-
-      if(mergeTraits) {
-        Set<TypeTrait> traits = extension == null ? REQUIRES_EXACTLY_ONE : extension.getTypeTraits();
-
-        typeTraits.addAll(traits);
-
-        if(!traits.contains(TypeTrait.LAZY)) {
-          mergeTraits = false;
-        }
-      }
-
-      if(extension == null) {
-        return new InjectionType(type, typeTraits);
-      }
-
-      type = extension.getElementType(type);  // returning the same type is disallowed (makes no sense either)
-    }
-  }
-
-  private static class InjectionType {
-    final Type elementType;
-    final Set<TypeTrait> typeTraits;
-
-    InjectionType(Type elementType, Set<TypeTrait> typeTraits) {
-      this.elementType = elementType;
-      this.typeTraits = typeTraits;
-    }
-
-    Type getElementType() {
-      return elementType;
-    }
-
-    Set<TypeTrait> getTypeTraits() {
-      return typeTraits;
     }
   }
 }

@@ -199,7 +199,7 @@ class DefaultDiscovererFactory implements DiscovererFactory {
 
         for(InjectionTarget injectionTarget : injectable.getInjectionTargets()) {
           Binding binding = injectionTarget.getBinding();
-          Key elementKey = binding.getElementKey();
+          Key elementKey = injectionTarget.getElementKey();
 
           if(includingResolver.resolve(elementKey).isEmpty()) {
             via.put(elementKey, injectableKey);

@@ -145,13 +145,13 @@ public class Types {
    * Gets the {@link Type} of a generic parameter, identified by given by the {@link TypeVariable},
    * of the given {@link Class} when resolved against the given {@link Type}.
    *
+   * @param <T> the type of the {@link Class}
    * @param type a {@link Type} from which to determine the parameters of the given {@link Class}, cannot be {@code null}
-   * @param cls a {@link Class} to determine a type parameter for, cannot be {@code null}
    * @param typeVariable a {@link TypeVariable} of the given {@link Class} to extract, cannot be {@code null}
    * @return a {@link Type}, can be {@code null} if the {@link TypeVariable} was not associated with the given {@link Class}
    */
-  public static Type getTypeParameter(Type type, Class<?> cls, TypeVariable<?> typeVariable) {
-    return TypeUtils.getTypeArguments(type, cls).get(typeVariable);
+  public static <T> Type getTypeParameter(Type type, TypeVariable<Class<T>> typeVariable) {
+    return TypeUtils.getTypeArguments(type, typeVariable.getGenericDeclaration()).get(typeVariable);
   }
 
   /**
