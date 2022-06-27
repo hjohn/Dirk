@@ -1,4 +1,4 @@
-package org.int4.dirk.core.definition;
+package org.int4.dirk.core.util;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -30,7 +30,7 @@ public class KeyTest {
 
     assertThat(key.getType()).isEqualTo(Types.parameterize(Supplier.class, String.class));
     assertThat(key.getQualifiers()).containsExactlyInAnyOrder(Annotations.of(Red.class), Annotations.of(Green.class));
-    assertThat(key.toString()).isEqualTo("@org.int4.dirk.core.definition.KeyTest$Green() @org.int4.dirk.core.definition.KeyTest$Red() java.util.function.Supplier<java.lang.String>");
+    assertThat(key.toString()).isEqualTo("@org.int4.dirk.core.util.KeyTest$Green() @org.int4.dirk.core.util.KeyTest$Red() java.util.function.Supplier<java.lang.String>");
   }
 
   @Test

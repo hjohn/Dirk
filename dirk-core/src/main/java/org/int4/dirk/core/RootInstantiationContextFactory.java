@@ -19,7 +19,7 @@ import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 import org.int4.dirk.core.InstantiationContextFactory.ExtendedCreationalContext;
 import org.int4.dirk.core.InstantiationContextFactory.Instantiator;
-import org.int4.dirk.core.definition.Key;
+import org.int4.dirk.core.util.Key;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.instantiation.InstantiationContext;
 import org.int4.dirk.spi.scope.CreationalContext;

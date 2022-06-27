@@ -4,7 +4,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 
 import org.int4.dirk.core.definition.Injectable;
-import org.int4.dirk.core.store.Resolver;
+import org.int4.dirk.core.util.Resolver;
 
 /**
  * Gathers fully expanded sets of {@link Injectable}s based on the given inputs.

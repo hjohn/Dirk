@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.int4.dirk.api.definition.DefinitionException;
+import org.int4.dirk.core.util.Key;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
 import org.int4.dirk.spi.instantiation.TypeTrait;

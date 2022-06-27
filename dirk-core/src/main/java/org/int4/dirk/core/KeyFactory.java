@@ -5,7 +5,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.int4.dirk.core.definition.Key;
+import org.int4.dirk.core.util.Key;
 import org.int4.dirk.util.Annotations;
 
 /**

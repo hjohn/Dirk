@@ -8,7 +8,7 @@ import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
-import org.int4.dirk.core.definition.Key;
+import org.int4.dirk.core.util.Key;
 
 /**
  * Implements the {@link InstanceResolver} interface.

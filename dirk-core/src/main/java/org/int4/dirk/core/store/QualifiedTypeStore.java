@@ -22,7 +22,8 @@ import java.util.stream.Stream;
 
 import org.int4.dirk.api.definition.DuplicateDependencyException;
 import org.int4.dirk.api.definition.MissingDependencyException;
-import org.int4.dirk.core.definition.Key;
+import org.int4.dirk.core.util.Key;
+import org.int4.dirk.core.util.Resolver;
 import org.int4.dirk.util.Types;
 
 /**

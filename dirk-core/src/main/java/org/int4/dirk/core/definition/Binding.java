@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.int4.dirk.core.util.Key;
 import org.int4.dirk.spi.instantiation.TypeTrait;
 
 /**

@@ -1,8 +1,6 @@
-package org.int4.dirk.core.store;
+package org.int4.dirk.core.util;
 
 import java.util.Set;
-
-import org.int4.dirk.core.definition.Key;
 
 /**
  * Implementers provide a way to look up a type {@code T} by {@link Key}.

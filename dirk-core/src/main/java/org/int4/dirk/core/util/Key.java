@@ -1,4 +1,4 @@
-package org.int4.dirk.core.definition;
+package org.int4.dirk.core.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
