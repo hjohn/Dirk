@@ -4,9 +4,12 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.int4.dirk.api.Injector;
 import org.int4.dirk.api.TypeLiteral;
+import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 import org.int4.dirk.core.RootInstantiationContextFactory.RootInstantiationContext;
 import org.int4.dirk.core.test.qualifiers.Red;
@@ -44,6 +47,14 @@ public class DependentsLifeCycleTest {
       TypeVariables.get(InstantiationContext.class, 0),
       Resolution.LAZY,
       context -> context
+    ))
+    .add(new InjectionTargetExtension<Supplier<Object>, Object>(  // bad extension, LAZY but calls context immediately
+      TypeVariables.get(Supplier.class, 0),
+      Resolution.LAZY,
+      context -> {
+        context.create();
+        return () -> "test";
+      }
     ))
     .build();
 
@@ -517,6 +528,41 @@ public class DependentsLifeCycleTest {
 
     assertPostConstructs();
     assertPreDestroys("TestScoped-3", "Dependent-2", "SubDependent-1");
+  }
+
+  public static class BadExtensionUser extends AbstractLifeCycleLogger {
+    @Inject Supplier<Dependent> supplier;
+  }
+
+  @Test
+  void shouldDetectBadLazyExtensions() {
+    injector.register(SubDependent.class);
+    injector.register(Dependent.class);
+    injector.register(BadExtensionUser.class);
+
+    assertThatThrownBy(() -> injector.getInstance(BadExtensionUser.class))
+      .isExactlyInstanceOf(CreationException.class)
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(IllegalStateException.class)
+      .hasMessage("Incorrectly implemented extension. Lazy extensions are not allowed to access the creational context during instance creation!")
+      .hasNoCause();
+  }
+
+  public static class BadExtensionUserWithSingleton extends AbstractLifeCycleLogger {
+    @Inject Supplier<String> supplier;
+  }
+
+  @Test
+  void shouldDetectBadLazyExtensionsWithSingleton() {
+    injector.registerInstance("A");
+    injector.register(BadExtensionUserWithSingleton.class);
+
+    assertThatThrownBy(() -> injector.getInstance(BadExtensionUserWithSingleton.class))
+      .isExactlyInstanceOf(CreationException.class)
+      .extracting(Throwable::getCause, InstanceOfAssertFactories.THROWABLE)
+      .isExactlyInstanceOf(IllegalStateException.class)
+      .hasMessage("Incorrectly implemented extension. Lazy extensions are not allowed to access the creational context during instance creation!")
+      .hasNoCause();
   }
 
   private static void assertPostConstructs(String... names) {

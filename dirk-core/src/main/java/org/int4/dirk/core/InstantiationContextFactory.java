@@ -42,26 +42,7 @@ import org.int4.dirk.util.Types;
  */
 class InstantiationContextFactory {
   private static final Logger LOGGER = Logger.getLogger(InstantiationContextFactory.class.getName());
-  private static final ExtendedCreationalContext<?> NULL_CONTEXT = new ExtendedCreationalContext<>() {
-    @Override
-    public Object get() {
-      return null;
-    }
-
-    @Override
-    public void release() {
-    }
-
-    @Override
-    public boolean needsDestroy() {
-      return false;
-    }
-
-    @Override
-    public void attach(CreationalContext<?> creationalContext) {
-      throw new UnsupportedOperationException();
-    }
-  };
+  private static final ExtendedCreationalContext<?> NULL_CONTEXT = new FixedCreationalContext<>(null);
 
   private static boolean strictOrder;
 
@@ -178,7 +159,7 @@ class InstantiationContextFactory {
       RootInstantiationContext<E, ?> instantiationContext = rootInstantiationContextFactory.create(resolver, elementInstantiator);
       InjectionTargetExtensionCreationalContext<T, E> creationalContext = new InjectionTargetExtensionCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), resolution == Resolution.LAZY ? instantiationContext : null);
 
-      open(creationalContext);
+      open(resolution == Resolution.LAZY ? NULL_CONTEXT : creationalContext);
 
       try {
         creationalContext.initialize(instanceProvider.getInstance(instantiationContext), resolution == Resolution.LAZY);
@@ -272,26 +253,7 @@ class InstantiationContextFactory {
           try {
             T instance = proxyStrategy.<T>createProxyFactory(Types.raw(injectable.getType())).apply(() -> createContext(resolver, scopeResolver, injectable).get());
 
-            return new ExtendedCreationalContext<>() {
-              @Override
-              public T get() {
-                return instance;
-              }
-
-              @Override
-              public void release() {
-              }
-
-              @Override
-              public boolean needsDestroy() {
-                return false;
-              }
-
-              @Override
-              public void attach(CreationalContext<?> creationalContext) {
-                throw new UnsupportedOperationException();
-              }
-            };
+            return new FixedCreationalContext<>(instance);
           }
           catch(Exception e) {  // as extensions are called, a general catch all is used here to wrap unexpected exceptions with some useful diagnostics
             throw new CreationException("[" + injectable.getType() + "] proxy could not be created", e);
@@ -355,8 +317,35 @@ class InstantiationContextFactory {
   }
 
   interface ExtendedCreationalContext<T> extends CreationalContext<T> {
-    void attach(CreationalContext<?> creationalContext);
+    void attach(ExtendedCreationalContext<?> creationalContext);
     boolean needsDestroy();
+  }
+
+  private static final class FixedCreationalContext<T> implements ExtendedCreationalContext<T> {
+    private final T instance;
+
+    FixedCreationalContext(T instance) {
+      this.instance = instance;
+    }
+
+    @Override
+    public T get() {
+      return instance;
+    }
+
+    @Override
+    public void release() {
+    }
+
+    @Override
+    public boolean needsDestroy() {
+      return false;
+    }
+
+    @Override
+    public void attach(ExtendedCreationalContext<?> creationalContext) {
+      throw new IllegalStateException("Incorrectly implemented extension. Lazy extensions are not allowed to access the creational context during instance creation!");
+    }
   }
 
   private static final class InjectionTargetExtensionCreationalContext<T, E> implements ExtendedCreationalContext<T> {
@@ -379,7 +368,7 @@ class InstantiationContextFactory {
 
       initialized = true;
 
-      if(parent != null && needsDestroy()) {
+      if(parent != null) {
         parent.attach(this);
       }
     }
@@ -394,12 +383,14 @@ class InstantiationContextFactory {
     }
 
     @Override
-    public final void attach(CreationalContext<?> child) {
-      if(children == null) {
-        children = new ArrayList<>();
-      }
+    public final void attach(ExtendedCreationalContext<?> child) {
+      if(child.needsDestroy()) {
+        if(children == null) {
+          children = new ArrayList<>();
+        }
 
-      children.add(child);
+        children.add(child);
+      }
     }
 
     @Override
@@ -472,18 +463,20 @@ class InstantiationContextFactory {
       this.instance = instance;
       this.initialized = true;
 
-      if(parent != null && needsDestroy()) {
+      if(parent != null) {
         parent.attach(this);
       }
     }
 
     @Override
-    public void attach(CreationalContext<?> creationalContext) {
-      if(children == null) {
-        children = new ArrayList<>();
-      }
+    public void attach(ExtendedCreationalContext<?> creationalContext) {
+      if(creationalContext.needsDestroy()) {
+        if(children == null) {
+          children = new ArrayList<>();
+        }
 
-      children.add(creationalContext);
+        children.add(creationalContext);
+      }
     }
 
     @Override
