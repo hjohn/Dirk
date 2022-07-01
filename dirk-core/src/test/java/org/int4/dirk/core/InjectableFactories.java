@@ -45,15 +45,15 @@ public class InjectableFactories {
   private final Collection<InjectionTargetExtension<?, ?>> injectionTargetExtensions;
   private final InjectionTargetExtensionStore injectionTargetExtensionStore;
   private final BindingProvider bindingProvider;
-  private final InstantiationContextFactory instantiationContextFactory;
+  private final InstanceFactory instanceFactory;
 
   public InjectableFactories(ScopeResolverManager scopeResolverManager, Collection<InjectionTargetExtension<?, ?>> extensions) {
     this.injectionTargetExtensions = extensions;
     this.scopeResolverManager = scopeResolverManager;
     this.injectionTargetExtensionStore = new InjectionTargetExtensionStore(injectionTargetExtensions);
     this.bindingProvider = new BindingProvider(ANNOTATION_STRATEGY);
-    this.instantiationContextFactory = new InstantiationContextFactory(InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
-    this.factory = new DefaultInjectableFactory(scopeResolverManager, instantiationContextFactory, ANNOTATION_STRATEGY, SCOPE_STRATEGY, injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet()));
+    this.instanceFactory = new InstanceFactory(InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
+    this.factory = new DefaultInjectableFactory(scopeResolverManager, instanceFactory, ANNOTATION_STRATEGY, SCOPE_STRATEGY, injectionTargetExtensions.stream().map(InjectionTargetExtension::getTargetClass).collect(Collectors.toSet()));
     this.lifeCycleCallbacksFactory = new AnnotationBasedLifeCycleCallbacksFactory(PostConstruct.class, PreDestroy.class);
   }
 
@@ -69,8 +69,8 @@ public class InjectableFactories {
     return injectionTargetExtensionStore;
   }
 
-  public InstantiationContextFactory getInstantiationContextFactory() {
-    return instantiationContextFactory;
+  public InstanceFactory getInstanceFactory() {
+    return instanceFactory;
   }
 
   public ScopeResolverManager getScopeResolverManager() {

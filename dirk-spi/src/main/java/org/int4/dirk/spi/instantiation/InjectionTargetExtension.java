@@ -62,7 +62,7 @@ public class InjectionTargetExtension<T, E> {
    * Returns how the injection target should be resolved. This determines what kind of
    * restrictions are applied when an injection target of this type is added to an injector.
    * When eager, restrictions are enforced before the injector is modified. When lazy,
-   * use of the {@link InstantiationContext} may result in errors if the required types are
+   * use of the {@link Instance} may result in errors if the required types are
    * not available.
    *
    * @return a {@link Resolution}, never {@code null}

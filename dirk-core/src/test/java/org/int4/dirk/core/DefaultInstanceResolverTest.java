@@ -55,7 +55,7 @@ public class DefaultInstanceResolverTest {
   private final InjectableFactories injectableFactories = new InjectableFactories(scopeResolverManager);
   private final InjectionTargetExtensionStore injectionTargetExtensionStore = injectableFactories.getInjectionTargetExtensionStore();
   private final InjectableStore store = new InjectableStore(InjectableFactories.PROXY_STRATEGY);
-  private final InstantiationContextFactory instantiationContextFactory = new InstantiationContextFactory(InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
+  private final InstanceFactory instanceFactory = new InstanceFactory(InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
   private final ClassInjectableFactory classInjectableFactory = injectableFactories.forClass();
   private final MethodInjectableFactory methodInjectableFactory = injectableFactories.forMethod();
   private final InstanceInjectableFactory instanceInjectableFactory = injectableFactories.forInstance();
@@ -64,7 +64,7 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreIsEmpty {
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, instantiationContextFactory);
+    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, instanceFactory);
 
     @Test
     void shouldThrowExceptionWhenGettingSingleInstance() {
@@ -81,7 +81,7 @@ public class DefaultInstanceResolverTest {
 
   @Nested
   class WhenStoreNotEmpty {
-    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, instantiationContextFactory);
+    private final InstanceResolver instanceResolver = new DefaultInstanceResolver(store, instanceFactory);
 
     @BeforeEach
     void beforeEach() throws DependencyException {

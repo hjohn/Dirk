@@ -17,16 +17,16 @@ import org.int4.dirk.core.util.Resolver;
  */
 class DefaultInstanceResolver implements InstanceResolver {
   private final Resolver<Injectable<?>> resolver;
-  private final InstantiationContextFactory instantiationContextFactory;
+  private final InstanceFactory instanceFactory;
 
   /**
    * Constructs a new instance.
    *
-   * @param instantiationContextFactory an {@link InstantiationContextFactory}, cannot be {@code null}
+   * @param instanceFactory an {@link InstanceFactory}, cannot be {@code null}
    */
-  DefaultInstanceResolver(Resolver<Injectable<?>> resolver, InstantiationContextFactory instantiationContextFactory) {
+  DefaultInstanceResolver(Resolver<Injectable<?>> resolver, InstanceFactory instanceFactory) {
     this.resolver = resolver;
-    this.instantiationContextFactory = instantiationContextFactory;
+    this.instanceFactory = instanceFactory;
   }
 
   @Override
@@ -50,10 +50,10 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   private <T> T getInstance(Key key) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
-    return instantiationContextFactory.<T>createContext(resolver, key, false).get();
+    return instanceFactory.<T>createInstance(resolver, key, false).get();
   }
 
   private <T> List<T> getInstances(Key key) throws CreationException {
-    return instantiationContextFactory.<T>createContext(resolver, key, false).getAll();
+    return instanceFactory.<T>createInstance(resolver, key, false).getAll();
   }
 }

@@ -11,12 +11,12 @@ import org.int4.dirk.api.Injector;
 import org.int4.dirk.api.TypeLiteral;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
-import org.int4.dirk.core.RootInstantiationContextFactory.RootInstantiationContext;
+import org.int4.dirk.core.RootInstanceFactory.RootInstance;
 import org.int4.dirk.core.test.qualifiers.Red;
 import org.int4.dirk.core.test.scope.TestScope;
 import org.int4.dirk.extensions.proxy.ByteBuddyProxyStrategy;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
-import org.int4.dirk.spi.instantiation.InstantiationContext;
+import org.int4.dirk.spi.instantiation.Instance;
 import org.int4.dirk.spi.instantiation.Resolution;
 import org.int4.dirk.spi.scope.AbstractScopeResolver;
 import org.int4.dirk.util.Annotations;
@@ -43,8 +43,8 @@ public class DependentsLifeCycleTest {
     .useDefaultInjectionTargetExtensions()
     .proxyStrategy(new ByteBuddyProxyStrategy())
     .add(scopeResolver)
-    .add(new InjectionTargetExtension<InstantiationContext<Object>, Object>(
-      TypeVariables.get(InstantiationContext.class, 0),
+    .add(new InjectionTargetExtension<Instance<Object>, Object>(
+      TypeVariables.get(Instance.class, 0),
       Resolution.LAZY,
       context -> context
     ))
@@ -67,7 +67,7 @@ public class DependentsLifeCycleTest {
     POST_CONSTRUCTS.clear();
     PRE_DESTROYS.clear();
 
-    InstantiationContextFactory.useStrictOrdering();
+    InstanceFactory.useStrictOrdering();
   }
 
   public static class SubDependent extends AbstractLifeCycleLogger {
@@ -82,7 +82,7 @@ public class DependentsLifeCycleTest {
     injector.register(SubDependent.class);
     injector.register(Dependent.class);
 
-    InstantiationContext<Dependent> instance = injector.getInstance(new TypeLiteral<InstantiationContext<Dependent>>() {});
+    Instance<Dependent> instance = injector.getInstance(new TypeLiteral<Instance<Dependent>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
@@ -108,7 +108,7 @@ public class DependentsLifeCycleTest {
     injector.register(Dependent.class);
     injector.register(Container.class);
 
-    InstantiationContext<Container> instance = injector.getInstance(new TypeLiteral<InstantiationContext<Container>>() {});
+    Instance<Container> instance = injector.getInstance(new TypeLiteral<Instance<Container>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
@@ -126,7 +126,7 @@ public class DependentsLifeCycleTest {
 
   @Red
   public static class Parent extends AbstractLifeCycleLogger {
-    @Inject InstantiationContext<Dependent> dependent;
+    @Inject Instance<Dependent> dependent;
   }
 
   @Test
@@ -135,7 +135,7 @@ public class DependentsLifeCycleTest {
     injector.register(Dependent.class);
     injector.register(Parent.class);
 
-    InstantiationContext<Parent> instance = injector.getInstance(new TypeLiteral<InstantiationContext<Parent>>() {});
+    Instance<Parent> instance = injector.getInstance(new TypeLiteral<Instance<Parent>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
@@ -157,7 +157,7 @@ public class DependentsLifeCycleTest {
     injector.register(Dependent.class);
     injector.register(Parent.class);
 
-    InstantiationContext<Parent> instance = injector.getInstance(new TypeLiteral<InstantiationContext<Parent>>() {});
+    Instance<Parent> instance = injector.getInstance(new TypeLiteral<Instance<Parent>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
@@ -185,7 +185,7 @@ public class DependentsLifeCycleTest {
     injector.register(Dependent.class);
     injector.register(Parent.class);
 
-    InstantiationContext<Parent> instance = injector.getInstance(new TypeLiteral<InstantiationContext<Parent>>() {});
+    Instance<Parent> instance = injector.getInstance(new TypeLiteral<Instance<Parent>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
@@ -212,7 +212,7 @@ public class DependentsLifeCycleTest {
   }
 
   public static class GrandParent extends AbstractLifeCycleLogger {
-    @Inject InstantiationContext<Parent> parent;
+    @Inject Instance<Parent> parent;
   }
 
   @Test
@@ -222,7 +222,7 @@ public class DependentsLifeCycleTest {
     injector.register(Parent.class);
     injector.register(GrandParent.class);
 
-    InstantiationContext<GrandParent> instance = injector.getInstance(new TypeLiteral<InstantiationContext<GrandParent>>() {});
+    Instance<GrandParent> instance = injector.getInstance(new TypeLiteral<Instance<GrandParent>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
@@ -285,23 +285,23 @@ public class DependentsLifeCycleTest {
     injector.register(Dependent.class);
     injector.register(SingletonScoped.class);
 
-    InstantiationContext<List<AbstractLifeCycleLogger>> context = injector.getInstance(new TypeLiteral<InstantiationContext<List<AbstractLifeCycleLogger>>>() {});
+    Instance<List<AbstractLifeCycleLogger>> instance = injector.getInstance(new TypeLiteral<Instance<List<AbstractLifeCycleLogger>>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
 
-    List<AbstractLifeCycleLogger> list = context.get();
+    List<AbstractLifeCycleLogger> list = instance.get();
 
     assertThat(list).hasSize(3);
     assertPostConstructs("SubDependent-0", "Dependent-1", "SingletonScoped-2", "SubDependent-3");
     assertPreDestroys();
 
     @SuppressWarnings("unchecked")
-    RootInstantiationContext<List<AbstractLifeCycleLogger>, ?> castContext = (RootInstantiationContext<List<AbstractLifeCycleLogger>, ?>)context;
+    RootInstance<List<AbstractLifeCycleLogger>, ?> castContext = (RootInstance<List<AbstractLifeCycleLogger>, ?>)instance;
 
     assertThat(castContext.hasContextFor(list)).isTrue();
 
-    context.destroy(list);
+    instance.destroy(list);
 
     assertPostConstructs();
     assertPreDestroys("Dependent-1", "SubDependent-0", "SubDependent-3");
@@ -313,12 +313,12 @@ public class DependentsLifeCycleTest {
     injector.register(Dependent.class);
     injector.register(SingletonScoped.class);
 
-    InstantiationContext<List<AbstractLifeCycleLogger>> context = injector.getInstance(new TypeLiteral<InstantiationContext<List<AbstractLifeCycleLogger>>>() {});
+    Instance<List<AbstractLifeCycleLogger>> instance = injector.getInstance(new TypeLiteral<Instance<List<AbstractLifeCycleLogger>>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
 
-    List<AbstractLifeCycleLogger> list = context.get();
+    List<AbstractLifeCycleLogger> list = instance.get();
 
     assertThat(list).hasSize(3);
     assertPostConstructs("SubDependent-0", "Dependent-1", "SingletonScoped-2", "SubDependent-3");
@@ -326,12 +326,12 @@ public class DependentsLifeCycleTest {
 
     List<AbstractLifeCycleLogger> rewrappedList = new ArrayList<>(list);
 
-    context.destroy(rewrappedList);
+    instance.destroy(rewrappedList);
 
     assertPostConstructs();
     assertPreDestroys();
 
-    context.destroy(list);  // has to be original for it to work
+    instance.destroy(list);  // has to be original for it to work
 
     assertPostConstructs();
     assertPreDestroys("Dependent-1", "SubDependent-0", "SubDependent-3");
@@ -343,25 +343,25 @@ public class DependentsLifeCycleTest {
     injector.register(Dependent.class);
     injector.register(SingletonScoped.class);
 
-    InstantiationContext<AbstractLifeCycleLogger> context = injector.getInstance(new TypeLiteral<InstantiationContext<AbstractLifeCycleLogger>>() {});
+    Instance<AbstractLifeCycleLogger> instance = injector.getInstance(new TypeLiteral<Instance<AbstractLifeCycleLogger>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
 
-    List<AbstractLifeCycleLogger> list = context.getAll();
+    List<AbstractLifeCycleLogger> list = instance.getAll();
 
     assertThat(list).hasSize(3);
     assertPostConstructs("SubDependent-0", "Dependent-1", "SingletonScoped-2", "SubDependent-3");
     assertPreDestroys();
 
-    context.destroyAll(list);
+    instance.destroyAll(list);
 
     assertPostConstructs();
     assertPreDestroys("Dependent-1", "SubDependent-0", "SubDependent-3");
   }
 
   public static class SingletonParent extends AbstractLifeCycleLogger {
-    @Inject InstantiationContext<SingletonScoped> singletonScoped;
+    @Inject Instance<SingletonScoped> singletonScoped;
   }
 
   @Test
@@ -369,12 +369,12 @@ public class DependentsLifeCycleTest {
     injector.register(SingletonScoped.class);
     injector.register(SingletonParent.class);
 
-    InstantiationContext<SingletonParent> context = injector.getInstance(new TypeLiteral<InstantiationContext<SingletonParent>>() {});
+    Instance<SingletonParent> instance = injector.getInstance(new TypeLiteral<Instance<SingletonParent>>() {});
 
     assertPostConstructs();
     assertPreDestroys();
 
-    SingletonParent singletonParent = context.get();
+    SingletonParent singletonParent = instance.get();
 
     assertPostConstructs("SingletonParent-0");
     assertPreDestroys();
@@ -385,7 +385,7 @@ public class DependentsLifeCycleTest {
     assertPostConstructs("SingletonScoped-1");
     assertPreDestroys();
 
-    context.destroy(singletonParent);
+    instance.destroy(singletonParent);
 
     assertPostConstructs();
     assertPreDestroys("SingletonParent-0");
@@ -403,14 +403,14 @@ public class DependentsLifeCycleTest {
     injector.register(DestructableDependent.class);
     injector.register(Indestructable.class);
 
-    InstantiationContext<Indestructable> context = injector.getInstance(new TypeLiteral<InstantiationContext<Indestructable>>() {});
+    Instance<Indestructable> instance = injector.getInstance(new TypeLiteral<Instance<Indestructable>>() {});
 
-    Indestructable i = context.get();
+    Indestructable i = instance.get();
 
     assertPostConstructs("DestructableDependent-0");
     assertPreDestroys();
 
-    context.destroy(i);
+    instance.destroy(i);
 
     assertPostConstructs();
     assertPreDestroys("DestructableDependent-0");
@@ -423,14 +423,14 @@ public class DependentsLifeCycleTest {
   void shouldNotTrackListWhenNothingInItNeedsDestroying() {
     injector.register(SimpleElement.class);
 
-    InstantiationContext<List<SimpleElement>> context = injector.getInstance(new TypeLiteral<InstantiationContext<List<SimpleElement>>>() {});
+    Instance<List<SimpleElement>> instance = injector.getInstance(new TypeLiteral<Instance<List<SimpleElement>>>() {});
 
-    List<SimpleElement> list = context.get();
+    List<SimpleElement> list = instance.get();
 
     assertThat(list).hasSize(1);
 
     @SuppressWarnings("unchecked")
-    RootInstantiationContext<List<SimpleElement>, ?> castContext = (RootInstantiationContext<List<SimpleElement>, ?>)context;
+    RootInstance<List<SimpleElement>, ?> castContext = (RootInstance<List<SimpleElement>, ?>)instance;
 
     assertThat(castContext.hasContextFor(list)).isFalse();
   }
@@ -444,14 +444,14 @@ public class DependentsLifeCycleTest {
   void shouldNotDestroySingletonWithDependent() {
     injector.register(List.of(SingletonWithDependent.class, Dependent.class, SubDependent.class));
 
-    InstantiationContext<SingletonWithDependent> context = injector.getInstance(new TypeLiteral<InstantiationContext<SingletonWithDependent>>() {});
+    Instance<SingletonWithDependent> instance = injector.getInstance(new TypeLiteral<Instance<SingletonWithDependent>>() {});
 
-    SingletonWithDependent s = context.get();
+    SingletonWithDependent s = instance.get();
 
     assertPostConstructs("SubDependent-0", "Dependent-1", "SingletonWithDependent-2");
     assertPreDestroys();
 
-    context.destroy(s);
+    instance.destroy(s);
 
     assertPostConstructs();
     assertPreDestroys();
@@ -470,21 +470,21 @@ public class DependentsLifeCycleTest {
   void shouldDestroyDependentsWhenScopedObjectIsDestroyed() {
     injector.register(List.of(TestScoped.class, Dependent.class, SubDependent.class));
 
-    InstantiationContext<TestScoped> context = injector.getInstance(new TypeLiteral<InstantiationContext<TestScoped>>() {});
+    Instance<TestScoped> instance = injector.getInstance(new TypeLiteral<Instance<TestScoped>>() {});
 
-    assertThatThrownBy(() -> context.get()).isExactlyInstanceOf(ScopeNotActiveException.class);
+    assertThatThrownBy(() -> instance.get()).isExactlyInstanceOf(ScopeNotActiveException.class);
 
     currentScope = "A";
 
     assertPostConstructs();
     assertPreDestroys();
 
-    TestScoped testScoped = context.get();
+    TestScoped testScoped = instance.get();
 
     assertPostConstructs("SubDependent-0", "Dependent-1", "TestScoped-2");
     assertPreDestroys();
 
-    context.destroy(testScoped);  // expect nothing, scoped objects cannot be destroyed this way
+    instance.destroy(testScoped);  // expect nothing, scoped objects cannot be destroyed this way
 
     assertPostConstructs();
     assertPreDestroys();
@@ -503,9 +503,9 @@ public class DependentsLifeCycleTest {
   void shouldDestroyDependentsCreatedByProxyWhenScopedIsDestroyed() {
     injector.register(List.of(DependentOnTestScoped.class, TestScoped.class, Dependent.class, SubDependent.class));
 
-    InstantiationContext<DependentOnTestScoped> context = injector.getInstance(new TypeLiteral<InstantiationContext<DependentOnTestScoped>>() {});
+    Instance<DependentOnTestScoped> instance = injector.getInstance(new TypeLiteral<Instance<DependentOnTestScoped>>() {});
 
-    DependentOnTestScoped root = context.get();
+    DependentOnTestScoped root = instance.get();
 
     assertPostConstructs("DependentOnTestScoped-0");
     assertPreDestroys();
@@ -519,7 +519,7 @@ public class DependentsLifeCycleTest {
     assertPostConstructs("SubDependent-1", "Dependent-2", "TestScoped-3");
     assertPreDestroys();
 
-    context.destroy(root);  // expect only root to be destroyed, proxied objects cannot be destroyed this way
+    instance.destroy(root);  // expect only root to be destroyed, proxied objects cannot be destroyed this way
 
     assertPostConstructs();
     assertPreDestroys("DependentOnTestScoped-0");

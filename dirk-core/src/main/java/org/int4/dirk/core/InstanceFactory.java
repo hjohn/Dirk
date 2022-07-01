@@ -17,7 +17,7 @@ import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
-import org.int4.dirk.core.RootInstantiationContextFactory.RootInstantiationContext;
+import org.int4.dirk.core.RootInstanceFactory.RootInstance;
 import org.int4.dirk.core.definition.Binding;
 import org.int4.dirk.core.definition.ExtendedScopeResolver;
 import org.int4.dirk.core.definition.Injectable;
@@ -30,25 +30,25 @@ import org.int4.dirk.core.util.Resolver;
 import org.int4.dirk.spi.config.AnnotationStrategy;
 import org.int4.dirk.spi.config.ProxyStrategy;
 import org.int4.dirk.spi.instantiation.InjectionTargetExtension;
+import org.int4.dirk.spi.instantiation.Instance;
 import org.int4.dirk.spi.instantiation.InstanceProvider;
-import org.int4.dirk.spi.instantiation.InstantiationContext;
 import org.int4.dirk.spi.instantiation.Resolution;
 import org.int4.dirk.spi.scope.CreationalContext;
 import org.int4.dirk.spi.scope.ScopeResolver;
 import org.int4.dirk.util.Types;
 
 /**
- * Factory for {@link InstantiationContext}s.
+ * Factory for {@link Instance}s.
  */
-class InstantiationContextFactory {
-  private static final Logger LOGGER = Logger.getLogger(InstantiationContextFactory.class.getName());
+class InstanceFactory {
+  private static final Logger LOGGER = Logger.getLogger(InstanceFactory.class.getName());
   private static final ExtendedCreationalContext<?> NULL_CONTEXT = new FixedCreationalContext<>(null);
 
   private static boolean strictOrder;
 
   private final ProxyStrategy proxyStrategy;
   private final InjectionTargetExtensionStore injectionTargetExtensionStore;
-  private final RootInstantiationContextFactory rootInstantiationContextFactory;
+  private final RootInstanceFactory rootInstanceFactory;
   private final ThreadLocal<Deque<ExtendedCreationalContext<?>>> stack = ThreadLocal.withInitial(ArrayDeque::new);
 
   /**
@@ -58,14 +58,14 @@ class InstantiationContextFactory {
    * @param proxyStrategy a {@link ProxyStrategy}, cannot be {@code null}
    * @param injectionTargetExtensionStore an {@link InjectionTargetExtensionStore}, cannot be {@code null}
    */
-  InstantiationContextFactory(AnnotationStrategy annotationStrategy, ProxyStrategy proxyStrategy, InjectionTargetExtensionStore injectionTargetExtensionStore) {
+  InstanceFactory(AnnotationStrategy annotationStrategy, ProxyStrategy proxyStrategy, InjectionTargetExtensionStore injectionTargetExtensionStore) {
     this.proxyStrategy = Objects.requireNonNull(proxyStrategy, "proxyStrategy");
     this.injectionTargetExtensionStore = Objects.requireNonNull(injectionTargetExtensionStore, "injectionTargetExtensionStore");
-    this.rootInstantiationContextFactory = new RootInstantiationContextFactory(annotationStrategy);
+    this.rootInstanceFactory = new RootInstanceFactory(annotationStrategy);
   }
 
-  <T> InstantiationContext<T> createContext(Resolver<Injectable<?>> resolver, Key key, boolean optional) {
-    return rootInstantiationContextFactory.create(resolver, createInstantiatorInternal(key, optional, null));
+  <T> Instance<T> createInstance(Resolver<Injectable<?>> resolver, Key key, boolean optional) {
+    return rootInstanceFactory.create(resolver, createInstantiatorInternal(key, optional, null));
   }
 
   <T> Instantiator<T> createInstantiator(Key key, boolean optional, Annotation parentScope) {
@@ -156,13 +156,13 @@ class InstantiationContextFactory {
         return castContext;
       }
 
-      RootInstantiationContext<E, ?> instantiationContext = rootInstantiationContextFactory.create(resolver, elementInstantiator);
-      InjectionTargetExtensionCreationalContext<T, E> creationalContext = new InjectionTargetExtensionCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), resolution == Resolution.LAZY ? instantiationContext : null);
+      RootInstance<E, ?> instance = rootInstanceFactory.create(resolver, elementInstantiator);
+      InjectionTargetExtensionCreationalContext<T, E> creationalContext = new InjectionTargetExtensionCreationalContext<>(stack.get().isEmpty() ? null : stack.get().getLast(), resolution == Resolution.LAZY ? instance : null);
 
       open(resolution == Resolution.LAZY ? NULL_CONTEXT : creationalContext);
 
       try {
-        creationalContext.initialize(instanceProvider.getInstance(instantiationContext), resolution == Resolution.LAZY);
+        creationalContext.initialize(instanceProvider.getInstance(instance), resolution == Resolution.LAZY);
 
         return creationalContext;
       }
@@ -350,16 +350,16 @@ class InstantiationContextFactory {
 
   private static final class InjectionTargetExtensionCreationalContext<T, E> implements ExtendedCreationalContext<T> {
     private final ExtendedCreationalContext<?> parent;
-    private final RootInstantiationContext<E, ?> instantiationContext;
+    private final RootInstance<E, ?> rootInstance;
 
     private T instance;
     private boolean needsDestroy;
     private boolean initialized;
     private List<CreationalContext<?>> children;
 
-    InjectionTargetExtensionCreationalContext(ExtendedCreationalContext<?> parent, RootInstantiationContext<E, ?> context) {
+    InjectionTargetExtensionCreationalContext(ExtendedCreationalContext<?> parent, RootInstance<E, ?> rootInstance) {
       this.parent = parent;
-      this.instantiationContext = context;
+      this.rootInstance = rootInstance;
     }
 
     void initialize(T instance, boolean needsDestroy) {
@@ -395,8 +395,8 @@ class InstantiationContextFactory {
 
     @Override
     public void release() {
-      if(instantiationContext != null) {
-        instantiationContext.release();
+      if(rootInstance != null) {
+        rootInstance.release();
       }
 
       if(children != null) {
@@ -443,7 +443,7 @@ class InstantiationContextFactory {
    *
    * <p>A {@code CreationalContext} is created whenever an {@link Injectable} is obtained from
    * a {@link ScopeResolver}. If the resolver decides to create a new instance, it will
-   * call recursively into a {@link InstantiationContext}.
+   * call recursively into a {@link Instance}.
    */
   private class LazyCreationalContext<T> implements ExtendedCreationalContext<T> {
     private final ExtendedCreationalContext<?> parent;

@@ -11,22 +11,23 @@ import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
 
 /**
- * A context which can be used to create instances of type {@code T} which match
- * all its criteria. Sub contexts can be created which further narrow the set of
- * possible matches.
+ * Allows dynamic access to instances created by an injector. An {@link Instance} can
+ * be used to create instances of type {@code T} which match all its criteria. Sub
+ * {@link Instance}s can be created which further narrow the set of possible matches.
  *
- * <p>Contexts are often created for a specific injection target. This target may
- * allow optional injection. If optional injection is allowed, {@code null} is a valid
- * result in case there are no matches.
+ * <p>{@link Instance}s are created for specific injection targets. This target may be
+ * marked optional. If the target is optional, {@code null} is a valid
+ * result in case the {@link Instance} can provide no matches.
  *
  * @param <T> the type of the instances
  */
-public interface InstantiationContext<T> {
+public interface Instance<T> {
 
   /**
    * Creates an instance of type {@code T}. If there are multiple matching instances
-   * an {@link AmbiguousResolutionException} exception is thrown. Returns {@code null} if
-   * there are no matches and {@code null} is a considered valid result for this context.
+   * an {@link AmbiguousResolutionException} exception is thrown. If the target for
+   * which this {@link Instance} was created is optional, then {@code null} is returned when
+   * there are no matches, otherwise an {@link UnsatisfiedResolutionException} is thrown.
    *
    * @return an instance or {@code null} if there were no matches
    * @throws CreationException when the creation of the instance failed
@@ -37,9 +38,12 @@ public interface InstantiationContext<T> {
   T get() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException;
 
   /**
-   * Creates all instances of type {@code T} this context can provide. If there were no
-   * matches {@code null} is returned if valid for this context, otherwise returns an empty
-   * list. Scoped types which scope is currently inactive are excluded.
+   * Creates all instances of type {@code T}. If the target for which this {@link Instance} was
+   * created is optional, then {@code null} is returned when there are no matches, otherwise an
+   * empty list is returned.
+   *
+   * <p>Scoped types which scope is currently inactive are ignored, and so this call
+   * never produces scope related exceptions.
    *
    * @return a list of instances, can be {@code null} or empty but never contains {@code null}
    * @throws CreationException when the creation of an instance failed
@@ -47,53 +51,53 @@ public interface InstantiationContext<T> {
   List<T> getAll() throws CreationException;
 
   /**
-   * Destroys an instance created with this {@link InstantiationContext} or one of its children.
+   * Destroys an instance created with this {@link Instance} or one of its children.
    *
    * @param instance an instance to destroy, cannot be {@code null}
    */
   void destroy(T instance);
 
   /**
-   * Destroys a collection of instances created with this {@link InstantiationContext} or one of its children.
+   * Destroys a collection of instances created with this {@link Instance} or one of its children.
    *
    * @param instances a collection of instances to destroy, cannot be {@code null}
    */
   void destroyAll(Collection<T> instances);
 
   /**
-   * Creates an {@link InstantiationContext} based on this context which further
+   * Creates an {@link Instance} based on this one which further
    * narrows the potential matching instances by requiring additional qualifiers.
    *
    * @param qualifiers an array of additional qualifier {@link Annotation}s, cannot be {@code null}
-   * @return an {@link InstantiationContext}, never {@code null}
+   * @return an {@link Instance}, never {@code null}
    * @throws IllegalArgumentException if any of the given annotations is not a qualifier
    */
-  InstantiationContext<T> select(Annotation... qualifiers);
+  Instance<T> select(Annotation... qualifiers);
 
   /**
-   * Creates an {@link InstantiationContext} based on this context which further
+   * Creates an {@link Instance} based on this one which further
    * narrows the potential matching instances to a subtype of {@code T} and the given
    * additional qualifiers.
    *
    * @param <U> a subtype of type {@code T}
    * @param subtype a subtype of type {@code T}, cannot be {@code null}
    * @param qualifiers an array of additional qualifier {@link Annotation}s, cannot be {@code null}
-   * @return an {@link InstantiationContext}, never {@code null}
+   * @return an {@link Instance}, never {@code null}
    * @throws IllegalArgumentException if any of the given annotations is not a qualifier
    */
-  <U extends T> InstantiationContext<U> select(Class<U> subtype, Annotation... qualifiers);
+  <U extends T> Instance<U> select(Class<U> subtype, Annotation... qualifiers);
 
   /**
-   * Creates an {@link InstantiationContext} based on this context which further
+   * Creates an {@link Instance} based on this one which further
    * narrows the potential matching instances to a subtype of {@code T} and the given
    * additional qualifiers.
    *
    * @param <U> a subtype of type {@code T}
    * @param subtype specifies a subtype of type {@code T}, cannot be {@code null}
    * @param qualifiers an array of additional qualifier {@link Annotation}s, cannot be {@code null}
-   * @return an {@link InstantiationContext}, never {@code null}
+   * @return an {@link Instance}, never {@code null}
    * @throws IllegalArgumentException if any of the given annotations is not a qualifier
    */
-  <U extends T> InstantiationContext<U> select(TypeLiteral<U> subtype, Annotation... qualifiers);
+  <U extends T> Instance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers);
 
 }

@@ -9,9 +9,9 @@ public class InstanceResolvers {
   public static DefaultInstanceResolver create() {
     InjectionTargetExtensionStore injectionTargetExtensionStore = InjectionTargetExtensionStores.create(InjectionTargetExtensions.create());
     InjectableStore store = new InjectableStore(InjectableFactories.PROXY_STRATEGY);
-    InstantiationContextFactory instantiationContextFactory = new InstantiationContextFactory(InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
+    InstanceFactory instanceFactory = new InstanceFactory(InjectableFactories.ANNOTATION_STRATEGY, InjectableFactories.PROXY_STRATEGY, injectionTargetExtensionStore);
 
-    return new DefaultInstanceResolver(store, instantiationContextFactory);
+    return new DefaultInstanceResolver(store, instanceFactory);
   }
 
 }

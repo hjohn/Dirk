@@ -38,7 +38,7 @@ import org.int4.dirk.util.Types;
  */
 class DefaultInjectableFactory implements InjectableFactory {
   private final ScopeResolverManager scopeResolverManager;
-  private final InstantiationContextFactory instantiationContextFactory;
+  private final InstanceFactory instanceFactory;
   private final AnnotationStrategy annotationStrategy;
   private final ScopeStrategy scopeStrategy;
   private final Set<Class<?>> extendedTypes;
@@ -47,14 +47,14 @@ class DefaultInjectableFactory implements InjectableFactory {
    * Constructs a new instance.
    *
    * @param scopeResolverManager a {@link ScopeResolverManager}, cannot be {@code null}
-   * @param instantiationContextFactory an {@link InstantiationContextFactory}, cannot be {@code null}
+   * @param instanceFactory an {@link InstanceFactory}, cannot be {@code null}
    * @param annotationStrategy a {@link AnnotationStrategy}, cannot be {@code null}
    * @param scopeStrategy a {@link ScopeStrategy}, cannot be {@code null}
    * @param extendedTypes a set of {@link Class} for which injection target extensions are in use, cannot be {@code null} or contain {@code null} but can be empty
    */
-  DefaultInjectableFactory(ScopeResolverManager scopeResolverManager, InstantiationContextFactory instantiationContextFactory, AnnotationStrategy annotationStrategy, ScopeStrategy scopeStrategy, Set<Class<?>> extendedTypes) {
+  DefaultInjectableFactory(ScopeResolverManager scopeResolverManager, InstanceFactory instanceFactory, AnnotationStrategy annotationStrategy, ScopeStrategy scopeStrategy, Set<Class<?>> extendedTypes) {
     this.scopeResolverManager = Objects.requireNonNull(scopeResolverManager, "scopeResolverManager");
-    this.instantiationContextFactory = Objects.requireNonNull(instantiationContextFactory, "instantiationContextFactory");
+    this.instanceFactory = Objects.requireNonNull(instanceFactory, "instanceFactory");
     this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy");
     this.scopeStrategy = Objects.requireNonNull(scopeStrategy, "scopeStrategy");
     this.extendedTypes = Objects.requireNonNull(extendedTypes, "extendedTypes");
@@ -116,7 +116,7 @@ class DefaultInjectableFactory implements InjectableFactory {
   }
 
   private InjectionTarget toInjectionTarget(Binding binding, ScopeResolver scopeResolver) {
-    Instantiator<?> instantiator = instantiationContextFactory.createInstantiator(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional(), scopeResolver.getAnnotation());
+    Instantiator<?> instantiator = instanceFactory.createInstantiator(new Key(binding.getType(), binding.getQualifiers()), binding.isOptional(), scopeResolver.getAnnotation());
 
     return new InjectionTarget() {
       @Override

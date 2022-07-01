@@ -17,16 +17,16 @@ import org.int4.dirk.api.instantiation.AmbiguousResolutionException;
 import org.int4.dirk.api.instantiation.CreationException;
 import org.int4.dirk.api.instantiation.UnsatisfiedResolutionException;
 import org.int4.dirk.api.scope.ScopeNotActiveException;
-import org.int4.dirk.core.InstantiationContextFactory.DefaultInstantiator;
-import org.int4.dirk.core.InstantiationContextFactory.ExtendedCreationalContext;
+import org.int4.dirk.core.InstanceFactory.DefaultInstantiator;
+import org.int4.dirk.core.InstanceFactory.ExtendedCreationalContext;
 import org.int4.dirk.core.definition.Injectable;
 import org.int4.dirk.core.util.Key;
 import org.int4.dirk.core.util.Resolver;
 import org.int4.dirk.spi.config.AnnotationStrategy;
-import org.int4.dirk.spi.instantiation.InstantiationContext;
+import org.int4.dirk.spi.instantiation.Instance;
 import org.int4.dirk.spi.scope.CreationalContext;
 
-class RootInstantiationContextFactory {
+class RootInstanceFactory {
   private final AnnotationStrategy annotationStrategy;
 
   /**
@@ -34,30 +34,30 @@ class RootInstantiationContextFactory {
    *
    * @param annotationStrategy an {@link AnnotationStrategy}, cannot be {@code null}
    */
-  RootInstantiationContextFactory(AnnotationStrategy annotationStrategy) {
+  RootInstanceFactory(AnnotationStrategy annotationStrategy) {
     this.annotationStrategy = Objects.requireNonNull(annotationStrategy, "annotationStrategy");
   }
 
   /**
-   * Returns an {@link RootInstantiationContext} for the given {@link Key} and whether it
-   * is optional or not. If an {@link RootInstantiationContext} is optional, it is allowed
+   * Returns an {@link RootInstance} for the given {@link Key} and whether it
+   * is optional or not. If an {@link RootInstance} is optional, it is allowed
    * to return {@code null} when no instances could be created, otherwise it will throw
    * an {@link UnsatisfiedResolutionException}.
    *
    * @param <T> the type of instances the context creates
    * @param <E> the element type of instances the context creates
    * @param instantiator a {@link DefaultInstantiator}, cannot be {@code null}
-   * @return a {@link RootInstantiationContext}, never {@code null}
+   * @return a {@link RootInstance}, never {@code null}
    */
-  <T, E> RootInstantiationContext<T, E> create(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator) {
-    return new RootInstantiationContext<>(resolver, instantiator);
+  <T, E> RootInstance<T, E> create(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator) {
+    return new RootInstance<>(resolver, instantiator);
   }
 
-  abstract class AbstractRootInstantiationContext<T, E> implements InstantiationContext<T> {
+  abstract class AbstractRootInstance<T, E> implements Instance<T> {
     protected final Resolver<Injectable<?>> resolver;
     protected final DefaultInstantiator<T, E> instantiator;
 
-    protected AbstractRootInstantiationContext(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator) {
+    protected AbstractRootInstance(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator) {
       this.resolver = resolver;
       this.instantiator = instantiator;
     }
@@ -99,17 +99,17 @@ class RootInstantiationContextFactory {
     }
 
     @Override
-    public final InstantiationContext<T> select(Annotation... qualifiers) {
+    public final Instance<T> select(Annotation... qualifiers) {
       return createChildContext(new Key(instantiator.getKey().getType(), mergeQualifiers(instantiator.getKey(), qualifiers)));
     }
 
     @Override
-    public final <U extends T> InstantiationContext<U> select(Class<U> subtype, Annotation... qualifiers) {
+    public final <U extends T> Instance<U> select(Class<U> subtype, Annotation... qualifiers) {
       return createChildContext(new Key(subtype, mergeQualifiers(instantiator.getKey(), qualifiers)));
     }
 
     @Override
-    public final <U extends T> InstantiationContext<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+    public final <U extends T> Instance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
       return createChildContext(new Key(subtype.getType(), mergeQualifiers(instantiator.getKey(), qualifiers)));
     }
 
@@ -121,34 +121,34 @@ class RootInstantiationContextFactory {
       return Stream.concat(key.getQualifiers().stream(), Arrays.stream(qualifiers)).collect(Collectors.toSet());
     }
 
-    protected abstract <U extends T> InstantiationContext<U> createChildContext(Key key);
+    protected abstract <U extends T> Instance<U> createChildContext(Key key);
     protected abstract void storeCreationalContext(CreationalContext<T> creationalContext);
   }
 
   /**
-   * The root {@link InstantiationContext} is the context type that is injected or returned
+   * The root {@link Instance} is the context type that is injected or returned
    * when specifically requested. The type it represents can be further refined to sub types,
-   * but not be made more general. When the type is refined, a child {@link InstantiationContext}
+   * but not be made more general. When the type is refined, a child {@link Instance}
    * is returned which delegates to a root context.
    *
    * @param <T> the type the context can create
    * @param <E> the element type (if any) if the type created is an extended type
    */
-  class RootInstantiationContext<T, E> extends AbstractRootInstantiationContext<T, E> {
+  class RootInstance<T, E> extends AbstractRootInstance<T, E> {
     private final Map<Identity<T>, CreationalContext<T>> creationalContexts = new LinkedHashMap<>();
 
-    RootInstantiationContext(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator) {
+    RootInstance(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator) {
       super(resolver, instantiator);
     }
 
     @Override
-    protected <U extends T> InstantiationContext<U> createChildContext(Key key) {
+    protected <U extends T> Instance<U> createChildContext(Key key) {
       @SuppressWarnings("unchecked")  // safe cast as parent will accept sub types of T
-      RootInstantiationContext<U, E> castParent = (RootInstantiationContext<U, E>)this;
+      RootInstance<U, E> castParent = (RootInstance<U, E>)this;
       @SuppressWarnings("unchecked")
       DefaultInstantiator<U, E> subInstantiator = (DefaultInstantiator<U, E>)instantiator.deriveSubInstantiator(key);
 
-      return new ChildInstantiationContext<>(resolver, subInstantiator, castParent);
+      return new ChildInstance<>(resolver, subInstantiator, castParent);
     }
 
     synchronized boolean hasContextFor(T instance) {
@@ -190,30 +190,30 @@ class RootInstantiationContextFactory {
   }
 
   /**
-   * A child {@link InstantiationContext} exists to specialize the type provide by a
+   * A child {@link Instance} exists to specialize the type provide by a
    * root context. It delegates most of its functions to the root context. Specifically,
-   * the tracking of dependents is handled by the root context.
+   * the tracking of dependents is handled by the root instance.
    *
    * @param <T> the type the context can create
    * @param <E> the element type (if any) if the type created is an extended type
    */
-  class ChildInstantiationContext<T, E> extends AbstractRootInstantiationContext<T, E> {
-    private final RootInstantiationContext<T, E> parent;
+  class ChildInstance<T, E> extends AbstractRootInstance<T, E> {
+    private final RootInstance<T, E> parent;
 
-    private ChildInstantiationContext(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator, RootInstantiationContext<T, E> parent) {
+    private ChildInstance(Resolver<Injectable<?>> resolver, DefaultInstantiator<T, E> instantiator, RootInstance<T, E> parent) {
       super(resolver, instantiator);
 
       this.parent = parent;
     }
 
     @Override
-    protected <U extends T> InstantiationContext<U> createChildContext(Key key) {
+    protected <U extends T> Instance<U> createChildContext(Key key) {
       @SuppressWarnings("unchecked")  // safe cast as parent will accept sub types of T
-      RootInstantiationContext<U, E> castParent = (RootInstantiationContext<U, E>)parent;
+      RootInstance<U, E> castParent = (RootInstance<U, E>)parent;
       @SuppressWarnings("unchecked")
       DefaultInstantiator<U, E> subInstantiator = (DefaultInstantiator<U, E>)instantiator.deriveSubInstantiator(key);
 
-      return new ChildInstantiationContext<>(resolver, subInstantiator, castParent);
+      return new ChildInstance<>(resolver, subInstantiator, castParent);
     }
 
     @Override
