@@ -24,7 +24,7 @@ import org.int4.dirk.api.scope.ScopeNotActiveException;
 public interface InstantiationContext<T> {
 
   /**
-   * Creates an instance of type {@code T}. If there are multiple matching instances key given
+   * Creates an instance of type {@code T}. If there are multiple matching instances
    * an {@link AmbiguousResolutionException} exception is thrown. Returns {@code null} if
    * there are no matches and {@code null} is a considered valid result for this context.
    *
@@ -34,7 +34,7 @@ public interface InstantiationContext<T> {
    * @throws AmbiguousResolutionException when their are multiple potential instances
    * @throws ScopeNotActiveException when the scope for the given type is not active
    */
-  T create() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException;
+  T get() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException;
 
   /**
    * Creates all instances of type {@code T} this context can provide. If there were no
@@ -44,7 +44,7 @@ public interface InstantiationContext<T> {
    * @return a list of instances, can be {@code null} or empty but never contains {@code null}
    * @throws CreationException when the creation of an instance failed
    */
-  List<T> createAll() throws CreationException;
+  List<T> getAll() throws CreationException;
 
   /**
    * Destroys an instance created with this {@link InstantiationContext} or one of its children.

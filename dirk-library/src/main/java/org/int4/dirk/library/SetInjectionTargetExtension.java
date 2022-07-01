@@ -20,7 +20,7 @@ public class SetInjectionTargetExtension<T> extends InjectionTargetExtension<Set
    */
   public SetInjectionTargetExtension() {
     super(TypeVariables.get(Set.class, 0), Resolution.EAGER_ANY, context -> {
-      List<T> instances = context.createAll();
+      List<T> instances = context.getAll();
 
       return instances == null ? null : new HashSet<>(instances);
     });

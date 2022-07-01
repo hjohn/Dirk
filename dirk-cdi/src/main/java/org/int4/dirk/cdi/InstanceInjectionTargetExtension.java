@@ -37,12 +37,12 @@ public class InstanceInjectionTargetExtension<T> extends InjectionTargetExtensio
 
     @Override
     public T get() {
-      return context.create();
+      return context.get();
     }
 
     @Override
     public Iterator<T> iterator() {
-      return context.createAll().iterator();
+      return context.getAll().iterator();
     }
 
     @Override
@@ -63,7 +63,7 @@ public class InstanceInjectionTargetExtension<T> extends InjectionTargetExtensio
     @Override
     public boolean isUnsatisfied() {  // TODO this implementation is sub par; improve when extensions to InstantiationContext interface are finalized
       try {
-        context.create();
+        context.get();
 
         return false;
       }
@@ -78,7 +78,7 @@ public class InstanceInjectionTargetExtension<T> extends InjectionTargetExtensio
     @Override
     public boolean isAmbiguous() {  // TODO this implementation is sub par; improve when extensions to InstantiationContext interface are finalized
       try {
-        context.create();
+        context.get();
 
         return false;
       }
@@ -93,7 +93,7 @@ public class InstanceInjectionTargetExtension<T> extends InjectionTargetExtensio
     @Override
     public boolean isResolvable() {  // TODO this implementation is sub par; improve when extensions to InstantiationContext interface are finalized
       try {
-        context.create();
+        context.get();
 
         return true;
       }

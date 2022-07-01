@@ -81,36 +81,36 @@ public class InstantiationContextFactoryTest {
       class ThenContext {
         @Test
         void createShouldBeAmbiguous() {
-          assertThatThrownBy(() -> context.create())
+          assertThatThrownBy(() -> context.get())
             .isExactlyInstanceOf(AmbiguousResolutionException.class);
         }
 
         @Test
         void createAllShouldReturnAllInScopeInstances() {
-          assertThat(context.createAll()).hasSize(5);
+          assertThat(context.getAll()).hasSize(5);
         }
 
         @Test
         void selectShouldCreateSubcontexts() {
           InstantiationContext<B> bs = context.select(B.class);
 
-          assertThatThrownBy(() -> bs.create()).isExactlyInstanceOf(AmbiguousResolutionException.class);
-          assertThat(bs.createAll()).hasSize(2);
+          assertThatThrownBy(() -> bs.get()).isExactlyInstanceOf(AmbiguousResolutionException.class);
+          assertThat(bs.getAll()).hasSize(2);
 
           InstantiationContext<C> cs = context.select(new TypeLiteral<C>() {});
 
-          assertThat(cs.create()).isInstanceOf(C.class);
-          assertThat(cs.createAll()).hasSize(1);
+          assertThat(cs.get()).isInstanceOf(C.class);
+          assertThat(cs.getAll()).hasSize(1);
 
           InstantiationContext<A> reds = context.select(Annotations.of(Red.class));
 
-          assertThatThrownBy(() -> reds.create()).isExactlyInstanceOf(AmbiguousResolutionException.class);
-          assertThat(reds.createAll()).hasSize(2);
+          assertThatThrownBy(() -> reds.get()).isExactlyInstanceOf(AmbiguousResolutionException.class);
+          assertThat(reds.getAll()).hasSize(2);
 
           InstantiationContext<A> greens = context.select(Annotations.of(Green.class));
 
-          assertThatThrownBy(() -> greens.create()).isExactlyInstanceOf(AmbiguousResolutionException.class);  // Ambiguous as there could be a second one in scope sometimes
-          assertThat(greens.createAll()).hasSize(1);  // Only 1 since other is not in scope
+          assertThatThrownBy(() -> greens.get()).isExactlyInstanceOf(AmbiguousResolutionException.class);  // Ambiguous as there could be a second one in scope sometimes
+          assertThat(greens.getAll()).hasSize(1);  // Only 1 since other is not in scope
         }
 
         @Test
@@ -128,13 +128,13 @@ public class InstantiationContextFactoryTest {
 
       @Test
       void createShouldThrowScopeException() {
-        assertThatThrownBy(() -> context.create())
+        assertThatThrownBy(() -> context.get())
           .isExactlyInstanceOf(ScopeNotActiveException.class);
       }
 
       @Test
       void createAllShouldReturnNoInstances() {
-        assertThat(context.createAll()).isEmpty();
+        assertThat(context.getAll()).isEmpty();
       }
 
       @Nested
@@ -145,12 +145,12 @@ public class InstantiationContextFactoryTest {
 
         @Test
         void createShouldBeSatisfied() {
-          assertThat(context.create()).isInstanceOf(F.class);
+          assertThat(context.get()).isInstanceOf(F.class);
         }
 
         @Test
         void createAllShouldReturnOneInstance() {
-          assertThat(context.createAll()).hasSize(1);
+          assertThat(context.getAll()).hasSize(1);
         }
       }
     }
@@ -161,18 +161,18 @@ public class InstantiationContextFactoryTest {
 
       @Test
       void createShouldBeSatisfied() {
-        assertThat(context.create()).isInstanceOf(E.class);
+        assertThat(context.get()).isInstanceOf(E.class);
       }
 
       @Test
       void createShouldReturnUpdatedInstance() {
-        E e = context.create();
+        E e = context.get();
 
         assertThat(e.test).isEqualTo("default");
 
         store.putAll(List.of(injectableFactories.forInstance().create("set")));
 
-        E e2 = context.create();
+        E e2 = context.get();
 
         assertThat(e).isNotEqualTo(e2);
         assertThat(e2.test).isEqualTo("set");
@@ -188,7 +188,7 @@ public class InstantiationContextFactoryTest {
         E.postConstructs = 0;
         G.postConstructs = 0;
 
-        assertThat(context.create()).isInstanceOf(E.class);
+        assertThat(context.get()).isInstanceOf(E.class);
         assertThat(E.postConstructs).isEqualTo(1);
         assertThat(G.postConstructs).isEqualTo(1);
       }
@@ -198,7 +198,7 @@ public class InstantiationContextFactoryTest {
         E.preDestroys = 0;
         G.preDestroys = 0;
 
-        E instance = context.create();
+        E instance = context.get();
 
         context.destroy(instance);
 
@@ -213,14 +213,14 @@ public class InstantiationContextFactoryTest {
 
       @Test
       void createShouldBeSatisfied() {
-        assertThat(context.create()).isInstanceOf(X.class);
+        assertThat(context.get()).isInstanceOf(X.class);
       }
 
       @Test
       void createShouldCallLifecycleMethods() {
         X.postConstructs = 0;
 
-        assertThat(context.create()).isInstanceOf(X.class);
+        assertThat(context.get()).isInstanceOf(X.class);
         assertThat(X.postConstructs).isEqualTo(1);
       }
 
@@ -228,7 +228,7 @@ public class InstantiationContextFactoryTest {
       void destroyShouldNotCallLifecycleMethods() {
         X.preDestroys = 0;
 
-        X instance = context.create();
+        X instance = context.get();
 
         context.destroy(instance);
 
@@ -242,18 +242,18 @@ public class InstantiationContextFactoryTest {
 
       @Test
       void createShouldBeSatisfied() {
-        assertThat(context.create()).isNull();
+        assertThat(context.get()).isNull();
       }
 
       @Test
       void createShouldReturnUpdatedInstance() {
-        String initial = context.create();
+        String initial = context.get();
 
         assertThat(initial).isNull();
 
         store.putAll(List.of(injectableFactories.forInstance().create("set")));
 
-        String afterRegistration = context.create();
+        String afterRegistration = context.get();
 
         assertThat(afterRegistration).isEqualTo("set");
       }
@@ -267,24 +267,24 @@ public class InstantiationContextFactoryTest {
       class ThenContext {
         @Test
         void createShouldReturnListWithInScopeInstances() {
-          assertThat(context.create()).flatExtracting(Object::getClass).containsExactlyInAnyOrder(B.class, D.class);
+          assertThat(context.get()).flatExtracting(Object::getClass).containsExactlyInAnyOrder(B.class, D.class);
 
           currentScope = "A";
 
-          assertThat(context.create()).flatExtracting(Object::getClass).containsExactlyInAnyOrder(B.class, D.class, F.class);
+          assertThat(context.get()).flatExtracting(Object::getClass).containsExactlyInAnyOrder(B.class, D.class, F.class);
         }
 
         @Test
         void createAllForExtendedTypesShouldReturnEmptyList() {
-          assertThat(context.createAll()).isEmpty();
+          assertThat(context.getAll()).isEmpty();
         }
 
         @Test
         void selectShouldCreateSubcontexts() {
           InstantiationContext<List<B>> reds = context.select(Annotations.of(Red.class));
 
-          assertThat(reds.create()).flatExtracting(Object::getClass).containsExactlyInAnyOrder(D.class);
-          assertThat(reds.createAll()).isEmpty();
+          assertThat(reds.get()).flatExtracting(Object::getClass).containsExactlyInAnyOrder(D.class);
+          assertThat(reds.getAll()).isEmpty();
         }
       }
     }
@@ -297,12 +297,12 @@ public class InstantiationContextFactoryTest {
       class ThenContext {
         @Test
         void createAllShouldDiscoverBadInjectionTargetExtensionCallingCreate() {
-          assertThat(context.createAll()).isEmpty();
+          assertThat(context.getAll()).isEmpty();
         }
 
         @Test
         void createAllShouldNotDiscoverBadInjectionTargetExtensionAsExtensionsAreNotSupported() {
-          assertThat(context.createAll()).isEmpty();
+          assertThat(context.getAll()).isEmpty();
         }
       }
     }

@@ -50,10 +50,10 @@ class DefaultInstanceResolver implements InstanceResolver {
   }
 
   private <T> T getInstance(Key key) throws UnsatisfiedResolutionException, AmbiguousResolutionException, CreationException, ScopeNotActiveException {
-    return instantiationContextFactory.<T>createContext(resolver, key, false).create();
+    return instantiationContextFactory.<T>createContext(resolver, key, false).get();
   }
 
   private <T> List<T> getInstances(Key key) throws CreationException {
-    return instantiationContextFactory.<T>createContext(resolver, key, false).createAll();
+    return instantiationContextFactory.<T>createContext(resolver, key, false).getAll();
   }
 }

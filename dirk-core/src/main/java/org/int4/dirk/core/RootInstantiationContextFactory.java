@@ -63,7 +63,7 @@ class RootInstantiationContextFactory {
     }
 
     @Override
-    public final T create() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
+    public final T get() throws CreationException, UnsatisfiedResolutionException, AmbiguousResolutionException, ScopeNotActiveException {
       ExtendedCreationalContext<T> creationalContext = instantiator.create(resolver);
 
       if(creationalContext.needsDestroy()) {
@@ -74,7 +74,7 @@ class RootInstantiationContextFactory {
     }
 
     @Override
-    public final List<T> createAll() throws CreationException {
+    public final List<T> getAll() throws CreationException {
       List<ExtendedCreationalContext<T>> creationalContexts = instantiator.createAll(resolver);
 
       if(creationalContexts == null) {

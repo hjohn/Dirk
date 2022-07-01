@@ -23,6 +23,6 @@ public class ProviderInjectionTargetExtension<T, E> extends InjectionTargetExten
    * @param providerFactory a function to create the provider instance given a supplier, cannot be {@code null}
    */
   public ProviderInjectionTargetExtension(Class<T> providerClass, Function<Supplier<E>, T> providerFactory) {
-    super(TypeVariables.get(providerClass, 0), Resolution.LAZY, context -> providerFactory.apply(context::create));
+    super(TypeVariables.get(providerClass, 0), Resolution.LAZY, context -> providerFactory.apply(context::get));
   }
 }

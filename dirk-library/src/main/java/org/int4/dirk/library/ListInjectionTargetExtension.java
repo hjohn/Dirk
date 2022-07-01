@@ -17,7 +17,7 @@ public class ListInjectionTargetExtension<T> extends InjectionTargetExtension<Li
    * Creates a new instance.
    */
   public ListInjectionTargetExtension() {
-    super(TypeVariables.get(List.class, 0), Resolution.EAGER_ANY, context -> context.createAll());
+    super(TypeVariables.get(List.class, 0), Resolution.EAGER_ANY, context -> context.getAll());
   }
 
 }
