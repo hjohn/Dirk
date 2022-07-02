@@ -14,7 +14,7 @@ Add a dependency to Dirk in your POM:
 
     <groupId>org.int4.dirk</groupId>
     <artifactId>dirk-di<artifactId>
-    <version>1.0.0-alpha3</version>
+    <version>1.0.0-beta1</version>
 
 Assume there is a small class which depends on a `String` which Dirk should provide:
 
